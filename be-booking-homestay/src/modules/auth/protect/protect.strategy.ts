@@ -23,7 +23,12 @@ export class ProtectStrategy extends PassportStrategy(Strategy, `protect`) {
         id: decode.userId,
       },
       include: {
-        roles: true,
+        roles: {
+          select: { name: true },
+        },
+        loyalty_program: {
+          select: { level: true },
+        },
       },
     });
 

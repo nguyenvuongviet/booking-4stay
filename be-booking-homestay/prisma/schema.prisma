@@ -39,30 +39,44 @@ model roles {
 }
 
 model users {
-  id          Int            @id @default(autoincrement())
-  email       String         @unique(map: "email") @db.VarChar(255)
-  password    String?        @db.VarChar(255)
-  fullName    String         @db.VarChar(255)
-  phoneNumber String?        @db.VarChar(20)
-  dateOfBirth DateTime?      @db.Date
-  gender      users_gender?
-  avatar      String?        @db.Text
-  country     String?        @db.VarChar(100)
-  isVerified  Boolean        @default(false)
-  isActive    Boolean        @default(false)
-  googleId    String?        @db.VarChar(255)
-  provider    users_provider @default(LOCAL)
-  lastLogin   DateTime?      @db.Timestamp(0)
-  roleId      Int
-  deletedBy   Int            @default(0)
-  isDeleted   Boolean        @default(false)
-  deletedAt   DateTime?      @db.Timestamp(0)
-  createdAt   DateTime       @default(now()) @db.Timestamp(0)
-  updatedAt   DateTime       @default(now()) @db.Timestamp(0)
-  otp_codes   otp_codes[]
-  roles       roles          @relation(fields: [roleId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "users_ibfk_1")
+  id              Int              @id @default(autoincrement())
+  email           String           @unique(map: "email") @db.VarChar(255)
+  password        String?          @db.VarChar(255)
+  fullName        String           @db.VarChar(255)
+  phoneNumber     String?          @db.VarChar(20)
+  dateOfBirth     DateTime?        @db.Date
+  gender          users_gender?
+  avatar          String?          @db.Text
+  country         String?          @db.VarChar(100)
+  isVerified      Boolean          @default(false)
+  isActive        Boolean          @default(false)
+  googleId        String?          @db.VarChar(255)
+  provider        users_provider   @default(LOCAL)
+  lastLogin       DateTime?        @db.Timestamp(0)
+  roleId          Int
+  deletedBy       Int              @default(0)
+  isDeleted       Boolean          @default(false)
+  deletedAt       DateTime?        @db.Timestamp(0)
+  createdAt       DateTime         @default(now()) @db.Timestamp(0)
+  updatedAt       DateTime         @default(now()) @db.Timestamp(0)
+  loyalty_program loyalty_program?
+  otp_codes       otp_codes[]
+  roles           roles            @relation(fields: [roleId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "users_ibfk_1")
 
   @@index([roleId], map: "roleId")
+}
+
+model loyalty_program {
+  id              Int                   @id @default(autoincrement())
+  userId          Int                   @unique(map: "userId")
+  totalBookings   Int                   @default(0)
+  totalNights     Int                   @default(0)
+  points          Int                   @default(0)
+  level           loyalty_program_level @default(BRONZE)
+  lastUpgradeDate DateTime?             @db.Timestamp(0)
+  createdAt       DateTime              @default(now()) @db.Timestamp(0)
+  updatedAt       DateTime              @default(now()) @db.Timestamp(0)
+  users           users                 @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "loyalty_program_ibfk_1")
 }
 
 enum otp_codes_type {
@@ -79,4 +93,11 @@ enum users_gender {
 enum users_provider {
   LOCAL
   GOOGLE
+}
+
+enum loyalty_program_level {
+  BRONZE
+  SILVER
+  GOLD
+  PLATINUM
 }

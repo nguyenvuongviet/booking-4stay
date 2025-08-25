@@ -21,9 +21,9 @@ export class AuthController {
   }
 
   @Public()
-  @Post('verify-otp')
+  @Post('activate-account')
   async verifyOtp(@Body() verifyOtpDto: VerifyOtpDto) {
-    return await this.authService.verifyOtp(verifyOtpDto);
+    return await this.authService.activateAccount(verifyOtpDto);
   }
 
   @Public()

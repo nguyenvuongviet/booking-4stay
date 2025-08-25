@@ -50,7 +50,7 @@ CREATE TABLE `users` (
 CREATE TABLE `loyalty_program` (
     `id` INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
     
-    `userId` INT NOT NULL,
+    `userId` INT NOT NULL UNIQUE,
     FOREIGN KEY (`userId`) REFERENCES `users`(`id`) ON DELETE CASCADE,
 
     `totalBookings` INT NOT NULL DEFAULT 0,      

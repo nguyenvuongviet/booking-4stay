@@ -57,9 +57,8 @@ export class OtpService {
       },
     });
 
-    if (!otpRecord) {
+    if (!otpRecord)
       throw new BadRequestException('OTP không hợp lệ hoặc hết hạn!');
-    }
 
     await this.prismaService.otp_codes.update({
       where: { id: otpRecord.id },

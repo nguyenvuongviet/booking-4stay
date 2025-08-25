@@ -52,9 +52,8 @@ export class AuthService {
     const defaultRole = await this.prismaService.roles.findUnique({
       where: { name: 'USER' },
     });
-    if (!defaultRole) {
-      throw new Error('Vai trò mặc định không tìm thấy');
-    }
+
+    if (!defaultRole) throw new Error('Vai trò mặc định không tìm thấy');
 
     const userNew = await this.prismaService.users.create({
       data: {
@@ -79,21 +78,43 @@ export class AuthService {
     };
   }
 
-  async verifyOtp(verifyOtpDto: VerifyOtpDto) {
+  async activateAccount(verifyOtpDto: VerifyOtpDto) {
     const { email } = verifyOtpDto;
 
-    const verify = await this.otpService.verifyOtp(verifyOtpDto);
-
-    if (!verify) {
-      throw new BadRequestException('OTP không hợp lệ hoặc hết hạn!');
-    }
-    await this.prismaService.users.update({
-      where: { email },
-      data: {
-        isActive: true,
-        isVerified: true,
-      },
+    const verify = await this.otpService.verifyOtp({
+      ...verifyOtpDto,
+      type: 'REGISTER',
     });
+
+    if (!verify)
+      throw new BadRequestException('OTP không hợp lệ hoặc hết hạn!');
+
+    const userExist = await this.prismaService.users.findUnique({
+      where: { email },
+    });
+    if (!userExist || userExist.isDeleted) {
+      throw new BadRequestException('Tài khoản không tìm thấy!');
+    }
+
+    await this.prismaService.$transaction([
+      this.prismaService.users.update({
+        where: { email },
+        data: {
+          isActive: true,
+          isVerified: true,
+          updatedAt: new Date(),
+        },
+      }),
+      this.prismaService.loyalty_program.create({
+        data: {
+          userId: userExist.id,
+          totalBookings: 0,
+          totalNights: 0,
+          points: 0,
+          level: 'BRONZE',
+        },
+      }),
+    ]);
 
     return { message: 'Tài khoản của bạn đã kích hoạt!' };
   }
@@ -116,9 +137,8 @@ export class AuthService {
 
     const isPassword = bcrypt.compareSync(password, userExist.password);
 
-    if (!isPassword) {
+    if (!isPassword)
       throw new BadRequestException('Email hoặc mật khẩu không chính xác.');
-    }
 
     const tokens = this.tokenService.createTokens(userExist.id);
     return tokens;
@@ -146,9 +166,8 @@ export class AuthService {
       },
     ) as { userId: number };
 
-    if (decodeRefreshToken.userId !== decodeAccessToken.userId) {
+    if (decodeRefreshToken.userId !== decodeAccessToken.userId)
       throw new UnauthorizedException(`Token không hợp lệ`);
-    }
 
     const tokens = this.tokenService.createTokens(decodeRefreshToken.userId);
 
@@ -160,9 +179,7 @@ export class AuthService {
       where: { email },
     });
 
-    if (!userExist) {
-      throw new BadRequestException('Tài khoản không tìm thấy!');
-    }
+    if (!userExist) throw new BadRequestException('Tài khoản không tìm thấy!');
 
     await this.otpService.createOtp(
       userExist.email,
@@ -184,9 +201,7 @@ export class AuthService {
 
     const verify = await this.otpService.verifyOtp(verifyOtpDto);
 
-    if (!verify) {
-      throw new BadRequestException('OTP không hợp lệ!');
-    }
+    if (!verify) throw new BadRequestException('OTP không hợp lệ!');
 
     const salt = await bcrypt.genSalt(10);
     const hashPassword = await bcrypt.hash(newPassword, salt);
