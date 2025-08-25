@@ -53,6 +53,7 @@ export class OtpService {
 
     return {
       success: true,
+      message: 'OTP hợp lệ!',
     };
   }
 }

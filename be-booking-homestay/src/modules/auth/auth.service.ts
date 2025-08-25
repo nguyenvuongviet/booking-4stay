@@ -79,10 +79,14 @@ export class AuthService {
     };
   }
 
+  async verifyOtp(verifyOtpDto: VerifyOtpDto) {
+    return await this.otpService.verifyOtp(verifyOtpDto);
+  }
+
   async activateAccount(verifyOtpDto: VerifyOtpDto) {
     const { email } = verifyOtpDto;
 
-    const verify = await this.otpService.verifyOtp(verifyOtpDto);
+    const verify = this.verifyOtp(verifyOtpDto);
 
     if (!verify)
       throw new BadRequestException('OTP không hợp lệ hoặc hết hạn!');
@@ -190,16 +194,13 @@ export class AuthService {
   }
 
   async resetPassword(resetPasswordDto: ResetPasswordDto) {
-    const { email, otp, newPassword } = resetPasswordDto;
+    const { email, newPassword } = resetPasswordDto;
 
-    const verifyOtpDto: VerifyOtpDto = {
-      email: email,
-      otp: otp,
-    };
+    const userExist = await this.prismaService.users.findUnique({
+      where: { email },
+    });
 
-    const verify = await this.otpService.verifyOtp(verifyOtpDto);
-
-    if (!verify) throw new BadRequestException('OTP không hợp lệ!');
+    if (!userExist) throw new BadRequestException('Tài khoản không tìm thấy!');
 
     const salt = await bcrypt.genSalt(10);
     const hashPassword = await bcrypt.hash(newPassword, salt);
