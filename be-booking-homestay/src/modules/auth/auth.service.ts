@@ -18,6 +18,7 @@ import {
 } from 'src/common/constant/app.constant';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { ResetPasswordDto } from './dto/reset-password';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
 
 @Injectable()
 export class AuthService {
@@ -81,10 +82,7 @@ export class AuthService {
   async activateAccount(verifyOtpDto: VerifyOtpDto) {
     const { email } = verifyOtpDto;
 
-    const verify = await this.otpService.verifyOtp({
-      ...verifyOtpDto,
-      type: 'REGISTER',
-    });
+    const verify = await this.otpService.verifyOtp(verifyOtpDto);
 
     if (!verify)
       throw new BadRequestException('OTP không hợp lệ hoặc hết hạn!');
@@ -174,7 +172,8 @@ export class AuthService {
     return tokens;
   }
 
-  async forgotPassword(email: string) {
+  async forgotPassword(forgotPasswordDto: ForgotPasswordDto) {
+    const { email } = forgotPasswordDto;
     const userExist = await this.prismaService.users.findUnique({
       where: { email },
     });
@@ -196,7 +195,6 @@ export class AuthService {
     const verifyOtpDto: VerifyOtpDto = {
       email: email,
       otp: otp,
-      type: 'FORGOT_PASSWORD',
     };
 
     const verify = await this.otpService.verifyOtp(verifyOtpDto);

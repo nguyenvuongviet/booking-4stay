@@ -8,19 +8,18 @@ datasource db {
 }
 
 model otp_codes {
-  id        Int            @id @default(autoincrement())
+  id        Int       @id @default(autoincrement())
   userId    Int?
-  email     String         @db.VarChar(255)
-  otp       String         @db.VarChar(10)
-  type      otp_codes_type
-  expiresAt DateTime       @db.Timestamp(0)
-  isUsed    Boolean        @default(false)
-  deletedBy Int            @default(0)
-  isDeleted Boolean        @default(false)
-  deletedAt DateTime?      @db.Timestamp(0)
-  createdAt DateTime       @default(now()) @db.Timestamp(0)
-  updatedAt DateTime       @default(now()) @db.Timestamp(0)
-  users     users?         @relation(fields: [userId], references: [id], onUpdate: NoAction, map: "otp_codes_ibfk_1")
+  email     String    @db.VarChar(255)
+  otp       String    @db.VarChar(10)
+  expiresAt DateTime  @db.Timestamp(0)
+  isUsed    Boolean   @default(false)
+  deletedBy Int       @default(0)
+  isDeleted Boolean   @default(false)
+  deletedAt DateTime? @db.Timestamp(0)
+  createdAt DateTime  @default(now()) @db.Timestamp(0)
+  updatedAt DateTime  @default(now()) @db.Timestamp(0)
+  users     users?    @relation(fields: [userId], references: [id], onUpdate: NoAction, map: "otp_codes_ibfk_1")
 
   @@index([userId], map: "userId")
 }
@@ -77,11 +76,6 @@ model loyalty_program {
   createdAt       DateTime              @default(now()) @db.Timestamp(0)
   updatedAt       DateTime              @default(now()) @db.Timestamp(0)
   users           users                 @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "loyalty_program_ibfk_1")
-}
-
-enum otp_codes_type {
-  REGISTER
-  FORGOT_PASSWORD
 }
 
 enum users_gender {

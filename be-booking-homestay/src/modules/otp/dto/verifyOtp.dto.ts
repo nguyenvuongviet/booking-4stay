@@ -17,9 +17,4 @@ export class VerifyOtpDto {
   @IsString()
   @IsNotEmpty()
   otp: string;
-
-  @ApiProperty({ example: 'REGISTER', enum: ['REGISTER', 'FORGOT_PASSWORD'] })
-  @IsString()
-  @IsNotEmpty()
-  type: 'REGISTER' | 'FORGOT_PASSWORD';
 }

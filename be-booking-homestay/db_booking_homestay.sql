@@ -72,7 +72,6 @@ CREATE TABLE `otp_codes` (
     `userId` INT NULL, -- null nếu user chưa tồn tại
     `email` VARCHAR(255) NOT NULL,
     `otp` VARCHAR(10) NOT NULL,
-    `type` ENUM('REGISTER', 'FORGOT_PASSWORD') NOT NULL,
     `expiresAt` TIMESTAMP NOT NULL,
     `isUsed` TINYINT(1) NOT NULL DEFAULT 0,
 

@@ -18,26 +18,13 @@ export class OtpService {
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
 
-    if (type === 'FORGOT_PASSWORD') {
-      const existingOtp = await this.prismaService.otp_codes.findFirst({
-        where: { email },
-      });
+    await this.prismaService.otp_codes.deleteMany({
+      where: { email },
+    });
 
-      if (existingOtp) {
-        await this.prismaService.otp_codes.update({
-          where: { id: existingOtp.id },
-          data: { type, otp, expiresAt, isUsed: false },
-        });
-      } else {
-        await this.prismaService.otp_codes.create({
-          data: { userId, email, otp, type, expiresAt },
-        });
-      }
-    } else {
-      await this.prismaService.otp_codes.create({
-        data: { userId, email, otp, type, expiresAt },
-      });
-    }
+    await this.prismaService.otp_codes.create({
+      data: { userId, email, otp, expiresAt },
+    });
 
     await this.mailService.sendOtpMail(email, otp, type);
 
@@ -45,13 +32,12 @@ export class OtpService {
   }
 
   async verifyOtp(verifyOtpDto: VerifyOtpDto) {
-    const { email, otp, type } = verifyOtpDto;
+    const { email, otp } = verifyOtpDto;
 
     const otpRecord = await this.prismaService.otp_codes.findFirst({
       where: {
         email,
         otp,
-        type,
         isUsed: false,
         expiresAt: { gt: new Date() },
       },
