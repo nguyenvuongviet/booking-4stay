@@ -27,6 +27,12 @@ export class AuthController {
   }
 
   @Public()
+  @Post('activate-account')
+  async activateAccount(@Body() verifyOtpDto: VerifyOtpDto) {
+    return await this.authService.activateAccount(verifyOtpDto);
+  }
+
+  @Public()
   @Post('login')
   async login(@Body() loginAuthDto: LoginDto) {
     console.log({ loginAuthDto });
@@ -52,7 +58,7 @@ export class AuthController {
   @Public()
   @Post('forgot-password')
   async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
-    return await this.authService.forgotPassword(forgotPasswordDto.email);
+    return await this.authService.forgotPassword(forgotPasswordDto);
   }
 
   @Public()

@@ -47,12 +47,31 @@ CREATE TABLE `users` (
     `updatedAt` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
+CREATE TABLE `loyalty_program` (
+    `id` INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
+    
+    `userId` INT NOT NULL UNIQUE,
+    FOREIGN KEY (`userId`) REFERENCES `users`(`id`) ON DELETE CASCADE,
+
+    `totalBookings` INT NOT NULL DEFAULT 0,      
+    `totalNights` INT NOT NULL DEFAULT 0,        
+    `points` INT NOT NULL DEFAULT 0,             
+    
+    `level` ENUM('BRONZE', 'SILVER', 'GOLD', 'PLATINUM') 
+        NOT NULL DEFAULT 'BRONZE',
+
+    `lastUpgradeDate` TIMESTAMP NULL DEFAULT NULL,
+
+    `createdAt` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updatedAt` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+
 CREATE TABLE `otp_codes` (
     `id` INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
     `userId` INT NULL, -- null nếu user chưa tồn tại
     `email` VARCHAR(255) NOT NULL,
     `otp` VARCHAR(10) NOT NULL,
-    `type` ENUM('REGISTER', 'FORGOT_PASSWORD') NOT NULL,
     `expiresAt` TIMESTAMP NOT NULL,
     `isUsed` TINYINT(1) NOT NULL DEFAULT 0,
 
