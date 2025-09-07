@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,6 +22,11 @@ export default function ForgotPasswordModal({
   const [emailInput, setEmailInput] = useState("");
 
   const { setEmail } = useAuth(); // lấy từ context
+
+  useEffect(() => {
+    setEmailInput("");
+    setError("");
+  }, [show]);
 
   if (!show) return null;
 
@@ -91,7 +96,10 @@ export default function ForgotPasswordModal({
                 {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
               </div>
 
-              <Button className="w-full bg-[#3f9bda] hover:bg-[#2980b9] text-white py-3" onClick = {handleContinue}>
+              <Button
+                className="w-full bg-[#3f9bda] hover:bg-[#2980b9] text-white py-3"
+                onClick={handleContinue}
+              >
                 Send OTP
               </Button>
             </form>

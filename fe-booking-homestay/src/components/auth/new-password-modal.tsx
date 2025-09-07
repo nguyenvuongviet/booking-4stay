@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Eye, EyeOff, X } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface NewPasswordModalProps {
   show: boolean;
@@ -16,7 +16,46 @@ export default function NewPasswordModal({
   setShow,
 }: NewPasswordModalProps) {
   const [showPassword, setShowPassword] = useState(false);
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [confirmPasswordError, setConfirmPasswordError] = useState("");
+
+  useEffect(() => {
+    setPassword("");
+    setConfirmPassword("");
+    setPasswordError("");
+    setConfirmPasswordError("");
+    setShowPassword(false);
+  }, [show]);
+
   if (!show) return null;
+
+  const handleCreatePassword = (e: React.FormEvent) => {
+    e.preventDefault();
+    let hasError = false;
+
+    if (!password) {
+      setPasswordError("Please enter your password!");
+      hasError = true;
+    } else if (password.length < 6) {
+      setPasswordError("Password must be at least 6 characters!");
+      hasError = true;
+    } else setPasswordError("");
+    if (!confirmPassword) {
+      setConfirmPasswordError("Please confirm your password!");
+      hasError = true;
+    } else if (password !== confirmPassword) {
+      setConfirmPasswordError("Passwords do not match!");
+      hasError = true;
+    } else setConfirmPasswordError("");
+    if (hasError) return;
+
+    // Gọi API tạo mật khẩu mới ở đây
+
+    setShow(false);
+  };
+
   return (
     <>
       {/* New Password Modal */}
@@ -35,7 +74,7 @@ export default function NewPasswordModal({
               </button>
             </div>
 
-            <form className="space-y-4">
+            <form className="space-y-4" onSubmit={handleCreatePassword}>
               <div className="grid grid-cols-1 gap-4">
                 <div>
                   <Label
@@ -46,9 +85,14 @@ export default function NewPasswordModal({
                   </Label>
                   <div className="relative">
                     <Input
-                      id="signupPassword"
+                      id="password"
                       type={showPassword ? "text" : "password"}
                       className="mt-1 border-[#d0d5dd] focus:border-[#3f9bda] focus:ring-[#3f9bda] pr-10"
+                      value={password}
+                      onChange={(e) => {
+                        setPassword(e.target.value);
+                        if (passwordError) setPasswordError("");
+                      }}
                     />
                     <button
                       type="button"
@@ -58,6 +102,9 @@ export default function NewPasswordModal({
                       {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                     </button>
                   </div>
+                  {passwordError && (
+                    <p className="text-red-500 text-sm mb-1">{passwordError}</p>
+                  )}
                 </div>
                 <div>
                   <Label
@@ -71,8 +118,18 @@ export default function NewPasswordModal({
                       id="confirmPassword"
                       type="password"
                       className="mt-1 border-[#d0d5dd] focus:border-[#3f9bda] focus:ring-[#3f9bda] pr-10"
+                      value={confirmPassword}
+                      onChange={(e) => {
+                        setConfirmPassword(e.target.value);
+                        if (confirmPasswordError) setConfirmPasswordError("");
+                      }}
                     />
                   </div>
+                   {confirmPasswordError && (
+                    <p className="text-red-500 text-sm mb-1">
+                      {confirmPasswordError}
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -83,9 +140,7 @@ export default function NewPasswordModal({
 
               <Button
                 className="w-full bg-[#3f9bda] hover:bg-[#2980b9] text-white py-3"
-                onClick={() => {
-                  setShow(false);
-                }}
+
               >
                 Sign in
               </Button>

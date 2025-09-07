@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/context/auth-context";
 
 interface OTPModalsProps {
@@ -22,10 +22,16 @@ export default function OTPModals({
   const [error, setError] = useState("");
   const { email } = useAuth(); // lấy email từ context
 
+  useEffect(() => {
+    setOtpValues(["", "", "", "", "", ""]);
+    setError("");
+  }, [show]);
+  
   if (!show) return null;
 
   const handleVerify = () => {
     const otpCode = otpValues.join("");
+
     if (otpCode.length < 6) {
       setError("Vui lòng nhập đầy đủ 6 ký tự OTP");
       return;
@@ -95,7 +101,16 @@ export default function OTPModals({
                   value={value}
                   onChange={(e) => handleOtpChange(index, e.target.value)}
                   className="w-12 h-12 text-center text-xl font-semibold border border-[#d0d5dd] rounded-lg focus:border-[#3f9bda] focus:ring-1 focus:ring-[#3f9bda] focus:outline-none"
-                  onKeyDown={(e) => e.key === "Enter" && handleVerify()} //Nhan Enter de verify
+                  onKeyDown={(e) => {
+                    //Nhan Enter de verify
+                    if (e.key === "Enter") handleVerify();
+                    if (e.key === "Backspace" &&!otpValues[index] && index > 0) {
+                      const prevInput = document.getElementById(
+                        `otp-${index - 1}`
+                      );
+                      prevInput?.focus();
+                    }
+                  }} 
                 />
               ))}
             </div>

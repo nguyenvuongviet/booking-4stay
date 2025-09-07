@@ -3,9 +3,9 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Eye, EyeOff, X } from "lucide-react";
-import { useState } from "react";
 import { useAuth } from "@/context/auth-context";
+import { Eye, EyeOff, X } from "lucide-react";
+import { useEffect, useState } from "react";
 
 interface SignUpModalProps {
   show: boolean;
@@ -21,6 +21,14 @@ export default function SignUpModal({
   switchToOTP,
 }: SignUpModalProps) {
   const [showPassword, setShowPassword] = useState(false);
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [confirmPasswordError, setConfirmPasswordError] = useState("");
+  const [phoneError, setPhoneError] = useState("");
+  const [firstNameError, setFirstNameError] = useState("");
+  const [lastNameError, setLastNameError] = useState("");
 
   //local state
   const [firstName, setFirstName] = useState("");
@@ -30,13 +38,67 @@ export default function SignUpModal({
 
   const { setEmail } = useAuth(); // lấy từ context
 
+  useEffect(() => {
+    setFirstName("");
+    setLastName("");
+    setEmailInput("");
+    setPhone("");
+    setPassword("");
+    setConfirmPassword("");
+    setEmailError("");
+    setPasswordError("");
+    setConfirmPasswordError("");
+    setPhoneError("");
+    setFirstNameError("");
+    setLastNameError("");
+    setShowPassword(false);
+  }, [show]);
+
+  if (!show) return null;
+
+  const validateEmail = (email: string) => {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(email);
+  };
+
   const handleSignUp = (e: React.FormEvent) => {
     e.preventDefault();
+    let hasError = false;
 
-    if (!emailInput) {
-      alert("Please enter your email!");
-      return;
-    }
+    if (!firstName.trim()) {
+      setFirstNameError("Please enter your first name!");
+      hasError = true;
+    } else setFirstNameError("");
+    if (!lastName.trim()) {
+      setLastNameError("Please enter your last name!");
+      hasError = true;
+    } else setLastNameError("");
+    if (!phone.trim()) {
+      setPhoneError("Please enter your phone number!");
+      hasError = true;
+    } else setPhoneError("");
+    if (!password) {
+      setPasswordError("Please enter your password!");
+      hasError = true;
+    } else if (password.length < 6) {
+      setPasswordError("Password must be at least 6 characters!");
+      hasError = true;
+    } else setPasswordError("");
+    if (!confirmPassword) {
+      setConfirmPasswordError("Please confirm your password!");
+      hasError = true;
+    } else if (password !== confirmPassword) {
+      setConfirmPasswordError("Passwords do not match!");
+      hasError = true;
+    } else setConfirmPasswordError("");
+    if (!emailInput.trim()) {
+      setEmailError("Please enter your email!");
+      hasError = true;
+    } else if (!validateEmail(emailInput.trim())) {
+      setEmailError("Please enter a valid email!");
+      hasError = true;
+    } else setEmailError("");
+    if (hasError) return;
 
     // lưu email vào context để OTPModal có thể dùng
     setEmail(emailInput);
@@ -61,8 +123,8 @@ export default function SignUpModal({
               </button>
             </div>
 
-            <form className="space-y-4" onSubmit={handleSignUp}>
-              <div className="grid grid-cols-2 gap-4">
+            <form className="space-y-1" onSubmit={handleSignUp}>
+              <div className="grid grid-cols-2 gap-2">
                 <div>
                   <Label
                     htmlFor="firstName"
@@ -76,7 +138,13 @@ export default function SignUpModal({
                     value={firstName}
                     onChange={(e) => setFirstName(e.target.value)}
                   />
+                  {firstNameError && (
+                    <p className="text-red-500 text-sm mb-1">
+                      {firstNameError}
+                    </p>
+                  )}
                 </div>
+
                 <div>
                   <Label
                     htmlFor="lastName"
@@ -90,6 +158,9 @@ export default function SignUpModal({
                     value={lastName}
                     onChange={(e) => setLastName(e.target.value)}
                   />
+                  {lastNameError && (
+                    <p className="text-red-500 text-sm mb-1">{lastNameError}</p>
+                  )}
                 </div>
               </div>
 
@@ -108,6 +179,9 @@ export default function SignUpModal({
                   onChange={(e) => setEmailInput(e.target.value)}
                 />
               </div>
+              {emailError && (
+                <p className="text-red-500 text-sm mb-2">{emailError}</p>
+              )}
 
               <div>
                 <Label
@@ -124,8 +198,11 @@ export default function SignUpModal({
                   onChange={(e) => setPhone(e.target.value)}
                 />
               </div>
+              {phoneError && (
+                <p className="text-red-500 text-sm mb-2">{phoneError}</p>
+              )}
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-2">
                 <div>
                   <Label
                     htmlFor="signupPassword"
@@ -138,6 +215,11 @@ export default function SignUpModal({
                       id="signupPassword"
                       type={showPassword ? "text" : "password"}
                       className="mt-1 border-[#d0d5dd] focus:border-[#3f9bda] focus:ring-[#3f9bda] pr-10"
+                      value={password}
+                      onChange={(e) => {
+                        setPassword(e.target.value);
+                        if (passwordError) setPasswordError("");
+                      }}
                     />
                     <button
                       type="button"
@@ -147,7 +229,11 @@ export default function SignUpModal({
                       {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                     </button>
                   </div>
+                  {passwordError && (
+                    <p className="text-red-500 text-sm mb-1">{passwordError}</p>
+                  )}
                 </div>
+
                 <div>
                   <Label
                     htmlFor="confirmPassword"
@@ -155,20 +241,26 @@ export default function SignUpModal({
                   >
                     Confirm your password
                   </Label>
-                  <div className="relative">
-                    <Input
-                      id="confirmPassword"
-                      type="password"
-                      className="mt-1 border-[#d0d5dd] focus:border-[#3f9bda] focus:ring-[#3f9bda] pr-10"
-                    />
-                  </div>
+                  <Input
+                    id="confirmSigupPassword"
+                    type="password"
+                    className="mt-1 border-[#d0d5dd] focus:border-[#3f9bda] focus:ring-[#3f9bda] pr-10"
+                    value={confirmPassword}
+                    onChange={(e) => {
+                      setConfirmPassword(e.target.value);
+                      if (confirmPasswordError) setConfirmPasswordError("");
+                    }}
+                  />
+                  {confirmPasswordError && (
+                    <p className="text-red-500 text-sm mb-1">
+                      {confirmPasswordError}
+                    </p>
+                  )}
                 </div>
+                <p className="text-[#667085] text-xs mb-4">
+                  Use 6 or more characters!
+                </p>
               </div>
-
-              <p className="text-[#667085] text-xs">
-                Use 8 or more characters with a mix of letters, numbers &
-                symbols
-              </p>
 
               <Button
                 className="w-full bg-[#3f9bda] hover:bg-[#2980b9] text-white py-3"
@@ -181,7 +273,7 @@ export default function SignUpModal({
               </Button>
             </form>
 
-            <div className="mt-4 text-center">
+            <div className="mt-2 text-center">
               <span className="text-[#667085] text-sm">
                 Already have an account?{" "}
               </span>
@@ -196,9 +288,9 @@ export default function SignUpModal({
               </button>
             </div>
 
-            <div className="mt-4 text-center text-[#667085] text-sm">OR</div>
+            <div className="mt-2 text-center text-[#667085] text-sm">OR</div>
 
-            <div className="mt-4">
+            <div className="mt-2">
               <Button
                 variant="outline"
                 className="w-full border-[#d0d5dd] text-[#344054] hover:bg-[#f9fafb] flex items-center justify-center gap-2 bg-transparent"

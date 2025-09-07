@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import { X, Eye, EyeOff } from "lucide-react";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useAuth } from "@/context/auth-context";
+import { Eye, EyeOff, X } from "lucide-react";
+import { useEffect, useState } from "react";
 
 interface SignInModalProps {
   show: boolean;
@@ -21,22 +21,44 @@ export default function SignInModal({
   switchToForgotPassword,
 }: SignInModalProps) {
   const [showPassword, setShowPassword] = useState(false);
+  const [password, setPassword] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
 
   //local state
   const [emailInput, setEmailInput] = useState("");
 
   const { setEmail } = useAuth(); // lấy từ context
 
+  useEffect(() => {
+    setEmailInput("");
+    setPassword("");
+    setEmailError("");
+    setPasswordError("");
+  }, [show]);
+
+  if (!show) return null;
+
   const handleSignIn = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!emailInput) {
-      alert("Please enter your email!");
-      return;
-    }
+    let hasError = false;
+
+    if (!emailInput.trim()) {
+      setEmailError("Please enter your email!");
+      hasError = true;
+    } else setEmailError("");
+
+    if (!password) {
+      setPasswordError("Please enter your password!");
+      hasError = true;
+    } else setPasswordError("");
+    if (hasError) return;
 
     // lưu email vào context để OTPModal có thể dùng
-    setEmail(emailInput);
+    setEmail(emailInput.trim());
+
+    //TODO: api
 
     setShow(false);
   };
@@ -73,6 +95,9 @@ export default function SignInModal({
                   onChange={(e) => setEmailInput(e.target.value)}
                 />
               </div>
+              {emailError && (
+                <p className="text-red-500 text-sm mb-4">{emailError}</p>
+              )}
 
               <div>
                 <div className="flex justify-between items-center">
@@ -88,15 +113,20 @@ export default function SignInModal({
                     onClick={() => setShowPassword(!showPassword)}
                   >
                     {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                    Hide
+                    {showPassword ? "Hide" : "Show"}
                   </button>
                 </div>
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
                   className="mt-1 border-[#d0d5dd] focus:border-[#3f9bda] focus:ring-[#3f9bda]"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
+              {passwordError && (
+                <p className="text-red-500 text-sm mb-4">{passwordError}</p>
+              )}
 
               <Button className="w-full bg-[#3f9bda] hover:bg-[#2980b9] text-white py-3">
                 Sign in
@@ -131,6 +161,7 @@ export default function SignInModal({
 
             <div className="mt-6">
               <Button
+                type="button"
                 variant="outline"
                 className="w-full border-[#d0d5dd] text-[#344054] hover:bg-[#f9fafb] flex items-center justify-center gap-2 bg-transparent"
               >
