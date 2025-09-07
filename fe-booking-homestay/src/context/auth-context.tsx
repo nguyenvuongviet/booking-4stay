@@ -5,7 +5,7 @@ import SignInModal from "@/components/auth/signin-modal";
 import SignUpModal from "@/components/auth/signup-modal";
 import ForgotPasswordModal from "@/components/auth/forgot-password-modal";
 import OTPModal from "@/components/auth/otp-modal";
-import NewPasswordModal from "@/components/auth/new-password";
+import NewPasswordModal from "@/components/auth/new-password-modal";
 
 interface AuthContextType {
   openSignIn: () => void;
@@ -64,7 +64,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         closeAll,
         email,
         setEmail,
-        
+        openOTP
       }}
     >
       {children}
