@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Eye, EyeOff, X } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
+import axios from "axios";
 
 interface ForgotPasswordModalProps {
   show: boolean;
@@ -20,12 +21,14 @@ export default function ForgotPasswordModal({
 }: ForgotPasswordModalProps) {
   const [error, setError] = useState("");
   const [emailInput, setEmailInput] = useState("");
-
+  const [apiError, setApiError] = useState("");
+  // const [loading, setLoading] = useState(false);
   const { setEmail } = useAuth(); // lấy từ context
 
   useEffect(() => {
     setEmailInput("");
     setError("");
+    setApiError("");
   }, [show]);
 
   if (!show) return null;
@@ -36,7 +39,7 @@ export default function ForgotPasswordModal({
     return re.test(email);
   };
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (!emailInput) {
       setError("Vui lòng nhập email trước khi tiếp tục");
       return;
@@ -45,11 +48,28 @@ export default function ForgotPasswordModal({
       setError("Email không hợp lệ. Vui lòng nhập đúng định dạng.");
       return;
     }
-
-    setEmail(emailInput);
-    setError("");
-    setShow(false); // đóng modal forgot password
-    switchToOTP(true); // mở modal OTP
+    setApiError("");
+    // setLoading(true);
+    try {
+      const { data } = await axios.post(
+        "http://localhost:3069/auth/forgot-password",
+        {
+          email: emailInput.trim(),
+        }
+      );
+      setEmail(emailInput);
+      setError("");
+      setShow(false); // đóng modal forgot password
+      switchToOTP(true); // mở modal OTP
+    } catch (error: any) {
+      if (error.response) {
+        setApiError(error.response.data.message || "Sign up failed!");
+      } else {
+        setApiError("Something went wrong. Please try again.");
+      }
+    } finally {
+      // setLoading(false);
+    }
   };
 
   return (
@@ -95,7 +115,9 @@ export default function ForgotPasswordModal({
                 />
                 {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
               </div>
-
+              {apiError && (
+                <p className="text-red-500 text-sm mb-4">{apiError}</p>
+              )}
               <Button
                 className="w-full bg-[#3f9bda] hover:bg-[#2980b9] text-white py-3"
                 onClick={handleContinue}

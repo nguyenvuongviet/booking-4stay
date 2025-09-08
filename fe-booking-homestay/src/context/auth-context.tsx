@@ -15,6 +15,8 @@ interface AuthContextType {
   closeAll: () => void;
   email: string;
   setEmail: (email: string) => void;
+  otp: string;
+  setOtp: (otp: string) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -26,6 +28,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [showOTP, setShowOTP] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [email, setEmail] = useState("");
+  const [otp, setOtp] = useState("");
+  const [otpContext, setOtpContext] = useState<"signup" | "forgotPassword">(
+    "signup"
+  );
 
   const closeAll = () => {
     setShowSignIn(false);
@@ -64,7 +70,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         closeAll,
         email,
         setEmail,
-        openOTP
+        openOTP,
+        otp,
+        setOtp,
       }}
     >
       {children}
@@ -82,6 +90,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setShow={setShowSignUp}
         switchToSignIn={openSignIn}
         switchToOTP={() => {
+          setOtpContext("signup");
           closeAll();
           setShowOTP(true);
         }}
@@ -91,6 +100,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         show={showForgotPassword}
         setShow={setShowForgotPassword}
         switchToOTP={() => {
+          setOtpContext("forgotPassword");
           closeAll();
           setShowOTP(true);
         }}
@@ -99,10 +109,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       <OTPModal
         show={showOTP}
         setShow={setShowOTP}
-        context="forgotPassword"
+        context={otpContext}
         onSuccess={() => {
-          closeAll();
-          setShowNewPassword(true);
+          if (otpContext === "forgotPassword") {
+            closeAll();
+            setShowNewPassword(true);
+          }
         }}
       />
 

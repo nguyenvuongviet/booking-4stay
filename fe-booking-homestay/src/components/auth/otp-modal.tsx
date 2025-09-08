@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/auth-context";
+import axios from "axios";
 
 interface OTPModalsProps {
   show: boolean;
@@ -20,17 +21,24 @@ export default function OTPModals({
 }: OTPModalsProps) {
   const [otpValues, setOtpValues] = useState(["", "", "", "", "", ""]);
   const [error, setError] = useState("");
-  const { email } = useAuth(); // lấy email từ context
+  const [apiError, setApiError] = useState("");
+  const { email } = useAuth();
+  const { setOtp } = useAuth();
+  // const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     setOtpValues(["", "", "", "", "", ""]);
     setError("");
+    setApiError("");
   }, [show]);
-  
+
   if (!show) return null;
 
-  const handleVerify = () => {
+  const handleVerify = async () => {
     const otpCode = otpValues.join("");
+    const firstInput = document.getElementById("otp-0");
+
+    setApiError("");
 
     if (otpCode.length < 6) {
       setError("Vui lòng nhập đầy đủ 6 ký tự OTP");
@@ -41,13 +49,60 @@ export default function OTPModals({
     // gọi API verify OTP ở đây
     console.log("Xác thực OTP:", otpCode, "cho email:", email);
 
-    if (context === "signup") {
-      // OTP cho đăng ký
-      alert("Sign up success!");
-      onSuccess(); // hoặc setShow(false)
-    } else if (context === "forgotPassword") {
-      // OTP cho quên mật khẩu
-      onSuccess(); // mở NewPasswordModal
+    // setLoading(true);
+    try {
+      if (context === "signup") {
+        // alert("Sign up success!");
+        try {
+          const { data } = await axios.post(
+            "http://localhost:3069/auth/activate-account",
+            {
+              email: email.trim(),
+              otp: otpCode,
+            }
+          );
+          setOtp(otpCode);
+          setShow(false);
+        } catch (error: any) {
+          setApiError(error.response?.data?.message || "Fail!");
+          setOtpValues(["", "", "", "", "", ""]);
+          const firstInput = document.getElementById("otp-0");
+          firstInput?.focus();
+        }
+      } else if (context === "forgotPassword") {
+        try {
+          const { data } = await axios.post(
+            "http://localhost:3069/auth/verify-otp",
+            {
+              email: email.trim(),
+              otp: otpCode,
+            }
+          );
+          setOtp(otpCode);
+          setShow(false);
+          onSuccess(); // mở NewPasswordModal
+        } catch (error: any) {
+          setApiError(error.response?.data?.message || "Fail!");
+          setOtpValues(["", "", "", "", "", ""]);
+          const firstInput = document.getElementById("otp-0");
+          firstInput?.focus();
+        }
+      }
+    } catch (error: any) {
+      if (error.response?.status === 400) {
+        setApiError(
+          error.response.data.message || "OTP không hợp lệ hoặc hết hạn!"
+        );
+        // reset ô nhập OTP để nhập lại
+        setOtpValues(["", "", "", "", "", ""]);
+        // focus input đầu tiên
+        const firstInput = document.getElementById("otp-0");
+        firstInput?.focus();
+      } else {
+        setApiError("Đã có lỗi xảy ra. Vui lòng thử lại.");
+      }
+    } finally {
+      // setLoading(false);
     }
   };
 
@@ -56,12 +111,41 @@ export default function OTPModals({
       const newOtpValues = [...otpValues];
       newOtpValues[index] = value;
       setOtpValues(newOtpValues);
+      if (apiError) setApiError("");
 
       // Auto-focus next input
       if (value && index < 5) {
         const nextInput = document.getElementById(`otp-${index + 1}`);
         nextInput?.focus();
       }
+    }
+  };
+
+  const handleResendOtp = async () => {
+    if (!email) return;
+
+    // setLoading(true);
+    setApiError("");
+    try {
+      const { data } = await axios.post(
+        "http://localhost:3069/auth/forgot-password",
+        { email: email.trim() }
+      );
+    } catch (error: any) {
+      if (error.response?.status === 400) {
+        setApiError(
+          error.response.data.message || "OTP không hợp lệ hoặc hết hạn!"
+        );
+        // reset ô nhập OTP để nhập lại
+        setOtpValues(["", "", "", "", "", ""]);
+        // focus input đầu tiên
+        const firstInput = document.getElementById("otp-0");
+        firstInput?.focus();
+      } else {
+        setApiError("Đã có lỗi xảy ra. Vui lòng thử lại.");
+      }
+    } finally {
+      // setLoading(false);
     }
   };
 
@@ -85,7 +169,9 @@ export default function OTPModals({
                 <X size={24} />
               </button>
             </div>
-
+            {apiError && (
+              <p className="text-red-500 text-sm mb-4">{apiError}</p>
+            )}
             <p className="text-[#667085] text-sm mb-6">
               We have sent a OTP to {""}
               <span className="font-semibold text-[#3f9bda]">{email}</span>
@@ -104,13 +190,17 @@ export default function OTPModals({
                   onKeyDown={(e) => {
                     //Nhan Enter de verify
                     if (e.key === "Enter") handleVerify();
-                    if (e.key === "Backspace" &&!otpValues[index] && index > 0) {
+                    if (
+                      e.key === "Backspace" &&
+                      !otpValues[index] &&
+                      index > 0
+                    ) {
                       const prevInput = document.getElementById(
                         `otp-${index - 1}`
                       );
                       prevInput?.focus();
                     }
-                  }} 
+                  }}
                 />
               ))}
             </div>
@@ -127,8 +217,13 @@ export default function OTPModals({
               <span className="text-[#667085] text-sm">
                 Didn't receive code?{" "}
               </span>
-              <button className="text-[#3f9bda] text-sm font-medium hover:underline">
+              <button
+                className="text-[#3f9bda] text-sm font-medium hover:underline"
+                onClick={handleResendOtp}
+                // disabled={loading}
+              >
                 Resend OTP
+                {/* {loading ? "Resending..." : "Resend OTP"} */}
               </button>
             </div>
           </div>

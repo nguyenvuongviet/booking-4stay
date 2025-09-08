@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/context/auth-context";
 import { Eye, EyeOff, X } from "lucide-react";
 import { useEffect, useState } from "react";
+import axios from "axios";
 
 interface SignInModalProps {
   show: boolean;
@@ -24,6 +25,8 @@ export default function SignInModal({
   const [password, setPassword] = useState("");
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
+  const [apiError, setApiError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   //local state
   const [emailInput, setEmailInput] = useState("");
@@ -35,13 +38,14 @@ export default function SignInModal({
     setPassword("");
     setEmailError("");
     setPasswordError("");
+    setApiError("");
   }, [show]);
 
   if (!show) return null;
 
-  const handleSignIn = (e: React.FormEvent) => {
+  const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
-
+    setApiError("");
     let hasError = false;
 
     if (!emailInput.trim()) {
@@ -55,12 +59,32 @@ export default function SignInModal({
     } else setPasswordError("");
     if (hasError) return;
 
-    // lưu email vào context để OTPModal có thể dùng
-    setEmail(emailInput.trim());
+    setLoading(true);
 
-    //TODO: api
+    try {
+      const { data } = await axios.post("http://localhost:3069/auth/login", {
+        email: emailInput.trim(),
+        password,
+      });
+      console.log("API response:", data);
+      // lưu email vào context để OTPModal có thể dùng
+      setEmail(emailInput.trim());
+      localStorage.setItem("token", data.token);
+      setShow(false);
+    } catch (error: any) {
+      if (error.response) {
+        setApiError(error.response.data.message || "Sign in failed!");
+      } else {
+        setApiError("Something went wrong. Please try again.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    setShow(false);
+  const handleSocialSignIn = (provider: "google") => {
+    // Chuyển hướng tới backend OAuth endpoint
+    window.location.href = `http://localhost:3069/auth/${provider}`;
   };
 
   return (
@@ -79,7 +103,11 @@ export default function SignInModal({
               </button>
             </div>
 
-            <form className="space-y-4" onSubmit={handleSignIn}>
+            {apiError && (
+              <p className="text-red-500 text-sm mt-2">{apiError}</p>
+            )}
+
+            <form className="space-y-4 mt-2" onSubmit={handleSignIn}>
               <div>
                 <Label
                   htmlFor="email"
@@ -128,25 +156,31 @@ export default function SignInModal({
                 <p className="text-red-500 text-sm mb-4">{passwordError}</p>
               )}
 
-              <Button className="w-full bg-[#3f9bda] hover:bg-[#2980b9] text-white py-3">
-                Sign in
+              <Button
+                className="w-full bg-[#3f9bda] hover:bg-[#2980b9] text-white py-3"
+                type="submit"
+                disabled={loading}
+              >
+                {loading ? "Signing in..." : "Sign in"}
               </Button>
             </form>
 
-            <div className="mt-4 text-center">
-              <span className="text-[#667085] text-sm">
-                Don't have an account?{" "}
-              </span>
-              <button
-                onClick={() => {
-                  setShow(false);
-                  switchToSignUp(true);
-                }}
-                className="text-[#3f9bda] text-sm font-medium hover:underline"
-              >
-                Sign up
-              </button>
-              <div className="mt-2">
+            <div className="mt-4 flex justify-between items-center text-sm">
+              <div>
+                <span className="text-[#667085] text-sm">
+                  Don't have an account?{" "}
+                </span>
+                <button
+                  onClick={() => {
+                    setShow(false);
+                    switchToSignUp(true);
+                  }}
+                  className="text-[#3f9bda] text-sm font-medium hover:underline"
+                >
+                  Sign up
+                </button>
+              </div>
+              <div>
                 <button
                   className="text-[#3f9bda] text-sm hover:underline"
                   onClick={() => {
@@ -159,11 +193,19 @@ export default function SignInModal({
               </div>
             </div>
 
+            <div className="flex items-center mt-6">
+              <div className="flex-grow border-t border-gray-300"></div>
+              <span className="mx-4 text-[#667085] text-sm">OR</span>
+              <div className="flex-grow border-t border-gray-300"></div>
+            </div>
+
             <div className="mt-6">
               <Button
                 type="button"
                 variant="outline"
                 className="w-full border-[#d0d5dd] text-[#344054] hover:bg-[#f9fafb] flex items-center justify-center gap-2 bg-transparent"
+                onClick={() => handleSocialSignIn("google")}
+                disabled={loading}
               >
                 <svg width="18" height="18" viewBox="0 0 24 24">
                   <path

@@ -5,6 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Eye, EyeOff, X } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useAuth } from "@/context/auth-context";
+import axios from "axios";
 
 interface NewPasswordModalProps {
   show: boolean;
@@ -20,6 +22,9 @@ export default function NewPasswordModal({
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [confirmPasswordError, setConfirmPasswordError] = useState("");
+  const [emailInput, setEmailInput] = useState("");
+  const [apiError, setApiError] = useState("");
+  const { email, otp } = useAuth();
 
   useEffect(() => {
     setPassword("");
@@ -27,14 +32,15 @@ export default function NewPasswordModal({
     setPasswordError("");
     setConfirmPasswordError("");
     setShowPassword(false);
+    setApiError("");
   }, [show]);
 
   if (!show) return null;
 
-  const handleCreatePassword = (e: React.FormEvent) => {
+  const handleCreatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     let hasError = false;
-
+    setApiError("");
     if (!password) {
       setPasswordError("Please enter your password!");
       hasError = true;
@@ -52,8 +58,25 @@ export default function NewPasswordModal({
     if (hasError) return;
 
     // Gọi API tạo mật khẩu mới ở đây
-
-    setShow(false);
+    try {
+      const { data } = await axios.post(
+        "http://localhost:3069/auth/reset-password",
+        {
+          email,
+          otp,
+          newPassword: password,
+        }
+      );
+      setShow(false);
+    } catch (error: any) {
+      if (error.response) {
+        setApiError(error.response.data.message);
+      } else {
+        setApiError("Something went wrong. Please try again.");
+      }
+    } finally {
+      // setLoading(false);
+    }
   };
 
   return (
@@ -73,7 +96,9 @@ export default function NewPasswordModal({
                 <X size={24} />
               </button>
             </div>
-
+            {apiError && (
+              <p className="text-red-500 text-sm mb-4">{apiError}</p>
+            )}
             <form className="space-y-4" onSubmit={handleCreatePassword}>
               <div className="grid grid-cols-1 gap-4">
                 <div>
@@ -125,7 +150,7 @@ export default function NewPasswordModal({
                       }}
                     />
                   </div>
-                   {confirmPasswordError && (
+                  {confirmPasswordError && (
                     <p className="text-red-500 text-sm mb-1">
                       {confirmPasswordError}
                     </p>
@@ -134,14 +159,10 @@ export default function NewPasswordModal({
               </div>
 
               <p className="text-[#667085] text-xs">
-                Use 8 or more characters with a mix of letters, numbers &
-                symbols
+                Use 6 or more characters!
               </p>
 
-              <Button
-                className="w-full bg-[#3f9bda] hover:bg-[#2980b9] text-white py-3"
-
-              >
+              <Button className="w-full bg-[#3f9bda] hover:bg-[#2980b9] text-white py-3">
                 Sign in
               </Button>
             </form>

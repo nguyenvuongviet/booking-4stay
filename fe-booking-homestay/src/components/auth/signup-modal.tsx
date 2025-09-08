@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/context/auth-context";
 import { Eye, EyeOff, X } from "lucide-react";
 import { useEffect, useState } from "react";
+import axios from "axios";
 
 interface SignUpModalProps {
   show: boolean;
@@ -29,6 +30,8 @@ export default function SignUpModal({
   const [phoneError, setPhoneError] = useState("");
   const [firstNameError, setFirstNameError] = useState("");
   const [lastNameError, setLastNameError] = useState("");
+  const [apiError, setApiError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   //local state
   const [firstName, setFirstName] = useState("");
@@ -51,6 +54,7 @@ export default function SignUpModal({
     setPhoneError("");
     setFirstNameError("");
     setLastNameError("");
+    setApiError("");
     setShowPassword(false);
   }, [show]);
 
@@ -61,8 +65,9 @@ export default function SignUpModal({
     return re.test(email);
   };
 
-  const handleSignUp = (e: React.FormEvent) => {
+  const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+     console.log("Sign In button clicked");
     let hasError = false;
 
     if (!firstName.trim()) {
@@ -100,11 +105,30 @@ export default function SignUpModal({
     } else setEmailError("");
     if (hasError) return;
 
-    // lưu email vào context để OTPModal có thể dùng
-    setEmail(emailInput);
+    setApiError("");
+    setLoading(true);
 
-    setShow(false);
-    switchToOTP(true);
+    try {
+      const { data } = await axios.post("http://localhost:3069/auth/register", {
+        fullName: firstName.trim() + " " + lastName.trim(),
+        email: emailInput.trim(),
+        password,
+        phoneNumber: phone.trim(),
+      });
+      // lưu email vào context để OTPModal có thể dùng
+      setEmail(emailInput);
+      localStorage.setItem("token", data.token);
+      setShow(false);
+      switchToOTP(true);
+    } catch (error: any) {
+      if (error.response) {
+        setApiError(error.response.data.message || "Sign up failed!");
+      } else {
+        setApiError("Something went wrong. Please try again.");
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -264,12 +288,10 @@ export default function SignUpModal({
 
               <Button
                 className="w-full bg-[#3f9bda] hover:bg-[#2980b9] text-white py-3"
-                // onClick={() => {
-                //   setShow(false);
-                //   switchToOTP(true);
-                // }}
+                type="submit" 
+                disabled={loading} 
               >
-                Sign up
+                {loading ? "Signing up..." : "Sign up"}
               </Button>
             </form>
 
@@ -288,8 +310,11 @@ export default function SignUpModal({
               </button>
             </div>
 
-            <div className="mt-2 text-center text-[#667085] text-sm">OR</div>
-
+            <div className="flex items-center my-4">
+              <div className="flex-grow border-t border-gray-300"></div>
+              <span className="mx-4 text-[#667085] text-sm">OR</span>
+              <div className="flex-grow border-t border-gray-300"></div>
+            </div>
             <div className="mt-2">
               <Button
                 variant="outline"
