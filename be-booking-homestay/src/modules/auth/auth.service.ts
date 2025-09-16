@@ -36,7 +36,7 @@ export class AuthService {
   async register(
     registerDto: RegisterDto,
   ): Promise<{ message: string; user: any }> {
-    const { email, password, phoneNumber, fullName } = registerDto;
+    const { email, password, phoneNumber, firstName, lastName } = registerDto;
 
     if (!this.isValidEmail(email)) {
       throw new BadRequestException('Email không hợp lệ!');
@@ -72,7 +72,8 @@ export class AuthService {
           email,
           password: hashPassword,
           phoneNumber,
-          fullName,
+          firstName,
+          lastName,
           roleId: defaultRole.id,
           isActive: false,
           isVerified: false,

@@ -34,7 +34,8 @@ CREATE TABLE `users` (
     
     `email` VARCHAR(255) NOT NULL UNIQUE,
     `password` VARCHAR(255) NULL, -- có thể null nếu đăng nhập Google
-    `fullName` VARCHAR(255) NOT NULL,
+    `firstName` VARCHAR(255) NOT NULL,
+    `lastName` VARCHAR(255) NOT NULL,
     `phoneNumber` VARCHAR(20) NULL,
     `dateOfBirth` DATE NULL,
     `gender` ENUM('MALE', 'FEMALE', 'OTHER') NULL,
@@ -199,7 +200,7 @@ CREATE TABLE `payments` (
     `id` INT PRIMARY KEY AUTO_INCREMENT,
     `bookingId` INT NOT NULL,
     `amount` DECIMAL(12,2) NOT NULL,
-    `method` ENUM('CASH', 'CREDIT_CARD', 'PAYPAL') NOT NULL,
+    `method` ENUM('CASH', 'CREDIT_CARD', 'PAYPAL', 'ONLINE') NOT NULL,
     `paymentGateway` VARCHAR(50) NULL, -- cổng thanh toán (ví dụ momo, vnpay)   
     `transactionId` VARCHAR(255) NULL, -- mã giao dịch từ gateway
     `status` ENUM('PENDING', 'SUCCESS', 'FAILED') DEFAULT 'PENDING',
