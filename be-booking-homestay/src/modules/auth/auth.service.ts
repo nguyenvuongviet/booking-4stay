@@ -11,7 +11,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { TokenService } from '../token/token.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
-
+import { Validator } from 'src/common/validation';
 import {
   ACCESS_TOKEN_SECRET,
   REFRESH_TOKEN_SECRET,
@@ -19,6 +19,7 @@ import {
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { ResetPasswordDto } from './dto/reset-password';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { sanitizeUserData } from 'src/common/helpers/sanitize-user';
 
 @Injectable()
 export class AuthService {
@@ -28,17 +29,12 @@ export class AuthService {
     private readonly otpService: OtpService,
   ) {}
 
-  private isValidEmail(email: string): boolean {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  }
-
   async register(
     registerDto: RegisterDto,
   ): Promise<{ message: string; user: any }> {
     const { email, password, phoneNumber, firstName, lastName } = registerDto;
 
-    if (!this.isValidEmail(email)) {
+    if (Validator.isValidEmail(email) === false) {
       throw new BadRequestException('Email không hợp lệ!');
     }
 
@@ -81,7 +77,6 @@ export class AuthService {
       });
 
       console.log({ userNew });
-      const { password: _, ...user } = userNew;
 
       this.otpService
         .createOtp(email, userNew.id, 'REGISTER')
@@ -91,7 +86,7 @@ export class AuthService {
 
       return {
         message: 'Đăng ký tài khoản thành công, vui lòng kích hoạt tài khoản!',
-        user,
+        user: sanitizeUserData(userNew),
       };
     } catch (error) {
       throw error instanceof BadRequestException
@@ -118,7 +113,7 @@ export class AuthService {
   ): Promise<{ message: string }> {
     const { email } = verifyOtpDto;
 
-    if (!this.isValidEmail(email)) {
+    if (Validator.isValidEmail(email) === false) {
       throw new BadRequestException('Email không hợp lệ!');
     }
 
@@ -170,13 +165,14 @@ export class AuthService {
   async login(loginAuthDto: LoginDto): Promise<any> {
     const { email, password } = loginAuthDto;
 
-    if (!this.isValidEmail(email)) {
+    if (Validator.isValidEmail(email) === false) {
       throw new BadRequestException('Email không hợp lệ!');
     }
 
     try {
       const userExist = await this.prismaService.users.findUnique({
         where: { email },
+        include: { roles: true, loyalty_program: true },
       });
 
       if (!userExist || !userExist.isActive)
@@ -193,7 +189,7 @@ export class AuthService {
 
       const tokens = this.tokenService.createTokens(userExist.id);
 
-      return { ...tokens, user: { ...userExist, password: undefined } };
+      return { ...tokens, user: sanitizeUserData(userExist) };
     } catch (error) {
       console.log(`Lỗi khi đăng nhập cho ${email}: ${error.message}`);
       throw error instanceof BadRequestException
@@ -203,8 +199,7 @@ export class AuthService {
   }
 
   async getUserInfo(user: any): Promise<any> {
-    const { password, ...userInfo } = user;
-    return userInfo;
+    return sanitizeUserData(user);
   }
 
   async refreshToken(refreshTokenDto: RefreshTokenDto) {
@@ -243,7 +238,7 @@ export class AuthService {
     forgotPasswordDto: ForgotPasswordDto,
   ): Promise<{ message: string }> {
     const { email } = forgotPasswordDto;
-    if (!this.isValidEmail(email)) {
+    if (Validator.isValidEmail(email) === false) {
       throw new BadRequestException('Email không hợp lệ!');
     }
 
@@ -275,7 +270,7 @@ export class AuthService {
     resetPasswordDto: ResetPasswordDto,
   ): Promise<{ message: string }> {
     const { email, newPassword } = resetPasswordDto;
-    if (!this.isValidEmail(email)) {
+    if (Validator.isValidEmail(email) === false) {
       throw new BadRequestException('Email không hợp lệ!');
     }
 

@@ -3,7 +3,6 @@ import {
   ForbiddenException,
   Injectable,
   UnauthorizedException,
-  UseGuards,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { JsonWebTokenError, TokenExpiredError } from '@nestjs/jwt';
@@ -27,9 +26,9 @@ export class ProtectGuard extends AuthGuard('protect') {
     }
     return super.canActivate(context);
   }
- 
+
   handleRequest(err, user, info) {
-    console.log({ err, user, info });
+    // console.log({ err, user, info });
 
     if (err || !user) {
       if (info instanceof TokenExpiredError) {

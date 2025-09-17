@@ -6,10 +6,11 @@ import { PrismaService } from './modules/prisma/prisma.service';
 import { TokenModule } from './modules/token/token.module';
 import { MailModule } from './modules/mail/mail.module';
 import { OtpModule } from './modules/otp/otp.module';
-import { ProtectStrategy } from './modules/auth/protect/protect.strategy';
+import { ProtectStrategy } from './common/guard/protect/protect.strategy';
+import { UserModule } from './modules/user/user.module';
 
 @Module({
-  imports: [AuthModule, TokenModule, MailModule, OtpModule],
+  imports: [AuthModule, TokenModule, MailModule, OtpModule, UserModule],
   controllers: [AppController],
   providers: [AppService, PrismaService, ProtectStrategy],
 })
