@@ -1,5 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
+import * as fs from 'fs';
+import * as path from 'path';
 import { sanitizeUserData } from 'src/common/helpers/sanitize-user';
 import { buildUserWhereClause } from 'src/common/helpers/user-query.helper';
 import { PrismaService } from '../prisma/prisma.service';
@@ -7,11 +9,15 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserAdminDto } from './dto/update-user-admin.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserFilterDto } from './dto/user-filter.dto';
-import { UploadFileDto } from 'src/common/dto/upload-file.dto';
+import { PORT } from 'src/common/constant/app.constant';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
 
 @Injectable()
 export class UserService {
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(
+    private readonly prismaService: PrismaService,
+    private cloudinaryService: CloudinaryService,
+  ) {}
 
   async findAll() {
     const users = await this.prismaService.users.findMany({
@@ -285,7 +291,10 @@ export class UserService {
     return { message: 'Xoá người dùng thành công' };
   }
 
-  async uploadAvatar(id: number, file: UploadFileDto) {
+  async avatarLocal(id: number, file: Express.Multer.File) {
+    if (!file || !file.filename) {
+      throw new BadRequestException('Không có file được upload');
+    }
     const user = await this.prismaService.users.findFirst({
       where: { id, isDeleted: false },
     });
@@ -294,19 +303,51 @@ export class UserService {
       throw new BadRequestException('Người dùng không tồn tại');
     }
 
-    console.log({ file });
+    if (user.avatar) {
+      const oldFilePath = path.join('./', 'public/images/avatar', user.avatar);
+      if (fs.existsSync(oldFilePath)) {
+        fs.unlinkSync(oldFilePath);
+      }
+    }
+    await this.prismaService.users.update({
+      where: { id },
+      data: { avatar: file.filename },
+    });
 
-    // const updatedUser = await this.prismaService.users.update({
-    //   where: { id },
-    //   data: {
-    //     avatar: file.file?.path || user.avatar,
-    //   },
-    //   include: {
-    //     roles: true,
-    //     loyalty_program: true,
-    //   },
-    // });
+    return {
+      message: 'Upload ảnh phòng thành công',
+      filename: file.filename,
+      imgUrl: `http://localhost:${PORT}/public/images/avatar/${file.filename}`,
+    };
+  }
 
-    // return sanitizeUserData(updatedUser);
+  async avatarCloudinary(id: number, file: Express.Multer.File) {
+    if (!file) {
+      throw new BadRequestException('Không có file được upload');
+    }
+
+    const user = await this.prismaService.users.findFirst({
+      where: { id, isDeleted: false },
+    });
+
+    if (!user) throw new BadRequestException('Người dùng không tồn tại');
+
+    if (user.avatar) await this.cloudinaryService.deleteImage(user.avatar);
+
+    const uploadResult: any = await this.cloudinaryService.uploadImage(
+      file.buffer,
+      'avatars',
+    );
+
+    await this.prismaService.users.update({
+      where: { id },
+      data: { avatar: uploadResult.public_id },
+    });
+
+    return {
+      message: 'Upload avatar thành công',
+      filename: uploadResult.public_id,
+      imgUrl: uploadResult.secure_url,
+    };
   }
 }

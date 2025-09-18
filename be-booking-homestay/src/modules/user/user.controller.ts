@@ -8,6 +8,7 @@ import {
   Post,
   Query,
   UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -23,6 +24,8 @@ import { UserFilterDto } from './dto/user-filter.dto';
 import { UserService } from './user.service';
 import { UpdateUserAdminDto } from './dto/update-user-admin.dto';
 import { UploadFileDto } from 'src/common/dto/upload-file.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { uploadLocalConfig } from 'src/config/upload-local.config';
 
 @ApiTags('user')
 @ApiBearerAuth('AccessToken')
@@ -94,15 +97,33 @@ export class UserController {
     return this.userService.delete(+id);
   }
 
-  @Post('/:id/upload-avatar')
-  // @UseInterceptors(uploadConfig('avatar', 2))
+  @Post('/:id/avatar-local')
+  @UseInterceptors(uploadLocalConfig('images', 'avatar', 2))
   @ApiParam({ name: 'id', type: String, description: 'User ID', example: '1' })
   @ApiConsumes('multipart/form-data')
-  @ApiBody({ type: UploadFileDto, description: 'File upload' })
-  async uploadAvatar(
+  @ApiBody({
+    description: 'Upload file',
+    type: UploadFileDto,
+  })
+  async avatarLocal(
     @Param('id') id: string,
-    @UploadedFile() file: UploadFileDto,
+    @UploadedFile() file: Express.Multer.File,
   ) {
-    return await this.userService.uploadAvatar(+id, file);
+    return await this.userService.avatarLocal(+id, file);
+  }
+
+  @Post('/:id/avatar-cloudinary')
+  @UseInterceptors(FileInterceptor('file'))
+  @ApiParam({ name: 'id', type: String, description: 'User ID', example: '1' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    description: 'Upload file',
+    type: UploadFileDto,
+  })
+  async avatarCloudinary(
+    @Param('id') id: string,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    return await this.userService.avatarCloudinary(+id, file);
   }
 }
