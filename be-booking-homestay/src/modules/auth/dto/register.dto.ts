@@ -1,15 +1,16 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsNotEmpty, IsString, Matches } from 'class-validator';
-export enum Gender {
-  MALE = 'male',
-  FEMALE = 'female',
-  OTHER = 'other',
-}
+import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
+
 export class RegisterDto {
-  @ApiProperty({ example: 'Nguyễn Văn A', description: 'Họ tên của bạn' })
-  @IsString({ message: 'Họ tên phải là chuỗi' })
-  @IsNotEmpty({ message: 'Họ tên không được để trống' })
-  fullName: string;
+  @ApiProperty({ example: 'Nguyễn Văn', description: 'Họ của bạn' })
+  @IsString({ message: 'Họ phải là chuỗi' })
+  @IsNotEmpty({ message: 'Họ không được để trống' })
+  firstName: string;
+
+  @ApiProperty({ example: 'An', description: 'Tên của bạn' })
+  @IsString({ message: 'Tên phải là chuỗi' })
+  @IsNotEmpty({ message: 'Tên không được để trống' })
+  lastName: string;
 
   @ApiProperty({
     example: 'nguyenvana123@gmail.com',
