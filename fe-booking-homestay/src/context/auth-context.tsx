@@ -12,7 +12,6 @@ import SignUpModal from "@/components/auth/signup-modal";
 import ForgotPasswordModal from "@/components/auth/forgot-password-modal";
 import OTPModal from "@/components/auth/otp-modal";
 import NewPasswordModal from "@/components/auth/new-password-modal";
-import api from "../lib/request";
 import { IUser } from "../models/User";
 import { useRouter } from "next/navigation";
 import { login as loginApi } from "@/services/authApi";
@@ -20,6 +19,7 @@ import { STORAGE_KEYS } from "@/constants";
 
 interface AuthContextType {
   user: IUser | null;
+  setUser: (user: IUser | null) => void; 
   logout: () => void;
   openSignIn: () => void;
   openSignUp: () => void;
@@ -130,6 +130,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     <AuthContext.Provider
       value={{
         user,
+        setUser,
         logout,
         openSignIn,
         openSignUp,

@@ -31,7 +31,7 @@ export default function SignInModal({
 
   //local state
   const [emailInput, setEmailInput] = useState("");
-
+  const { setUser } = useAuth();
 
   useEffect(() => {
     setEmailInput("");
@@ -66,6 +66,8 @@ export default function SignInModal({
         email: emailInput.trim(),
         password,
       });
+      setUser(data.user);
+
       console.log("API response:", data);
       // lưu email vào context để OTPModal có thể dùng
       setEmailInput(emailInput.trim());
