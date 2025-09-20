@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Eye, EyeOff, X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/auth-context";
-import axios from "axios";
+import api from "@/lib/request"
 
 interface NewPasswordModalProps {
   show: boolean;
@@ -59,8 +59,8 @@ export default function NewPasswordModal({
 
     // Gọi API tạo mật khẩu mới ở đây
     try {
-      const { data } = await axios.post(
-        "http://localhost:3069/auth/reset-password",
+      const { data } = await api.post(
+        "/auth/reset-password",
         {
           email,
           otp,

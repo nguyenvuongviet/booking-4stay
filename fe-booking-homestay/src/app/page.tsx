@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Header from "@/components/Header";
 import {
   Search,
   MapPin,
@@ -11,11 +12,17 @@ import {
   Car,
   Coffee,
   Dumbbell,
+  Menu,
+  LogOut,
+  User as UserIcon,
+  ShoppingBag,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/context/auth-context";
+import Link from "next/link";
+
 
 interface Hotel {
   id: number;
@@ -36,8 +43,6 @@ interface Destination {
 }
 
 export default function HomePage() {
-  const { openSignIn } = useAuth();
-
   const featuredHotels: Hotel[] = [
     {
       id: 1,
@@ -110,54 +115,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-[#f9fafb]">
       {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <span className="text-2xl font-bold text-[#3f9bda]">4Stay</span>
-            </div>
-
-            <nav className="hidden md:flex space-x-8">
-              <a
-                href="#"
-                className="text-[#667085] hover:text-[#344054] font-medium"
-              >
-                Home
-              </a>
-              <a
-                href="#"
-                className="text-[#667085] hover:text-[#344054] font-medium"
-              >
-                Hotels
-              </a>
-              <a
-                href="#"
-                className="text-[#667085] hover:text-[#344054] font-medium"
-              >
-                Rooms
-              </a>
-              <a
-                href="#"
-                className="text-[#667085] hover:text-[#344054] font-medium"
-              >
-                About
-              </a>
-              <a
-                href="#"
-                className="text-[#667085] hover:text-[#344054] font-medium"
-              >
-                Contact
-              </a>
-            </nav>
-
-            <Button
-              className="bg-[#3f9bda] hover:bg-[#2980b9] text-white px-6"
-              onClick={openSignIn}>
-              Sign in
-            </Button>
-          </div>
-        </div>
-      </header>
+      <Header/>
 
       {/* Hero Section */}
       <section className="bg-gradient-to-r from-[#3f9bda] to-[#2980b9] text-white py-20">
@@ -475,7 +433,6 @@ export default function HomePage() {
           </div>
         </div>
       </footer>
-
     </div>
   );
 }

@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Eye, EyeOff, X } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
-import axios from "axios";
+import api from "@/lib/request"
 
 interface ForgotPasswordModalProps {
   show: boolean;
@@ -51,8 +51,8 @@ export default function ForgotPasswordModal({
     setApiError("");
     // setLoading(true);
     try {
-      const { data } = await axios.post(
-        "http://localhost:3069/auth/forgot-password",
+      const { data } = await api.post(
+        "/auth/forgot-password",
         {
           email: emailInput.trim(),
         }

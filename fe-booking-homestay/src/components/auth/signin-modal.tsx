@@ -6,7 +6,6 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/context/auth-context";
 import { Eye, EyeOff, X } from "lucide-react";
 import { useEffect, useState } from "react";
-import axios from "axios";
 
 interface SignInModalProps {
   show: boolean;
@@ -30,8 +29,7 @@ export default function SignInModal({
 
   //local state
   const [emailInput, setEmailInput] = useState("");
-
-  const { setEmail } = useAuth(); // lấy từ context
+  const { login, setEmail } = useAuth();
 
   useEffect(() => {
     setEmailInput("");
@@ -62,14 +60,15 @@ export default function SignInModal({
     setLoading(true);
 
     try {
-      const { data } = await axios.post("http://localhost:3069/auth/login", {
-        email: emailInput.trim(),
-        password,
-      });
-      console.log("API response:", data);
+      // const { data } = await api.post("/auth/login", {
+      //   email: emailInput.trim(),
+      //   password,
+      // });
+      await login(emailInput.trim(), password);
+      console.log("Đăng nhập thành công 🎉");
+     
       // lưu email vào context để OTPModal có thể dùng
       setEmail(emailInput.trim());
-      localStorage.setItem("token", data.token);
       setShow(false);
     } catch (error: any) {
       if (error.response) {

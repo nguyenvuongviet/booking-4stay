@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/context/auth-context";
 import { Eye, EyeOff, X } from "lucide-react";
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "@/lib/request"
 
 interface SignUpModalProps {
   show: boolean;
@@ -109,7 +109,7 @@ export default function SignUpModal({
     setLoading(true);
 
     try {
-      const { data } = await axios.post("http://localhost:3069/auth/register", {
+      const { data } = await api.post("/auth/register", {
         fullName: firstName.trim() + " " + lastName.trim(),
         email: emailInput.trim(),
         password,
@@ -117,7 +117,7 @@ export default function SignUpModal({
       });
       // lưu email vào context để OTPModal có thể dùng
       setEmail(emailInput);
-      localStorage.setItem("token", data.token);
+      // localStorage.setItem("token", data.token);
       setShow(false);
       switchToOTP(true);
     } catch (error: any) {

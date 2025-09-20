@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/auth-context";
-import axios from "axios";
+import api from "@/lib/request"
 
 interface OTPModalsProps {
   show: boolean;
@@ -54,8 +54,8 @@ export default function OTPModals({
       if (context === "signup") {
         // alert("Sign up success!");
         try {
-          const { data } = await axios.post(
-            "http://localhost:3069/auth/activate-account",
+          const { data } = await api.post(
+            "/auth/activate-account",
             {
               email: email.trim(),
               otp: otpCode,
@@ -71,8 +71,8 @@ export default function OTPModals({
         }
       } else if (context === "forgotPassword") {
         try {
-          const { data } = await axios.post(
-            "http://localhost:3069/auth/verify-otp",
+          const { data } = await api.post(
+            "/auth/verify-otp",
             {
               email: email.trim(),
               otp: otpCode,
@@ -127,8 +127,8 @@ export default function OTPModals({
     // setLoading(true);
     setApiError("");
     try {
-      const { data } = await axios.post(
-        "http://localhost:3069/auth/forgot-password",
+      const { data } = await api.post(
+        "auth/forgot-password",
         { email: email.trim() }
       );
     } catch (error: any) {
