@@ -3,10 +3,10 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Eye, EyeOff, X } from "lucide-react";
-import { useState, useEffect } from "react";
 import { useAuth } from "@/context/auth-context";
-import api from "@/lib/request"
+import { reset_password } from "@/services/authApi";
+import { Eye, EyeOff, X } from "lucide-react";
+import { useEffect, useState } from "react";
 
 interface NewPasswordModalProps {
   show: boolean;
@@ -59,14 +59,11 @@ export default function NewPasswordModal({
 
     // Gọi API tạo mật khẩu mới ở đây
     try {
-      const { data } = await api.post(
-        "/auth/reset-password",
-        {
-          email,
-          otp,
-          newPassword: password,
-        }
-      );
+      const { data } = await reset_password({
+        email,
+        otp,
+        newPassword: password,
+      });
       setShow(false);
     } catch (error: any) {
       if (error.response) {

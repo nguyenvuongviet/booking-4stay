@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/context/auth-context";
 import { Eye, EyeOff, X } from "lucide-react";
 import { useEffect, useState } from "react";
-import api from "@/lib/request"
+import {register} from "@/services/authApi";
 
 interface SignUpModalProps {
   show: boolean;
@@ -67,7 +67,7 @@ export default function SignUpModal({
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-     console.log("Sign In button clicked");
+    console.log("Sign In button clicked");
     let hasError = false;
 
     if (!firstName.trim()) {
@@ -109,15 +109,15 @@ export default function SignUpModal({
     setLoading(true);
 
     try {
-      const { data } = await api.post("/auth/register", {
-        fullName: firstName.trim() + " " + lastName.trim(),
+      const { data } = await register({
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
         email: emailInput.trim(),
-        password,
+        password: password,
         phoneNumber: phone.trim(),
       });
       // lưu email vào context để OTPModal có thể dùng
       setEmail(emailInput);
-      // localStorage.setItem("token", data.token);
       setShow(false);
       switchToOTP(true);
     } catch (error: any) {
@@ -266,7 +266,7 @@ export default function SignUpModal({
                     Confirm your password
                   </Label>
                   <Input
-                    id="confirmSigupPassword"
+                    id="confirmSignupPassword"
                     type="password"
                     className="mt-1 border-[#d0d5dd] focus:border-[#3f9bda] focus:ring-[#3f9bda] pr-10"
                     value={confirmPassword}
@@ -288,8 +288,8 @@ export default function SignUpModal({
 
               <Button
                 className="w-full bg-[#3f9bda] hover:bg-[#2980b9] text-white py-3"
-                type="submit" 
-                disabled={loading} 
+                type="submit"
+                disabled={loading}
               >
                 {loading ? "Signing up..." : "Sign up"}
               </Button>

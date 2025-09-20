@@ -15,10 +15,11 @@ import NewPasswordModal from "@/components/auth/new-password-modal";
 import api from "../lib/request";
 import { IUser } from "../models/User";
 import { useRouter } from "next/navigation";
+import { login as loginApi } from "@/services/authApi";
+import { STORAGE_KEYS } from "@/constants";
 
 interface AuthContextType {
   user: IUser | null;
-  login: (email: string, password: string) => Promise<void>;
   logout: () => void;
   openSignIn: () => void;
   openSignUp: () => void;
@@ -48,34 +49,41 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<IUser | null>(null);
   const router = useRouter();
 
-  // ✅ Nếu F5 lại, lấy user từ localStorage (nếu muốn thì lưu user ở localStorage luôn)
+  // Nếu F5 lại, lấy user từ localStorage (nếu muốn thì lưu user ở localStorage luôn)
   useEffect(() => {
-    const savedUser = localStorage.getItem("user");
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
+    const savedData = localStorage.getItem(STORAGE_KEYS.CURRENT_USER);
+    if (savedData) {
+      try {
+        const parsed = JSON.parse(savedData);
+        setUser(parsed.user); // chỉ lấy phần user
+      } catch (err) {
+        console.error("Error parsing CURRENT_USER:", err);
+      }
     }
   }, []);
 
   // Mỗi khi user thay đổi, cập nhật vào localStorage
   useEffect(() => {
     if (user) {
-      localStorage.setItem("user", JSON.stringify(user));
+      const savedData = localStorage.getItem(STORAGE_KEYS.CURRENT_USER);
+      let parsed = {};
+      try {
+        parsed = savedData ? JSON.parse(savedData) : {};
+      } catch {
+        parsed = {};
+      }
+
+      localStorage.setItem(
+        STORAGE_KEYS.CURRENT_USER,
+        JSON.stringify({
+          ...parsed,
+          user, // cập nhật user
+        })
+      );
     } else {
-      localStorage.removeItem("user");
+      localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
     }
   }, [user]);
-
-  const login = async (email: string, password: string) => {
-    const res = await api.post("/auth/login", { email, password });
-    const { accessToken, refreshToken, user } = res.data.data;
-
-    // Lưu token
-    localStorage.setItem("accessToken", accessToken);
-    localStorage.setItem("refreshToken", refreshToken);
-    localStorage.setItem("user", JSON.stringify(user));
-    // Set user ngay từ response
-    setUser(user);
-  };
 
   const logout = () => {
     localStorage.removeItem("accessToken");
@@ -122,7 +130,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     <AuthContext.Provider
       value={{
         user,
-        login,
         logout,
         openSignIn,
         openSignUp,

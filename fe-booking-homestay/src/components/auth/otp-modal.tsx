@@ -4,7 +4,11 @@ import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/auth-context";
-import api from "@/lib/request"
+import {
+  active_account,
+  forgot_password,
+  verify_otp,
+} from "@/services/authApi";
 
 interface OTPModalsProps {
   show: boolean;
@@ -54,13 +58,10 @@ export default function OTPModals({
       if (context === "signup") {
         // alert("Sign up success!");
         try {
-          const { data } = await api.post(
-            "/auth/activate-account",
-            {
-              email: email.trim(),
-              otp: otpCode,
-            }
-          );
+          const { data } = await active_account({
+            email: email.trim(),
+            otp: otpCode,
+          });
           setOtp(otpCode);
           setShow(false);
         } catch (error: any) {
@@ -71,13 +72,10 @@ export default function OTPModals({
         }
       } else if (context === "forgotPassword") {
         try {
-          const { data } = await api.post(
-            "/auth/verify-otp",
-            {
-              email: email.trim(),
-              otp: otpCode,
-            }
-          );
+          const { data } = await verify_otp({
+            email: email.trim(),
+            otp: otpCode,
+          });
           setOtp(otpCode);
           setShow(false);
           onSuccess(); // mở NewPasswordModal
@@ -127,10 +125,7 @@ export default function OTPModals({
     // setLoading(true);
     setApiError("");
     try {
-      const { data } = await api.post(
-        "auth/forgot-password",
-        { email: email.trim() }
-      );
+      const { data } = await forgot_password({ email: email.trim() });
     } catch (error: any) {
       if (error.response?.status === 400) {
         setApiError(

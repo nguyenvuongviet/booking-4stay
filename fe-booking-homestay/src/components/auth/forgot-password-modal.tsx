@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Eye, EyeOff, X } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
-import api from "@/lib/request"
+import { forgot_password } from "@/services/authApi";
 
 interface ForgotPasswordModalProps {
   show: boolean;
@@ -51,12 +51,7 @@ export default function ForgotPasswordModal({
     setApiError("");
     // setLoading(true);
     try {
-      const { data } = await api.post(
-        "/auth/forgot-password",
-        {
-          email: emailInput.trim(),
-        }
-      );
+      const { data } = await forgot_password({ email: emailInput.trim() });
       setEmail(emailInput);
       setError("");
       setShow(false); // đóng modal forgot password

@@ -68,7 +68,7 @@ export default function SignInModal({
       });
       console.log("API response:", data);
       // lưu email vào context để OTPModal có thể dùng
-      setEmail(emailInput.trim());
+      setEmailInput(emailInput.trim());
       localStorage.setItem(
         STORAGE_KEYS.CURRENT_USER,
         JSON.stringify({
