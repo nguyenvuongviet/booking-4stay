@@ -24,38 +24,70 @@ export const register = async (data: {
   }
 };
 
-export const active_account = async (data: { email: string, otp: string}) => {
+export const active_account = async (data: { email: string; otp: string }) => {
   try {
     const resp = await api.post("/auth/activate-account", data);
     return resp.data;
   } catch (error) {
-    console.error("Active account error: ", error)
+    console.error("Active account error: ", error);
   }
-}
+};
 
-export const verify_otp = async (data: {email: string, otp: string}) => {
+export const verify_otp = async (data: { email: string; otp: string }) => {
   try {
     const resp = await api.post("/auth/verify-otp", data);
     return resp.data;
   } catch (error) {
-    console.error("Verify otp error: ", error)
+    console.error("Verify otp error: ", error);
   }
-}
+};
 
-export const forgot_password = async (data: {email: string}) => {
+export const forgot_password = async (data: { email: string }) => {
   try {
-    const resp = await api.post("auth/forgot-password",data);
+    const resp = await api.post("auth/forgot-password", data);
     return resp.data;
   } catch (error) {
     console.error("Forgot password error: ", error);
   }
-}
+};
 
-export const reset_password = async (data: { email: string, otp: string, newPassword: string}) => {
+export const reset_password = async (data: {
+  email: string;
+  otp: string;
+  newPassword: string;
+}) => {
   try {
-    const resp = await api.post("auth/reset-password",data);
+    const resp = await api.post("auth/reset-password", data);
     return resp.data;
   } catch (error) {
     console.error("Forgot password error: ", error);
   }
-}
+};
+
+export const update_profile = async (
+  id: string,
+  data: {
+    email?: string;
+    firstName?: string;
+    lastName?: string;
+    phoneNumber?: string;
+    country?: string;
+    dateOfBirth?: string;
+    gender?: string;
+  }) => {
+  try {
+    const resp = await api.patch(`user/update/${id}`, data);
+    return resp.data;
+  } catch (error) {
+    console.error("Update profile error: ", error);
+  }
+};
+
+export const upload_file = async (id: string, data: FormData) => {
+  try{
+    const resp = await api.post(`user/${id}/avatar-cloudinary`, data);
+    return resp.data;
+  } catch (error) {
+    console.error("Update profile error: ", error);
+  }
+};

@@ -64,7 +64,7 @@ export default function Header() {
                   alt="avatar"
                   className="w-8 h-8 rounded-full"
                 />
-                <span>{user.fullName}</span>
+                <span>{user.firstName + " " + user.lastName}</span>
                 {/* <span>Thảo Ly</span> */}
               </button>
               {openMenu && (

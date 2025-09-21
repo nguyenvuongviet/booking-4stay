@@ -163,7 +163,7 @@ export default function SignUpModal({
                     onChange={(e) => setFirstName(e.target.value)}
                   />
                   {firstNameError && (
-                    <p className="text-red-500 text-sm mb-1">
+                    <p className="text-red-500 text-xs mb-1">
                       {firstNameError}
                     </p>
                   )}
@@ -183,7 +183,7 @@ export default function SignUpModal({
                     onChange={(e) => setLastName(e.target.value)}
                   />
                   {lastNameError && (
-                    <p className="text-red-500 text-sm mb-1">{lastNameError}</p>
+                    <p className="text-red-500 text-xs mb-1">{lastNameError}</p>
                   )}
                 </div>
               </div>
@@ -204,7 +204,7 @@ export default function SignUpModal({
                 />
               </div>
               {emailError && (
-                <p className="text-red-500 text-sm mb-2">{emailError}</p>
+                <p className="text-red-500 text-xs mb-2">{emailError}</p>
               )}
 
               <div>
@@ -223,7 +223,7 @@ export default function SignUpModal({
                 />
               </div>
               {phoneError && (
-                <p className="text-red-500 text-sm mb-2">{phoneError}</p>
+                <p className="text-red-500 text-xs mb-2">{phoneError}</p>
               )}
 
               <div className="grid grid-cols-2 gap-2">
@@ -254,7 +254,7 @@ export default function SignUpModal({
                     </button>
                   </div>
                   {passwordError && (
-                    <p className="text-red-500 text-sm mb-1">{passwordError}</p>
+                    <p className="text-red-500 text-xs mb-1">{passwordError}</p>
                   )}
                 </div>
 
@@ -276,7 +276,7 @@ export default function SignUpModal({
                     }}
                   />
                   {confirmPasswordError && (
-                    <p className="text-red-500 text-sm mb-1">
+                    <p className="text-red-500 text-xs mb-1">
                       {confirmPasswordError}
                     </p>
                   )}

@@ -19,7 +19,8 @@ import { STORAGE_KEYS } from "@/constants";
 
 interface AuthContextType {
   user: IUser | null;
-  setUser: (user: IUser | null) => void; 
+  setUser: (user: IUser | null) => void;
+  updateUser: (user: IUser) => void;
   logout: () => void;
   openSignIn: () => void;
   openSignUp: () => void;
@@ -48,47 +49,35 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   );
   const [user, setUser] = useState<IUser | null>(null);
   const router = useRouter();
-
-  // Nếu F5 lại, lấy user từ localStorage (nếu muốn thì lưu user ở localStorage luôn)
   useEffect(() => {
-    const savedData = localStorage.getItem(STORAGE_KEYS.CURRENT_USER);
-    if (savedData) {
-      try {
-        const parsed = JSON.parse(savedData);
-        setUser(parsed.user); // chỉ lấy phần user
-      } catch (err) {
-        console.error("Error parsing CURRENT_USER:", err);
+    // Load khi mount
+    const saved = localStorage.getItem(STORAGE_KEYS.CURRENT_USER);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (parsed?.user) {
+        setUser(parsed.user); // chỉ set user, giữ accessToken & refreshToken nguyên vẹn
       }
     }
   }, []);
 
-  // Mỗi khi user thay đổi, cập nhật vào localStorage
-  useEffect(() => {
-    if (user) {
-      const savedData = localStorage.getItem(STORAGE_KEYS.CURRENT_USER);
-      let parsed = {};
-      try {
-        parsed = savedData ? JSON.parse(savedData) : {};
-      } catch {
-        parsed = {};
-      }
+  const updateUser = (newUser: IUser) => {
+    setUser(newUser);
 
-      localStorage.setItem(
-        STORAGE_KEYS.CURRENT_USER,
-        JSON.stringify({
-          ...parsed,
-          user, // cập nhật user
-        })
-      );
-    } else {
-      localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
-    }
-  }, [user]);
+    const currentData = JSON.parse(
+      localStorage.getItem(STORAGE_KEYS.CURRENT_USER) || "{}"
+    );
+    const updatedData = {
+      ...currentData,
+      user: newUser,
+    };
+    localStorage.setItem(
+      STORAGE_KEYS.CURRENT_USER,
+      JSON.stringify(updatedData)
+    );
+  };
 
   const logout = () => {
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("refreshToken");
-    localStorage.removeItem("user");
+    localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
     setUser(null);
     router.push("/");
   };
@@ -131,6 +120,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       value={{
         user,
         setUser,
+        updateUser,
         logout,
         openSignIn,
         openSignUp,
