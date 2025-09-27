@@ -2,7 +2,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import * as fs from 'fs';
 import * as path from 'path';
-import { sanitizeUserData } from 'src/common/helpers/sanitize-user';
+import { sanitizeUserData } from 'src/common/helpers/sanitize-user.helpers';
 import { buildUserWhereClause } from 'src/common/helpers/user-query.helper';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -27,9 +27,7 @@ export class UserService {
         loyalty_program: true,
       },
     });
-    const data = sanitizeUserData(users);
-
-    return data;
+    return sanitizeUserData(users);
   }
 
   async findAllFiltered(filterDto: UserFilterDto) {
@@ -144,37 +142,14 @@ export class UserService {
   }
 
   async update(id: number, updateUserDto: UpdateUserDto) {
-    const {
-      email,
-      firstName,
-      lastName,
-      phoneNumber,
-      dateOfBirth,
-      gender,
-      country,
-    } = updateUserDto;
-
-    console.log({ updateUserDto });
+    const { firstName, lastName, phoneNumber, dateOfBirth, gender, country } =
+      updateUserDto;
 
     const dob = dateOfBirth ? new Date(dateOfBirth) : undefined;
-    if (email) {
-      const existing = await this.prismaService.users.findFirst({
-        where: {
-          email,
-          NOT: { id },
-        },
-      });
 
-      if (existing) {
-        throw new BadRequestException(
-          'Email đã được sử dụng bởi người dùng khác',
-        );
-      }
-    }
     const newUser = await this.prismaService.users.update({
       where: { id },
       data: {
-        email,
         firstName,
         lastName,
         phoneNumber,
@@ -188,12 +163,13 @@ export class UserService {
       },
     });
 
+    console.log({ newUser });
+
     return sanitizeUserData(newUser);
   }
 
   async adminUpdate(id: number, updateUserAdminDto: UpdateUserAdminDto) {
     const {
-      email,
       firstName,
       lastName,
       phoneNumber,
@@ -220,21 +196,6 @@ export class UserService {
       throw new BadRequestException('Người dùng không tồn tại');
     }
 
-    if (email) {
-      const existing = await this.prismaService.users.findFirst({
-        where: {
-          email,
-          NOT: { id },
-        },
-      });
-
-      if (existing) {
-        throw new BadRequestException(
-          'Email đã được sử dụng bởi người dùng khác',
-        );
-      }
-    }
-
     if (!role) {
       throw new BadRequestException(`Vai trò '${roleName}' không tồn tại`);
     }
@@ -242,7 +203,6 @@ export class UserService {
     const newUser = await this.prismaService.users.update({
       where: { id },
       data: {
-        email,
         firstName,
         lastName,
         phoneNumber,
@@ -274,6 +234,7 @@ export class UserService {
       },
     });
 
+    console.log({ newUser });
     return sanitizeUserData(newUser);
   }
 

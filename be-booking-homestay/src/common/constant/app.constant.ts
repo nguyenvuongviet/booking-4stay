@@ -4,6 +4,8 @@ export const PORT = process.env.PORT;
 
 export const DATABASE_URL = process.env.DATABASE_URL;
 
+export const CLOUDINARY_BASE_URL = process.env.CLOUDINARY_BASE_URL;
+
 export const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET;
 export const ACCESS_TOKEN_EXPIRES = process.env.ACCESS_TOKEN_EXPIRES;
 
@@ -23,6 +25,7 @@ export const CLOUDINARY_API_SECRET = process.env.CLOUDINARY_API_SECRET;
 console.log({
   PORT,
   DATABASE_URL,
+  CLOUDINARY_BASE_URL,
   ACCESS_TOKEN_SECRET,
   ACCESS_TOKEN_EXPIRES,
   REFRESH_TOKEN_SECRET,
