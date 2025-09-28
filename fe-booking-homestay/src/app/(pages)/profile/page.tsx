@@ -21,7 +21,7 @@ export default function ProfilePage() {
   const { user, setUser, updateUser } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
   // state local để edit
-  const [avatarUrl, setAvatarUrl] = useState("/images/default-avatar.jpg");
+  const [avatarUrl, setAvatarUrl] = useState("/default-avatar.jpg");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [dob, setDob] = useState("");
@@ -33,7 +33,7 @@ export default function ProfilePage() {
   // mỗi khi user thay đổi (từ context), sync vào state form
   useEffect(() => {
     if (user) {
-      setAvatarUrl(user.avatar || "/images/default-avatar.jpg");
+      setAvatarUrl(user.avatar || "/default-avatar.jpg");
       setFirstName(user.firstName || "");
       setLastName(user.lastName || "");
       setDob(user.dateOfBirth ? user.dateOfBirth.split("T")[0] : "");

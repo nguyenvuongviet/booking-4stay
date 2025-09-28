@@ -148,26 +148,28 @@ export default function OTPModals({
     <>
       {/* OTP Modal */}
       {show && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-8 w-full max-w-md mx-4 shadow-2xl">
-            <div className="flex justify-between items-center mb-6">
-              <div className="flex items-center gap-3">
-                <span className="text-2xl font-bold text-[#3f9bda]">4Stay</span>
-                <span className="text-xl font-semibold text-[#344054]">
-                  Enter OTP
-                </span>
+        <div className="fixed inset-0 bg-foreground/50 flex items-center justify-center z-50">
+          <div className="bg-card rounded-lg p-8 w-full max-w-md mx-4 shadow-2xl">
+            <div className="text-center mb-4">
+              <span className="text-xl text-foreground elegant-heading">
+                4Stay
+              </span>
+              <span className="text-3xl elegant-heading text-primary">
+                Enter OTP
+              </span>{" "}
+              <div className="flex justify-end">
+                <button
+                  onClick={() => setShow(false)}
+                  className="text-primary hover:text-primary/80"
+                >
+                  <X size={24} />
+                </button>
               </div>
-              <button
-                onClick={() => setShow(false)}
-                className="text-[#667085] hover:text-[#344054]"
-              >
-                <X size={24} />
-              </button>
             </div>
             {apiError && (
-              <p className="text-red-500 text-sm mb-4">{apiError}</p>
+              <p className="text-destructive text-sm mb-4">{apiError}</p>
             )}
-            <p className="text-[#667085] text-sm mb-6">
+            <p className="text-foreground elegant-subheading mb-6">
               We have sent a OTP to {""}
               <span className="font-semibold text-[#3f9bda]">{email}</span>
             </p>
@@ -181,7 +183,7 @@ export default function OTPModals({
                   maxLength={1}
                   value={value}
                   onChange={(e) => handleOtpChange(index, e.target.value)}
-                  className="w-12 h-12 text-center text-xl font-semibold border border-[#d0d5dd] rounded-lg focus:border-[#3f9bda] focus:ring-1 focus:ring-[#3f9bda] focus:outline-none"
+                  className="w-12 h-12 text-center text-xl font-semibold border border-border rounded-lg focus:outline-none"
                   onKeyDown={(e) => {
                     //Nhan Enter de verify
                     if (e.key === "Enter") handleVerify();
@@ -199,21 +201,21 @@ export default function OTPModals({
                 />
               ))}
             </div>
-            {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
+            {error && <p className="text-destructive text-sm mb-4">{error}</p>}
 
             <Button
-              className="w-full bg-[#3f9bda] hover:bg-[#2980b9] text-white py-3 mb-4"
+              className="mb-4 rounded-2xl w-full bg-primary hover:bg-primary/90 text-primary-foreground h-10 elegant-subheading text-md"
               onClick={handleVerify}
             >
               Verify OTP
             </Button>
 
             <div className="text-center">
-              <span className="text-[#667085] text-sm">
+              <span className="text-muted-foreground elegant-subheading text-sm">
                 Didn't receive code?{" "}
               </span>
               <button
-                className="text-[#3f9bda] text-sm font-medium hover:underline"
+                className="text-primary elegant-heading text-base hover:underline"
                 onClick={handleResendOtp}
                 // disabled={loading}
               >

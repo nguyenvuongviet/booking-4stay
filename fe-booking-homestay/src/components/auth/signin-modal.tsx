@@ -100,53 +100,53 @@ export default function SignInModal({
     <>
       {/* Sign In Modal */}
       {show && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-8 w-full max-w-md mx-4 shadow-2xl">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-semibold text-[#3f9bda]">Sign in</h2>
-              <button
-                onClick={() => setShow(false)}
-                className="text-[#667085] hover:text-[#344054]"
-              >
+        <div className="fixed inset-0 bg-foreground/50 flex items-center justify-center z-50">
+          <div className="bg-card rounded-2xl p-8 w-full max-w-md mx-4 shadow-2xl">
+            <div className="flex justify-end">
+              <button onClick={() => setShow(false)} className="text-primary hover:text-primary/80">
                 <X size={24} />
               </button>
             </div>
 
+            <div className="text-center mb-4">
+              <h2 className="text-3xl elegant-heading text-primary">SIGN IN</h2>
+            </div>
+
             {apiError && (
-              <p className="text-red-500 text-sm mt-2">{apiError}</p>
+              <p className="text-destructive text-sm mt-2">{apiError}</p>
             )}
 
             <form className="space-y-4 mt-2" onSubmit={handleSignIn}>
               <div>
                 <Label
                   htmlFor="email"
-                  className="text-[#344054] text-sm font-medium"
+                  className="text-foreground elegant-subheading"
                 >
                   Your email
                 </Label>
                 <Input
                   id="email"
                   type="email"
-                  className="mt-1 border-[#d0d5dd] focus:border-[#3f9bda] focus:ring-[#3f9bda]"
+                  className="mt-1 bg-input rounded-2xl"
                   value={emailInput}
                   onChange={(e) => setEmailInput(e.target.value)}
                 />
               </div>
               {emailError && (
-                <p className="text-red-500 text-sm mb-4">{emailError}</p>
+                <p className="text-destructive text-sm mb-4">{emailError}</p>
               )}
 
               <div>
                 <div className="flex justify-between items-center">
                   <Label
                     htmlFor="password"
-                    className="text-[#344054] text-sm font-medium"
+                    className="text-foreground elegant-subheading"
                   >
                     Your password
                   </Label>
                   <button
                     type="button"
-                    className="text-[#667085] text-sm hover:text-[#344054] flex items-center gap-1"
+                    className="text-muted-foreground text-sm hover:text-primary flex items-center gap-1"
                     onClick={() => setShowPassword(!showPassword)}
                   >
                     {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -156,17 +156,17 @@ export default function SignInModal({
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
-                  className="mt-1 border-[#d0d5dd] focus:border-[#3f9bda] focus:ring-[#3f9bda]"
+                  className="mt-1 bg-input rounded-2xl"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
               {passwordError && (
-                <p className="text-red-500 text-sm mb-4">{passwordError}</p>
+                <p className="text-destructive text-sm mb-4">{passwordError}</p>
               )}
 
               <Button
-                className="w-full bg-[#3f9bda] hover:bg-[#2980b9] text-white py-3"
+                className="mt-4 rounded-2xl w-full bg-primary hover:bg-primary/90 text-primary-foreground h-10 elegant-subheading text-md"
                 type="submit"
                 disabled={loading}
               >
@@ -176,7 +176,7 @@ export default function SignInModal({
 
             <div className="mt-4 flex justify-between items-center text-sm">
               <div>
-                <span className="text-[#667085] text-sm">
+                <span className="text-muted-foreground elegant-subheading">
                   Don't have an account?{" "}
                 </span>
                 <button
@@ -184,14 +184,14 @@ export default function SignInModal({
                     setShow(false);
                     switchToSignUp(true);
                   }}
-                  className="text-[#3f9bda] text-sm font-medium hover:underline"
+                  className="text-primary elegant-heading text-base hover:underline"
                 >
                   Sign up
                 </button>
               </div>
               <div>
                 <button
-                  className="text-[#3f9bda] text-sm hover:underline"
+                  className="text-primary elegant-subheading hover:underline"
                   onClick={() => {
                     switchToForgotPassword(true);
                     setShow(false);
@@ -203,16 +203,16 @@ export default function SignInModal({
             </div>
 
             <div className="flex items-center mt-6">
-              <div className="flex-grow border-t border-gray-300"></div>
-              <span className="mx-4 text-[#667085] text-sm">OR</span>
-              <div className="flex-grow border-t border-gray-300"></div>
+              <div className="flex-grow border-t border-border"></div>
+              <span className="mx-4 elegant-subheading text-muted-foreground text-sm">OR</span>
+              <div className="flex-grow border-t border-border"></div>
             </div>
 
             <div className="mt-6">
               <Button
                 type="button"
                 variant="outline"
-                className="w-full border-[#d0d5dd] text-[#344054] hover:bg-[#f9fafb] flex items-center justify-center gap-2 bg-transparent"
+                className="rounded-2xl w-full border-border text-foreground bg-transparent hover:bg-muted flex items-center justify-center gap-2"
                 onClick={() => handleSocialSignIn("google")}
                 disabled={loading}
               >
