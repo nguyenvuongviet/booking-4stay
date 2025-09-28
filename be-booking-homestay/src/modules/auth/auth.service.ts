@@ -19,7 +19,7 @@ import {
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { ResetPasswordDto } from './dto/reset-password';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
-import { sanitizeUserData } from 'src/common/helpers/sanitize-user';
+import { sanitizeUserData } from 'src/common/helpers/sanitize-user.helpers';
 
 @Injectable()
 export class AuthService {

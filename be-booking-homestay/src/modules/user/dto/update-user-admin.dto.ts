@@ -4,7 +4,7 @@ import { IsBoolean, IsDateString, IsEnum, IsOptional } from 'class-validator';
 import { CreateUserDto } from './create-user.dto';
 
 export class UpdateUserAdminDto extends PartialType(
-  OmitType(CreateUserDto, ['password'] as const),
+  OmitType(CreateUserDto, ['email', 'password'] as const),
 ) {
   @ApiPropertyOptional({ example: '2000-01-01', description: 'Ngày sinh' })
   @IsOptional()
