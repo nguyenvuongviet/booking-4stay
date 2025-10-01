@@ -177,7 +177,7 @@ export default function SignInModal({
             <div className="mt-4 flex justify-between items-center text-sm">
               <div>
                 <span className="text-muted-foreground elegant-subheading">
-                  Don't have an account?{" "}
+                  Don{"'"}t have an account?{" "}
                 </span>
                 <button
                   onClick={() => {

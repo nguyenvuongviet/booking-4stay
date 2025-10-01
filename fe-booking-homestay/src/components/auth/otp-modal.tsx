@@ -212,7 +212,7 @@ export default function OTPModals({
 
             <div className="text-center">
               <span className="text-muted-foreground elegant-subheading text-sm">
-                Didn't receive code?{" "}
+                Didn{"'"}t receive code?{" "}
               </span>
               <button
                 className="text-primary elegant-heading text-base hover:underline"

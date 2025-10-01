@@ -320,7 +320,7 @@ export default function HotelsListPage() {
         {!hasMore && !loading && (
           <div className="flex items-center justify-center py-1">
             <div className="text-center text-muted-foreground ">
-              <p className="text-sm ">You've reached the end of the results</p>
+              <p className="text-sm ">You{"'"}ve reached the end of the results</p>
               <p className="text-xs mt-1">
                 Total: {hotels.length} hotels found
               </p>

@@ -294,7 +294,7 @@ export default function HomePage() {
               Popular Destinations
             </h2>
             <p className="elegant-subheading text-xl text-muted-foreground max-w-2xl mx-auto">
-              Explore the world's most sought-after travel destinations
+              Explore the world{"'"}s most sought-after travel destinations
             </p>
           </div>
 
