@@ -25,7 +25,7 @@ import { uploadLocalConfig } from 'src/config/upload-local.config';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserAdminDto } from './dto/update-user-admin.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { UserFilterDto } from './dto/user-filter.dto';
+import { UserFilterDto } from './dto/filter-user.dto';
 import { UserService } from './user.service';
 
 @ApiTags('user')

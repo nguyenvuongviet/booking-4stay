@@ -1,13 +1,7 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { loyalty_program_level } from '@prisma/client';
-import { IsOptional, IsEnum, IsBoolean } from 'class-validator';
+import { IsEnum, IsOptional } from 'class-validator';
 import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
-
-export enum Role {
-  ADMIN = 'ADMIN',
-  USER = 'USER',
-  HOST = 'HOST',
-}
+import { LoyaltyLevel, Role } from './enum.dto';
 
 export class UserFilterDto extends PaginationQueryDto {
   @ApiPropertyOptional({
@@ -21,12 +15,12 @@ export class UserFilterDto extends PaginationQueryDto {
   roleName?: Role;
 
   @ApiPropertyOptional({
-    enum: loyalty_program_level,
+    enum: LoyaltyLevel,
     description: 'Cấp độ loyalty',
   })
   @IsOptional()
-  @IsEnum(loyalty_program_level, {
+  @IsEnum(LoyaltyLevel, {
     message: 'loyaltyLevel must be BRONZE, SILVER, GOLD, or PLATINUM',
   })
-  loyaltyLevel?: loyalty_program_level;
+  loyaltyLevel?: LoyaltyLevel;
 }
