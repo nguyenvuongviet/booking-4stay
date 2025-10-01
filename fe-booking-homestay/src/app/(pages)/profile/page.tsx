@@ -108,7 +108,7 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f9fafb]">
+    <div className="min-h-screen bg-background">
       <Headers />
 
       {/* Main Content */}

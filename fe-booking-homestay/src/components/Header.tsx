@@ -45,8 +45,13 @@ export default function Header() {
               Home
             </a>
             <a
-              href="#"
-              className="elegant-subheading text-muted-foreground hover:text-foreground transition-colors"
+              href="/room-list"
+              className={`elegant-subheading transition-colors ${
+                pathname === "/room-list"
+                  ? "text-foreground"
+                  : "text-muted-foreground hover:text-foreground "
+              }
+              }`}
             >
               Hotels
             </a>
@@ -153,23 +158,12 @@ export default function Header() {
               Home
             </a>
             <a
-              href="#"
+              href="/room-list"
               className="elegant-subheading text-muted-foreground hover:text-foreground transition-colors"
             >
               Hotels
             </a>
-            <a
-              href="#"
-              className="elegant-subheading text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Rooms
-            </a>
-            <a
-              href="#"
-              className="elegant-subheading text-muted-foreground hover:text-foreground transition-colors"
-            >
-              About
-            </a>
+
             <a
               href="#"
               className="elegant-subheading text-muted-foreground hover:text-foreground transition-colors"

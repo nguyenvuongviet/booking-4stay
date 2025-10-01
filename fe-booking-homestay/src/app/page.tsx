@@ -1,14 +1,13 @@
 "use client";
 
-import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import Image from "next/image";
+import Header from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { useState } from "react";
+import { Destination } from "@/models/Destination";
+import { Hotel } from "@/models/Hotel";
 import {
-  Calendar,
   Car,
   Coffee,
   Dumbbell,
@@ -18,23 +17,8 @@ import {
   Users,
   Wifi,
 } from "lucide-react";
-
-interface Hotel {
-  id: number;
-  name: string;
-  location: string;
-  rating: number;
-  price: number;
-  image: string;
-  amenities: string[];
-}
-
-interface Destination {
-  id: number;
-  name: string;
-  country: string;
-  image: string;
-}
+import Image from "next/image";
+import { useState } from "react";
 
 export default function HomePage() {
   const [checkIn, setCheckIn] = useState("");
@@ -132,6 +116,9 @@ export default function HomePage() {
         return null;
     }
   };
+  const formatPrice = (price: number) => {
+    return `${price.toLocaleString()} VND`
+  }
 
   return (
     <div className="min-h-screen bg-background ">
@@ -139,12 +126,12 @@ export default function HomePage() {
       <Header />
 
       {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center justify-center bg-gradient-to-b form-background to-secondary/30 mt-16 lg:mt-1">
+      <section className="relative min-h-screen flex items-center justify-center bg-gradient-to-b form-background to-secondary/30 pt-20 sm:pt-10">
         <div className="max-w-5xl mx-auto px-6 lg:px-8 text-center">
           <div className="mb-12 max-w-3xl mx-auto">
             <h1 className="elegant-heading text-6xl md:text-8xl text-foreground mb-8 text-balance">
               Find
-              <span className="text-primary"> Your Perfect </span> 
+              <span className="text-primary"> Your Perfect </span>
               Stay
             </h1>
             <p className="elegant-subheading text-xl mb:text-2xl text-muted-foreground max-w-2xl mx-auto text-pretty">
@@ -161,7 +148,7 @@ export default function HomePage() {
                 </label>
                 <div className="relative">
                   <MapPin
-                    className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#667085]"
+                    className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground"
                     size={20}
                   />
                   <Input
@@ -183,7 +170,7 @@ export default function HomePage() {
                     type="date"
                     value={checkIn}
                     onChange={(e) => setCheckIn(e.target.value)}
-                    className=" h-12 text-md elegant-subheading"
+                    className=" h-12 elegant-subheading"
                   />
                 </div>
               </div>
@@ -222,10 +209,10 @@ export default function HomePage() {
                 </div>
               </div>
             </div>
-              <Button className="rounded-xl w-full bg-primary hover:bg-primary/90 text-primary-foreground h-12 elegant-subheading text-md">
-                <Search className="mr-2" size={20} />
-                Search Hotels
-              </Button>
+            <Button className="rounded-xl w-full bg-primary hover:bg-primary/90 text-primary-foreground h-12 elegant-subheading text-md">
+              <Search className="mr-2" size={20} />
+              Search Hotels
+            </Button>
           </div>
         </div>
       </section>
@@ -271,7 +258,10 @@ export default function HomePage() {
                   </p>
                   <div className="flex items-center gap-2 mb-4">
                     {hotel.amenities.map((amenity) => (
-                      <div key={amenity} className="elegant-subheading text-muted-foreground">
+                      <div
+                        key={amenity}
+                        className="elegant-subheading text-muted-foreground"
+                      >
                         {getAmenityIcon(amenity)}
                       </div>
                     ))}
@@ -279,9 +269,11 @@ export default function HomePage() {
                   <div className="flex justify-between items-center">
                     <div>
                       <span className="text-2xl elegant-heading text-foreground">
-                        {hotel.price}VND
+                        {formatPrice(hotel.price)}
                       </span>
-                      <span className="elegant-subheading text-muted-foreground">/night</span>
+                      <span className="elegant-subheading text-muted-foreground">
+                        /night
+                      </span>
                     </div>
                     <Button className="bg-primary hover:bg-primary/90 text-primary-foreground elegant-subheading">
                       Book Now
