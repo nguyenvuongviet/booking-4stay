@@ -71,7 +71,6 @@ export function buildUserWhereClause(
     where.OR = [
       { firstName: { contains: search } },
       { lastName: { contains: search } },
-      { email: { contains: search } },
       { phoneNumber: { contains: search } },
     ];
   }

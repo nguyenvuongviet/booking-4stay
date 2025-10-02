@@ -233,15 +233,18 @@ model rooms {
 }
 
 model locations {
-  id        Int      @id @default(autoincrement())
-  province  String   @db.VarChar(100)
-  district  String   @db.VarChar(100)
-  ward      String?  @db.VarChar(100)
-  street    String?  @db.VarChar(255)
-  latitude  Decimal? @db.Decimal(10, 7)
-  longitude Decimal? @db.Decimal(10, 7)
-  createdAt DateTime @default(now()) @db.Timestamp(0)
-  updatedAt DateTime @default(now()) @db.Timestamp(0)
+  id        Int       @id @default(autoincrement())
+  province  String    @db.VarChar(100)
+  district  String    @db.VarChar(100)
+  ward      String?   @db.VarChar(100)
+  street    String?   @db.VarChar(255)
+  latitude  Decimal?  @db.Decimal(10, 7)
+  longitude Decimal?  @db.Decimal(10, 7)
+  deletedBy Int       @default(0)
+  isDeleted Boolean   @default(false)
+  deletedAt DateTime? @db.Timestamp(0)
+  createdAt DateTime  @default(now()) @db.Timestamp(0)
+  updatedAt DateTime  @default(now()) @db.Timestamp(0)
   rooms     rooms[]
 }
 
@@ -250,6 +253,9 @@ model loyalty_levels {
   name            String            @unique(map: "name") @db.VarChar(50)
   minPoints       Int               @default(0)
   description     String?           @db.VarChar(255)
+  deletedBy       Int               @default(0)
+  isDeleted       Boolean           @default(false)
+  deletedAt       DateTime?         @db.Timestamp(0)
   createdAt       DateTime          @default(now()) @db.Timestamp(0)
   updatedAt       DateTime          @default(now()) @db.Timestamp(0)
   loyalty_program loyalty_program[]

@@ -9,6 +9,7 @@ import { OtpModule } from './modules/otp/otp.module';
 import { PrismaService } from './modules/prisma/prisma.service';
 import { TokenModule } from './modules/token/token.module';
 import { UserModule } from './modules/user/user.module';
+import { LocationModule } from './modules/location/location.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { UserModule } from './modules/user/user.module';
     TokenModule,
     OtpModule,
     UserModule,
+    LocationModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService, ProtectStrategy],

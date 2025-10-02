@@ -6,9 +6,9 @@ VALUES
 
 INSERT INTO `users` (`email`,`password`,`firstName`,`lastName`,`phoneNumber`,`country`,`isVerified`,`isActive`)
 VALUES
-('admin@gmail.com','hashedpwd1','admin','vieet','0901234567','Vietnam',1,1),
-('user1@example.com','hashedpwd2','Bob','Tran','0907654321','Vietnam',1,1),
-('user2@example.com','hashedpwd3','Hieu','Le','0911111111','Vietnam',1,1);
+('admin@gmail.com','$2b$10$ch/gepo7MiSD7MCZ9PpW0uSI.upAxnfdSvrbMLmrtzhY7.tZ0fKj6','admin','vieet','0901234567','Vietnam',1,1),
+('user1@example.com','$2b$10$ch/gepo7MiSD7MCZ9PpW0uSI.upAxnfdSvrbMLmrtzhY7.tZ0fKj6','Bob','Tran','0907654321','Vietnam',1,1),
+('user2@example.com','$2b$10$ch/gepo7MiSD7MCZ9PpW0uSI.upAxnfdSvrbMLmrtzhY7.tZ0fKj6','Hieu','Le','0911111111','Vietnam',1,1);
 
 INSERT INTO `user_roles` (`userId`,`roleId`)
 VALUES 
