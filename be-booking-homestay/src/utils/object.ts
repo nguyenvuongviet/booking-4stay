@@ -1,17 +1,7 @@
-export function omitFields(obj: any, fields: string[]): any {
-  if (Array.isArray(obj)) {
-    return obj.map((item) => omitFields(item, fields));
-  }
-
-  if (typeof obj === 'object' && obj !== null) {
-    const clone: any = {};
-    for (const key in obj) {
-      if (!fields.includes(key)) {
-        clone[key] = omitFields(obj[key], fields);
-      }
-    }
-    return clone;
-  }
-
-  return obj;
+export function sanitizeCollection<T>(
+  data: T | T[],
+  handler: (item: T) => any,
+): any {
+  if (!data) return null;
+  return Array.isArray(data) ? data.map(handler) : handler(data);
 }

@@ -147,6 +147,7 @@ export class UserService {
     const roles = await this.prismaService.roles.findMany({
       where: { isActive: true },
       orderBy: { id: 'asc' },
+      select: { id: true, name: true, description: true },
     });
     return roles;
   }

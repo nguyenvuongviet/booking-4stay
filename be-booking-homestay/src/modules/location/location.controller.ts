@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Public } from 'src/common/decorator/public.decorator';
@@ -13,6 +14,7 @@ import { Roles } from 'src/common/decorator/roles.decorator';
 import { CreateLocationDto } from './dto/create-location.dto';
 import { UpdateLocationDto } from './dto/update-location.dto';
 import { LocationService } from './location.service';
+import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
 
 @ApiTags('location')
 @Controller('location')
@@ -29,6 +31,12 @@ export class LocationController {
   @Public()
   async provinces() {
     return this.locationService.listProvinces();
+  }
+
+  @Get('search')
+  @Public()
+  async search(@Query() query: PaginationQueryDto) {
+    return this.locationService.search(query);
   }
 
   @Get('provinces/:province/districts')

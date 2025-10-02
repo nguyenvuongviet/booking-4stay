@@ -2,6 +2,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateLocationDto } from './dto/create-location.dto';
 import { UpdateLocationDto } from './dto/update-location.dto';
 import { PrismaService } from '../prisma/prisma.service';
+import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
 
 @Injectable()
 export class LocationService {
@@ -11,12 +12,79 @@ export class LocationService {
     return await this.prisma.locations.findMany({
       where: { isDeleted: false },
       orderBy: [{ province: 'asc' }, { district: 'asc' }, { ward: 'asc' }],
+      select: {
+        id: true,
+        province: true,
+        district: true,
+        ward: true,
+        street: true,
+      },
     });
+  }
+
+  async search(query: PaginationQueryDto) {
+    const { search } = query;
+    const locations = await this.prisma.locations.findMany({
+      where: {
+        OR: [
+          { province: { contains: search } },
+          // { district: { contains: search } },
+          // { ward: { contains: search } },
+          // { street: { contains: search } },
+        ],
+      },
+      orderBy: [{ province: 'asc' }, { district: 'asc' }, { ward: 'asc' }],
+      select: {
+        id: true,
+        province: true,
+        district: true,
+        ward: true,
+        street: true,
+      },
+    });
+    return locations;
+  }
+
+  async listProvinces() {
+    const rows = await this.prisma.locations.findMany({
+      where: { isDeleted: false },
+      distinct: ['province'],
+      select: { province: true },
+      orderBy: { province: 'asc' },
+    });
+    return rows.map((r) => r.province);
+  }
+
+  async listDistricts(province: string) {
+    const rows = await this.prisma.locations.findMany({
+      where: { isDeleted: false, province },
+      distinct: ['district'],
+      select: { district: true },
+      orderBy: { district: 'asc' },
+    });
+    return rows.map((r) => r.district);
+  }
+
+  async listWards(province: string, district: string) {
+    const rows = await this.prisma.locations.findMany({
+      where: { isDeleted: false, province, district },
+      distinct: ['ward'],
+      select: { ward: true },
+      orderBy: { ward: 'asc' },
+    });
+    return rows.map((r) => r.ward).filter(Boolean);
   }
 
   async findOne(id: number) {
     const location = await this.prisma.locations.findFirst({
       where: { id, isDeleted: false },
+      select: {
+        id: true,
+        province: true,
+        district: true,
+        ward: true,
+        street: true,
+      },
     });
     if (!location) throw new BadRequestException('Location không tồn tại');
     return location;
@@ -50,35 +118,5 @@ export class LocationService {
       where: { id },
       data: { isDeleted: true, deletedAt: new Date(), deletedBy },
     });
-  }
-
-  async listProvinces() {
-    const rows = await this.prisma.locations.findMany({
-      where: { isDeleted: false },
-      distinct: ['province'],
-      select: { province: true },
-      orderBy: { province: 'asc' },
-    });
-    return rows.map((r) => r.province);
-  }
-
-  async listDistricts(province: string) {
-    const rows = await this.prisma.locations.findMany({
-      where: { isDeleted: false, province },
-      distinct: ['district'],
-      select: { district: true },
-      orderBy: { district: 'asc' },
-    });
-    return rows.map((r) => r.district);
-  }
-
-  async listWards(province: string, district: string) {
-    const rows = await this.prisma.locations.findMany({
-      where: { isDeleted: false, province, district },
-      distinct: ['ward'],
-      select: { ward: true },
-      orderBy: { ward: 'asc' },
-    });
-    return rows.map((r) => r.ward).filter(Boolean);
   }
 }
