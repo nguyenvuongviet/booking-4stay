@@ -29,9 +29,9 @@ INSERT INTO `locations` (`province`,`district`,`ward`,`street`,`latitude`,`longi
 
 INSERT INTO `rooms` (`hostId`,`locationId`,`name`,`description`,`price`,`adultCapacity`,`childCapacity`,`status`)
 VALUES
-(3,1,'Deluxe Room Saigon','Phòng view phố đi bộ Nguyễn Huệ, có ban công',800000,2,1,'AVAILABLE'),
-(3,2,'Studio Cozy D3','Căn hộ nhỏ ấm cúng quận 3',600000,2,1,'AVAILABLE'),
-(3,3,'Riverside Danang','Phòng cạnh sông Hàn, view cầu Rồng',1200000,3,2,'AVAILABLE');
+(1,1,'Deluxe Room Saigon','Phòng view phố đi bộ Nguyễn Huệ, có ban công',800000,2,1,'AVAILABLE'),
+(1,2,'Studio Cozy D3','Căn hộ nhỏ ấm cúng quận 3',600000,2,1,'AVAILABLE'),
+(1,3,'Riverside Danang','Phòng cạnh sông Hàn, view cầu Rồng',1200000,3,2,'AVAILABLE');
 
 INSERT INTO `room_beds` (`roomId`,`type`,`quantity`) VALUES
 (1,'DOUBLE',1),

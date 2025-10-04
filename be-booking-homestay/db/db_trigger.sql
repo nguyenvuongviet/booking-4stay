@@ -11,7 +11,7 @@ BEGIN
     UPDATE rooms r
     SET 
       r.rating = (
-        SELECT IFNULL(ROUND(AVG(rv.rating),1),0)
+        SELECT IFNULL(ROUND(AVG(rv.rating), 1), 0)
         FROM reviews rv
         JOIN bookings b ON rv.bookingId = b.id
         WHERE b.roomId = r.id
@@ -65,19 +65,6 @@ BEGIN
   DECLARE v_roomId INT;
   SELECT roomId INTO v_roomId FROM bookings WHERE id = OLD.bookingId;
   CALL recompute_room_rating(v_roomId);
-END $$
-
--- Trigger: Auto update booking status when payment SUCCESS
-DROP TRIGGER IF EXISTS trg_payment_success $$
-CREATE TRIGGER trg_payment_success
-AFTER UPDATE ON payments
-FOR EACH ROW
-BEGIN
-  IF NEW.status = 'SUCCESS' AND OLD.status <> 'SUCCESS' THEN
-    UPDATE bookings 
-    SET status = 'CONFIRMED'
-    WHERE id = NEW.bookingId;
-  END IF;
 END $$
 
 DELIMITER ;

@@ -3,23 +3,18 @@ import { CreateLocationDto } from './dto/create-location.dto';
 import { UpdateLocationDto } from './dto/update-location.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
+import { cleanData } from 'src/utils/object';
 
 @Injectable()
 export class LocationService {
   constructor(private readonly prisma: PrismaService) {}
 
   async findAll() {
-    return await this.prisma.locations.findMany({
+    const locations = await this.prisma.locations.findMany({
       where: { isDeleted: false },
       orderBy: [{ province: 'asc' }, { district: 'asc' }, { ward: 'asc' }],
-      select: {
-        id: true,
-        province: true,
-        district: true,
-        ward: true,
-        street: true,
-      },
     });
+    return cleanData(locations);
   }
 
   async search(query: PaginationQueryDto) {
@@ -34,15 +29,8 @@ export class LocationService {
         ],
       },
       orderBy: [{ province: 'asc' }, { district: 'asc' }, { ward: 'asc' }],
-      select: {
-        id: true,
-        province: true,
-        district: true,
-        ward: true,
-        street: true,
-      },
     });
-    return locations;
+    return cleanData(locations);
   }
 
   async listProvinces() {
@@ -78,16 +66,9 @@ export class LocationService {
   async findOne(id: number) {
     const location = await this.prisma.locations.findFirst({
       where: { id, isDeleted: false },
-      select: {
-        id: true,
-        province: true,
-        district: true,
-        ward: true,
-        street: true,
-      },
     });
     if (!location) throw new BadRequestException('Location không tồn tại');
-    return location;
+    return cleanData(location);
   }
 
   async create(createLocationDto: CreateLocationDto) {
@@ -114,9 +95,11 @@ export class LocationService {
       );
     }
 
-    return this.prisma.locations.update({
+    await this.prisma.locations.update({
       where: { id },
       data: { isDeleted: true, deletedAt: new Date(), deletedBy },
     });
+
+    return { message: 'Xoá location thành công' };
   }
 }

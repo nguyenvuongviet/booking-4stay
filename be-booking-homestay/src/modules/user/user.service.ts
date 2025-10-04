@@ -1,13 +1,11 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import * as fs from 'fs';
 import * as path from 'path';
 import { PORT } from 'src/common/constant/app.constant';
 import { getLoyaltyLevel } from 'src/helpers/loyalty.helper';
-import {
-  buildUserWhereClause,
-  sanitizeUserData,
-} from 'src/helpers/user.helper';
+import { sanitizeUserData } from 'src/helpers/user.helper';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -34,10 +32,46 @@ export class UserService {
   }
 
   async findAllFiltered(filterDto: UserFilterDto) {
-    const { page = 1, pageSize = 10 } = filterDto;
+    const {
+      page = 1,
+      pageSize = 10,
+      search,
+      roleName,
+      loyaltyLevel,
+    } = filterDto;
+
     const skip = (page - 1) * pageSize;
 
-    const where = buildUserWhereClause(filterDto);
+    const where: Prisma.usersWhereInput = {
+      isDeleted: false,
+      ...(search
+        ? {
+            OR: [
+              { firstName: { contains: search } },
+              { lastName: { contains: search } },
+              { phoneNumber: { contains: search } },
+            ],
+          }
+        : {}),
+      ...(roleName
+        ? {
+            user_roles: {
+              some: {
+                roles: { name: roleName },
+              },
+            },
+          }
+        : {}),
+      ...(loyaltyLevel
+        ? {
+            loyalty_program: {
+              is: {
+                loyalty_levels: { name: loyaltyLevel },
+              },
+            },
+          }
+        : {}),
+    };
 
     const [totalItems, users] = await Promise.all([
       this.prismaService.users.count({ where }),

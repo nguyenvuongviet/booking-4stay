@@ -253,6 +253,7 @@ model loyalty_levels {
   name            String            @unique(map: "name") @db.VarChar(50)
   minPoints       Int               @default(0)
   description     String?           @db.VarChar(255)
+  isActive        Boolean           @default(true)
   deletedBy       Int               @default(0)
   isDeleted       Boolean           @default(false)
   deletedAt       DateTime?         @db.Timestamp(0)

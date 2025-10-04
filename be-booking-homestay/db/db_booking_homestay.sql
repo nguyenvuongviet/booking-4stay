@@ -80,6 +80,7 @@ CREATE TABLE `loyalty_levels` (
     `name` VARCHAR(50) NOT NULL UNIQUE,
     `minPoints` INT NOT NULL DEFAULT 0,
     `description` VARCHAR(255) NULL,
+    `isActive` TINYINT(1) NOT NULL DEFAULT 1
 
     `deletedBy` INT NOT NULL DEFAULT 0,
     `isDeleted` TINYINT(1) NOT NULL DEFAULT 0,

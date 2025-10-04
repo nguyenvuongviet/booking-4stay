@@ -5,11 +5,13 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ProtectStrategy } from './common/guard/protect/protect.strategy';
 import { AuthModule } from './modules/auth/auth.module';
+import { LocationModule } from './modules/location/location.module';
+import { LoyaltyModule } from './modules/loyalty/loyalty.module';
 import { OtpModule } from './modules/otp/otp.module';
 import { PrismaService } from './modules/prisma/prisma.service';
+// import { RoomModule } from './modules/room/room.module';
 import { TokenModule } from './modules/token/token.module';
 import { UserModule } from './modules/user/user.module';
-import { LocationModule } from './modules/location/location.module';
 
 @Module({
   imports: [
@@ -22,6 +24,8 @@ import { LocationModule } from './modules/location/location.module';
     OtpModule,
     UserModule,
     LocationModule,
+    LoyaltyModule,
+    // RoomModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService, ProtectStrategy],
