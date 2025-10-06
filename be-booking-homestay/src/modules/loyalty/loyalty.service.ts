@@ -154,4 +154,70 @@ export class LoyaltyService {
 
     return cleanData(program);
   }
+
+  async recomputeAllUserLevels() {
+    const levels = await this.prisma.loyalty_levels.findMany({
+      where: { isActive: true },
+      orderBy: { minPoints: 'asc' },
+    });
+
+    if (levels.length === 0)
+      throw new BadRequestException('Chưa có cấp độ nào khả dụng.');
+
+    const programs = await this.prisma.loyalty_program.findMany({
+      include: { loyalty_levels: true },
+    });
+
+    let updatedCount = 0;
+
+    for (const program of programs) {
+      const matchedLevel = levels
+        .slice()
+        .reverse()
+        .find((lvl) => program.points >= lvl.minPoints);
+
+      if (
+        matchedLevel &&
+        program.levelId !== matchedLevel.id &&
+        matchedLevel.isActive
+      ) {
+        await this.prisma.loyalty_program.update({
+          where: { id: program.id },
+          data: {
+            levelId: matchedLevel.id,
+            lastUpgradeDate: new Date(),
+          },
+        });
+        updatedCount++;
+      }
+    }
+
+    return {
+      message: `Cập nhật lại cấp độ cho ${updatedCount} người dùng.`,
+    };
+  }
+
+  async createLoyaltyForUser(userId: number) {
+    const existing = await this.prisma.loyalty_program.findUnique({
+      where: { userId },
+    });
+    if (existing) return existing;
+
+    const defaultLevel = await this.prisma.loyalty_levels.findFirst({
+      orderBy: { minPoints: 'asc' },
+    });
+    if (!defaultLevel) {
+      throw new BadRequestException('Không tìm thấy cấp độ loyalty mặc định!');
+    }
+
+    return await this.prisma.loyalty_program.create({
+      data: {
+        userId,
+        totalBookings: 0,
+        totalNights: 0,
+        points: 0,
+        levelId: defaultLevel.id,
+      },
+    });
+  }
 }

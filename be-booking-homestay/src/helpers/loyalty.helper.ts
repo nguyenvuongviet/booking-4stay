@@ -1,17 +1,46 @@
 import { BadRequestException } from '@nestjs/common';
-import { PrismaService } from 'src/modules/prisma/prisma.service';
+import { PrismaClient } from '@prisma/client';
 
-export async function getLoyaltyLevel(
-  prisma: PrismaService,
-  levelName: string,
+export async function createLoyaltyProgram(
+  prisma: PrismaClient,
+  userId: number,
+  options?: { customLevelId?: number; forceReset?: boolean },
 ) {
-  const level = await prisma.loyalty_levels.findUnique({
-    where: { name: levelName },
+  const { customLevelId, forceReset = false } = options || {};
+
+  const user = await prisma.users.findUnique({ where: { id: userId } });
+  if (!user) throw new BadRequestException('Không tìm thấy người dùng!');
+
+  const existing = await prisma.loyalty_program.findUnique({
+    where: { userId },
   });
 
-  if (!level) {
-    throw new BadRequestException(`Loyalty level '${levelName}' không tồn tại`);
+  if (existing && !forceReset) return existing;
+  if (existing && forceReset) {
+    await prisma.loyalty_program.delete({ where: { userId } });
   }
 
-  return level;
+  let levelId = customLevelId;
+  if (!levelId) {
+    const defaultLevel = await prisma.loyalty_levels.findFirst({
+      where: { minPoints: 0 },
+      orderBy: { id: 'asc' },
+    });
+    if (!defaultLevel)
+      throw new BadRequestException('Không tìm thấy cấp độ mặc định!');
+    levelId = defaultLevel.id;
+  }
+
+  const loyalty = await prisma.loyalty_program.create({
+    data: {
+      userId,
+      totalBookings: 0,
+      totalNights: 0,
+      points: 0,
+      levelId,
+    },
+    include: { loyalty_levels: true },
+  });
+
+  return loyalty;
 }

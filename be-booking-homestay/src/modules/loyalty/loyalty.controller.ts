@@ -7,7 +7,7 @@ import {
   Patch,
   Post,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { LoyaltyService } from './loyalty.service';
 import { CreateLoyaltyLevelDto } from './dto/create-loyalty-level.dto';
 import { UpdateLoyaltyLevelDto } from './dto/update-loyalty-level.dto';
@@ -47,7 +47,7 @@ export class LoyaltyController {
     return this.loyaltyService.updateLevel(id, dto);
   }
 
-  @Patch('levels/:id/toggle')
+  @Patch('levels/:id/toggle-active')
   @Roles('ADMIN')
   toggleActive(@Param('id', ParseIntPipe) id: number) {
     return this.loyaltyService.toggleActive(id);
@@ -65,5 +65,12 @@ export class LoyaltyController {
     @Body() dto: UpdateUserLoyaltyDto,
   ) {
     return this.loyaltyService.updateUserLoyalty(userId, dto);
+  }
+
+  @ApiOperation({ summary: 'Cập nhật thông tin cấp độ loyalty (Admin)' })
+  @Roles('ADMIN')
+  @Post('recompute')
+  async recomputeLevels() {
+    return this.loyaltyService.recomputeAllUserLevels();
   }
 }

@@ -53,15 +53,4 @@ export class CreateUserDto {
   })
   @IsNotEmpty({ message: 'Vai trò không được để trống' })
   roleName?: Role;
-
-  @ApiProperty({
-    enum: LoyaltyLevel,
-    description: 'Mức độ khách hàng thân thiết',
-    required: false,
-  })
-  @IsOptional()
-  @IsEnum(LoyaltyLevel, {
-    message: 'LoyaltyLevel must be BRONZE, SILVER, GOLD, or PLATINUM',
-  })
-  loyaltyLevel?: LoyaltyLevel;
 }
