@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { loyalty_program_level } from '@prisma/client';
+
 import {
   IsEmail,
   IsEnum,
@@ -7,12 +7,8 @@ import {
   IsOptional,
   IsString,
 } from 'class-validator';
+import { LoyaltyLevel, Role } from './enum.dto';
 
-export enum Role {
-  ADMIN = 'ADMIN',
-  USER = 'USER',
-  HOST = 'HOST',
-}
 export class CreateUserDto {
   @ApiProperty({
     example: 'nguyenvana123@gmail.com',
@@ -59,13 +55,13 @@ export class CreateUserDto {
   roleName?: Role;
 
   @ApiProperty({
-    enum: loyalty_program_level,
+    enum: LoyaltyLevel,
     description: 'Mức độ khách hàng thân thiết',
     required: false,
   })
   @IsOptional()
-  @IsEnum(loyalty_program_level, {
-    message: 'loyaltyLevel must be BRONZE, SILVER, GOLD, or PLATINUM',
+  @IsEnum(LoyaltyLevel, {
+    message: 'LoyaltyLevel must be BRONZE, SILVER, GOLD, or PLATINUM',
   })
-  loyaltyLevel?: loyalty_program_level;
+  loyaltyLevel?: LoyaltyLevel;
 }

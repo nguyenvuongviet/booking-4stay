@@ -3,6 +3,7 @@ import { PassportStrategy } from '@nestjs/passport';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ACCESS_TOKEN_SECRET } from 'src/common/constant/app.constant';
 import { PrismaService } from 'src/modules/prisma/prisma.service';
+import { sanitizeUserData } from 'src/helpers/user.helper';
 
 @Injectable()
 export class ProtectStrategy extends PassportStrategy(Strategy, `protect`) {
@@ -23,11 +24,9 @@ export class ProtectStrategy extends PassportStrategy(Strategy, `protect`) {
         id: decode.userId,
       },
       include: {
-        roles: {
-          select: { name: true },
-        },
+        user_roles: { include: { roles: { select: { name: true } } } },
         loyalty_program: {
-          select: { level: true },
+          include: { loyalty_levels: { select: { name: true } } },
         },
       },
     });

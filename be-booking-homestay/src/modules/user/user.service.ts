@@ -2,15 +2,18 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import * as fs from 'fs';
 import * as path from 'path';
-import { sanitizeUserData } from 'src/common/helpers/sanitize-user.helpers';
-import { buildUserWhereClause } from 'src/common/helpers/user-query.helper';
+import { PORT } from 'src/common/constant/app.constant';
+import { getLoyaltyLevel } from 'src/helpers/loyalty.helper';
+import {
+  buildUserWhereClause,
+  sanitizeUserData,
+} from 'src/helpers/user.helper';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
+import { UserFilterDto } from './dto/filter-user.dto';
 import { UpdateUserAdminDto } from './dto/update-user-admin.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { UserFilterDto } from './dto/user-filter.dto';
-import { PORT } from 'src/common/constant/app.constant';
-import { CloudinaryService } from '../cloudinary/cloudinary.service';
 
 @Injectable()
 export class UserService {
@@ -23,8 +26,8 @@ export class UserService {
     const users = await this.prismaService.users.findMany({
       where: { isDeleted: false },
       include: {
-        roles: true,
-        loyalty_program: true,
+        user_roles: { include: { roles: true } },
+        loyalty_program: { include: { loyalty_levels: true } },
       },
     });
     return sanitizeUserData(users);
@@ -44,8 +47,8 @@ export class UserService {
         orderBy: { createdAt: 'desc' },
         where,
         include: {
-          roles: true,
-          loyalty_program: true,
+          user_roles: { include: { roles: true } },
+          loyalty_program: { include: { loyalty_levels: true } },
         },
       }),
     ]);
@@ -87,6 +90,10 @@ export class UserService {
 
     const hashedPassword = await bcrypt.hash(password, salt);
 
+    const loyalty = loyaltyLevel
+      ? await getLoyaltyLevel(this.prismaService, loyaltyLevel)
+      : null;
+
     const user = await this.prismaService.users.create({
       data: {
         email,
@@ -95,13 +102,15 @@ export class UserService {
         lastName,
         phoneNumber,
         country,
-        roleId: role.id,
         isVerified: true,
         isActive: true,
-        loyalty_program: loyaltyLevel
+        user_roles: {
+          create: { roleId: role.id },
+        },
+        loyalty_program: loyalty
           ? {
               create: {
-                level: loyaltyLevel,
+                levelId: loyalty.id,
                 totalBookings: 0,
                 totalNights: 0,
                 points: 0,
@@ -110,8 +119,8 @@ export class UserService {
           : undefined,
       },
       include: {
-        roles: true,
-        loyalty_program: true,
+        user_roles: { include: { roles: true } },
+        loyalty_program: { include: { loyalty_levels: true } },
       },
     });
 
@@ -122,8 +131,8 @@ export class UserService {
     const user = await this.prismaService.users.findFirst({
       where: { id, isDeleted: false },
       include: {
-        roles: true,
-        loyalty_program: true,
+        user_roles: { include: { roles: true } },
+        loyalty_program: { include: { loyalty_levels: true } },
       },
     });
 
@@ -158,8 +167,8 @@ export class UserService {
         country,
       },
       include: {
-        roles: true,
-        loyalty_program: true,
+        user_roles: { include: { roles: true } },
+        loyalty_program: { include: { loyalty_levels: true } },
       },
     });
 
@@ -180,6 +189,7 @@ export class UserService {
       loyaltyLevel,
       isActive,
     } = updateUserAdminDto;
+
     const dob = dateOfBirth ? new Date(dateOfBirth) : undefined;
 
     const [user, role] = await Promise.all([
@@ -200,6 +210,12 @@ export class UserService {
       throw new BadRequestException(`Vai trò '${roleName}' không tồn tại`);
     }
 
+    let levelId: number | undefined;
+    if (loyaltyLevel) {
+      const level = await getLoyaltyLevel(this.prismaService, loyaltyLevel); // helper trả về object loyalty_levels
+      levelId = level.id;
+    }
+
     const newUser = await this.prismaService.users.update({
       where: { id },
       data: {
@@ -209,19 +225,23 @@ export class UserService {
         dateOfBirth: dob,
         gender,
         country,
-        roleId: role.id,
         isActive,
-        loyalty_program: loyaltyLevel
+        user_roles: {
+          deleteMany: {},
+          create: { roleId: role.id },
+        },
+        loyalty_program: levelId
           ? {
-              update: { level: loyaltyLevel },
+              update: { levelId },
             }
           : user.loyalty_program
             ? {
-                update: { level: user.loyalty_program.level },
+                update: { levelId: user.loyalty_program.levelId },
               }
             : {
                 create: {
-                  level: 'BRONZE',
+                  levelId: (await getLoyaltyLevel(this.prismaService, 'BRONZE'))
+                    .id,
                   totalBookings: 0,
                   totalNights: 0,
                   points: 0,
@@ -229,25 +249,32 @@ export class UserService {
               },
       },
       include: {
-        roles: true,
-        loyalty_program: true,
+        user_roles: { include: { roles: true } },
+        loyalty_program: { include: { loyalty_levels: true } },
       },
     });
 
-    console.log({ newUser });
     return sanitizeUserData(newUser);
   }
 
-  async delete(id: number) {
-    const user = await this.prismaService.users.update({
-      where: { id },
-      data: { isDeleted: true },
-      select: { id: true, isDeleted: true },
+  async delete(id: number, deletedBy: number = 0) {
+    const userExist = await this.prismaService.users.findFirst({
+      where: { id, isDeleted: false },
+      select: { id: true },
     });
 
-    if (!user || user.isDeleted === false) {
+    if (!userExist) {
       throw new BadRequestException('Người dùng không tồn tại hoặc đã bị xoá');
     }
+
+    await this.prismaService.users.update({
+      where: { id },
+      data: {
+        isDeleted: true,
+        deletedAt: new Date(),
+        deletedBy,
+      },
+    });
 
     return { message: 'Xoá người dùng thành công' };
   }

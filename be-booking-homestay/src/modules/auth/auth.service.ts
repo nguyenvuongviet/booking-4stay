@@ -5,21 +5,22 @@ import {
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import * as jwt from 'jsonwebtoken';
-import { VerifyOtpDto } from '../otp/dto/verifyOtp.dto';
-import { OtpService } from '../otp/otp.service';
-import { PrismaService } from '../prisma/prisma.service';
-import { TokenService } from '../token/token.service';
-import { LoginDto } from './dto/login.dto';
-import { RegisterDto } from './dto/register.dto';
-import { Validator } from 'src/common/validation';
 import {
   ACCESS_TOKEN_SECRET,
   REFRESH_TOKEN_SECRET,
 } from 'src/common/constant/app.constant';
-import { RefreshTokenDto } from './dto/refresh-token.dto';
-import { ResetPasswordDto } from './dto/reset-password';
+import { Validator } from 'src/common/validation';
+import { getLoyaltyLevel } from 'src/helpers/loyalty.helper';
+import { sanitizeUserData } from 'src/helpers/user.helper';
+import { VerifyOtpDto } from '../otp/dto/verifyOtp.dto';
+import { OtpService } from '../otp/otp.service';
+import { PrismaService } from '../prisma/prisma.service';
+import { TokenService } from '../token/token.service';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
-import { sanitizeUserData } from 'src/common/helpers/sanitize-user.helpers';
+import { LoginDto } from './dto/login.dto';
+import { RefreshTokenDto } from './dto/refresh-token.dto';
+import { RegisterDto } from './dto/register.dto';
+import { ResetPasswordDto } from './dto/reset-password';
 
 @Injectable()
 export class AuthService {
@@ -70,9 +71,14 @@ export class AuthService {
           phoneNumber,
           firstName,
           lastName,
-          roleId: defaultRole.id,
           isActive: false,
           isVerified: false,
+          user_roles: {
+            create: { roleId: defaultRole.id },
+          },
+        },
+        include: {
+          user_roles: { include: { roles: { select: { name: true } } } },
         },
       });
 
@@ -118,17 +124,20 @@ export class AuthService {
     }
 
     try {
-      const [verifyResult, userExist] = await Promise.all([
+      const [verifyResult, userExist, bronzeLevel] = await Promise.all([
         this.verifyOtp(verifyOtpDto),
         this.prismaService.users.findUnique({ where: { email } }),
+        getLoyaltyLevel(this.prismaService, 'BRONZE'),
       ]);
 
       if (!verifyResult.success) {
         throw new BadRequestException('OTP không hợp lệ hoặc hết hạn!');
       }
-
       if (!userExist || userExist.isDeleted) {
         throw new BadRequestException('Tài khoản không tìm thấy!');
+      }
+      if (!bronzeLevel) {
+        throw new BadRequestException('Không tìm thấy level BRONZE');
       }
 
       await this.prismaService.$transaction([
@@ -146,7 +155,7 @@ export class AuthService {
             totalBookings: 0,
             totalNights: 0,
             points: 0,
-            level: 'BRONZE',
+            levelId: bronzeLevel.id,
           },
         }),
       ]);
@@ -172,7 +181,10 @@ export class AuthService {
     try {
       const userExist = await this.prismaService.users.findUnique({
         where: { email },
-        include: { roles: true, loyalty_program: true },
+        include: {
+          user_roles: { include: { roles: true } },
+          loyalty_program: { include: { loyalty_levels: true } },
+        },
       });
 
       if (!userExist || !userExist.isActive)
@@ -183,12 +195,10 @@ export class AuthService {
         throw new BadRequestException('Mật khẩu không hợp lệ!');
 
       const isPassword = await bcrypt.compare(password, userExist.password);
-
       if (!isPassword)
         throw new BadRequestException('Email hoặc mật khẩu không chính xác.');
 
       const tokens = this.tokenService.createTokens(userExist.id);
-
       return { ...tokens, user: sanitizeUserData(userExist) };
     } catch (error) {
       console.log(`Lỗi khi đăng nhập cho ${email}: ${error.message}`);

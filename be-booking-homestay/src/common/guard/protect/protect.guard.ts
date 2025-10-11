@@ -8,6 +8,7 @@ import { Reflector } from '@nestjs/core';
 import { JsonWebTokenError, TokenExpiredError } from '@nestjs/jwt';
 import { AuthGuard } from '@nestjs/passport';
 import { IS_PUBLIC_KEY } from 'src/common/decorator/public.decorator';
+import { sanitizeUserData } from 'src/helpers/user.helper';
 
 @Injectable()
 export class ProtectGuard extends AuthGuard('protect') {
