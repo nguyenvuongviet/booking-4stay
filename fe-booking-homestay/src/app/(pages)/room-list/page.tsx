@@ -7,6 +7,8 @@ import { Hotel } from "@/models/Hotel";
 import { Card, CardContent } from "@/components/ui/card";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
+
 import {
   Star,
   MapPin,
@@ -19,7 +21,7 @@ import {
 } from "lucide-react";
 import { SearchBar } from "@/components/SearchBar";
 import { FilterBar } from "@/components/FilterBar";
-import { motion, AnimatePresence } from "framer-motion";
+// import { motion, AnimatePresence } from "framer-motion";
 
 const initialHotels = [
   {
@@ -173,6 +175,7 @@ export default function HotelsListPage() {
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(1);
   const [scrolled, setScrolled] = useState(false);
+  const router = useRouter();
 
   const formatPrice = (price: number) => {
     return `${price.toLocaleString()} VND`;
@@ -212,7 +215,6 @@ export default function HotelsListPage() {
         loadMoreHotels();
       }
       setScrolled(window.scrollY > 100);
-      
     };
 
     window.addEventListener("scroll", handleScroll);
@@ -261,7 +263,8 @@ export default function HotelsListPage() {
           {hotels.map((hotel, index) => (
             <Card
               key={`${hotel.id}-${index}`}
-              className="overflow-hidden hover:shadow-xl transition-all duration-500"
+              onClick={() => router.push(`/room/${hotel.id}`)}
+              className="overflow-hidden hover:shadow-xl transition-all duration-500 hover:cursor-pointer"
             >
               <div className="relative">
                 <Image
@@ -284,6 +287,7 @@ export default function HotelsListPage() {
                   <MapPin size={16} />
                   {hotel.location}
                 </p>
+                
                 {/* <div className="flex items-center gap-2 mb-4">
                   {hotel.amenities.map((amenity) => (
                     <div
@@ -320,7 +324,9 @@ export default function HotelsListPage() {
         {!hasMore && !loading && (
           <div className="flex items-center justify-center py-1">
             <div className="text-center text-muted-foreground ">
-              <p className="text-sm ">You{"'"}ve reached the end of the results</p>
+              <p className="text-sm ">
+                You{"'"}ve reached the end of the results
+              </p>
               <p className="text-xs mt-1">
                 Total: {hotels.length} hotels found
               </p>

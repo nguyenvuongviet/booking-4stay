@@ -45,6 +45,7 @@
 }
 
 :root {
+  /* --background: oklch(0.98 0.005 85); Warm off-white */
   --background: oklch(0.98 0.005 85); /* Warm off-white */
   --foreground: oklch(0.15 0.01 85); /* Deep charcoal */
   --card: oklch(1 0 0); /* Pure white */
@@ -139,6 +140,13 @@
   font-family: "Playfair Display", "Times New Roman", serif;
   font-weight: 400;
   letter-spacing: -0.02em;
+}
+
+.elegant-sanserif {
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1.5;
 }
 @layer utilities {
   input[type="date"]::-webkit-calendar-picker-indicator {

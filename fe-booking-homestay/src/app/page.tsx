@@ -19,11 +19,14 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function HomePage() {
   const [checkIn, setCheckIn] = useState("");
   const [checkOut, setCheckOut] = useState("");
   const [guests, setGuests] = useState("2");
+  const router = useRouter();
+
   const featuredHotels: Hotel[] = [
     {
       id: 1,
@@ -117,8 +120,8 @@ export default function HomePage() {
     }
   };
   const formatPrice = (price: number) => {
-    return `${price.toLocaleString()} VND`
-  }
+    return `${price.toLocaleString()} VND`;
+  };
 
   return (
     <div className="min-h-screen bg-background ">
@@ -140,8 +143,8 @@ export default function HomePage() {
           </div>
 
           {/* Search Form */}
-          <div className="bg-card rounded-2xl p-8 shadow-xl ">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div className="bg-card rounded-4xl p-8 shadow-xl ">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-2 mb-8">
               <div>
                 <label className="elegant-subheading text-sm text-muted-foreground mb-2 block">
                   Location
@@ -153,7 +156,7 @@ export default function HomePage() {
                   />
                   <Input
                     placeholder="Where are you going?"
-                    className="pl-10 h-12 border-border focus:border-accent elegant-subheading"
+                    className="pl-10 h-12 border-border focus:border-accent elegant-subheading rounded-2xl"
                   />
                 </div>
               </div>
@@ -170,7 +173,7 @@ export default function HomePage() {
                     type="date"
                     value={checkIn}
                     onChange={(e) => setCheckIn(e.target.value)}
-                    className=" h-12 elegant-subheading"
+                    className=" h-12 elegant-subheading  rounded-2xl"
                   />
                 </div>
               </div>
@@ -187,7 +190,7 @@ export default function HomePage() {
                     type="date"
                     value={checkOut}
                     onChange={(e) => setCheckOut(e.target.value)}
-                    className=" h-12 elegant-subheading"
+                    className=" h-12 elegant-subheading  rounded-2xl"
                   />
                 </div>
               </div>
@@ -200,7 +203,7 @@ export default function HomePage() {
                     className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground"
                     size={20}
                   />
-                  <select className="w-full h-12 pl-12 pr-4 border border-border rounded-md focus:border-accent focus:ring-1 focus:ring-accent">
+                  <select className="w-full h-12 pl-12 pr-4 border border-border rounded-2xl focus:border-accent focus:ring-1 focus:ring-accent">
                     <option>2 Guests</option>
                     <option>1 Guest</option>
                     <option>3 Guests</option>
@@ -209,7 +212,7 @@ export default function HomePage() {
                 </div>
               </div>
             </div>
-            <Button className="rounded-xl w-full bg-primary hover:bg-primary/90 text-primary-foreground h-12 elegant-subheading text-md">
+            <Button className="rounded-2xl w-full bg-primary hover:bg-primary/90 text-primary-foreground h-12 elegant-subheading text-md">
               <Search className="mr-2" size={20} />
               Search Hotels
             </Button>
@@ -233,7 +236,8 @@ export default function HomePage() {
             {featuredHotels.map((hotel) => (
               <Card
                 key={hotel.id}
-                // className="overflow-hidden hover:shadow-xl transition-all duration-500"
+                
+                className="overflow-hidden hover:shadow-xl transition-all duration-500 "
               >
                 <div className="relative">
                   <Image
@@ -275,7 +279,9 @@ export default function HomePage() {
                         /night
                       </span>
                     </div>
-                    <Button className="bg-primary hover:bg-primary/90 text-primary-foreground elegant-subheading">
+                    <Button 
+                    onClick={() => router.push(`/room/${hotel.id}`)}
+                    className="bg-primary hover:bg-primary/90 text-primary-foreground elegant-subheading hover:cursor-pointer rounded-xl">
                       Book Now
                     </Button>
                   </div>
