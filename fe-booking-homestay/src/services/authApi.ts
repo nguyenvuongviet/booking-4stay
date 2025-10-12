@@ -6,6 +6,7 @@ export const login = async (data: { email: string; password: string }) => {
     return response.data;
   } catch (error) {
     console.error("Login error:", error);
+    throw error;
   }
 };
 
@@ -21,6 +22,7 @@ export const register = async (data: {
     return response.data;
   } catch (error) {
     console.error("Register error: ", error);
+    throw error;
   }
 };
 
@@ -30,6 +32,7 @@ export const active_account = async (data: { email: string; otp: string }) => {
     return resp.data;
   } catch (error) {
     console.error("Active account error: ", error);
+    throw error;
   }
 };
 
@@ -39,6 +42,7 @@ export const verify_otp = async (data: { email: string; otp: string }) => {
     return resp.data;
   } catch (error) {
     console.error("Verify otp error: ", error);
+    throw error;
   }
 };
 
@@ -48,6 +52,7 @@ export const forgot_password = async (data: { email: string }) => {
     return resp.data;
   } catch (error) {
     console.error("Forgot password error: ", error);
+    throw error;
   }
 };
 
@@ -61,13 +66,12 @@ export const reset_password = async (data: {
     return resp.data;
   } catch (error) {
     console.error("Forgot password error: ", error);
+    throw error;
   }
 };
 
 export const update_profile = async (
-  id: string,
   data: {
-    email?: string;
     firstName?: string;
     lastName?: string;
     phoneNumber?: string;
@@ -76,18 +80,20 @@ export const update_profile = async (
     gender?: string;
   }) => {
   try {
-    const resp = await api.patch(`user/update/${id}`, data);
+    const resp = await api.patch("user/update", data);
     return resp.data;
   } catch (error) {
     console.error("Update profile error: ", error);
+    throw error;
   }
 };
 
-export const upload_file = async (id: string, data: FormData) => {
+export const upload_file = async (data: FormData) => {
   try{
-    const resp = await api.post(`user/${id}/avatar-cloudinary`, data);
+    const resp = await api.post(`user/avatar-cloudinary`, data);
     return resp.data;
   } catch (error) {
     console.error("Update profile error: ", error);
+    throw error;
   }
 };

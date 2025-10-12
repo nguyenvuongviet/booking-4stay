@@ -24,7 +24,7 @@ export default function Header() {
                 alt="Logo"
                 width={45}
                 height={45}
-                className="inline-block mr-1"
+                className="inline-block mr-1 "
               />
               <span className="elegant-heading text-2xl text-foreground">
                 4STAY
@@ -85,7 +85,7 @@ export default function Header() {
                   src={user?.avatar || "/default-avatar.jpg"}
                   // src={"images/default-avatar.jpg"}
                   alt="avatar"
-                  className="w-8 h-8 rounded-full"
+                  className="w-8 h-8 rounded-full object-cover"
                 />
                 <span>{user.firstName + " " + user.lastName}</span>
                 {/* <span>Thảo Ly</span> */}
@@ -97,6 +97,12 @@ export default function Header() {
                     className="block px-4 py-2 hover:bg-gray-100 rounded-md"
                   >
                     Profile
+                  </Link>
+                  <Link
+                    href="/booking"
+                    className="block px-4 py-2 hover:bg-gray-100 rounded-md"
+                  >
+                    Bookings
                   </Link>
                   <button
                     className="block w-full text-left px-4 py-2 hover:bg-gray-100 rounded-md"

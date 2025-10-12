@@ -49,7 +49,6 @@ export default function ProfilePage() {
     try {
       const updatedUser: Partial<IUser> = Object.fromEntries(
         Object.entries({
-          email,
           firstName,
           lastName,
           phoneNumber: phone,
@@ -59,7 +58,7 @@ export default function ProfilePage() {
         }).filter(([_, v]) => v && v !== "")
       );
 
-      const res = await update_profile(user.id, updatedUser);
+      const res = await update_profile(updatedUser);
       if (!res?.data) {
         console.error("User data undefined, cannot update localStorage");
         return;
@@ -91,7 +90,7 @@ export default function ProfilePage() {
       formData.append("file", file);
 
       // gọi API upload avatar
-      const { data } = await upload_file(user.id, formData);
+      const { data } = await upload_file(formData);
       // giả sử res.data.avatar là URL mới của avatar
       if (data?.imgUrl) {
         setAvatarUrl(data.imgUrl);
@@ -112,8 +111,8 @@ export default function ProfilePage() {
       <Headers />
 
       {/* Main Content */}
-      <div className="max-w-2xl mx-auto mt-4">
-        <h1 className="text-2xl font-semibold text-gray-900 mb-4">
+      <div className="max-w-2xl mx-auto mt-24">
+        <h1 className="text-3xl elegant-heading  mb-4">
           My profile
         </h1>
         {/* Profile Avatar */}
@@ -260,7 +259,7 @@ export default function ProfilePage() {
 
             <Button
               onClick={handleSubmit}
-              className="mt-4 bg-[#3f9bda] text-white hover:bg-[#3f9bda]/90"
+              className="my-4 rounded-2xl w-full bg-primary hover:bg-primary/90 text-primary-foreground h-10 elegant-subheading text-md"
             >
               Save change
             </Button>

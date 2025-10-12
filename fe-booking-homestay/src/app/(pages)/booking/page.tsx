@@ -1,15 +1,13 @@
 "use client";
 
-import Footer from "@/components/Footer";
-import Header from "@/components/Header";
+import { Card, CardContent } from "@/components/ui/card";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
-import { FilterBar } from "@/components/FilterBar";
-import { RoomCard } from "@/components/RoomCard";
-import { SearchBar } from "@/components/SearchBar";
+import Image from "next/image";
+import { Button } from "@/components/ui/button";
+import Header from "@/components/Header";
 import { Hotel } from "@/models/Hotel";
-import { Car, Coffee, Dumbbell, Loader2, Wifi } from "lucide-react";
-// import { motion, AnimatePresence } from "framer-motion";
+import { useState, useCallback, useEffect } from "react";
+import { Loader2, Star, MapPin } from "lucide-react";
 
 const initialHotels: Hotel[] = [
   {
@@ -48,24 +46,6 @@ const initialHotels: Hotel[] = [
     price: 650000,
     amenities: ["wifi", "parking", "restaurant"],
   },
-  {
-    id: 5,
-    name: "Central Business Hotel",
-    location: "45 Le Loi Street, Ben Nghe Ward, District 1...",
-    rating: 7.8,
-    image: "/images/home-dn.jpg",
-    price: 420000,
-    amenities: ["wifi"],
-  },
-  {
-    id: 6,
-    name: "Modern City Hotel",
-    location: "123 Dong Khoi Street, Ben Nghe Ward, District 1...",
-    rating: 6.5,
-    image: "/images/home-dn.jpg",
-    price: 350000,
-    amenities: ["wifi", "gym"],
-  },
 ];
 
 const generateMoreHotels = (startId: number, count: number) => {
@@ -74,23 +54,12 @@ const generateMoreHotels = (startId: number, count: number) => {
     "Saigon Star Hotel",
     "Golden Dragon Hotel",
     "Pearl River Hotel",
-    "Lotus Garden Hotel",
-    "Diamond Tower Hotel",
-    "Royal Crown Hotel",
-    "Emerald Bay Hotel",
-    "Silver Moon Hotel",
-    "Crystal Palace Hotel",
-    "Jade Garden Hotel",
-    "Ruby Tower Hotel",
   ];
 
   const location = [
     "District 1, Ho Chi Minh City",
     "District 3, Ho Chi Minh City",
     "District 5, Ho Chi Minh City",
-    "District 7, Ho Chi Minh City",
-    "Binh Thanh District, Ho Chi Minh City",
-    "Tan Binh District, Ho Chi Minh City",
   ];
 
   const images = [
@@ -121,27 +90,17 @@ const generateMoreHotels = (startId: number, count: number) => {
   }));
 };
 
-export default function HotelsListPage() {
-  // const getAmenityIcon = (amenity: string) => {
-  //   switch (amenity) {
-  //     case "wifi":
-  //       return <Wifi size={16} />;
-  //     case "parking":
-  //       return <Car size={16} />;
-  //     case "restaurant":
-  //       return <Coffee size={16} />;
-  //     case "gym":
-  //       return <Dumbbell size={16} />;
-  //     default:
-  //       return null;
-  //   }
-  // };
+export default function HistoryBooking() {
   const [hotels, setHotels] = useState(initialHotels);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(1);
   const [scrolled, setScrolled] = useState(false);
   const router = useRouter();
+
+  const formatPrice = (price: number) => {
+    return `${price.toLocaleString()} VND`;
+  };
 
   const loadMoreHotels = useCallback(async () => {
     if (loading || !hasMore) return;
@@ -186,44 +145,72 @@ export default function HotelsListPage() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      {/* <AnimatePresence>
-        {!scrolled && (
-          <motion.div
-            key="header"
-            initial={{ y: 0, opacity: 1 }}
-            exit={{ y: -100, opacity: 0 }}
-            transition={{ duration: 0.5 }}
-            className="fixed top-0 left-0 w-full z-40"
-          >
-            <Header />
-          </motion.div>
-        )}
-      </AnimatePresence> */}
-
-      {/* SearchBar: trượt lên khi scroll */}
-      {/* <motion.div
-        key="searchbar"
-        initial={false}
-        animate={{
-          y: scrolled ? 0 : 80,
-          boxShadow: scrolled
-            ? "0px 4px 12px rgba(0,0,0,0.1)"
-            : "0px 0px 0px rgba(0,0,0,0)",
-        }}
-        transition={{ duration: 0.5, ease: "easeInOut" }}
-        className="fixed top-0 left-0 w-full z-30 bg-background"
-      >
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <SearchBar />
-        </div>
-      </motion.div> */}
-      <main className="container mx-auto py-12 space-y-12 pt-20 px-4 sm:px-6 lg:px-8">
-        <SearchBar />
-        <FilterBar />
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 ">
+      <div className="container max-w-6xl mx-auto py-12 space-y-12 pt-20 px-4 sm:px-6 lg:px-8">
+        <h2 className="elegant-heading text-3xl">History booking</h2>
+        <div className="grid grid-cols-1 gap-8 ">
           {hotels.map((hotel, index) => (
-            <RoomCard key={`${hotel.id}-${index}`} hotel={hotel} />
+            <Card
+              key={`${hotel.id}-${index}`}
+              onClick={() => router.push(`/booking/${hotel.id}`)}
+              className="overflow-hidden hover:shadow-xl transition-all duration-500 hover:cursor-pointer"
+            >
+              <div className="flex">
+                <div className="relative">
+                  <Image
+                    src={hotel.image || "/placeholder.svg"}
+                    alt={hotel.name}
+                    width={400}
+                    height={600}
+                    className="w-70 h-full object-cover rounded-l-2xl"
+                  />
+                  <div className="absolute top-4  left-4 bg-border px-2 py-1 rounded-full flex items-center gap-1">
+                    <Star className="text-chart-4 fill-current" size={16} />
+                    <span className="text-sm font-medium">{hotel.rating}</span>
+                  </div>
+                </div>
+                <div className="relative w-full">
+                  <div className="absolute top-4 right-4 bg-succcess text-white px-2 py-1 rounded-full flex items-center gap-1">
+                    <span className="text-sm ">Complete</span>
+                  </div>
+                  <CardContent className="p-8 w-full">
+                    <h3 className="elegant-heading text-2xl text-foreground pb-6 truncate">
+                      {hotel.name}
+                    </h3>
+                    <p className="elegant-subheading text-muted-foreground mb-2 flex items-center gap-1">
+                      <MapPin size={16} />
+                      {hotel.location}
+                    </p>
+
+                    {/* <div className="flex items-center gap-2 mb-4">
+                  {hotel.amenities.map((amenity) => (
+                    <div
+                      key={amenity}
+                      className="elegant-subheading text-muted-foreground"
+                    >
+                      {getAmenityIcon(amenity)}
+                    </div>
+                  ))}
+                </div> */}
+                    <div className="flex flex-row-reverse mt-14">
+                      <div>
+                        <span className="text-2xl elegant-heading text-foreground">
+                          {formatPrice(hotel.price)}
+                        </span>
+                        <span className="elegant-subheading text-muted-foreground">
+                          /night
+                        </span>
+                      </div>
+                    </div>
+                    {/* <Button
+                    onClick={() => router.push(`/history/${hotel.id}`)}
+                    className="mt-4 bg-primary hover:bg-primary/90 text-primary-foreground elegant-subheading hover:cursor-pointer rounded-xl"
+                  >
+                    See detail
+                  </Button> */}
+                  </CardContent>
+                </div>
+              </div>
+            </Card>
           ))}
         </div>
         {loading && (
@@ -234,22 +221,7 @@ export default function HotelsListPage() {
             </div>
           </div>
         )}
-
-        {!hasMore && !loading && (
-          <div className="flex items-center justify-center py-1">
-            <div className="text-center text-muted-foreground ">
-              <p className="text-sm ">
-                You{"'"}ve reached the end of the results
-              </p>
-              <p className="text-xs mt-1">
-                Total: {hotels.length} hotels found
-              </p>
-            </div>
-          </div>
-        )}
-      </main>
-
-      <Footer />
+      </div>
     </div>
   );
 }

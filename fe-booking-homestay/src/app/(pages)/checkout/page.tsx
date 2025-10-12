@@ -289,7 +289,7 @@ export default function CheckoutPage() {
             </Card>
           </div>
           {/* Right  */}
-          <div className="lg:col-span-1 sticky top-10">
+          <div className="lg:col-span-1 sticky top-20">
             {/* Booking Summary  */}
             <Card className="p-6 sticky top-10 space-y-6">
               <h2 className="text-2xl elegant-heading mb-4">Booking Summary</h2>

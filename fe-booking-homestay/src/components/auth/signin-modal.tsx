@@ -82,7 +82,10 @@ export default function SignInModal({
       setShow(false);
     } catch (error: any) {
       if (error.response) {
-        setApiError(error.response.data.message || "Sign in failed!");
+        // const message = error.response.data?.message || "Sign in failed!";
+        const message = "Incorrect email or password!";
+        setApiError(message);
+        console.error("API Error:", error.response.data);
       } else {
         setApiError("Something went wrong. Please try again.");
       }
@@ -103,7 +106,10 @@ export default function SignInModal({
         <div className="fixed inset-0 bg-foreground/50 flex items-center justify-center z-50">
           <div className="bg-card rounded-2xl p-8 w-full max-w-md mx-4 shadow-2xl">
             <div className="flex justify-end">
-              <button onClick={() => setShow(false)} className="text-primary hover:text-primary/80">
+              <button
+                onClick={() => setShow(false)}
+                className="text-primary hover:text-primary/80"
+              >
                 <X size={24} />
               </button>
             </div>
@@ -204,7 +210,9 @@ export default function SignInModal({
 
             <div className="flex items-center mt-6">
               <div className="flex-grow border-t border-border"></div>
-              <span className="mx-4 elegant-subheading text-muted-foreground text-sm">OR</span>
+              <span className="mx-4 elegant-subheading text-muted-foreground text-sm">
+                OR
+              </span>
               <div className="flex-grow border-t border-border"></div>
             </div>
 
