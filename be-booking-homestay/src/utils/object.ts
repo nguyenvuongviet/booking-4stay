@@ -1,3 +1,5 @@
+import { CLOUDINARY_BASE_URL, PORT } from 'src/common/constant/app.constant';
+
 const fieldsToRemove = [
   'deletedBy',
   'isDeleted',
@@ -5,6 +7,9 @@ const fieldsToRemove = [
   'createdAt',
   'updatedAt',
 ];
+
+const BASE_URL = `http://localhost:${PORT}`;
+const AVATAR_PATH = '/public/images/avatar';
 
 export function cleanData(data: any) {
   const cleanObject = (obj: any): any => {
@@ -48,4 +53,14 @@ export function sanitizeCollection<T>(
 ): any {
   if (!data) return null;
   return Array.isArray(data) ? data.map(handler) : handler(data);
+}
+
+export function buildImageUrl(images: string | null): string | null {
+  if (!images) return null;
+
+  if (images.startsWith('4stay/')) {
+    return `${CLOUDINARY_BASE_URL}/${images}.jpg`;
+  }
+
+  return `${BASE_URL}${AVATAR_PATH}/${images}`;
 }

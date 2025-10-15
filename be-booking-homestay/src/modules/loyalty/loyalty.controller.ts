@@ -14,7 +14,7 @@ import { UpdateLoyaltyLevelDto } from './dto/update-loyalty-level.dto';
 import { UpdateUserLoyaltyDto } from './dto/update-user-loyalty.dto';
 import { Roles } from 'src/common/decorator/roles.decorator';
 
-@ApiTags('Loyalty')
+@ApiTags('loyalty')
 @ApiBearerAuth('AccessToken')
 @Controller('loyalty')
 export class LoyaltyController {

@@ -44,3 +44,38 @@ export async function createLoyaltyProgram(
 
   return loyalty;
 }
+
+export async function recalculateLoyaltyLevel(
+  prisma: PrismaClient,
+  userId: number,
+): Promise<boolean> {
+  const program = await prisma.loyalty_program.findUnique({
+    where: { userId },
+    include: { loyalty_levels: true },
+  });
+  if (!program) return false;
+
+  const levels = await prisma.loyalty_levels.findMany({
+    orderBy: { minPoints: 'asc' },
+  });
+  if (!levels.length) return false;
+
+  const currentPoints = program.points;
+  const newLevel = [...levels]
+    .reverse()
+    .find((lvl) => currentPoints >= lvl.minPoints);
+
+  if (newLevel && newLevel.id !== program.levelId) {
+    await prisma.loyalty_program.update({
+      where: { userId },
+      data: {
+        levelId: newLevel.id,
+        lastUpgradeDate: new Date(),
+      },
+    });
+
+    return true;
+  }
+
+  return false;
+}

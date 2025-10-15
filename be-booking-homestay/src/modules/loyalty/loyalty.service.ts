@@ -196,28 +196,4 @@ export class LoyaltyService {
       message: `Cập nhật lại cấp độ cho ${updatedCount} người dùng.`,
     };
   }
-
-  async createLoyaltyForUser(userId: number) {
-    const existing = await this.prisma.loyalty_program.findUnique({
-      where: { userId },
-    });
-    if (existing) return existing;
-
-    const defaultLevel = await this.prisma.loyalty_levels.findFirst({
-      orderBy: { minPoints: 'asc' },
-    });
-    if (!defaultLevel) {
-      throw new BadRequestException('Không tìm thấy cấp độ loyalty mặc định!');
-    }
-
-    return await this.prisma.loyalty_program.create({
-      data: {
-        userId,
-        totalBookings: 0,
-        totalNights: 0,
-        points: 0,
-        levelId: defaultLevel.id,
-      },
-    });
-  }
 }

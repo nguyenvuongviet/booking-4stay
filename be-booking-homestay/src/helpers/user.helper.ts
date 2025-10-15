@@ -1,18 +1,4 @@
-import { CLOUDINARY_BASE_URL, PORT } from 'src/common/constant/app.constant';
-import { sanitizeCollection } from 'src/utils/object';
-
-const BASE_URL = `http://localhost:${PORT}`;
-const AVATAR_PATH = '/public/images/avatar';
-
-function buildAvatarUrl(avatar: string | null): string | null {
-  if (!avatar) return null;
-
-  if (avatar.startsWith('4stay/')) {
-    return `${CLOUDINARY_BASE_URL}/${avatar}.jpg`;
-  }
-
-  return `${BASE_URL}${AVATAR_PATH}/${avatar}`;
-}
+import { buildImageUrl, sanitizeCollection } from 'src/utils/object';
 
 function sanitizeUser(user: any) {
   if (!user) return null;
@@ -25,7 +11,7 @@ function sanitizeUser(user: any) {
     phoneNumber: user.phoneNumber,
     dateOfBirth: user.dateOfBirth ? user.dateOfBirth.toISOString() : null,
     gender: user.gender,
-    avatar: buildAvatarUrl(user.avatar),
+    avatar: buildImageUrl(user.avatar),
     country: user.country,
     roles: Array.isArray(user.user_roles)
       ? user.user_roles.map((ur: any) => ur.roles?.name).filter(Boolean)

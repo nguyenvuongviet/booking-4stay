@@ -9,7 +9,7 @@ import { LocationModule } from './modules/location/location.module';
 import { LoyaltyModule } from './modules/loyalty/loyalty.module';
 import { OtpModule } from './modules/otp/otp.module';
 import { PrismaService } from './modules/prisma/prisma.service';
-// import { RoomModule } from './modules/room/room.module';
+import { RoomModule } from './modules/room/room.module';
 import { TokenModule } from './modules/token/token.module';
 import { UserModule } from './modules/user/user.module';
 
@@ -25,7 +25,7 @@ import { UserModule } from './modules/user/user.module';
     UserModule,
     LocationModule,
     LoyaltyModule,
-    // RoomModule,
+    RoomModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService, ProtectStrategy],
