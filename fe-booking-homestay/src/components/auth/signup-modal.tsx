@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/context/auth-context";
 import { Eye, EyeOff, X } from "lucide-react";
 import { useEffect, useState } from "react";
-import axios from "axios";
+import { register } from "@/services/authApi";
 
 interface SignUpModalProps {
   show: boolean;
@@ -67,7 +67,7 @@ export default function SignUpModal({
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-     console.log("Sign In button clicked");
+    console.log("Sign In button clicked");
     let hasError = false;
 
     if (!firstName.trim()) {
@@ -109,15 +109,15 @@ export default function SignUpModal({
     setLoading(true);
 
     try {
-      const { data } = await axios.post("http://localhost:3069/auth/register", {
-        fullName: firstName.trim() + " " + lastName.trim(),
+      const { data } = await register({
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
         email: emailInput.trim(),
-        password,
+        password: password,
         phoneNumber: phone.trim(),
       });
       // lưu email vào context để OTPModal có thể dùng
       setEmail(emailInput);
-      localStorage.setItem("token", data.token);
       setShow(false);
       switchToOTP(true);
     } catch (error: any) {
@@ -135,16 +135,19 @@ export default function SignUpModal({
     <>
       {/* Sign Up Modal */}
       {show && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-8 w-full max-w-md mx-4 shadow-2xl">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-semibold text-[#3f9bda]">Sign up</h2>
+        <div className="fixed inset-0 bg-foreground/50 flex items-center justify-center z-50">
+          <div className="bg-card rounded-2xl p-8 w-full max-w-md mx-4 shadow-2xl">
+            <div className="flex justify-end">
               <button
                 onClick={() => setShow(false)}
-                className="text-[#667085] hover:text-[#344054]"
+                className="text-primary hover:text-primary/80"
               >
                 <X size={24} />
               </button>
+            </div>
+
+            <div className="text-center mb-4">
+              <h2 className="text-3xl elegant-heading text-primary">SIGN UP</h2>
             </div>
 
             <form className="space-y-1" onSubmit={handleSignUp}>
@@ -152,18 +155,18 @@ export default function SignUpModal({
                 <div>
                   <Label
                     htmlFor="firstName"
-                    className="text-[#344054] text-sm font-medium"
+                    className="text-foreground elegant-subheading"
                   >
                     First name
                   </Label>
                   <Input
                     id="firstName"
-                    className="mt-1 border-[#d0d5dd] focus:border-[#3f9bda] focus:ring-[#3f9bda]"
+                    className="bg-input rounded-2xl mt-1 mb-2"
                     value={firstName}
                     onChange={(e) => setFirstName(e.target.value)}
                   />
                   {firstNameError && (
-                    <p className="text-red-500 text-sm mb-1">
+                    <p className="text-destructive text-xs mb-1">
                       {firstNameError}
                     </p>
                   )}
@@ -172,18 +175,20 @@ export default function SignUpModal({
                 <div>
                   <Label
                     htmlFor="lastName"
-                    className="text-[#344054] text-sm font-medium"
+                    className="text-foreground elegant-subheading"
                   >
                     Last name
                   </Label>
                   <Input
                     id="lastName"
-                    className="mt-1 border-[#d0d5dd] focus:border-[#3f9bda] focus:ring-[#3f9bda]"
+                    className="bg-input rounded-2xl mt-1 mb-2"
                     value={lastName}
                     onChange={(e) => setLastName(e.target.value)}
                   />
                   {lastNameError && (
-                    <p className="text-red-500 text-sm mb-1">{lastNameError}</p>
+                    <p className="text-destructive text-xs mb-1">
+                      {lastNameError}
+                    </p>
                   )}
                 </div>
               </div>
@@ -191,46 +196,46 @@ export default function SignUpModal({
               <div>
                 <Label
                   htmlFor="signupEmail"
-                  className="text-[#344054] text-sm font-medium"
+                  className="text-foreground elegant-subheading"
                 >
                   Your email
                 </Label>
                 <Input
                   id="signupEmail"
                   type="email"
-                  className="mt-1 border-[#d0d5dd] focus:border-[#3f9bda] focus:ring-[#3f9bda]"
+                  className="bg-input rounded-2xl mt-1 mb-2"
                   value={emailInput}
                   onChange={(e) => setEmailInput(e.target.value)}
                 />
               </div>
               {emailError && (
-                <p className="text-red-500 text-sm mb-2">{emailError}</p>
+                <p className="text-destructive text-xs mb-2">{emailError}</p>
               )}
 
               <div>
                 <Label
                   htmlFor="phone"
-                  className="text-[#344054] text-sm font-medium"
+                  className="text-foreground elegant-subheading"
                 >
                   Your mobile phone number
                 </Label>
                 <Input
                   id="phone"
                   type="tel"
-                  className="mt-1 border-[#d0d5dd] focus:border-[#3f9bda] focus:ring-[#3f9bda]"
+                  className="bg-input rounded-2xl mt-1 mb-2"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                 />
               </div>
               {phoneError && (
-                <p className="text-red-500 text-sm mb-2">{phoneError}</p>
+                <p className="text-destructive text-xs mb-2">{phoneError}</p>
               )}
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <Label
                     htmlFor="signupPassword"
-                    className="text-[#344054] text-sm font-medium"
+                    className="text-foreground elegant-subheading"
                   >
                     Password
                   </Label>
@@ -238,7 +243,7 @@ export default function SignUpModal({
                     <Input
                       id="signupPassword"
                       type={showPassword ? "text" : "password"}
-                      className="mt-1 border-[#d0d5dd] focus:border-[#3f9bda] focus:ring-[#3f9bda] pr-10"
+                      className="bg-input rounded-2xl mt-1 mb-2"
                       value={password}
                       onChange={(e) => {
                         setPassword(e.target.value);
@@ -247,28 +252,30 @@ export default function SignUpModal({
                     />
                     <button
                       type="button"
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#667085]"
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-primary hover:text-primary/80"
                       onClick={() => setShowPassword(!showPassword)}
                     >
                       {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                     </button>
                   </div>
                   {passwordError && (
-                    <p className="text-red-500 text-sm mb-1">{passwordError}</p>
+                    <p className="text-destructive text-xs mb-1">
+                      {passwordError}
+                    </p>
                   )}
                 </div>
 
                 <div>
                   <Label
                     htmlFor="confirmPassword"
-                    className="text-[#344054] text-sm font-medium"
+                    className="text-foreground elegant-subheading"
                   >
                     Confirm your password
                   </Label>
                   <Input
-                    id="confirmSigupPassword"
+                    id="confirmSignupPassword"
                     type="password"
-                    className="mt-1 border-[#d0d5dd] focus:border-[#3f9bda] focus:ring-[#3f9bda] pr-10"
+                    className="bg-input rounded-2xl mt-1 "
                     value={confirmPassword}
                     onChange={(e) => {
                       setConfirmPassword(e.target.value);
@@ -276,27 +283,27 @@ export default function SignUpModal({
                     }}
                   />
                   {confirmPasswordError && (
-                    <p className="text-red-500 text-sm mb-1">
+                    <p className="text-destructive text-xs mb-1">
                       {confirmPasswordError}
                     </p>
                   )}
                 </div>
-                <p className="text-[#667085] text-xs mb-4">
+                <p className="text-muted-foreground elegant-subheading text-xs mb-4">
                   Use 6 or more characters!
                 </p>
               </div>
 
               <Button
-                className="w-full bg-[#3f9bda] hover:bg-[#2980b9] text-white py-3"
-                type="submit" 
-                disabled={loading} 
+                className="rounded-2xl w-full bg-primary hover:bg-primary/90 text-primary-foreground h-10 elegant-subheading text-md"
+                type="submit"
+                disabled={loading}
               >
                 {loading ? "Signing up..." : "Sign up"}
               </Button>
             </form>
 
             <div className="mt-2 text-center">
-              <span className="text-[#667085] text-sm">
+              <span className="text-muted-foreground elegant-subheading text-sm">
                 Already have an account?{" "}
               </span>
               <button
@@ -304,21 +311,24 @@ export default function SignUpModal({
                   setShow(false);
                   switchToSignIn(true);
                 }}
-                className="text-[#3f9bda] text-sm font-medium hover:underline"
+                className="text-primary elegant-heading text-base hover:underline"
               >
                 Sign in
               </button>
             </div>
 
             <div className="flex items-center my-4">
-              <div className="flex-grow border-t border-gray-300"></div>
-              <span className="mx-4 text-[#667085] text-sm">OR</span>
-              <div className="flex-grow border-t border-gray-300"></div>
+              <div className="flex-grow border-t border-border"></div>
+              <span className="mx-4 elegant-subheading text-muted-foreground text-sm">
+                OR
+              </span>
+              <div className="flex-grow border-t border-border"></div>
             </div>
+
             <div className="mt-2">
               <Button
                 variant="outline"
-                className="w-full border-[#d0d5dd] text-[#344054] hover:bg-[#f9fafb] flex items-center justify-center gap-2 bg-transparent"
+                className="rounded-2xl w-full border-border text-foreground bg-transparent hover:bg-muted flex items-center justify-center gap-2"
               >
                 <svg width="18" height="18" viewBox="0 0 24 24">
                   <path

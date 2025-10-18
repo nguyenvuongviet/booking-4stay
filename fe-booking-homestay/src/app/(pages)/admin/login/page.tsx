@@ -1,47 +1,35 @@
 "use client";
-
+import { useEffect, useState } from "react";
+import { useAuth } from "@/context/auth-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import Image from "next/image";
 import { Label } from "@/components/ui/label";
-import { useAuth } from "@/context/auth-context";
 import { Eye, EyeOff, X } from "lucide-react";
-import { useEffect, useState } from "react";
 import { login } from "@/services/authApi";
 import { STORAGE_KEYS } from "@/constants";
+import { useRouter } from "next/navigation";
 
-interface SignInModalProps {
-  show: boolean;
-  setShow: (show: boolean) => void;
-  switchToSignUp: (show: boolean) => void;
-  switchToForgotPassword: (show: boolean) => void;
-}
-
-export default function SignInModal({
-  show,
-  setShow,
-  switchToSignUp,
-  switchToForgotPassword,
-}: SignInModalProps) {
+export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [password, setPassword] = useState("");
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [apiError, setApiError] = useState("");
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   //local state
   const [emailInput, setEmailInput] = useState("");
   const { setUser } = useAuth();
 
-  useEffect(() => {
-    setEmailInput("");
-    setPassword("");
-    setEmailError("");
-    setPasswordError("");
-    setApiError("");
-  }, [show]);
-
-  if (!show) return null;
+  // useEffect(() => {
+  //   setEmailInput("");
+  //   setPassword("");
+  //   setEmailError("");
+  //   setPasswordError("");
+  //   setApiError("");
+  // });
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,7 +67,7 @@ export default function SignInModal({
           user: data.user,
         })
       );
-      setShow(false);
+      router.push("/admin/home");
     } catch (error: any) {
       if (error.response) {
         // const message = error.response.data?.message || "Sign in failed!";
@@ -94,34 +82,27 @@ export default function SignInModal({
     }
   };
 
-  const handleSocialSignIn = (provider: "google") => {
-    // Chuyển hướng tới backend OAuth endpoint
-    window.location.href = `http://localhost:3069/auth/${provider}`;
-  };
-
   return (
-    <>
-      {/* Sign In Modal */}
-      {show && (
-        <div className="fixed inset-0 bg-foreground/50 flex items-center justify-center z-50">
-          <div className="bg-card rounded-2xl p-8 w-full max-w-md mx-4 shadow-2xl">
-            <div className="flex justify-end">
-              <button
-                onClick={() => setShow(false)}
-                className="text-primary hover:text-primary/80"
-              >
-                <X size={24} />
-              </button>
-            </div>
-
+    <div className="flex min-h-screen">
+      <div className=" lg:flex w-2/3 items-center justify-center bg-whitek">
+          <Image
+            src="/4stay-logo.png"
+            alt="HCMUTE Campus"
+            width={400}
+            height={600}
+            className="object-cover "
+            priority
+          />
+      </div>
+      <div className="lg:flex w-1/3 items-center justify-center bg-gray-100 pb-20">
+        <div className="mx-auto p-20 fixed flex items-center justify-center">
+          <div className="w-100">
             <div className="text-center mb-4">
               <h2 className="text-3xl elegant-heading text-primary">SIGN IN</h2>
             </div>
-
             {apiError && (
               <p className="text-destructive text-sm mt-2">{apiError}</p>
             )}
-
             <form className="space-y-4 mt-2" onSubmit={handleSignIn}>
               <div>
                 <Label
@@ -180,48 +161,47 @@ export default function SignInModal({
               </Button>
             </form>
 
-            <div className="mt-4 flex justify-between items-center text-sm">
-              <div>
-                <span className="text-muted-foreground elegant-subheading">
-                  Don{"'"}t have an account?{" "}
-                </span>
-                <button
-                  onClick={() => {
-                    setShow(false);
-                    switchToSignUp(true);
-                  }}
-                  className="text-primary elegant-heading text-base hover:underline"
-                >
-                  Sign up
-                </button>
-              </div>
-              <div>
-                <button
-                  className="text-primary elegant-subheading hover:underline"
-                  onClick={() => {
-                    switchToForgotPassword(true);
-                    setShow(false);
-                  }}
-                >
-                  Forgot your password?
-                </button>
-              </div>
-            </div>
+            {/* <div className="mt-4 flex justify-between items-center text-sm">
+          <div>
+            <span className="text-muted-foreground elegant-subheading">
+              Don{"'"}t have an account?{" "}
+            </span>
+            <button
+              onClick={() => {
+                setShow(false);
+                switchToSignUp(true);
+              }}
+              className="text-primary elegant-heading text-base hover:underline"
+            >
+              Sign up
+            </button>
+          </div>
+          <div>
+            <button
+              className="text-primary elegant-subheading hover:underline"
+              onClick={() => {
+                switchToForgotPassword(true);
+                setShow(false);
+              }}
+            >
+              Forgot your password?
+            </button>
+          </div>
+        </div> */}
 
-            <div className="flex items-center mt-6">
+            {/* <div className="flex items-center mt-6">
               <div className="flex-grow border-t border-border"></div>
               <span className="mx-4 elegant-subheading text-muted-foreground text-sm">
                 OR
               </span>
               <div className="flex-grow border-t border-border"></div>
-            </div>
+            </div> */}
 
-            <div className="mt-6">
+            {/* <div className="mt-6">
               <Button
                 type="button"
                 variant="outline"
                 className="rounded-2xl w-full border-border text-foreground bg-transparent hover:bg-muted flex items-center justify-center gap-2"
-                onClick={() => handleSocialSignIn("google")}
                 disabled={loading}
               >
                 <svg width="18" height="18" viewBox="0 0 24 24">
@@ -244,10 +224,10 @@ export default function SignInModal({
                 </svg>
                 Continue with Google
               </Button>
-            </div>
+            </div> */}
           </div>
         </div>
-      )}
-    </>
+      </div>
+    </div>
   );
 }

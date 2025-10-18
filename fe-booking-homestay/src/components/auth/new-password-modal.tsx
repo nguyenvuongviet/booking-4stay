@@ -3,10 +3,10 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Eye, EyeOff, X } from "lucide-react";
-import { useState, useEffect } from "react";
 import { useAuth } from "@/context/auth-context";
-import axios from "axios";
+import { reset_password } from "@/services/authApi";
+import { Eye, EyeOff, X } from "lucide-react";
+import { useEffect, useState } from "react";
 
 interface NewPasswordModalProps {
   show: boolean;
@@ -59,14 +59,11 @@ export default function NewPasswordModal({
 
     // Gọi API tạo mật khẩu mới ở đây
     try {
-      const { data } = await axios.post(
-        "http://localhost:3069/auth/reset-password",
-        {
-          email,
-          otp,
-          newPassword: password,
-        }
-      );
+      const { data } = await reset_password({
+        email,
+        otp,
+        newPassword: password,
+      });
       setShow(false);
     } catch (error: any) {
       if (error.response) {
@@ -83,28 +80,29 @@ export default function NewPasswordModal({
     <>
       {/* New Password Modal */}
       {show && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-8 w-full max-w-md mx-4 shadow-2xl">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-semibold text-[#3f9bda]">
-                Create new password
-              </h2>
+        <div className="fixed inset-0 bg-foreground/50 flex items-center justify-center z-50">
+          <div className="bg-card rounded-lg p-8 w-full max-w-md mx-4 shadow-2xl">
+            <div className="flex justify-end">
               <button
                 onClick={() => setShow(false)}
-                className="text-[#667085] hover:text-[#344054]"
+                className="text-primary hover:text-primary/80"
               >
                 <X size={24} />
               </button>
             </div>
+
+            <div className="text-center mb-4">
+              <h2 className="text-3xl elegant-heading text-primary">Create new password</h2>
+            </div>
             {apiError && (
-              <p className="text-red-500 text-sm mb-4">{apiError}</p>
+              <p className="text-destructive text-sm mb-4">{apiError}</p>
             )}
             <form className="space-y-4" onSubmit={handleCreatePassword}>
               <div className="grid grid-cols-1 gap-4">
                 <div>
                   <Label
                     htmlFor="signupPassword"
-                    className="text-[#344054] text-sm font-medium"
+                    className="text-foreground elegant-subheading"
                   >
                     Password
                   </Label>
@@ -112,7 +110,7 @@ export default function NewPasswordModal({
                     <Input
                       id="password"
                       type={showPassword ? "text" : "password"}
-                      className="mt-1 border-[#d0d5dd] focus:border-[#3f9bda] focus:ring-[#3f9bda] pr-10"
+                      className="bg-input rounded-2xl mt-1 mb-2 pr-10"
                       value={password}
                       onChange={(e) => {
                         setPassword(e.target.value);
@@ -121,20 +119,20 @@ export default function NewPasswordModal({
                     />
                     <button
                       type="button"
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#667085]"
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-primary hover:text-primary/80"
                       onClick={() => setShowPassword(!showPassword)}
                     >
                       {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                     </button>
                   </div>
                   {passwordError && (
-                    <p className="text-red-500 text-sm mb-1">{passwordError}</p>
+                    <p className="text-destructive text-sm mb-1">{passwordError}</p>
                   )}
                 </div>
                 <div>
                   <Label
                     htmlFor="confirmPassword"
-                    className="text-[#344054] text-sm font-medium"
+                    className="text-foreground elegant-subheading"
                   >
                     Confirm your password
                   </Label>
@@ -142,7 +140,7 @@ export default function NewPasswordModal({
                     <Input
                       id="confirmPassword"
                       type="password"
-                      className="mt-1 border-[#d0d5dd] focus:border-[#3f9bda] focus:ring-[#3f9bda] pr-10"
+                      className="bg-input rounded-2xl mt-1 mb-2 pr-10"
                       value={confirmPassword}
                       onChange={(e) => {
                         setConfirmPassword(e.target.value);
@@ -151,18 +149,18 @@ export default function NewPasswordModal({
                     />
                   </div>
                   {confirmPasswordError && (
-                    <p className="text-red-500 text-sm mb-1">
+                    <p className="text-destructive text-sm mb-1">
                       {confirmPasswordError}
                     </p>
                   )}
                 </div>
               </div>
 
-              <p className="text-[#667085] text-xs">
+              <p className="text-muted-foreground elegant-subheading text-xs mb-4">
                 Use 6 or more characters!
               </p>
 
-              <Button className="w-full bg-[#3f9bda] hover:bg-[#2980b9] text-white py-3">
+              <Button className="rounded-2xl w-full bg-primary hover:bg-primary/90 text-primary-foreground h-10 elegant-subheading text-md">
                 Sign in
               </Button>
             </form>

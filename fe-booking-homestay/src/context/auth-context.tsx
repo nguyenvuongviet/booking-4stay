@@ -1,13 +1,27 @@
 "use client";
 
-import { createContext, useContext, useState, ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  ReactNode,
+  useEffect,
+} from "react";
 import SignInModal from "@/components/auth/signin-modal";
 import SignUpModal from "@/components/auth/signup-modal";
 import ForgotPasswordModal from "@/components/auth/forgot-password-modal";
 import OTPModal from "@/components/auth/otp-modal";
 import NewPasswordModal from "@/components/auth/new-password-modal";
+import { IUser } from "../models/User";
+import { useRouter } from "next/navigation";
+import { login as loginApi } from "@/services/authApi";
+import { STORAGE_KEYS } from "@/constants";
 
 interface AuthContextType {
+  user: IUser | null;
+  setUser: (user: IUser | null) => void;
+  updateUser: (user: IUser) => void;
+  logout: () => void;
   openSignIn: () => void;
   openSignUp: () => void;
   openForgotPassword: () => void;
@@ -17,6 +31,7 @@ interface AuthContextType {
   setEmail: (email: string) => void;
   otp: string;
   setOtp: (otp: string) => void;
+  openNewPassword: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -32,6 +47,47 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [otpContext, setOtpContext] = useState<"signup" | "forgotPassword">(
     "signup"
   );
+  const [user, setUser] = useState<IUser | null>(null);
+  const router = useRouter();
+  useEffect(() => {
+    // Load khi mount
+    const saved = localStorage.getItem(STORAGE_KEYS.CURRENT_USER);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (parsed?.user) {
+        setUser(parsed.user); // chỉ set user, giữ accessToken & refreshToken nguyên vẹn
+      }
+    }
+  }, []);
+
+  const updateUser = (newUser: IUser) => {
+    setUser(newUser);
+
+    const currentData = JSON.parse(
+      localStorage.getItem(STORAGE_KEYS.CURRENT_USER) || "{}"
+    );
+    const updatedData = {
+      ...currentData,
+      user: newUser,
+    };
+    localStorage.setItem(
+      STORAGE_KEYS.CURRENT_USER,
+      JSON.stringify(updatedData)
+    );
+  };
+
+ const logout = () => {
+  localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
+  const role = user?.role;
+  setUser(null);
+
+  if (role === 1) {
+    router.push("/admin/login");
+  } else {
+    router.push("/");
+  }
+};
+
 
   const closeAll = () => {
     setShowSignIn(false);
@@ -61,9 +117,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setShowOTP(true);
   };
 
+  const openNewPassword = () => {
+    closeAll();
+    setShowNewPassword(true);
+  };
+
   return (
     <AuthContext.Provider
       value={{
+        user,
+        setUser,
+        updateUser,
+        logout,
         openSignIn,
         openSignUp,
         openForgotPassword,
@@ -73,6 +138,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         openOTP,
         otp,
         setOtp,
+        openNewPassword,
       }}
     >
       {children}

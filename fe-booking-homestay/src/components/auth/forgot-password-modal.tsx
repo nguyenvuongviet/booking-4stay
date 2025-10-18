@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Eye, EyeOff, X } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
-import axios from "axios";
+import { forgot_password } from "@/services/authApi";
 
 interface ForgotPasswordModalProps {
   show: boolean;
@@ -51,12 +51,7 @@ export default function ForgotPasswordModal({
     setApiError("");
     // setLoading(true);
     try {
-      const { data } = await axios.post(
-        "http://localhost:3069/auth/forgot-password",
-        {
-          email: emailInput.trim(),
-        }
-      );
+      const { data } = await forgot_password({ email: emailInput.trim() });
       setEmail(emailInput);
       setError("");
       setShow(false); // đóng modal forgot password
@@ -76,18 +71,19 @@ export default function ForgotPasswordModal({
     <>
       {/* Modal */}
       {show && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-8 w-full max-w-md mx-4 shadow-2xl">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-semibold text-[#3f9bda]">
-                Forgot Password
-              </h2>
+        <div className="fixed inset-0 bg-foreground/50 flex items-center justify-center z-50">
+          <div className="bg-card rounded-lg p-8 w-full max-w-md shadow-2xl">
+            <div className="flex justify-end">
               <button
                 onClick={() => setShow(false)}
-                className="text-[#667085] hover:text-[#344054]"
+                className="text-primary hover:text-primary/80"
               >
                 <X size={24} />
               </button>
+            </div>
+
+            <div className="text-center mb-4">
+              <h2 className="text-3xl elegant-heading text-primary">Forgot password</h2>
             </div>
 
             <form
@@ -100,7 +96,7 @@ export default function ForgotPasswordModal({
               <div>
                 <Label
                   htmlFor="signupEmail"
-                  className="text-[#344054] text-sm font-medium"
+                  className="text-foreground elegant-subheading"
                 >
                   Your email
                 </Label>
@@ -109,17 +105,17 @@ export default function ForgotPasswordModal({
                   type="email"
                   value={emailInput}
                   onChange={(e) => setEmailInput(e.target.value)}
-                  className={`mt-1 border-[#d0d5dd] focus:border-[#3f9bda] focus:ring-[#3f9bda] ${
-                    error ? "border-red-500" : ""
+                  className={`bg-input rounded-2xl mt-1 mb-2 ${
+                    error ? "border-destructive" : ""
                   }`}
                 />
-                {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
+                {error && <p className="text-destructive text-sm mt-1">{error}</p>}
               </div>
               {apiError && (
-                <p className="text-red-500 text-sm mb-4">{apiError}</p>
+                <p className="text-destructive text-sm mb-4">{apiError}</p>
               )}
               <Button
-                className="w-full bg-[#3f9bda] hover:bg-[#2980b9] text-white py-3"
+                className="mt-4 mb-6 rounded-2xl w-full bg-primary hover:bg-primary/90 text-primary-foreground h-10 elegant-subheading text-md"
                 onClick={handleContinue}
               >
                 Send OTP
