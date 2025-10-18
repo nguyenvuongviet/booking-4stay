@@ -76,11 +76,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     );
   };
 
-  const logout = () => {
-    localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
-    setUser(null);
+ const logout = () => {
+  localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
+  const role = user?.role;
+  setUser(null);
+
+  if (role === 1) {
+    router.push("/admin/login");
+  } else {
     router.push("/");
-  };
+  }
+};
+
 
   const closeAll = () => {
     setShowSignIn(false);
