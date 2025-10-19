@@ -1,6 +1,201 @@
 CREATE DATABASE IF NOT EXISTS `db_booking_homestay`;
 USE `db_booking_homestay`;
 
+DROP TABLE IF EXISTS `roles`;
+CREATE TABLE `roles` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(50) NOT NULL,
+  `description` text,
+  `isActive` tinyint(1) NOT NULL DEFAULT '1',
+  `deletedBy` int NOT NULL DEFAULT '0',
+  `isDeleted` tinyint(1) NOT NULL DEFAULT '0',
+  `deletedAt` timestamp NULL DEFAULT NULL,
+  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `name` (`name`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+DROP TABLE IF EXISTS `users`;
+CREATE TABLE `users` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `email` varchar(255) NOT NULL,
+  `password` varchar(255) DEFAULT NULL,
+  `firstName` varchar(255) NOT NULL,
+  `lastName` varchar(255) NOT NULL,
+  `phoneNumber` varchar(20) DEFAULT NULL,
+  `dateOfBirth` date DEFAULT NULL,
+  `gender` enum('MALE','FEMALE','OTHER') DEFAULT NULL,
+  `avatar` text,
+  `country` varchar(100) DEFAULT NULL,
+  `isVerified` tinyint(1) NOT NULL DEFAULT '0',
+  `isActive` tinyint(1) NOT NULL DEFAULT '0',
+  `googleId` varchar(255) DEFAULT NULL,
+  `provider` enum('LOCAL','GOOGLE') NOT NULL DEFAULT 'LOCAL',
+  `lastLogin` timestamp NULL DEFAULT NULL,
+  `deletedBy` int NOT NULL DEFAULT '0',
+  `isDeleted` tinyint(1) NOT NULL DEFAULT '0',
+  `deletedAt` timestamp NULL DEFAULT NULL,
+  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `email` (`email`)
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+DROP TABLE IF EXISTS `user_roles`;
+CREATE TABLE `user_roles` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `userId` int NOT NULL,
+  `roleId` int NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `user_role_unique` (`userId`,`roleId`),
+  KEY `roleId` (`roleId`),
+  CONSTRAINT `user_roles_ibfk_1` FOREIGN KEY (`userId`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `user_roles_ibfk_2` FOREIGN KEY (`roleId`) REFERENCES `roles` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+DROP TABLE IF EXISTS `otp_codes`;
+CREATE TABLE `otp_codes` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `userId` int DEFAULT NULL,
+  `email` varchar(255) NOT NULL,
+  `otp` varchar(10) NOT NULL,
+  `expiresAt` timestamp NOT NULL,
+  `isUsed` tinyint(1) NOT NULL DEFAULT '0',
+  `deletedBy` int NOT NULL DEFAULT '0',
+  `isDeleted` tinyint(1) NOT NULL DEFAULT '0',
+  `deletedAt` timestamp NULL DEFAULT NULL,
+  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `userId` (`userId`),
+  CONSTRAINT `otp_codes_ibfk_1` FOREIGN KEY (`userId`) REFERENCES `users` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+DROP TABLE IF EXISTS `loyalty_levels`;
+CREATE TABLE `loyalty_levels` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(50) NOT NULL,
+  `minPoints` int NOT NULL DEFAULT '0',
+  `description` varchar(255) DEFAULT NULL,
+  `isActive` tinyint(1) NOT NULL DEFAULT '1',
+  `deletedBy` int NOT NULL DEFAULT '0',
+  `isDeleted` tinyint(1) NOT NULL DEFAULT '0',
+  `deletedAt` timestamp NULL DEFAULT NULL,
+  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `name` (`name`)
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+DROP TABLE IF EXISTS `loyalty_program`;
+CREATE TABLE `loyalty_program` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `userId` int NOT NULL,
+  `totalBookings` int NOT NULL DEFAULT '0',
+  `totalNights` int NOT NULL DEFAULT '0',
+  `points` int NOT NULL DEFAULT '0',
+  `levelId` int NOT NULL,
+  `lastUpgradeDate` timestamp NULL DEFAULT NULL,
+  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `userId` (`userId`),
+  KEY `levelId` (`levelId`),
+  CONSTRAINT `loyalty_program_ibfk_1` FOREIGN KEY (`userId`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `loyalty_program_ibfk_2` FOREIGN KEY (`levelId`) REFERENCES `loyalty_levels` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+DROP TABLE IF EXISTS `locations`;
+CREATE TABLE `locations` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `province` varchar(100) NOT NULL,
+  `district` varchar(100) NOT NULL,
+  `ward` varchar(100) DEFAULT NULL,
+  `street` varchar(255) DEFAULT NULL,
+  `latitude` decimal(10,7) DEFAULT NULL,
+  `longitude` decimal(10,7) DEFAULT NULL,
+  `deletedBy` int NOT NULL DEFAULT '0',
+  `isDeleted` tinyint(1) NOT NULL DEFAULT '0',
+  `deletedAt` timestamp NULL DEFAULT NULL,
+  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+DROP TABLE IF EXISTS `rooms`;
+CREATE TABLE `rooms` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `hostId` int NOT NULL,
+  `locationId` int NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `description` text,
+  `price` decimal(12,2) NOT NULL,
+  `adultCapacity` int NOT NULL,
+  `childCapacity` int NOT NULL DEFAULT '0',
+  `status` enum('AVAILABLE','BOOKED','MAINTENANCE') DEFAULT 'AVAILABLE',
+  `rating` decimal(2,1) DEFAULT '0.0',
+  `reviewCount` int DEFAULT '0',
+  `deletedBy` int NOT NULL DEFAULT '0',
+  `isDeleted` tinyint(1) NOT NULL DEFAULT '0',
+  `deletedAt` timestamp NULL DEFAULT NULL,
+  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `hostId` (`hostId`),
+  KEY `locationId` (`locationId`),
+  CONSTRAINT `rooms_ibfk_1` FOREIGN KEY (`hostId`) REFERENCES `users` (`id`),
+  CONSTRAINT `rooms_ibfk_2` FOREIGN KEY (`locationId`) REFERENCES `locations` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+DROP TABLE IF EXISTS `room_beds`;
+CREATE TABLE `room_beds` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `roomId` int NOT NULL,
+  `type` enum('SINGLE','DOUBLE','QUEEN','KING','SOFA_BED','BUNK_BED') NOT NULL,
+  `quantity` int NOT NULL DEFAULT '1',
+  `deletedBy` int NOT NULL DEFAULT '0',
+  `isDeleted` tinyint(1) NOT NULL DEFAULT '0',
+  `deletedAt` timestamp NULL DEFAULT NULL,
+  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `roomId` (`roomId`),
+  CONSTRAINT `room_beds_ibfk_1` FOREIGN KEY (`roomId`) REFERENCES `rooms` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+DROP TABLE IF EXISTS `room_prices`;
+CREATE TABLE `room_prices` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `roomId` int NOT NULL,
+  `date` date NOT NULL,
+  `price` decimal(12,2) NOT NULL,
+  `deletedBy` int NOT NULL DEFAULT '0',
+  `isDeleted` tinyint(1) NOT NULL DEFAULT '0',
+  `deletedAt` timestamp NULL DEFAULT NULL,
+  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `roomId` (`roomId`),
+  CONSTRAINT `room_prices_ibfk_1` FOREIGN KEY (`roomId`) REFERENCES `rooms` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+DROP TABLE IF EXISTS `room_availability`;
+CREATE TABLE `room_availability` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `roomId` int NOT NULL,
+  `date` date NOT NULL,
+  `isAvailable` tinyint(1) NOT NULL DEFAULT '1',
+  `deletedBy` int NOT NULL DEFAULT '0',
+  `isDeleted` tinyint(1) NOT NULL DEFAULT '0',
+  `deletedAt` timestamp NULL DEFAULT NULL,
+  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `roomId` (`roomId`),
+  CONSTRAINT `room_availability_ibfk_1` FOREIGN KEY (`roomId`) REFERENCES `rooms` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
 DROP TABLE IF EXISTS `amenities`;
 CREATE TABLE `amenities` (
   `id` int NOT NULL AUTO_INCREMENT,
@@ -14,6 +209,35 @@ CREATE TABLE `amenities` (
   `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `name` (`name`)
+) ENGINE=InnoDB AUTO_INCREMENT=26 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+DROP TABLE IF EXISTS `room_amenities`;
+CREATE TABLE `room_amenities` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `roomId` int NOT NULL,
+  `amenityId` int NOT NULL,
+  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `room_amenity_unique` (`roomId`,`amenityId`),
+  UNIQUE KEY `uq_room_amenity` (`roomId`,`amenityId`),
+  KEY `amenityId` (`amenityId`),
+  CONSTRAINT `room_amenities_ibfk_1` FOREIGN KEY (`roomId`) REFERENCES `rooms` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `room_amenities_ibfk_2` FOREIGN KEY (`amenityId`) REFERENCES `amenities` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=39 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+DROP TABLE IF EXISTS `room_images`;
+CREATE TABLE `room_images` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `roomId` int NOT NULL,
+  `imageUrl` varchar(255) NOT NULL,
+  `isMain` tinyint(1) NOT NULL DEFAULT '0',
+  `position` int DEFAULT NULL,
+  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `roomId` (`roomId`),
+  CONSTRAINT `room_images_ibfk_1` FOREIGN KEY (`roomId`) REFERENCES `rooms` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=26 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 DROP TABLE IF EXISTS `bookings`;
@@ -54,75 +278,6 @@ CREATE TABLE `contacts` (
   PRIMARY KEY (`id`),
   KEY `userId` (`userId`),
   CONSTRAINT `contacts_ibfk_1` FOREIGN KEY (`userId`) REFERENCES `users` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
-DROP TABLE IF EXISTS `locations`;
-CREATE TABLE `locations` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `province` varchar(100) NOT NULL,
-  `district` varchar(100) NOT NULL,
-  `ward` varchar(100) DEFAULT NULL,
-  `street` varchar(255) DEFAULT NULL,
-  `latitude` decimal(10,7) DEFAULT NULL,
-  `longitude` decimal(10,7) DEFAULT NULL,
-  `deletedBy` int NOT NULL DEFAULT '0',
-  `isDeleted` tinyint(1) NOT NULL DEFAULT '0',
-  `deletedAt` timestamp NULL DEFAULT NULL,
-  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
-DROP TABLE IF EXISTS `loyalty_levels`;
-CREATE TABLE `loyalty_levels` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(50) NOT NULL,
-  `minPoints` int NOT NULL DEFAULT '0',
-  `description` varchar(255) DEFAULT NULL,
-  `isActive` tinyint(1) NOT NULL DEFAULT '1',
-  `deletedBy` int NOT NULL DEFAULT '0',
-  `isDeleted` tinyint(1) NOT NULL DEFAULT '0',
-  `deletedAt` timestamp NULL DEFAULT NULL,
-  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `name` (`name`)
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
-DROP TABLE IF EXISTS `loyalty_program`;
-CREATE TABLE `loyalty_program` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `userId` int NOT NULL,
-  `totalBookings` int NOT NULL DEFAULT '0',
-  `totalNights` int NOT NULL DEFAULT '0',
-  `points` int NOT NULL DEFAULT '0',
-  `levelId` int NOT NULL,
-  `lastUpgradeDate` timestamp NULL DEFAULT NULL,
-  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `userId` (`userId`),
-  KEY `levelId` (`levelId`),
-  CONSTRAINT `loyalty_program_ibfk_1` FOREIGN KEY (`userId`) REFERENCES `users` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `loyalty_program_ibfk_2` FOREIGN KEY (`levelId`) REFERENCES `loyalty_levels` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
-DROP TABLE IF EXISTS `otp_codes`;
-CREATE TABLE `otp_codes` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `userId` int DEFAULT NULL,
-  `email` varchar(255) NOT NULL,
-  `otp` varchar(10) NOT NULL,
-  `expiresAt` timestamp NOT NULL,
-  `isUsed` tinyint(1) NOT NULL DEFAULT '0',
-  `deletedBy` int NOT NULL DEFAULT '0',
-  `isDeleted` tinyint(1) NOT NULL DEFAULT '0',
-  `deletedAt` timestamp NULL DEFAULT NULL,
-  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `userId` (`userId`),
-  CONSTRAINT `otp_codes_ibfk_1` FOREIGN KEY (`userId`) REFERENCES `users` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 DROP TABLE IF EXISTS `payment_methods`;
@@ -178,158 +333,3 @@ CREATE TABLE `reviews` (
   CONSTRAINT `reviews_ibfk_2` FOREIGN KEY (`userId`) REFERENCES `users` (`id`),
   CONSTRAINT `reviews_chk_1` CHECK (((`rating` >= 1.0) and (`rating` <= 5.0)))
 ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
-DROP TABLE IF EXISTS `roles`;
-CREATE TABLE `roles` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(50) NOT NULL,
-  `description` text,
-  `isActive` tinyint(1) NOT NULL DEFAULT '1',
-  `deletedBy` int NOT NULL DEFAULT '0',
-  `isDeleted` tinyint(1) NOT NULL DEFAULT '0',
-  `deletedAt` timestamp NULL DEFAULT NULL,
-  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `name` (`name`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
-DROP TABLE IF EXISTS `room_amenities`;
-CREATE TABLE `room_amenities` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `roomId` int NOT NULL,
-  `amenityId` int NOT NULL,
-  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `room_amenity_unique` (`roomId`,`amenityId`),
-  UNIQUE KEY `uq_room_amenity` (`roomId`,`amenityId`),
-  KEY `amenityId` (`amenityId`),
-  CONSTRAINT `room_amenities_ibfk_1` FOREIGN KEY (`roomId`) REFERENCES `rooms` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `room_amenities_ibfk_2` FOREIGN KEY (`amenityId`) REFERENCES `amenities` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=39 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
-DROP TABLE IF EXISTS `room_availability`;
-CREATE TABLE `room_availability` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `roomId` int NOT NULL,
-  `date` date NOT NULL,
-  `isAvailable` tinyint(1) NOT NULL DEFAULT '1',
-  `deletedBy` int NOT NULL DEFAULT '0',
-  `isDeleted` tinyint(1) NOT NULL DEFAULT '0',
-  `deletedAt` timestamp NULL DEFAULT NULL,
-  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `roomId` (`roomId`),
-  CONSTRAINT `room_availability_ibfk_1` FOREIGN KEY (`roomId`) REFERENCES `rooms` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
-DROP TABLE IF EXISTS `room_beds`;
-CREATE TABLE `room_beds` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `roomId` int NOT NULL,
-  `type` enum('SINGLE','DOUBLE','QUEEN','KING','SOFA_BED','BUNK_BED') NOT NULL,
-  `quantity` int NOT NULL DEFAULT '1',
-  `deletedBy` int NOT NULL DEFAULT '0',
-  `isDeleted` tinyint(1) NOT NULL DEFAULT '0',
-  `deletedAt` timestamp NULL DEFAULT NULL,
-  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `roomId` (`roomId`),
-  CONSTRAINT `room_beds_ibfk_1` FOREIGN KEY (`roomId`) REFERENCES `rooms` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
-DROP TABLE IF EXISTS `room_images`;
-CREATE TABLE `room_images` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `roomId` int NOT NULL,
-  `imageUrl` varchar(255) NOT NULL,
-  `isMain` tinyint(1) NOT NULL DEFAULT '0',
-  `position` int DEFAULT NULL,
-  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `roomId` (`roomId`),
-  CONSTRAINT `room_images_ibfk_1` FOREIGN KEY (`roomId`) REFERENCES `rooms` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=26 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
-DROP TABLE IF EXISTS `room_prices`;
-CREATE TABLE `room_prices` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `roomId` int NOT NULL,
-  `date` date NOT NULL,
-  `price` decimal(12,2) NOT NULL,
-  `deletedBy` int NOT NULL DEFAULT '0',
-  `isDeleted` tinyint(1) NOT NULL DEFAULT '0',
-  `deletedAt` timestamp NULL DEFAULT NULL,
-  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `roomId` (`roomId`),
-  CONSTRAINT `room_prices_ibfk_1` FOREIGN KEY (`roomId`) REFERENCES `rooms` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
-DROP TABLE IF EXISTS `rooms`;
-CREATE TABLE `rooms` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `hostId` int NOT NULL,
-  `locationId` int NOT NULL,
-  `name` varchar(255) NOT NULL,
-  `description` text,
-  `price` decimal(12,2) NOT NULL,
-  `adultCapacity` int NOT NULL,
-  `childCapacity` int NOT NULL DEFAULT '0',
-  `status` enum('AVAILABLE','BOOKED','MAINTENANCE') DEFAULT 'AVAILABLE',
-  `rating` decimal(2,1) DEFAULT '0.0',
-  `reviewCount` int DEFAULT '0',
-  `deletedBy` int NOT NULL DEFAULT '0',
-  `isDeleted` tinyint(1) NOT NULL DEFAULT '0',
-  `deletedAt` timestamp NULL DEFAULT NULL,
-  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `hostId` (`hostId`),
-  KEY `locationId` (`locationId`),
-  CONSTRAINT `rooms_ibfk_1` FOREIGN KEY (`hostId`) REFERENCES `users` (`id`),
-  CONSTRAINT `rooms_ibfk_2` FOREIGN KEY (`locationId`) REFERENCES `locations` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
-DROP TABLE IF EXISTS `user_roles`;
-CREATE TABLE `user_roles` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `userId` int NOT NULL,
-  `roleId` int NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `user_role_unique` (`userId`,`roleId`),
-  KEY `roleId` (`roleId`),
-  CONSTRAINT `user_roles_ibfk_1` FOREIGN KEY (`userId`) REFERENCES `users` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `user_roles_ibfk_2` FOREIGN KEY (`roleId`) REFERENCES `roles` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
-DROP TABLE IF EXISTS `users`;
-CREATE TABLE `users` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `email` varchar(255) NOT NULL,
-  `password` varchar(255) DEFAULT NULL,
-  `firstName` varchar(255) NOT NULL,
-  `lastName` varchar(255) NOT NULL,
-  `phoneNumber` varchar(20) DEFAULT NULL,
-  `dateOfBirth` date DEFAULT NULL,
-  `gender` enum('MALE','FEMALE','OTHER') DEFAULT NULL,
-  `avatar` text,
-  `country` varchar(100) DEFAULT NULL,
-  `isVerified` tinyint(1) NOT NULL DEFAULT '0',
-  `isActive` tinyint(1) NOT NULL DEFAULT '0',
-  `googleId` varchar(255) DEFAULT NULL,
-  `provider` enum('LOCAL','GOOGLE') NOT NULL DEFAULT 'LOCAL',
-  `lastLogin` timestamp NULL DEFAULT NULL,
-  `deletedBy` int NOT NULL DEFAULT '0',
-  `isDeleted` tinyint(1) NOT NULL DEFAULT '0',
-  `deletedAt` timestamp NULL DEFAULT NULL,
-  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `email` (`email`)
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;

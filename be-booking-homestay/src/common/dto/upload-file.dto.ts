@@ -7,16 +7,16 @@ export class UploadFileDto {
 
 export class UploadRoomImagesDto {
   @ApiProperty({
-    type: [UploadFileDto],
     description: 'Danh sách file ảnh cần upload',
+    type: 'array',
+    items: { type: 'string', format: 'binary' },
   })
   files: any[];
 
   @ApiProperty({
-    type: 'string',
+    description: 'Metadata từng ảnh (isMain, ...), dạng JSON string',
     required: false,
     example: JSON.stringify([{ isMain: true }, { isMain: false }]),
-    description: 'Thông tin bổ sung cho từng ảnh (isMain, v.v.)',
   })
   images?: string;
 }
