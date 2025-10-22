@@ -116,8 +116,8 @@ model bookings {
   payments   payments[]
   reviews    reviews[]
 
-  @@index([roomId], map: "roomId")
   @@index([userId], map: "userId")
+  @@index([roomId, checkIn, checkOut, status], map: "idx_bookings_overlap")
 }
 
 model contacts {
@@ -230,23 +230,29 @@ model rooms {
   locations         locations           @relation(fields: [locationId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "rooms_ibfk_2")
 
   @@index([hostId], map: "hostId")
-  @@index([locationId], map: "locationId")
+  @@index([adultCapacity, childCapacity], map: "idx_rooms_caps")
+  @@index([locationId, isDeleted], map: "idx_rooms_loc_del")
+  @@index([price], map: "idx_rooms_price")
+  @@index([rating], map: "idx_rooms_rating")
 }
 
 model locations {
-  id        Int       @id @default(autoincrement())
-  province  String    @db.VarChar(100)
-  district  String    @db.VarChar(100)
-  ward      String?   @db.VarChar(100)
-  street    String?   @db.VarChar(255)
-  latitude  Decimal?  @db.Decimal(10, 7)
-  longitude Decimal?  @db.Decimal(10, 7)
-  deletedBy Int       @default(0)
-  isDeleted Boolean   @default(false)
-  deletedAt DateTime? @db.Timestamp(0)
-  createdAt DateTime  @default(now()) @db.Timestamp(0)
-  updatedAt DateTime  @default(now()) @db.Timestamp(0)
-  rooms     rooms[]
+  id               Int       @id @default(autoincrement())
+  province         String    @db.VarChar(100)
+  provinceImageUrl String?   @db.VarChar(255)
+  district         String    @db.VarChar(100)
+  ward             String?   @db.VarChar(100)
+  street           String?   @db.VarChar(255)
+  latitude         Decimal?  @db.Decimal(10, 7)
+  longitude        Decimal?  @db.Decimal(10, 7)
+  deletedBy        Int       @default(0)
+  isDeleted        Boolean   @default(false)
+  deletedAt        DateTime? @db.Timestamp(0)
+  createdAt        DateTime  @default(now()) @db.Timestamp(0)
+  updatedAt        DateTime  @default(now()) @db.Timestamp(0)
+  rooms            rooms[]
+
+  @@index([province], map: "idx_locations_province")
 }
 
 model loyalty_levels {
@@ -285,7 +291,8 @@ model room_availability {
   updatedAt   DateTime  @default(now()) @db.Timestamp(0)
   rooms       rooms     @relation(fields: [roomId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "room_availability_ibfk_1")
 
-  @@index([roomId], map: "roomId")
+  @@unique([roomId, date], map: "uq_room_available")
+  @@index([roomId, date, isAvailable], map: "idx_availability")
 }
 
 model room_beds {
@@ -315,7 +322,7 @@ model room_prices {
   updatedAt DateTime  @default(now()) @db.Timestamp(0)
   rooms     rooms     @relation(fields: [roomId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "room_prices_ibfk_1")
 
-  @@index([roomId], map: "roomId")
+  @@unique([roomId, date], map: "uq_room_price")
 }
 
 model user_roles {

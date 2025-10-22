@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateRoomDto } from './dto/create-room.dto';
 import { UpdateRoomDto } from './dto/update-room.dto';
 import { PrismaService } from '../prisma/prisma.service';
@@ -16,64 +20,112 @@ export class RoomService {
     private readonly cloudinary: CloudinaryService,
   ) {}
 
-  async findAll(filterDto: RoomFilterDto) {
+  async findAll(query: RoomFilterDto) {
     const {
-      page = 1,
-      pageSize = 10,
-      search,
+      province,
       minPrice,
       maxPrice,
       adults,
       children,
       minRating,
-    } = filterDto;
-    const skip = (page - 1) * pageSize;
+      checkIn,
+      checkOut,
+      sortBy = 'createdAt',
+      sortOrder = 'desc',
+      page = 1,
+      pageSize = 12,
+    } = query;
 
-    const where: Prisma.roomsWhereInput = {
+    if (minPrice && maxPrice && minPrice > maxPrice) {
+      throw new BadRequestException(
+        'Giá tối thiểu không được lớn hơn giá tối đa',
+      );
+    }
+
+    if (province?.trim()) {
+      const existProvince = await this.prisma.locations.findFirst({
+        where: { province: province.trim(), isDeleted: false },
+        select: { id: true },
+      });
+      if (!existProvince) {
+        throw new NotFoundException(
+          `Không tìm thấy province = "${province}" trong dữ liệu locations`,
+        );
+      }
+    }
+
+    if ((checkIn && !checkOut) || (!checkIn && checkOut)) {
+      throw new BadRequestException('Cần truyền đủ cả checkIn và checkOut');
+    }
+
+    if (checkIn && checkOut) {
+      const inDate = new Date(checkIn);
+      const outDate = new Date(checkOut);
+      if (!(inDate < outDate)) {
+        throw new BadRequestException('Khoảng ngày không hợp lệ');
+      }
+    }
+
+    const where: any = {
       isDeleted: false,
-      users: { isActive: true, isDeleted: false },
-      ...(minPrice || maxPrice
-        ? { price: { gte: minPrice ?? 0, lte: maxPrice ?? 999999999 } }
+      ...(province?.trim()
+        ? { locations: { province: province.trim(), isDeleted: false } }
         : {}),
+      ...(minPrice ? { price: { gte: minPrice } } : {}),
+      ...(maxPrice ? { price: { lte: maxPrice } } : {}),
       ...(adults ? { adultCapacity: { gte: adults } } : {}),
-      ...(children ? { childCapacity: { gte: children } } : {}),
+      ...(children !== undefined ? { childCapacity: { gte: children } } : {}),
       ...(minRating ? { rating: { gte: minRating } } : {}),
-      ...(search ? { locations: { province: { contains: search } } } : {}),
     };
-    const [total, rooms] = await Promise.all([
-      this.prisma.rooms.count({ where }),
+
+    if (checkIn && checkOut) {
+      const inDate = new Date(checkIn),
+        outDate = new Date(checkOut);
+      where.bookings = {
+        none: {
+          status: { in: ['PENDING', 'CONFIRMED', 'CHECKED_IN'] },
+          AND: [{ checkOut: { gt: inDate } }, { checkIn: { lt: outDate } }],
+        },
+      };
+      where.room_availability = {
+        none: {
+          date: { gte: inDate, lt: outDate },
+          isAvailable: 0,
+          isDeleted: false,
+        },
+      };
+    }
+
+    const skip = (page - 1) * pageSize;
+    const orderBy = { [sortBy]: sortOrder };
+
+    const [items, total] = await this.prisma.$transaction([
       this.prisma.rooms.findMany({
+        where,
+        orderBy,
         skip,
         take: pageSize,
-        where,
-        orderBy: { createdAt: 'desc' },
         include: {
-          locations: true,
           room_images: true,
-          room_amenities: {
-            include: { amenities: true },
-          },
+          room_amenities: { include: { amenities: true } },
           room_beds: true,
-          users: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-              email: true,
-              phoneNumber: true,
-              avatar: true,
-            },
-          },
+          locations: true,
+          users: true,
         },
       }),
+      this.prisma.rooms.count({ where }),
     ]);
 
+    if (total === 0) {
+      throw new NotFoundException('Không tìm thấy phòng nào phù hợp');
+    }
+
     return {
+      message: 'Lấy danh sách phòng thành công',
       page,
       pageSize,
       total,
-      totalPages: Math.ceil(total / pageSize),
-      data: sanitizeRoom(rooms),
+      items: sanitizeRoom(items),
     };
   }
 

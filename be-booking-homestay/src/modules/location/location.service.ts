@@ -1,13 +1,21 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateLocationDto } from './dto/create-location.dto';
 import { UpdateLocationDto } from './dto/update-location.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
 import { cleanData } from 'src/utils/object';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
 
 @Injectable()
 export class LocationService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly cloudinary: CloudinaryService,
+  ) {}
 
   async findAll() {
     const locations = await this.prisma.locations.findMany({
@@ -101,5 +109,76 @@ export class LocationService {
     });
 
     return { message: 'Xoá location thành công' };
+  }
+
+  async setProvinceImage(province: string, file: Express.Multer.File) {
+    if (!province?.trim())
+      throw new BadRequestException('Thiếu tên tỉnh/thành');
+    if (!file) throw new BadRequestException('Không có file upload');
+
+    const normalized = province.trim();
+
+    const one = await this.prisma.locations.findFirst({
+      where: { province: normalized, isDeleted: false },
+      select: { provinceImageUrl: true },
+    });
+    if (!one)
+      throw new NotFoundException(
+        `Không tìm thấy province = "${normalized}" trong dữ liệu locations`,
+      );
+
+    const res: any = await this.cloudinary.uploadImage(
+      file.buffer,
+      `provinces/${normalized}`,
+    );
+
+    const upd = await this.prisma.locations.updateMany({
+      where: { province: normalized, isDeleted: false },
+      data: { provinceImageUrl: res.public_id, updatedAt: new Date() },
+    });
+
+    if (one.provinceImageUrl) {
+      this.cloudinary.deleteImage(one.provinceImageUrl).catch(() => null);
+    }
+
+    return {
+      message: 'Cập nhật ảnh province thành công',
+      province: normalized,
+      affectedLocations: upd.count,
+      filename: res.public_id,
+      imageUrl: res.secure_url,
+    };
+  }
+
+  async deleteProvinceImage(province: string) {
+    if (!province?.trim())
+      throw new BadRequestException('Thiếu tên tỉnh/thành');
+    const normalized = province.trim();
+
+    const one = await this.prisma.locations.findFirst({
+      where: {
+        province: normalized,
+        isDeleted: false,
+        NOT: { provinceImageUrl: null },
+      },
+      select: { provinceImageUrl: true },
+    });
+    if (!one)
+      return { message: 'Tỉnh/thành chưa có ảnh', province: normalized };
+
+    await this.cloudinary
+      .deleteImage(one.provinceImageUrl ?? '')
+      .catch(() => null);
+
+    const upd = await this.prisma.locations.updateMany({
+      where: { province: normalized, isDeleted: false },
+      data: { provinceImageUrl: null, updatedAt: new Date() },
+    });
+
+    return {
+      message: 'Xoá ảnh province thành công',
+      province: normalized,
+      affectedLocations: upd.count,
+    };
   }
 }

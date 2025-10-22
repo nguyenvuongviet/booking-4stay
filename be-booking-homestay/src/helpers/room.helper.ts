@@ -52,6 +52,7 @@ function sanitize(room: any) {
           ].map((img: any) => ({
             id: img.id,
             url: buildImageUrl(img.imageUrl),
+            position: img.position,
             isMain: !!img.isMain,
           }))
         : [],
