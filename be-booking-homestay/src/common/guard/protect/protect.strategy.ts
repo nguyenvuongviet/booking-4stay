@@ -8,11 +8,14 @@ import { sanitizeUserData } from 'src/helpers/user.helper';
 @Injectable()
 export class ProtectStrategy extends PassportStrategy(Strategy, `protect`) {
   constructor(private readonly prismaService: PrismaService) {
+    const secretOrKey = ACCESS_TOKEN_SECRET;
+    if (!secretOrKey) {
+      throw new Error('ACCESS_TOKEN_SECRET is missing');
+    }
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey:
-        ACCESS_TOKEN_SECRET || `KHÔNG LẤY ĐƯỢC ACCESS_TOKEN_SECRET Ở ENV`,
+      secretOrKey,
     });
   }
 
@@ -32,7 +35,7 @@ export class ProtectStrategy extends PassportStrategy(Strategy, `protect`) {
     });
 
     if (!user) {
-      throw new UnauthorizedException(`Không tìm thấy user`);
+      throw new UnauthorizedException(`User not found`);
     }
 
     return user;

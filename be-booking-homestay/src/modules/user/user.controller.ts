@@ -35,9 +35,9 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Patch('update')
-  update(@Body() updateUserDto: UpdateUserDto, @Req() req: Request) {
+  async update(@Body() updateUserDto: UpdateUserDto, @Req() req: Request) {
     const user = req['user'];
-    return this.userService.update(+user.id, updateUserDto);
+    return await this.userService.update(+user.id, updateUserDto);
   }
 
   @Post('/avatar-local')
@@ -70,6 +70,19 @@ export class UserController {
     return await this.userService.avatarCloudinary(+user.id, file);
   }
 
+  @Post('admin/create')
+  @Roles('ADMIN')
+  @ApiBody({ type: CreateUserDto })
+  async create(@Body() createUserDto: CreateUserDto) {
+    return await this.userService.create(createUserDto);
+  }
+
+  @Get('admin/list-roles')
+  @Roles('ADMIN')
+  async listRoles() {
+    return await this.userService.listRoles();
+  }
+
   @Get('admin/all')
   @Roles('ADMIN')
   async findAll() {
@@ -82,42 +95,29 @@ export class UserController {
     return await this.userService.findAllFiltered(query);
   }
 
-  @Post('admin/create')
-  @Roles('ADMIN')
-  @ApiBody({ type: CreateUserDto })
-  async create(@Body() createUserDto: CreateUserDto) {
-    return await this.userService.create(createUserDto);
-  }
-
   @Get('admin/profile/:id')
   @Roles('ADMIN')
   @ApiParam({ name: 'id', type: String, description: 'User ID', example: '1' })
-  findOne(@Param('id') id: string) {
-    return this.userService.findOne(+id);
-  }
-
-  @Get('admin/list-roles')
-  @Roles('ADMIN')
-  async listRoles() {
-    return await this.userService.listRoles();
+  async findOne(@Param('id') id: string) {
+    return await this.userService.findOne(+id);
   }
 
   @Patch('admin/update/:id')
   @Roles('ADMIN')
   @ApiParam({ name: 'id', type: String, description: 'User ID', example: '1' })
   @ApiBody({ type: UpdateUserAdminDto })
-  adminUpdate(
+  async adminUpdate(
     @Param('id') id: string,
     @Body() updateUserAdminDto: UpdateUserAdminDto,
   ) {
-    return this.userService.adminUpdate(+id, updateUserAdminDto);
+    return await this.userService.adminUpdate(+id, updateUserAdminDto);
   }
 
   @Delete('admin/delete/:id')
   @Roles('ADMIN')
   @ApiParam({ name: 'id', type: String, description: 'User ID', example: '1' })
-  delete(@Param('id') id: string) {
-    return this.userService.delete(+id);
+  async delete(@Param('id') id: string) {
+    return await this.userService.delete(+id);
   }
 
   @Post('admin/:id/avatar-local')

@@ -4,12 +4,7 @@ import { CreateUserDto } from './create-user.dto';
 import { users_gender } from '@prisma/client';
 
 export class UpdateUserDto extends PartialType(
-  OmitType(CreateUserDto, [
-    'email',
-    'password',
-    'roleName',
-    'loyaltyLevel',
-  ] as const),
+  OmitType(CreateUserDto, ['email', 'password', 'roleName'] as const),
 ) {
   @ApiPropertyOptional({ example: '2000-01-01', description: 'Ngày sinh' })
   @IsOptional()

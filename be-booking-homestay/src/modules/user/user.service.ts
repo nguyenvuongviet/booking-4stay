@@ -1,13 +1,11 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import * as fs from 'fs';
 import * as path from 'path';
 import { PORT } from 'src/common/constant/app.constant';
-import { getLoyaltyLevel } from 'src/helpers/loyalty.helper';
-import {
-  buildUserWhereClause,
-  sanitizeUserData,
-} from 'src/helpers/user.helper';
+import { createLoyaltyProgram } from 'src/helpers/loyalty.helper';
+import { sanitizeUserData } from 'src/helpers/user.helper';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -34,10 +32,46 @@ export class UserService {
   }
 
   async findAllFiltered(filterDto: UserFilterDto) {
-    const { page = 1, pageSize = 10 } = filterDto;
+    const {
+      page = 1,
+      pageSize = 10,
+      search,
+      roleName,
+      loyaltyLevel,
+    } = filterDto;
+
     const skip = (page - 1) * pageSize;
 
-    const where = buildUserWhereClause(filterDto);
+    const where: Prisma.usersWhereInput = {
+      isDeleted: false,
+      ...(search
+        ? {
+            OR: [
+              { firstName: { contains: search } },
+              { lastName: { contains: search } },
+              { phoneNumber: { contains: search } },
+            ],
+          }
+        : {}),
+      ...(roleName
+        ? {
+            user_roles: {
+              some: {
+                roles: { name: roleName },
+              },
+            },
+          }
+        : {}),
+      ...(loyaltyLevel
+        ? {
+            loyalty_program: {
+              is: {
+                loyalty_levels: { name: loyaltyLevel },
+              },
+            },
+          }
+        : {}),
+    };
 
     const [totalItems, users] = await Promise.all([
       this.prismaService.users.count({ where }),
@@ -71,58 +105,59 @@ export class UserService {
       phoneNumber,
       country,
       roleName,
-      loyaltyLevel,
     } = createUserDto;
 
-    const [role, salt, userExist] = await Promise.all([
-      this.prismaService.roles.findUnique({ where: { name: roleName } }),
-      bcrypt.genSalt(10),
-      this.prismaService.users.findUnique({ where: { email } }),
+    const [role, existingUser] = await Promise.all([
+      this.prismaService.roles.findUnique({
+        where: { name: roleName },
+      }),
+      this.prismaService.users.findUnique({
+        where: { email },
+      }),
     ]);
 
     if (!role) {
       throw new BadRequestException(`Vai trò '${roleName}' không tồn tại`);
     }
 
-    if (userExist) {
-      throw new BadRequestException('Email đã tồn tại');
+    if (existingUser) {
+      throw new BadRequestException('Email đã tồn tại!');
     }
 
-    const hashedPassword = await bcrypt.hash(password, salt);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    const loyalty = loyaltyLevel
-      ? await getLoyaltyLevel(this.prismaService, loyaltyLevel)
-      : null;
+    const user = await this.prismaService.$transaction(
+      async (tx: PrismaService) => {
+        const newUser = await tx.users.create({
+          data: {
+            email,
+            password: hashedPassword,
+            firstName,
+            lastName,
+            phoneNumber,
+            country,
+            isVerified: true,
+            isActive: true,
+            user_roles: {
+              create: { roleId: role.id },
+            },
+          },
+          include: {
+            user_roles: { include: { roles: true } },
+          },
+        });
 
-    const user = await this.prismaService.users.create({
-      data: {
-        email,
-        password: hashedPassword,
-        firstName,
-        lastName,
-        phoneNumber,
-        country,
-        isVerified: true,
-        isActive: true,
-        user_roles: {
-          create: { roleId: role.id },
-        },
-        loyalty_program: loyalty
-          ? {
-              create: {
-                levelId: loyalty.id,
-                totalBookings: 0,
-                totalNights: 0,
-                points: 0,
-              },
-            }
-          : undefined,
+        await createLoyaltyProgram(tx, newUser.id);
+
+        return tx.users.findUnique({
+          where: { id: newUser.id },
+          include: {
+            user_roles: { include: { roles: true } },
+            loyalty_program: { include: { loyalty_levels: true } },
+          },
+        });
       },
-      include: {
-        user_roles: { include: { roles: true } },
-        loyalty_program: { include: { loyalty_levels: true } },
-      },
-    });
+    );
 
     return sanitizeUserData(user);
   }
@@ -145,7 +180,9 @@ export class UserService {
 
   async listRoles() {
     const roles = await this.prismaService.roles.findMany({
+      where: { isActive: true },
       orderBy: { id: 'asc' },
+      select: { id: true, name: true, description: true },
     });
     return roles;
   }
@@ -186,7 +223,6 @@ export class UserService {
       gender,
       country,
       roleName,
-      loyaltyLevel,
       isActive,
     } = updateUserAdminDto;
 
@@ -210,12 +246,6 @@ export class UserService {
       throw new BadRequestException(`Vai trò '${roleName}' không tồn tại`);
     }
 
-    let levelId: number | undefined;
-    if (loyaltyLevel) {
-      const level = await getLoyaltyLevel(this.prismaService, loyaltyLevel); // helper trả về object loyalty_levels
-      levelId = level.id;
-    }
-
     const newUser = await this.prismaService.users.update({
       where: { id },
       data: {
@@ -230,23 +260,6 @@ export class UserService {
           deleteMany: {},
           create: { roleId: role.id },
         },
-        loyalty_program: levelId
-          ? {
-              update: { levelId },
-            }
-          : user.loyalty_program
-            ? {
-                update: { levelId: user.loyalty_program.levelId },
-              }
-            : {
-                create: {
-                  levelId: (await getLoyaltyLevel(this.prismaService, 'BRONZE'))
-                    .id,
-                  totalBookings: 0,
-                  totalNights: 0,
-                  points: 0,
-                },
-              },
       },
       include: {
         user_roles: { include: { roles: true } },

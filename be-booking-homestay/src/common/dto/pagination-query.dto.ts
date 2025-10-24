@@ -17,7 +17,7 @@ export class PaginationQueryDto {
   @Min(1)
   pageSize: number = 10;
 
-  @ApiPropertyOptional({ example: 'homestay', description: 'Từ khoá tìm kiếm' })
+  @ApiPropertyOptional({ example: '', description: 'Từ khoá tìm kiếm' })
   @IsOptional()
   @IsString()
   search?: string;

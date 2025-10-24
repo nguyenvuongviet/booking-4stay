@@ -136,39 +136,6 @@ model contacts {
   @@index([userId], map: "userId")
 }
 
-model locations {
-  id        Int      @id @default(autoincrement())
-  province  String   @db.VarChar(100)
-  district  String   @db.VarChar(100)
-  ward      String?  @db.VarChar(100)
-  street    String?  @db.VarChar(255)
-  latitude  Decimal? @db.Decimal(10, 7)
-  longitude Decimal? @db.Decimal(10, 7)
-  createdAt DateTime @default(now()) @db.Timestamp(0)
-  updatedAt DateTime @default(now()) @db.Timestamp(0)
-  rooms     rooms[]
-}
-
-model loyalty_levels {
-  id              Int               @id @default(autoincrement())
-  name            String            @unique(map: "name") @db.VarChar(50)
-  minPoints       Int               @default(0)
-  description     String?           @db.VarChar(255)
-  createdAt       DateTime          @default(now()) @db.Timestamp(0)
-  updatedAt       DateTime          @default(now()) @db.Timestamp(0)
-  loyalty_program loyalty_program[]
-}
-
-model payment_methods {
-  id          Int        @id @default(autoincrement())
-  name        String     @unique(map: "name") @db.VarChar(50)
-  description String?    @db.VarChar(255)
-  isActive    Boolean    @default(false)
-  createdAt   DateTime   @default(now()) @db.Timestamp(0)
-  updatedAt   DateTime   @default(now()) @db.Timestamp(0)
-  payments    payments[]
-}
-
 model payments {
   id              Int              @id @default(autoincrement())
   bookingId       Int
@@ -219,37 +186,8 @@ model room_amenities {
   amenities amenities @relation(fields: [amenityId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "room_amenities_ibfk_2")
 
   @@unique([roomId, amenityId], map: "room_amenity_unique")
+  @@unique([roomId, amenityId], map: "uq_room_amenity")
   @@index([amenityId], map: "amenityId")
-}
-
-model room_availability {
-  id          Int       @id @default(autoincrement())
-  roomId      Int
-  date        DateTime  @db.Date
-  isAvailable Boolean   @default(true)
-  deletedBy   Int       @default(0)
-  isDeleted   Boolean   @default(false)
-  deletedAt   DateTime? @db.Timestamp(0)
-  createdAt   DateTime  @default(now()) @db.Timestamp(0)
-  updatedAt   DateTime  @default(now()) @db.Timestamp(0)
-  rooms       rooms     @relation(fields: [roomId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "room_availability_ibfk_1")
-
-  @@index([roomId], map: "roomId")
-}
-
-model room_beds {
-  id        Int            @id @default(autoincrement())
-  roomId    Int
-  type      room_beds_type
-  quantity  Int            @default(1)
-  deletedBy Int            @default(0)
-  isDeleted Boolean        @default(false)
-  deletedAt DateTime?      @db.Timestamp(0)
-  createdAt DateTime       @default(now()) @db.Timestamp(0)
-  updatedAt DateTime       @default(now()) @db.Timestamp(0)
-  rooms     rooms          @relation(fields: [roomId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "room_beds_ibfk_1")
-
-  @@index([roomId], map: "roomId")
 }
 
 model room_images {
@@ -261,21 +199,6 @@ model room_images {
   createdAt DateTime @default(now()) @db.Timestamp(0)
   updatedAt DateTime @default(now()) @db.Timestamp(0)
   rooms     rooms    @relation(fields: [roomId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "room_images_ibfk_1")
-
-  @@index([roomId], map: "roomId")
-}
-
-model room_prices {
-  id        Int       @id @default(autoincrement())
-  roomId    Int
-  date      DateTime  @db.Date
-  price     Decimal   @db.Decimal(12, 2)
-  deletedBy Int       @default(0)
-  isDeleted Boolean   @default(false)
-  deletedAt DateTime? @db.Timestamp(0)
-  createdAt DateTime  @default(now()) @db.Timestamp(0)
-  updatedAt DateTime  @default(now()) @db.Timestamp(0)
-  rooms     rooms     @relation(fields: [roomId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "room_prices_ibfk_1")
 
   @@index([roomId], map: "roomId")
 }
@@ -310,13 +233,89 @@ model rooms {
   @@index([locationId], map: "locationId")
 }
 
-model table_template {
+model locations {
   id        Int       @id @default(autoincrement())
+  province  String    @db.VarChar(100)
+  district  String    @db.VarChar(100)
+  ward      String?   @db.VarChar(100)
+  street    String?   @db.VarChar(255)
+  latitude  Decimal?  @db.Decimal(10, 7)
+  longitude Decimal?  @db.Decimal(10, 7)
   deletedBy Int       @default(0)
   isDeleted Boolean   @default(false)
   deletedAt DateTime? @db.Timestamp(0)
   createdAt DateTime  @default(now()) @db.Timestamp(0)
   updatedAt DateTime  @default(now()) @db.Timestamp(0)
+  rooms     rooms[]
+}
+
+model loyalty_levels {
+  id              Int               @id @default(autoincrement())
+  name            String            @unique(map: "name") @db.VarChar(50)
+  minPoints       Int               @default(0)
+  description     String?           @db.VarChar(255)
+  isActive        Boolean           @default(true)
+  deletedBy       Int               @default(0)
+  isDeleted       Boolean           @default(false)
+  deletedAt       DateTime?         @db.Timestamp(0)
+  createdAt       DateTime          @default(now()) @db.Timestamp(0)
+  updatedAt       DateTime          @default(now()) @db.Timestamp(0)
+  loyalty_program loyalty_program[]
+}
+
+model payment_methods {
+  id          Int        @id @default(autoincrement())
+  name        String     @unique(map: "name") @db.VarChar(50)
+  description String?    @db.VarChar(255)
+  isActive    Boolean    @default(false)
+  createdAt   DateTime   @default(now()) @db.Timestamp(0)
+  updatedAt   DateTime   @default(now()) @db.Timestamp(0)
+  payments    payments[]
+}
+
+model room_availability {
+  id          Int       @id @default(autoincrement())
+  roomId      Int
+  date        DateTime  @db.Date
+  isAvailable Boolean   @default(true)
+  deletedBy   Int       @default(0)
+  isDeleted   Boolean   @default(false)
+  deletedAt   DateTime? @db.Timestamp(0)
+  createdAt   DateTime  @default(now()) @db.Timestamp(0)
+  updatedAt   DateTime  @default(now()) @db.Timestamp(0)
+  rooms       rooms     @relation(fields: [roomId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "room_availability_ibfk_1")
+
+  @@index([roomId], map: "roomId")
+}
+
+model room_beds {
+  id        Int            @id @default(autoincrement())
+  roomId    Int
+  type      room_beds_type
+  quantity  Int            @default(1)
+  deletedBy Int            @default(0)
+  isDeleted Boolean        @default(false)
+  deletedAt DateTime?      @db.Timestamp(0)
+  createdAt DateTime       @default(now()) @db.Timestamp(0)
+  updatedAt DateTime       @default(now()) @db.Timestamp(0)
+  rooms     rooms          @relation(fields: [roomId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "room_beds_ibfk_1")
+
+  @@index([roomId], map: "roomId")
+}
+
+model room_prices {
+  id        Int       @id @default(autoincrement())
+  roomId    Int
+  date      DateTime  @db.Date
+  price     Decimal   @db.Decimal(12, 2)
+  deletedBy Int       @default(0)
+  isDeleted Boolean   @default(false)
+  deletedAt DateTime? @db.Timestamp(0)
+  createdAt DateTime  @default(now()) @db.Timestamp(0)
+  updatedAt DateTime  @default(now()) @db.Timestamp(0)
+  rooms     rooms     @relation(fields: [roomId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "room_prices_ibfk_1")
+
+  @@index([roomId], map: "roomId")
 }
 
 model user_roles {
@@ -341,6 +340,18 @@ enum users_provider {
   GOOGLE
 }
 
+enum payments_status {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
+enum rooms_status {
+  AVAILABLE
+  BOOKED
+  MAINTENANCE
+}
+
 enum room_beds_type {
   SINGLE
   DOUBLE
@@ -357,12 +368,6 @@ enum amenities_category {
   COMMON
 }
 
-enum payments_status {
-  PENDING
-  SUCCESS
-  FAILED
-}
-
 enum bookings_status {
   PENDING
   CONFIRMED
@@ -370,10 +375,4 @@ enum bookings_status {
   CHECKED_OUT
   CANCELLED
   REFUNDED
-}
-
-enum rooms_status {
-  AVAILABLE
-  BOOKED
-  MAINTENANCE
 }

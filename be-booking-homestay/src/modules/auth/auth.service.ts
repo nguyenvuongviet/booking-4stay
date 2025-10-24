@@ -10,7 +10,7 @@ import {
   REFRESH_TOKEN_SECRET,
 } from 'src/common/constant/app.constant';
 import { Validator } from 'src/common/validation';
-import { getLoyaltyLevel } from 'src/helpers/loyalty.helper';
+import { createLoyaltyProgram } from 'src/helpers/loyalty.helper';
 import { sanitizeUserData } from 'src/helpers/user.helper';
 import { VerifyOtpDto } from '../otp/dto/verifyOtp.dto';
 import { OtpService } from '../otp/otp.service';
@@ -119,55 +119,41 @@ export class AuthService {
   ): Promise<{ message: string }> {
     const { email } = verifyOtpDto;
 
-    if (Validator.isValidEmail(email) === false) {
+    if (!Validator.isValidEmail(email)) {
       throw new BadRequestException('Email không hợp lệ!');
     }
 
     try {
-      const [verifyResult, userExist, bronzeLevel] = await Promise.all([
+      const [verifyResult, userExist] = await Promise.all([
         this.verifyOtp(verifyOtpDto),
         this.prismaService.users.findUnique({ where: { email } }),
-        getLoyaltyLevel(this.prismaService, 'BRONZE'),
       ]);
 
       if (!verifyResult.success) {
         throw new BadRequestException('OTP không hợp lệ hoặc hết hạn!');
       }
+
       if (!userExist || userExist.isDeleted) {
-        throw new BadRequestException('Tài khoản không tìm thấy!');
-      }
-      if (!bronzeLevel) {
-        throw new BadRequestException('Không tìm thấy level BRONZE');
+        throw new BadRequestException('Tài khoản không tồn tại!');
       }
 
-      await this.prismaService.$transaction([
-        this.prismaService.users.update({
+      await this.prismaService.$transaction(async (tx: PrismaService) => {
+        await tx.users.update({
           where: { email },
-          data: {
-            isActive: true,
-            isVerified: true,
-            updatedAt: new Date(),
-          },
-        }),
-        this.prismaService.loyalty_program.create({
-          data: {
-            userId: userExist.id,
-            totalBookings: 0,
-            totalNights: 0,
-            points: 0,
-            levelId: bronzeLevel.id,
-          },
-        }),
-      ]);
+          data: { isActive: true, isVerified: true, updatedAt: new Date() },
+        });
 
-      return { message: 'Tài khoản của bạn đã kích hoạt!' };
+        await createLoyaltyProgram(tx, userExist.id);
+      });
+
+      return {
+        message: 'Tài khoản đã được kích hoạt và gán loyalty mặc định!',
+      };
     } catch (error) {
-      console.log(`Lỗi khi kích hoạt tài khoản cho ${email}: ${error.message}`);
-      throw error instanceof BadRequestException
-        ? error
-        : new BadRequestException(
-            'Lỗi khi kích hoạt tài khoản. Vui lòng thử lại.',
-          );
+      console.error(`Error activateAccount(${email}): ${error.message}`);
+      throw new BadRequestException(
+        'Không thể kích hoạt tài khoản. Vui lòng thử lại.',
+      );
     }
   }
 

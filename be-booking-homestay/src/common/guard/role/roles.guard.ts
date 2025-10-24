@@ -27,10 +27,15 @@ export class RolesGuard implements CanActivate {
       throw new ForbiddenException('Bạn chưa đăng nhập!');
     }
 
-    const userRoles = user.user_roles.map((ur: any) => ur.roles?.name);
+    const userRoles = user.user_roles.map((ur: any) =>
+      ur.roles?.name.toLowerCase(),
+    );
+    const normalizedRequiredRoles = requiredRoles.map((role) =>
+      role.toLowerCase(),
+    );
 
     const hasRole = userRoles.some((role: string) =>
-      requiredRoles.includes(role),
+      normalizedRequiredRoles.includes(role),
     );
 
     if (!hasRole) {
