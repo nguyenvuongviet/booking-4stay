@@ -4,44 +4,44 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Hotel } from "@/models/Hotel";
-import {
-  Star,
-  MapPin,
-} from "lucide-react";
+import { Star, MapPin } from "lucide-react";
+import { Room } from "@/models/Room";
 
-type RoomCardProps = { hotel: Hotel };
+type RoomCardProps = { room: Room };
 
-export function RoomCard({ hotel }: RoomCardProps) {
+export function RoomCard({ room }: RoomCardProps) {
   const router = useRouter();
   const formatPrice = (price: number) => {
     return `${price.toLocaleString()} VND`;
   };
+  const getRoomImage = (url?: string) => url || "/images/da-nang.jpg";
 
   return (
     <Card
-      onClick={() => router.push(`/room/${hotel.id}`)}
+      onClick={() => router.push(`/room/${room.id}`)}
       className="overflow-hidden hover:shadow-xl transition-all duration-500 hover:cursor-pointer"
     >
       <div className="relative">
         <Image
-          src={hotel.image || "/placeholder.svg"}
-          alt={hotel.name}
+          src={getRoomImage(room.images?.main)}
+          alt={room.name}
           width={400}
           height={600}
+          priority
           className="w-full h-72 object-cover rounded-t-2xl"
         />
         <div className="absolute top-4 right-4 bg-border px-2 py-1 rounded-full flex items-center gap-1">
           <Star className="text-chart-4 fill-current" size={16} />
-          <span className="text-sm font-medium">{hotel.rating}</span>
+          <span className="text-sm font-medium">{room.rating}</span>
         </div>
       </div>
       <CardContent className="pb-8 ">
         <h3 className="elegant-heading text-2xl text-foreground pb-6 truncate">
-          {hotel.name}
+          {room.name}
         </h3>
         <p className="elegant-subheading text-muted-foreground mb-2 flex items-center gap-1">
           <MapPin size={16} />
-          {hotel.location}
+          {room.location.fullAddress}
         </p>
 
         {/* <div className="flex items-center gap-2 mb-4">
@@ -57,7 +57,7 @@ export function RoomCard({ hotel }: RoomCardProps) {
         <div className="flex flex-row-reverse">
           <div>
             <span className="text-2xl elegant-heading text-foreground">
-              {formatPrice(hotel.price)}
+              {formatPrice(room.price)}
             </span>
             <span className="elegant-subheading text-muted-foreground">
               /night
@@ -66,5 +66,5 @@ export function RoomCard({ hotel }: RoomCardProps) {
         </div>
       </CardContent>
     </Card>
-      );
+  );
 }

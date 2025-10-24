@@ -7,181 +7,112 @@ import { useCallback, useEffect, useState } from "react";
 import { FilterBar } from "@/components/FilterBar";
 import { RoomCard } from "@/components/RoomCard";
 import { SearchBar } from "@/components/SearchBar";
-import { Hotel } from "@/models/Hotel";
+import { Room } from "@/models/Room";
 import { Car, Coffee, Dumbbell, Loader2, Wifi } from "lucide-react";
+import { room_all } from "@/services/bookingApi";
+import { useSearchParams } from "next/navigation";
+import { search_room } from "@/services/bookingApi";
 // import { motion, AnimatePresence } from "framer-motion";
 
-const initialHotels: Hotel[] = [
-  {
-    id: 1,
-    name: "Kim Dung Hotel Tran Quang Khai",
-    location: "184 Tran Quang Khai Street, Ho Chi Minh City, ...",
-    rating: 7.0,
-    image: "/images/home-dn.jpg",
-    price: 438330,
-    amenities: ["wifi", "parking"],
-  },
-  {
-    id: 2,
-    name: "The One Premium Hotel",
-    location: "29 Thu Khoa Huan, Ben Thanh Ward, District 1, ...",
-    rating: 6.9,
-    image: "/images/home-dn-2.jpg",
-    price: 552496,
-    amenities: ["wifi", "restaurant"],
-  },
-  {
-    id: 3,
-    name: "Lucky Star Hotel Nguyen Trai",
-    location: "146 Nguyen Trai, Ben Thanh Ward, Ho Chi Minh...",
-    rating: 7.4,
-    image: "/images/home-dn.jpg",
-    price: 555841,
-    amenities: ["wifi", "gym"],
-  },
-  {
-    id: 4,
-    name: "Riverside Garden Hotel",
-    location: "78 Nguyen Hue Boulevard, District 1, Ho Chi Minh...",
-    rating: 8.2,
-    image: "/images/home-dn.jpg",
-    price: 650000,
-    amenities: ["wifi", "parking", "restaurant"],
-  },
-  {
-    id: 5,
-    name: "Central Business Hotel",
-    location: "45 Le Loi Street, Ben Nghe Ward, District 1...",
-    rating: 7.8,
-    image: "/images/home-dn.jpg",
-    price: 420000,
-    amenities: ["wifi"],
-  },
-  {
-    id: 6,
-    name: "Modern City Hotel",
-    location: "123 Dong Khoi Street, Ben Nghe Ward, District 1...",
-    rating: 6.5,
-    image: "/images/home-dn.jpg",
-    price: 350000,
-    amenities: ["wifi", "gym"],
-  },
-];
-
-const generateMoreHotels = (startId: number, count: number) => {
-  const hotelNames = [
-    "Grand Palace Hotel",
-    "Saigon Star Hotel",
-    "Golden Dragon Hotel",
-    "Pearl River Hotel",
-    "Lotus Garden Hotel",
-    "Diamond Tower Hotel",
-    "Royal Crown Hotel",
-    "Emerald Bay Hotel",
-    "Silver Moon Hotel",
-    "Crystal Palace Hotel",
-    "Jade Garden Hotel",
-    "Ruby Tower Hotel",
-  ];
-
-  const location = [
-    "District 1, Ho Chi Minh City",
-    "District 3, Ho Chi Minh City",
-    "District 5, Ho Chi Minh City",
-    "District 7, Ho Chi Minh City",
-    "Binh Thanh District, Ho Chi Minh City",
-    "Tan Binh District, Ho Chi Minh City",
-  ];
-
-  const images = [
-    "/images/home-dn.jpg",
-    "/images/home-dn-2.jpg",
-    "/images/home-hanoi-1.jpg",
-    "/images/home-hcm-1.jpg",
-    "/images/home-hanoi-1.jpg",
-    "/images/home-dn-2.jpg",
-  ];
-  const amenitiesList = [
-    ["wifi", "parking"],
-    ["wifi", "restaurant"],
-    ["wifi", "gym"],
-    ["wifi"],
-  ];
-
-  return Array.from({ length: count }, (_, index) => ({
-    id: startId + index,
-    name: hotelNames[index % hotelNames.length],
-    location: `${Math.floor(Math.random() * 500) + 1} ${
-      location[index % location.length]
-    }`,
-    rating: Math.round((Math.random() * 3 + 5) * 10) / 10,
-    price: Math.floor(Math.random() * 400000 + 250000),
-    image: images[index % images.length],
-    amenities: amenitiesList[index % amenitiesList.length], // ✅ thêm dòng này
-  }));
-};
-
 export default function HotelsListPage() {
-  // const getAmenityIcon = (amenity: string) => {
-  //   switch (amenity) {
-  //     case "wifi":
-  //       return <Wifi size={16} />;
-  //     case "parking":
-  //       return <Car size={16} />;
-  //     case "restaurant":
-  //       return <Coffee size={16} />;
-  //     case "gym":
-  //       return <Dumbbell size={16} />;
-  //     default:
-  //       return null;
-  //   }
-  // };
-  const [hotels, setHotels] = useState(initialHotels);
+  const [rooms, setRooms] = useState<Room[]>([]);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(1);
   const [scrolled, setScrolled] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const location = searchParams.get("location") || "";
+  const adults = Number(searchParams.get("adults")) || 1;
+  const children = Number(searchParams.get("children")) || 0;
 
-  const loadMoreHotels = useCallback(async () => {
-    if (loading || !hasMore) return;
+  const getRoomImage = (url?: string) => url || "/images/da-nang.jpg";
 
-    setLoading(true);
+  //Reset lại rooms khi thay đổi search params
+  useEffect(() => {
+    setRooms([]);
+    setPage(1);
+    setHasMore(true);
+  }, [location, adults, children]);
+  
+  // load data
+  useEffect(() => {
+    const loadRooms = async () => {
+      try {
+        setLoading(true);
+        let result;
+        let roomsData: any[] = [];
+        let totalPages = 1;
 
-    // Simulate API call delay
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+        if (location) {
+          // 🔍 Có location → tìm kiếm theo địa điểm
+          result = await search_room(location, adults, children);
+          roomsData = result?.data?.data || result?.data || [];
+          totalPages = 1; // tìm kiếm 1 lần duy nhất, không phân trang
+        } else {
+          // 🏨 Không có location → lấy tất cả (có phân trang)
+          result = await room_all({ page, pageSize: 6 });
+          roomsData = result?.rooms  || [];
+          totalPages = result?.totalPages || 1;
+        }
 
-    const newHotels = generateMoreHotels(hotels.length + 1, 6);
-    setHotels((prev) => [...prev, ...newHotels]);
-    setPage((prev) => prev + 1);
+        if (!roomsData.length || page > totalPages) {
+          setHasMore(false);
+          return;
+        }
 
-    // Stop loading more after 5 pages (30 hotels total)
-    if (page >= 5) {
-      setHasMore(false);
-    }
+        const mappedRooms: Room[] = roomsData.map((room: any) => ({
+          id: room.id,
+          name: room.name,
+          description: room.description,
+          price: room.price,
+          adultCapacity: room.adultCapacity,
+          childCapacity: room.childCapacity,
+          location: {
+            id: room.location?.id,
+            fullAddress: room.location?.fullAddress,
+            province: room.location?.province,
+          },
+          rating: room.rating || 0,
+          image: getRoomImage(room.images?.main),
+          images: room.images,
+          amenities: room.amenities?.map((a: any) => a.name) || [],
+        }));
 
-    setLoading(false);
-  }, [loading, hasMore, hotels.length, page]);
+        // ⛓️ Nếu là page=1 (tìm kiếm mới) thì thay hoàn toàn danh sách
+        setRooms((prev) => (page === 1 ? mappedRooms : [...prev, ...mappedRooms]));
 
+        if (page >= totalPages) setHasMore(false);
+      } catch (err) {
+        console.error("Error loading rooms:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadRooms();
+  }, [page, location, adults, children]);
+
+  // Infinite scroll
   useEffect(() => {
     const handleScroll = () => {
       if (loading || !hasMore) return;
 
-      const scrollTop =
-        window.pageYOffset || document.documentElement.scrollTop;
+      const scrollTop = window.scrollY;
       const scrollHeight = document.documentElement.scrollHeight;
       const clientHeight = window.innerHeight;
 
-      // Trigger load more when user is 200px from bottom
+      // Khi gần chạm đáy, gọi thêm trang mới
       if (scrollTop + clientHeight >= scrollHeight - 200) {
-        loadMoreHotels();
+        setPage((prev) => prev + 1);
       }
-      setScrolled(window.scrollY > 100);
+
+      setScrolled(scrollTop > 100);
     };
 
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
-  }, [loadMoreHotels, loading, hasMore]);
+  }, [loading, hasMore]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -217,13 +148,13 @@ export default function HotelsListPage() {
           <SearchBar />
         </div>
       </motion.div> */}
-      <main className="container mx-auto py-12 space-y-12 pt-20 px-4 sm:px-6 lg:px-8">
+      <main className="max-w-7xl container mx-auto py-12 space-y-12 pt-20 px-4 sm:px-6 lg:px-8">
         <SearchBar />
         <FilterBar />
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 ">
-          {hotels.map((hotel, index) => (
-            <RoomCard key={`${hotel.id}-${index}`} hotel={hotel} />
+          {rooms.map((room, index) => (
+            <RoomCard key={`${room.id}-${index}`} room={room} />
           ))}
         </div>
         {loading && (
@@ -241,9 +172,7 @@ export default function HotelsListPage() {
               <p className="text-sm ">
                 You{"'"}ve reached the end of the results
               </p>
-              <p className="text-xs mt-1">
-                Total: {hotels.length} hotels found
-              </p>
+              <p className="text-xs mt-1">Total: {rooms.length} hotels found</p>
             </div>
           </div>
         )}

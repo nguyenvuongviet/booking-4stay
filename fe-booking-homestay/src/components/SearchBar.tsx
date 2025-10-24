@@ -3,38 +3,134 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MapPin, Search, Users, X } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { useRouter } from "next/navigation";
+import { location, search_location, search_room } from "@/services/bookingApi";
+import { Location } from "@/models/Location";
+import { useSearchParams } from "next/navigation";
+import { Room } from "@/models/Room";
 
 export function SearchBar() {
   const [checkIn, setCheckIn] = useState("");
   const [checkOut, setCheckOut] = useState("");
-  const [adults, setAdults] = useState(3);
+  const [adults, setAdults] = useState(1);
   const [children, setChildren] = useState(0);
   const [isGuestPopoverOpen, setIsGuestPopoverOpen] = useState(false);
+  const [locations, setLocations] = useState<any[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [locationInput, setLocationInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+  const locationInputRef = useRef<HTMLInputElement>(null);
 
   const getGuestDisplayText = () => {
     const total = adults + children;
     return `${total} Guests`;
   };
+  //Hàm fetch gợi ý location
+  const fetchLocationSuggestions = useCallback(async (query: string) => {
+    if (!query.trim()) {
+      //input rỗng
+      const res = await location();
+      const allData = res.data || [];
+      setLocations(allData);
+      setShowSuggestions(allData.length > 0);
+    } else {
+      // có text
+      const res = await search_location(query);
+      const data = res.data?.data || [];
+      setLocations(data);
+      setShowSuggestions(data.length > 0);
+    }
+  }, []);
+
+  //tránh gọi API liên tục khi gõ
+  useEffect(() => {
+    if (!showSuggestions) return; // Chỉ chạy nếu đang focus
+    const timeout = setTimeout(() => {
+      fetchLocationSuggestions(locationInput);
+    }, 200);
+    return () => clearTimeout(timeout);
+  }, [locationInput, fetchLocationSuggestions, showSuggestions]);
+
+  const handleFocusLocation = () => {
+    setShowSuggestions(true);
+    fetchLocationSuggestions(locationInput);
+  };
+
+  const handleSelectLocation = (loc: Location) => {
+    setLocationInput(loc.province || "");
+    setShowSuggestions(false);
+  };
+
+  useEffect(() => {
+    const handleClickOutside = () => setShowSuggestions(false);
+    window.addEventListener("click", handleClickOutside);
+    return () => window.removeEventListener("click", handleClickOutside);
+  }, []);
+
+  const handleSearch = async () => {
+    try {
+      if (!locationInput.trim()) {
+        locationInputRef.current?.focus();
+        setShowSuggestions(true);
+        return;
+      }
+
+      router.push(
+        `/room-list?location=${encodeURIComponent(
+          locationInput
+        )}&adults=${adults}&children=${children}`
+      );
+    } catch (error) {
+      console.error("search room error: ", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="mx-auto max-w-7xl bg-card rounded-4xl shadow-lg p-3">
       <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
-        <div className="col-span-2 relative flex">
+        <div className="col-span-2 relative ">
           <MapPin
             className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground"
             size={20}
           />
           <Input
+            ref={locationInputRef}
+            value={locationInput}
+            onChange={(e) => setLocationInput(e.target.value)}
+            onFocus={handleFocusLocation}
+            onClick={(e) => e.stopPropagation()}
             placeholder="Where are you going?"
             className="pl-10 h-12 elegant-subheading rounded-4xl"
           />
+
+          {/* Danh sách gợi ý */}
+          {showSuggestions && locations.length > 0 && (
+            <ul className="absolute z-50 left-0 right-0 bg-white border border-gray-200 mt-2 rounded-xl shadow-lg max-h-60 overflow-auto">
+              {locations.map((loc: Location) => (
+                <li
+                  key={loc.id}
+                  onClick={() => handleSelectLocation(loc)}
+                  className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm text-gray-700"
+                >
+                  {/* {loc.province
+                              ? `${loc.district}, ${loc.province}`
+                              : loc.province || "Unknown"} */}
+                  {loc.province || "Unknown"}
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
+
         <div className="relative">
           <Input
             type="date"
@@ -205,7 +301,10 @@ export function SearchBar() {
             </PopoverContent>
           </Popover>
         </div>
-        <Button className="rounded-4xl w-full bg-primary hover:bg-primary/90 text-primary-foreground h-12 elegant-subheading text-md">
+        <Button
+          onClick={handleSearch}
+          className="rounded-4xl w-full bg-primary hover:bg-primary/90 text-primary-foreground h-12 elegant-subheading text-md"
+        >
           <Search className="mr-1" size={20} />
           Search
         </Button>

@@ -14,7 +14,6 @@ import OTPModal from "@/components/auth/otp-modal";
 import NewPasswordModal from "@/components/auth/new-password-modal";
 import { IUser } from "../models/User";
 import { useRouter } from "next/navigation";
-import { login as loginApi } from "@/services/authApi";
 import { STORAGE_KEYS } from "@/constants";
 
 interface AuthContextType {
