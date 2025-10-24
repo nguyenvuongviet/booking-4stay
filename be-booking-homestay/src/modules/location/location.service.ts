@@ -7,7 +7,7 @@ import { CreateLocationDto } from './dto/create-location.dto';
 import { UpdateLocationDto } from './dto/update-location.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
-import { cleanData } from 'src/utils/object';
+import { buildImageUrl, cleanData } from 'src/utils/object';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 
 @Injectable()
@@ -42,13 +42,31 @@ export class LocationService {
   }
 
   async listProvinces() {
-    const rows = await this.prisma.locations.findMany({
+    const provinces = await this.prisma.locations.groupBy({
+      by: ['province'],
       where: { isDeleted: false },
-      distinct: ['province'],
-      select: { province: true },
-      orderBy: { province: 'asc' },
+      _max: { updatedAt: true },
     });
-    return rows.map((r) => r.province);
+
+    const provinceData = await Promise.all(
+      provinces.map(async (p) => {
+        const row = await this.prisma.locations.findFirst({
+          where: { province: p.province, isDeleted: false },
+          orderBy: { updatedAt: 'desc' },
+          select: { province: true, provinceImageUrl: true },
+        });
+        return {
+          province: row?.province,
+          image: row?.provinceImageUrl
+            ? buildImageUrl(row.provinceImageUrl)
+            : null,
+        };
+      }),
+    );
+
+    return provinceData
+      .filter((x) => !!x.province)
+      .sort((a, b) => (a.province ?? '').localeCompare(b.province ?? ''));
   }
 
   async listDistricts(province: string) {
