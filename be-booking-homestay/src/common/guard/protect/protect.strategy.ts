@@ -29,7 +29,7 @@ export class ProtectStrategy extends PassportStrategy(Strategy, `protect`) {
       include: {
         user_roles: { include: { roles: { select: { name: true } } } },
         loyalty_program: {
-          include: { loyalty_levels: { select: { name: true } } },
+          include: { levels: { select: { name: true } } },
         },
       },
     });

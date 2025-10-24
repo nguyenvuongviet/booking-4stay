@@ -25,7 +25,7 @@ export class UserService {
       where: { isDeleted: false },
       include: {
         user_roles: { include: { roles: true } },
-        loyalty_program: { include: { loyalty_levels: true } },
+        loyalty_program: { include: { levels: true } },
       },
     });
     return sanitizeUserData(users);
@@ -66,7 +66,7 @@ export class UserService {
         ? {
             loyalty_program: {
               is: {
-                loyalty_levels: { name: loyaltyLevel },
+                levels: { name: loyaltyLevel },
               },
             },
           }
@@ -82,7 +82,7 @@ export class UserService {
         where,
         include: {
           user_roles: { include: { roles: true } },
-          loyalty_program: { include: { loyalty_levels: true } },
+          loyalty_program: { include: { levels: true } },
         },
       }),
     ]);
@@ -153,7 +153,7 @@ export class UserService {
           where: { id: newUser.id },
           include: {
             user_roles: { include: { roles: true } },
-            loyalty_program: { include: { loyalty_levels: true } },
+            loyalty_program: { include: { levels: true } },
           },
         });
       },
@@ -167,7 +167,7 @@ export class UserService {
       where: { id, isDeleted: false },
       include: {
         user_roles: { include: { roles: true } },
-        loyalty_program: { include: { loyalty_levels: true } },
+        loyalty_program: { include: { levels: true } },
       },
     });
 
@@ -205,7 +205,7 @@ export class UserService {
       },
       include: {
         user_roles: { include: { roles: true } },
-        loyalty_program: { include: { loyalty_levels: true } },
+        loyalty_program: { include: { levels: true } },
       },
     });
 
@@ -263,7 +263,7 @@ export class UserService {
       },
       include: {
         user_roles: { include: { roles: true } },
-        loyalty_program: { include: { loyalty_levels: true } },
+        loyalty_program: { include: { levels: true } },
       },
     });
 

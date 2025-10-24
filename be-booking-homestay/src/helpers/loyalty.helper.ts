@@ -22,7 +22,7 @@ export async function createLoyaltyProgram(
 
   let levelId = customLevelId;
   if (!levelId) {
-    const defaultLevel = await prisma.loyalty_levels.findFirst({
+    const defaultLevel = await prisma.levels.findFirst({
       where: { minPoints: 0 },
       orderBy: { id: 'asc' },
     });
@@ -39,7 +39,7 @@ export async function createLoyaltyProgram(
       points: 0,
       levelId,
     },
-    include: { loyalty_levels: true },
+    include: { levels: true },
   });
 
   return loyalty;
@@ -51,11 +51,11 @@ export async function recalculateLoyaltyLevel(
 ): Promise<boolean> {
   const program = await prisma.loyalty_program.findUnique({
     where: { userId },
-    include: { loyalty_levels: true },
+    include: { levels: true },
   });
   if (!program) return false;
 
-  const levels = await prisma.loyalty_levels.findMany({
+  const levels = await prisma.levels.findMany({
     orderBy: { minPoints: 'asc' },
   });
   if (!levels.length) return false;

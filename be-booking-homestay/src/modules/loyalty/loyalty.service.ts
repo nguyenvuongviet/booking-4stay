@@ -10,7 +10,7 @@ export class LoyaltyService {
   constructor(private readonly prisma: PrismaService) {}
 
   async findAllLevels() {
-    const levels = await this.prisma.loyalty_levels.findMany({
+    const levels = await this.prisma.levels.findMany({
       orderBy: { minPoints: 'asc' },
     });
 
@@ -18,7 +18,7 @@ export class LoyaltyService {
   }
 
   async findOneLevel(id: number) {
-    const level = await this.prisma.loyalty_levels.findUnique({
+    const level = await this.prisma.levels.findUnique({
       where: { id },
     });
     if (!level) throw new BadRequestException('Cấp độ không tồn tại');
@@ -26,7 +26,7 @@ export class LoyaltyService {
   }
 
   async createLevel(dto: CreateLoyaltyLevelDto) {
-    const existingLevel = await this.prisma.loyalty_levels.findFirst({
+    const existingLevel = await this.prisma.levels.findFirst({
       where: {
         OR: [{ name: dto.name }, { minPoints: dto.minPoints }],
       },
@@ -41,7 +41,7 @@ export class LoyaltyService {
       }
     }
 
-    return this.prisma.loyalty_levels.create({
+    return this.prisma.levels.create({
       data: {
         name: dto.name,
         minPoints: dto.minPoints,
@@ -52,13 +52,13 @@ export class LoyaltyService {
   }
 
   async updateLevel(id: number, dto: UpdateLoyaltyLevelDto) {
-    const level = await this.prisma.loyalty_levels.findUnique({
+    const level = await this.prisma.levels.findUnique({
       where: { id },
     });
     if (!level) throw new BadRequestException('Cấp độ không tồn tại');
 
     if (dto.name && dto.name !== level.name) {
-      const nameExists = await this.prisma.loyalty_levels.findFirst({
+      const nameExists = await this.prisma.levels.findFirst({
         where: {
           name: dto.name,
           NOT: { id },
@@ -74,7 +74,7 @@ export class LoyaltyService {
       dto.minPoints !== null &&
       dto.minPoints !== level.minPoints
     ) {
-      const pointExists = await this.prisma.loyalty_levels.findFirst({
+      const pointExists = await this.prisma.levels.findFirst({
         where: {
           minPoints: dto.minPoints,
           NOT: { id },
@@ -85,7 +85,7 @@ export class LoyaltyService {
       }
     }
 
-    return this.prisma.loyalty_levels.update({
+    return this.prisma.levels.update({
       where: { id },
       data: {
         name: dto.name ?? level.name,
@@ -97,12 +97,12 @@ export class LoyaltyService {
   }
 
   async toggleActive(id: number) {
-    const level = await this.prisma.loyalty_levels.findUnique({
+    const level = await this.prisma.levels.findUnique({
       where: { id },
     });
     if (!level) throw new BadRequestException('Cấp độ không tồn tại');
 
-    return await this.prisma.loyalty_levels.update({
+    return await this.prisma.levels.update({
       where: { id },
       data: { isActive: !level.isActive },
     });
@@ -112,7 +112,7 @@ export class LoyaltyService {
     const program = await this.prisma.loyalty_program.findUnique({
       where: { userId },
       include: {
-        loyalty_levels: true,
+        levels: true,
       },
     });
     if (!program)
@@ -124,7 +124,7 @@ export class LoyaltyService {
     const user = await this.prisma.users.findUnique({ where: { id: userId } });
     if (!user) throw new BadRequestException('Người dùng không tồn tại');
 
-    const level = await this.prisma.loyalty_levels.findUnique({
+    const level = await this.prisma.levels.findUnique({
       where: { name: dto.level },
     });
     if (!level || !level.isActive) {
@@ -149,14 +149,14 @@ export class LoyaltyService {
         totalNights: dto.totalNights ?? undefined,
         updatedAt: new Date(),
       },
-      include: { loyalty_levels: true },
+      include: { levels: true },
     });
 
     return cleanData(program);
   }
 
   async recomputeAllUserLevels() {
-    const levels = await this.prisma.loyalty_levels.findMany({
+    const levels = await this.prisma.levels.findMany({
       where: { isActive: true },
       orderBy: { minPoints: 'asc' },
     });
@@ -165,7 +165,7 @@ export class LoyaltyService {
       throw new BadRequestException('Chưa có cấp độ nào khả dụng.');
 
     const programs = await this.prisma.loyalty_program.findMany({
-      include: { loyalty_levels: true },
+      include: { levels: true },
     });
 
     let updatedCount = 0;

@@ -102,16 +102,18 @@ export class AuthService {
   }
 
   async verifyOtp(verifyOtpDto: VerifyOtpDto) {
-    try {
-      return await this.otpService.verifyOtp(verifyOtpDto);
-    } catch (error) {
-      console.log(
-        `Lỗi xác thực OTP cho ${verifyOtpDto.email}: ${error.message}`,
-      );
-      throw error instanceof BadRequestException
-        ? error
-        : new BadRequestException('OTP không hợp lệ hoặc hết hạn!');
-    }
+    // try {
+    //   return await this.otpService.verifyOtp(verifyOtpDto);
+    // } catch (error) {
+    //   console.log(
+    //     `Lỗi xác thực OTP cho ${verifyOtpDto.email}: ${error.message}`,
+    //   );
+    //   throw error instanceof BadRequestException
+    //     ? error
+    //     : new BadRequestException('OTP không hợp lệ hoặc hết hạn!');
+    // }
+
+    return await this.otpService.verifyOtp(verifyOtpDto);
   }
 
   async activateAccount(
@@ -169,7 +171,7 @@ export class AuthService {
         where: { email },
         include: {
           user_roles: { include: { roles: true } },
-          loyalty_program: { include: { loyalty_levels: true } },
+          loyalty_program: { include: { levels: true } },
         },
       });
 
