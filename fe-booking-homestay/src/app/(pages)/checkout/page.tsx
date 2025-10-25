@@ -7,12 +7,16 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@radix-ui/react-radio-group";
 import { ArrowLeft, CreditCard, Wallet, Building2, Check } from "lucide-react";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useAuth } from "@/context/auth-context";
+import { room_detail } from "@/services/bookingApi";
 
 type PaymentMethod = "momo" | "paypal" | "bank-transfer";
 
 export default function CheckoutPage() {
+  const { user } = useAuth();
+
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [emailInput, setEmailInput] = useState("");
@@ -21,24 +25,21 @@ export default function CheckoutPage() {
   const [firstNameError, setFirstNameError] = useState("");
   const [lastNameError, setLastNameError] = useState("");
   const router = useRouter();
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("momo");
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("paypal");
   const [cardDetails, setCardDetails] = useState({
     cardNumber: "",
     cardName: "",
     expiryDate: "",
     cvv: "",
   });
-  const bookingData = {
-    hotelName: "M Hotel Danang",
-    roomType: "Sea Garden Deluxe Double Room - Daily Afternoon Tea Inclusive",
-    checkIn: "October 15, 2025",
-    checkOut: "October 18, 2025",
-    nights: 3,
-    guests: 2,
-    pricePerNight: 333236,
-    totalPrice: 999708,
-    hotelImage: "/images/home-hanoi-1.jpg",
-  };
+  useEffect(() => {
+    if (user) {
+      setFirstName(user.firstName || "");
+      setLastName(user.lastName || "");
+      setEmailInput(user.email || "");
+      setPhone(user.phoneNumber || "");
+    }
+  }, [user]);
 
   const handleConfirmBooking = () => {
     console.log("[v0] Confirming booking with payment method:", paymentMethod);
@@ -48,12 +49,60 @@ export default function CheckoutPage() {
     router.push("/history");
   };
 
+  const searchParams = useSearchParams();
+  const roomId = searchParams.get("roomId");
+  const loc = searchParams.get("location");
+  const ad = searchParams.get("adults");
+  const ch = searchParams.get("children");
+  const ci = searchParams.get("checkIn");
+  const co = searchParams.get("checkOut");
+  const [room, setRoom] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const roomData = await room_detail(roomId!);
+        setRoom(roomData);
+      } catch (error) {
+        console.error("Error fetching checkout data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (roomId) fetchData();
+  }, [roomId]);
+
+  const bookingData = {
+    hotelName: room?.name,
+    roomType: room?.description,
+    checkIn: ci,
+    checkOut: co,
+    nights:
+      co && ci
+        ? (new Date(co).getTime() - new Date(ci).getTime()) /
+          (1000 * 60 * 60 * 24)
+        : 1,
+    adults: ad,
+    children: ch,
+    pricePerNight: room?.price,
+    hotelImage: "/images/home-hanoi-1.jpg",
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="bg-background border-b sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 py-4">
-          <button onClick={() => router.back()} className="px-4 flex items-center gap-2 text-gray-900 hover:text-primary hover:cursor-pointer">
+          <button
+            onClick={() =>
+              router.push(
+                `/room/${roomId}?location=${loc}&adults=${ad}&children=${ch}&checkIn=${ci}&checkOut=${co}`
+              )
+            }
+            className="px-4 flex items-center gap-2 text-gray-900 hover:text-primary hover:cursor-pointer"
+          >
             <ArrowLeft className="h-5 w-5" />
             <span className="elegant-subheading">Back to hotel</span>
           </button>
@@ -329,9 +378,15 @@ export default function CheckoutPage() {
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Guests:</span>
+                    <span className="text-gray-600">Adults: </span>
                     <span className="font-medium text-gray-900">
-                      {bookingData.guests}
+                      {bookingData.adults}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Children:</span>
+                    <span className="font-medium text-gray-900">
+                      {bookingData.children}
                     </span>
                   </div>
                 </div>
@@ -341,7 +396,7 @@ export default function CheckoutPage() {
               <div className="border-t pt-4 space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">
-                    đ {bookingData.pricePerNight.toLocaleString()} x{" "}
+                    đ {bookingData?.pricePerNight?.toLocaleString()} x{" "}
                     {bookingData.nights} nights
                   </span>
                   <span className="text-gray-900">
@@ -364,7 +419,10 @@ export default function CheckoutPage() {
                     Total
                   </span>
                   <span className="text-2xl font-bold text-gray-900">
-                    đ {bookingData.totalPrice.toLocaleString()}
+                    đ{" "}
+                    {(
+                      bookingData.pricePerNight * bookingData.nights
+                    ).toLocaleString()}
                   </span>
                 </div>
               </div>

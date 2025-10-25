@@ -35,7 +35,7 @@ export default function Header() {
           <nav className="hidden md:flex space-x-12">
             <a
               href="/"
-              className={`elegant-subheading transition-colors ${
+              className={`elegant-subheading text-lg transition-colors ${
                 pathname === "/"
                   ? "text-foreground"
                   : "text-muted-foreground hover:text-foreground "
@@ -46,14 +46,14 @@ export default function Header() {
             </a>
             <a
               href="/room-list"
-              className={`elegant-subheading transition-colors ${
+              className={`elegant-subheading text-lg transition-colors ${
                 pathname === "/room-list"
                   ? "text-foreground"
                   : "text-muted-foreground hover:text-foreground "
               }
               }`}
             >
-              Hotels
+              Rooms
             </a>
             {/* <a
               href="#"
@@ -69,7 +69,7 @@ export default function Header() {
             </a> */}
             <a
               href="#"
-              className="elegant-subheading text-muted-foreground hover:text-foreground transition-colors"
+              className="elegant-subheading text-lg text-muted-foreground hover:text-foreground transition-colors"
             >
               Contact
             </a>

@@ -18,20 +18,40 @@ import {
   Wifi,
 } from "lucide-react";
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { Room } from "@/models/Room";
+import {
+  location,
+  room_all,
+  search_location,
+  search_room,
+} from "@/services/bookingApi";
+import { Location } from "@/models/Location";
 
 export default function HomePage() {
   const [checkIn, setCheckIn] = useState("");
   const [checkOut, setCheckOut] = useState("");
-  const [adults, setAdults] = useState(3);
+  const [adults, setAdults] = useState(1);
   const [children, setChildren] = useState(0);
   const [isGuestPopoverOpen, setIsGuestPopoverOpen] = useState(false);
+  const [rooms, setRooms] = useState<Room[]>([]);
+  const [page, setPage] = useState(1);
+  const [locations, setLocations] = useState<any[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [locationInput, setLocationInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [hasMore, setHasMore] = useState(true);
+  const locationInputRef = useRef<HTMLInputElement>(null);
+
+  // 🔎 Từ khóa tìm kiếm (search)
+  const [search, setSearch] = useState("");
 
   const getGuestDisplayText = () => {
     const total = adults + children;
@@ -39,63 +59,6 @@ export default function HomePage() {
   };
 
   const router = useRouter();
-
-  const featuredHotels: Hotel[] = [
-    {
-      id: 1,
-      name: "4Stay Homestay",
-      location: "1 District, Ho Chi Minh City",
-      rating: 4.8,
-      price: 1500000,
-      image: "/images/home-hcm-1.jpg",
-      amenities: ["wifi", "parking", "restaurant", "gym"],
-    },
-    {
-      id: 2,
-      name: "4Stay Hotel",
-      location: "Hoan Kiem, Ha Noi",
-      rating: 4.6,
-      price: 1000000,
-      image: "/images/home-hanoi-1.jpg",
-      amenities: ["wifi", "restaurant", "gym"],
-    },
-    {
-      id: 3,
-      name: "4Stay Villa",
-      location: "Son Tra, Da Nang",
-      rating: 4.9,
-      price: 900000,
-      image: "/images/home-dn.jpg",
-      amenities: ["wifi", "parking", "restaurant"],
-    },
-    {
-      id: 4,
-      name: "4Stay Homestay",
-      location: "1 District, Ho Chi Minh City",
-      rating: 4.8,
-      price: 1500000,
-      image: "/images/home-hcm-1.jpg",
-      amenities: ["wifi", "parking", "restaurant", "gym"],
-    },
-    {
-      id: 5,
-      name: "4Stay Hotel",
-      location: "Hoan Kiem, Ha Noi",
-      rating: 4.6,
-      price: 1000000,
-      image: "/images/home-hanoi-1.jpg",
-      amenities: ["wifi", "restaurant", "gym"],
-    },
-    {
-      id: 6,
-      name: "4Stay Villa",
-      location: "Son Tra, Da Nang",
-      rating: 4.9,
-      price: 900000,
-      image: "/images/home-dn.jpg",
-      amenities: ["wifi", "parking", "restaurant"],
-    },
-  ];
 
   const popularDestinations: Destination[] = [
     {
@@ -118,22 +81,122 @@ export default function HomePage() {
     },
   ];
 
-  const getAmenityIcon = (amenity: string) => {
-    switch (amenity) {
-      case "wifi":
-        return <Wifi size={16} />;
-      case "parking":
-        return <Car size={16} />;
-      case "restaurant":
-        return <Coffee size={16} />;
-      case "gym":
-        return <Dumbbell size={16} />;
+  const getAmenityIcon = (amenity: Amenity) => {
+    switch (amenity.category) {
+      case "BASIC":
+        return "🛏️";
+      case "COMMON":
+        return "🚗";
       default:
-        return null;
+        return "✔️";
     }
   };
+
   const formatPrice = (price: number) => {
     return `${price.toLocaleString()} VND`;
+  };
+
+  const loadRooms = useCallback(
+    async (reset = false) => {
+      if (loading) return;
+      try {
+        setLoading(true);
+        const result = await room_all({
+          page: reset ? 1 : page,
+          pageSize: 6,
+          search: search.trim(),
+          adults,
+          children,
+        });
+
+        const roomsData = result.rooms || [];
+
+        if (reset) {
+          setRooms(roomsData);
+          setPage(2);
+        } else {
+          setRooms((prev) => [...prev, ...roomsData]);
+          setPage((prev) => prev + 1);
+        }
+
+        setHasMore(roomsData.length > 0);
+      } catch (err) {
+        console.error("Error loading rooms:", err);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [page, search, adults, children, loading]
+  );
+
+  //Hàm fetch gợi ý location
+  const fetchLocationSuggestions = useCallback(async (query: string) => {
+    if (!query.trim()) {
+      //input rỗng
+      const res = await location();
+      const allData = res.data || [];
+      setLocations(allData);
+      setShowSuggestions(allData.length > 0);
+    } else {
+      //có text
+      const res = await search_location(query);
+      const data = res.data?.data || [];
+      setLocations(data);
+      setError("");
+      setShowSuggestions(data.length > 0);
+    }
+  }, []);
+
+  //tránh gọi API liên tục khi gõ
+  useEffect(() => {
+    loadRooms(true);
+    if (!showSuggestions) return; // Chỉ chạy nếu đang focus
+    const timeout = setTimeout(() => {
+      fetchLocationSuggestions(locationInput);
+    }, 200);
+    return () => clearTimeout(timeout);
+  }, [locationInput, fetchLocationSuggestions, showSuggestions]);
+
+  const handleFocusLocation = () => {
+    setShowSuggestions(true);
+    fetchLocationSuggestions(locationInput);
+  };
+
+  const handleSelectLocation = (loc: Location) => {
+    setLocationInput(loc.province || "");
+    setShowSuggestions(false);
+  };
+
+  useEffect(() => {
+    const handleClickOutside = () => setShowSuggestions(false);
+    window.addEventListener("click", handleClickOutside);
+    return () => window.removeEventListener("click", handleClickOutside);
+  }, []);
+
+  const handleSearch = async () => {
+    setLoading(true);
+    try {
+      if (!locationInput || locationInput.trim() === "") {
+        setError("Please enter a location.");
+        setShowSuggestions(false);
+        locationInputRef.current?.focus();
+
+        return;
+      }
+      const query = new URLSearchParams({
+        location: locationInput,
+        ...(checkIn ? { checkIn } : {}),
+        ...(checkOut ? { checkOut } : {}),
+        adults: adults.toString(),
+        children: children.toString(),
+      }).toString();
+
+      router.push(`/room-list?${query}`);
+    } catch (error) {
+      console.error("search room error: ", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -168,20 +231,49 @@ export default function HomePage() {
                     size={20}
                   />
                   <Input
+                    ref={locationInputRef}
+                    value={locationInput}
+                    onChange={(e) => setLocationInput(e.target.value)}
+                    onFocus={handleFocusLocation}
+                    onClick={(e) => e.stopPropagation()}
                     placeholder="Where are you going?"
                     className="pl-10 h-12 border-border focus:border-accent elegant-subheading rounded-2xl"
                   />
+                  {error && (
+                    <p className="text-sm text-red-500 mt-1 absolute">
+                      {error}
+                    </p>
+                  )}
+
+                  {/* Danh sách gợi ý */}
+                  {showSuggestions && locations.length > 0 && (
+                    <ul className="absolute z-50 left-0 right-0 bg-white border border-gray-200 mt-2 rounded-xl shadow-lg max-h-60 overflow-auto text-left">
+                      {locations.map((loc: Location) => (
+                        <li
+                          key={loc.id}
+                          onClick={() => handleSelectLocation(loc)}
+                          className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm text-gray-700"
+                        >
+                          {/* {loc.province
+                              ? `${loc.district}, ${loc.province}`
+                              : loc.province || "Unknown"} */}
+                          {loc.province || "Unknown"}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
               </div>
+
               <div>
                 <label className="elegant-subheading text-sm text-muted-foreground mb-2 block">
                   Check in
                 </label>
                 <div className="relative">
                   {/* <Calendar
-                    className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground"
-                    size={20}
-                  /> */}
+                        className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground"
+                        size={20}
+                      /> */}
                   <Input
                     type="date"
                     value={checkIn}
@@ -196,9 +288,9 @@ export default function HomePage() {
                 </label>
                 <div className="relative">
                   {/* <Calendar
-                    className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground"
-                    size={20}
-                  /> */}
+                        className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground"
+                        size={20}
+                      /> */}
                   <Input
                     type="date"
                     value={checkOut}
@@ -224,8 +316,8 @@ export default function HomePage() {
                       <button className="w-full h-12 px-4 border border-border rounded-2xl focus:border-accent focus:ring-1 focus:ring-accent text-left flex items-center justify-between">
                         <div className="flex items-center justify-between ">
                           {/* <p className="text-sm text-muted-foreground elegant-subheading mr-4">
-                  Guests:{" "}
-                </p> */}
+                      Guests:{" "}
+                    </p> */}
                           <p className="ml-10 text-sm elegant-subheading">
                             {getGuestDisplayText()}
                           </p>
@@ -361,10 +453,10 @@ export default function HomePage() {
 
                         {/* Info Note */}
                         {/* <div className="pt-4 border-t">
-                <p className="text-sm text-gray-600">
-                  Chỗ ở này cho phép tối đa 3 khách, không tính em bé. 
-                </p>
-              </div> */}
+                    <p className="text-sm text-gray-600">
+                      Chỗ ở này cho phép tối đa 3 khách, không tính em bé. 
+                    </p>
+                  </div> */}
 
                         {/* Close Button */}
                         <Button
@@ -379,11 +471,36 @@ export default function HomePage() {
                 </div>
               </div>
             </div>
-            <Button className="rounded-2xl w-full bg-primary hover:bg-primary/90 text-primary-foreground h-12 elegant-subheading text-md">
+            <Button
+              onClick={handleSearch}
+              className="rounded-2xl w-full bg-primary hover:bg-primary/90 text-primary-foreground h-12 elegant-subheading text-md"
+            >
               <Search className="mr-2" size={20} />
-              Search Hotels
+              {loading ? "Searching..." : "Search Hotels"}
             </Button>
           </div>
+
+          {/* --- Results --- */}
+          {/* {loading ? (
+              <p>Loading rooms...</p>
+            ) : rooms.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {rooms.map((room) => (
+                  <div
+                    key={room.id}
+                    className="border rounded-xl p-4 shadow hover:shadow-lg transition"
+                  >
+                    <h3 className="font-semibold text-lg">{room.name}</h3>
+                    <p className="text-sm text-gray-600">{room.description}</p>
+                    <p className="text-primary font-medium mt-1">
+                      ${room.price}/night
+                    </p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-500">No rooms found.</p>
+            )} */}
         </div>
       </section>
 
@@ -400,53 +517,55 @@ export default function HomePage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {featuredHotels.map((hotel) => (
+            {rooms.map((room) => (
               <Card
-                key={hotel.id}
+                key={room.id}
                 className="overflow-hidden hover:shadow-xl transition-all duration-500 "
               >
                 <div className="relative">
                   <Image
-                    src={hotel.image || "/placeholder.svg"}
-                    alt={hotel.name}
+                    src={room.images?.main || "/images/da-nang.jpg"}
+                    alt={room.name}
                     width={400}
                     height={600}
                     className="w-full h-64 object-cover rounded-t-2xl"
                   />
                   <div className="absolute top-4 right-4 bg-white px-2 py-1 rounded-full flex items-center gap-1">
                     <Star className="text-yellow-400 fill-current" size={16} />
-                    <span className="text-sm font-medium">{hotel.rating}</span>
+                    <span className="text-sm font-medium">{room.rating}</span>
                   </div>
                 </div>
                 <CardContent className="pb-8">
                   <h3 className="elegant-heading text-2xl text-foreground mb-2">
-                    {hotel.name}
+                    {room.name}
                   </h3>
                   <p className="elegant-subheading text-muted-foreground mb-2 flex items-center gap-1">
                     <MapPin size={16} />
-                    {hotel.location}
+                    {room.location.fullAddress}
                   </p>
                   <div className="flex items-center gap-2 mb-4">
-                    {hotel.amenities.map((amenity) => (
+                    {(room.amenities || []).map((amenity) => (
                       <div
-                        key={amenity}
-                        className="elegant-subheading text-muted-foreground"
+                        key={amenity.id} // use id as key
+                        className="elegant-subheading text-muted-foreground flex items-center gap-1"
                       >
-                        {getAmenityIcon(amenity)}
+                        <span>{getAmenityIcon(amenity)}</span>
+                        <span>{amenity.name}</span>
                       </div>
                     ))}
                   </div>
+
                   <div className="flex justify-between items-center">
                     <div>
                       <span className="text-2xl elegant-heading text-foreground">
-                        {formatPrice(hotel.price)}
+                        {formatPrice(room.price)}
                       </span>
                       <span className="elegant-subheading text-muted-foreground">
                         /night
                       </span>
                     </div>
                     <Button
-                      onClick={() => router.push(`/room/${hotel.id}`)}
+                      onClick={() => router.push(`/room/${room.id}`)}
                       className="bg-primary hover:bg-primary/90 text-primary-foreground elegant-subheading hover:cursor-pointer rounded-xl"
                     >
                       Book Now

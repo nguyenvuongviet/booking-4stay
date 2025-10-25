@@ -201,6 +201,7 @@ model room_amenities {
 
   @@unique([roomId, amenityId], map: "room_amenity_unique")
   @@unique([roomId, amenityId], map: "uq_room_amenity")
+  @@unique([roomId, amenityId], map: "uq_room_amenity")
   @@index([amenityId], map: "amenityId")
 }
 
