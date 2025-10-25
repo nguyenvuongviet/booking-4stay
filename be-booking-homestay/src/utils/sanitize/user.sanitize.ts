@@ -1,4 +1,4 @@
-import { buildImageUrl, sanitizeCollection } from 'src/utils/object';
+import { buildImageUrl, sanitizeCollection } from 'src/utils/object.util';
 
 function sanitizeUser(user: any) {
   if (!user) return null;

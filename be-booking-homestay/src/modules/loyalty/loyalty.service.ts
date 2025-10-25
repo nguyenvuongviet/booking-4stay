@@ -3,7 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateLoyaltyLevelDto } from './dto/create-loyalty-level.dto';
 import { UpdateLoyaltyLevelDto } from './dto/update-loyalty-level.dto';
 import { UpdateUserLoyaltyDto } from './dto/update-user-loyalty.dto';
-import { cleanData } from 'src/utils/object';
+import { cleanData } from 'src/utils/object.util';
 
 @Injectable()
 export class LoyaltyService {

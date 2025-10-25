@@ -10,8 +10,8 @@ import {
   REFRESH_TOKEN_SECRET,
 } from 'src/common/constant/app.constant';
 import { Validator } from 'src/common/validation';
-import { createLoyaltyProgram } from 'src/helpers/loyalty.helper';
-import { sanitizeUserData } from 'src/helpers/user.helper';
+import { LoyaltyService } from 'src/helpers/loyalty.helper';
+import { sanitizeUserData } from 'src/utils/sanitize/user.sanitize';
 import { VerifyOtpDto } from '../otp/dto/verifyOtp.dto';
 import { OtpService } from '../otp/otp.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -28,6 +28,7 @@ export class AuthService {
     private readonly prismaService: PrismaService,
     private readonly tokenService: TokenService,
     private readonly otpService: OtpService,
+    private readonly loyaltyService: LoyaltyService,
   ) {}
 
   async register(
@@ -131,22 +132,17 @@ export class AuthService {
         this.prismaService.users.findUnique({ where: { email } }),
       ]);
 
-      if (!verifyResult.success) {
+      if (!verifyResult.success)
         throw new BadRequestException('OTP không hợp lệ hoặc hết hạn!');
-      }
-
-      if (!userExist || userExist.isDeleted) {
+      if (!userExist || userExist.isDeleted)
         throw new BadRequestException('Tài khoản không tồn tại!');
-      }
 
-      await this.prismaService.$transaction(async (tx: PrismaService) => {
-        await tx.users.update({
-          where: { email },
-          data: { isActive: true, isVerified: true, updatedAt: new Date() },
-        });
-
-        await createLoyaltyProgram(tx, userExist.id);
+      await this.prismaService.users.update({
+        where: { email },
+        data: { isActive: true, isVerified: true, updatedAt: new Date() },
       });
+
+      await this.loyaltyService.createLoyaltyProgram(userExist.id);
 
       return {
         message: 'Tài khoản đã được kích hoạt và gán loyalty mặc định!',

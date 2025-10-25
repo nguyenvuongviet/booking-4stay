@@ -4,8 +4,7 @@ import * as bcrypt from 'bcrypt';
 import * as fs from 'fs';
 import * as path from 'path';
 import { PORT } from 'src/common/constant/app.constant';
-import { createLoyaltyProgram } from 'src/helpers/loyalty.helper';
-import { sanitizeUserData } from 'src/helpers/user.helper';
+import { sanitizeUserData } from 'src/utils/sanitize/user.sanitize';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -146,8 +145,6 @@ export class UserService {
             user_roles: { include: { roles: true } },
           },
         });
-
-        await createLoyaltyProgram(tx, newUser.id);
 
         return tx.users.findUnique({
           where: { id: newUser.id },

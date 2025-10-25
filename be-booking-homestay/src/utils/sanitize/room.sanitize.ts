@@ -1,4 +1,4 @@
-import { buildImageUrl, sanitizeCollection } from 'src/utils/object';
+import { buildImageUrl, sanitizeCollection } from 'src/utils/object.util';
 
 function sanitize(room: any) {
   if (!room) return null;

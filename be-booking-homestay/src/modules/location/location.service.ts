@@ -7,7 +7,7 @@ import { CreateLocationDto } from './dto/create-location.dto';
 import { UpdateLocationDto } from './dto/update-location.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
-import { buildImageUrl, cleanData } from 'src/utils/object';
+import { buildImageUrl, cleanData } from 'src/utils/object.util';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 
 @Injectable()

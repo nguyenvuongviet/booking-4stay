@@ -8,7 +8,7 @@ import { UpdateRoomDto } from './dto/update-room.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { RoomFilterDto } from './dto/filter-room.dto';
 import { Prisma } from '@prisma/client';
-import { sanitizeRoom } from 'src/helpers/room.helper';
+import { sanitizeRoom } from 'src/utils/sanitize/room.sanitize';
 import { BedItemDto, BedType } from './dto/set-room-beds.dto';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { ImageItemDto } from './dto/set-room-images.dto';
