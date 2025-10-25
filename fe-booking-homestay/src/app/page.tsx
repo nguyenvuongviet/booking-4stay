@@ -149,6 +149,7 @@ export default function HomePage() {
 
   //tránh gọi API liên tục khi gõ
   useEffect(() => {
+    loadRooms(true);
     if (!showSuggestions) return; // Chỉ chạy nếu đang focus
     const timeout = setTimeout(() => {
       fetchLocationSuggestions(locationInput);
@@ -173,6 +174,7 @@ export default function HomePage() {
   }, []);
 
   const handleSearch = async () => {
+    setLoading(true);
     try {
       if (!locationInput || locationInput.trim() === "") {
         setError("Please enter a location.");
@@ -181,11 +183,15 @@ export default function HomePage() {
 
         return;
       }
-      router.push(
-        `/room-list?location=${encodeURIComponent(
-          locationInput
-        )}&adults=${adults}&children=${children}`
-      );
+      const query = new URLSearchParams({
+        location: locationInput,
+        ...(checkIn ? { checkIn } : {}),
+        ...(checkOut ? { checkOut } : {}),
+        adults: adults.toString(),
+        children: children.toString(),
+      }).toString();
+
+      router.push(`/room-list?${query}`);
     } catch (error) {
       console.error("search room error: ", error);
     } finally {

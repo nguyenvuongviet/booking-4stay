@@ -9,11 +9,9 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { location, search_location, search_room } from "@/services/bookingApi";
 import { Location } from "@/models/Location";
-import { useSearchParams } from "next/navigation";
-import { Room } from "@/models/Room";
 
 export function SearchBar() {
   const [checkIn, setCheckIn] = useState("");
@@ -26,7 +24,22 @@ export function SearchBar() {
   const [locationInput, setLocationInput] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
   const locationInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const loc = searchParams.get("location");
+    const ad = searchParams.get("adults");
+    const ch = searchParams.get("children");
+    const ci = searchParams.get("checkIn");
+    const co = searchParams.get("checkOut");
+
+    if (loc) setLocationInput(decodeURIComponent(loc));
+    if (ci) setCheckIn(ci);
+    if (co) setCheckOut(co);
+    if (ad) setAdults(Number(ad));
+    if (ch) setChildren(Number(ch));
+  }, [searchParams]);
 
   const getGuestDisplayText = () => {
     const total = adults + children;
@@ -82,11 +95,15 @@ export function SearchBar() {
         return;
       }
 
-      router.push(
-        `/room-list?location=${encodeURIComponent(
-          locationInput
-        )}&adults=${adults}&children=${children}`
-      );
+      const query = new URLSearchParams({
+        location: locationInput,
+        ...(checkIn ? { checkIn } : {}),
+        ...(checkOut ? { checkOut } : {}),
+        adults: adults.toString(),
+        children: children.toString(),
+      }).toString();
+
+      router.push(`/room-list?${query}`);
     } catch (error) {
       console.error("search room error: ", error);
     } finally {

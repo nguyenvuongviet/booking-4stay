@@ -1,7 +1,8 @@
 "use client";
 
 import { Card, CardContent } from "@/components/ui/card";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useState } from "react";
 import Image from "next/image";
 import { Hotel } from "@/models/Hotel";
 import { Star, MapPin } from "lucide-react";
@@ -10,15 +11,32 @@ import { Room } from "@/models/Room";
 type RoomCardProps = { room: Room };
 
 export function RoomCard({ room }: RoomCardProps) {
+  const searchParams = useSearchParams();
   const router = useRouter();
+  const loc = searchParams.get("location");
+  const ad = searchParams.get("adults");
+  const ch = searchParams.get("children");
+  const ci = searchParams.get("checkIn");
+  const co = searchParams.get("checkOut");
   const formatPrice = (price: number) => {
     return `${price.toLocaleString()} VND`;
   };
   const getRoomImage = (url?: string) => url || "/images/da-nang.jpg";
+  const query = new URLSearchParams({
+    location: loc || "",
+    ...(ci ? { checkIn:ci } : {}),
+    ...(co ? { checkOut:co } : {}),
+    adults: ad || "1",
+    children: ch || "0",
+  }).toString();
 
   return (
     <Card
-      onClick={() => router.push(`/room/${room.id}`)}
+      onClick={() =>
+        // router.push(`/room/${room.id}`)
+
+        router.push(`/room/${room.id}?${query}`)
+      }
       className="overflow-hidden hover:shadow-xl transition-all duration-500 hover:cursor-pointer"
     >
       <div className="relative">

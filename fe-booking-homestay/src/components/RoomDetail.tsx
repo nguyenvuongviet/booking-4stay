@@ -11,7 +11,7 @@ import {
 import { Room } from "@/models/Room";
 import { room_detail } from "@/services/bookingApi";
 import { Loader2, MapPin, Star, Users } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import Header from "./Header";
 import { SearchBar } from "./SearchBar";
@@ -40,6 +40,8 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
   const [isGuestPopoverOpen, setIsGuestPopoverOpen] = useState(false);
   const [room, setRoom] = useState<Room | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const searchParams = useSearchParams();
   const getTotalGuests = () => adults + children;
 
   const getGuestDisplayText = () => {
@@ -104,6 +106,17 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
 
     fetchRoom();
   }, [roomId]);
+  useEffect(() => {
+    const ad = searchParams.get("adults");
+    const ch = searchParams.get("children");
+    const ci = searchParams.get("checkIn");
+    const co = searchParams.get("checkOut");
+
+    if (ci) setCheckIn(ci);
+    if (co) setCheckOut(co);
+    if (ad) setAdults(Number(ad));
+    if (ch) setChildren(Number(ch));
+  }, [searchParams]);
 
   if (loading)
     return (
@@ -120,8 +133,8 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
 
       {/* Main Content */}
       <div className="container mx-auto py-12 space-y-12 pt-20 px-4 sm:px-6 lg:px-8">
-        <SearchBar />
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* <SearchBar /> */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-16">
           {/* Left Column - Main Content */}
           <div className="lg:col-span-2 space-y-6">
             {/* Photo Gallery */}
@@ -440,7 +453,7 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
               </div>
 
               <Button
-                onClick={() => router.push(`/checkout`)}
+                onClick={() => router.push(`/checkout?roomId=${room.id}`)}
                 className="w-full h-10 rounded-2xl mb-6"
               >
                 Select room

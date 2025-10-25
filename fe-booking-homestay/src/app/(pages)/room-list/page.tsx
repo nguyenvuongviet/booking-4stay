@@ -2,7 +2,7 @@
 
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { FilterBar } from "@/components/FilterBar";
 import { RoomCard } from "@/components/RoomCard";
@@ -10,7 +10,6 @@ import { SearchBar } from "@/components/SearchBar";
 import { Room } from "@/models/Room";
 import { Car, Coffee, Dumbbell, Loader2, Wifi } from "lucide-react";
 import { room_all } from "@/services/bookingApi";
-import { useSearchParams } from "next/navigation";
 import { search_room } from "@/services/bookingApi";
 // import { motion, AnimatePresence } from "framer-motion";
 
