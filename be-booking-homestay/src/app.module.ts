@@ -12,6 +12,7 @@ import { PrismaService } from './modules/prisma/prisma.service';
 import { RoomModule } from './modules/room/room.module';
 import { TokenModule } from './modules/token/token.module';
 import { UserModule } from './modules/user/user.module';
+import { BookingModule } from './modules/booking/booking.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { UserModule } from './modules/user/user.module';
     LocationModule,
     LoyaltyModule,
     RoomModule,
+    BookingModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService, ProtectStrategy],

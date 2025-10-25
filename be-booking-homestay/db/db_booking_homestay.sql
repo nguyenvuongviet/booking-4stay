@@ -47,6 +47,7 @@ CREATE TABLE `bookings` (
   `children` int NOT NULL DEFAULT '0',
   `totalPrice` decimal(12,2) NOT NULL,
   `status` enum('PENDING','CONFIRMED','CHECKED_IN','CHECKED_OUT','CANCELLED','REFUNDED') DEFAULT 'PENDING',
+  `cancelReason` varchar(255) DEFAULT NULL,
   `deletedBy` int NOT NULL DEFAULT '0',
   `isDeleted` tinyint(1) NOT NULL DEFAULT '0',
   `deletedAt` timestamp NULL DEFAULT NULL,
