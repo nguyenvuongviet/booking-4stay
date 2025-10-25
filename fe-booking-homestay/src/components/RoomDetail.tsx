@@ -13,6 +13,7 @@ import { room_detail } from "@/services/bookingApi";
 import { Loader2, MapPin, Star, Users } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useAuth } from "@/context/auth-context";
 import Header from "./Header";
 import { SearchBar } from "./SearchBar";
 
@@ -21,6 +22,7 @@ interface RoomDetailClientProps {
 }
 
 export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
+  const { openSignIn, user } = useAuth();
   const [showAllPhotos, setShowAllPhotos] = useState(false);
   const [showAllAmenities, setShowAllAmenities] = useState(false);
   const [showFullOverview, setShowFullOverview] = useState(false);
@@ -40,8 +42,15 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
   const [isGuestPopoverOpen, setIsGuestPopoverOpen] = useState(false);
   const [room, setRoom] = useState<Room | null>(null);
   const [loading, setLoading] = useState(true);
-
   const searchParams = useSearchParams();
+
+  const query = new URLSearchParams({
+    ...(checkIn ? { checkIn } : {}),
+    ...(checkOut ? { checkOut } : {}),
+    adults: adults.toString(),
+    children: children.toString(),
+  }).toString();
+
   const getTotalGuests = () => adults + children;
 
   const getGuestDisplayText = () => {
@@ -106,6 +115,7 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
 
     fetchRoom();
   }, [roomId]);
+
   useEffect(() => {
     const ad = searchParams.get("adults");
     const ch = searchParams.get("children");
@@ -176,7 +186,7 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
 
                   <p className="text-sm elegant-subheading flex items-center gap-1">
                     <MapPin className="h-4 w-4" />
-                    {room.location.fullAddress}
+                    {room.location?.fullAddress ?? "Unknown"}
                   </p>
                 </div>
                 <div className="text-right ">
@@ -252,7 +262,7 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
                   <span className="text-4xl elegant-heading">
                     {" "}
                     {/* {hotel.pricePerNight.toLocaleString()} VND */}
-                    {room.price.toLocaleString()} VND
+                    {room.price?.toLocaleString()} VND
                   </span>
                   <span className="text-md elegant-subheading text-muted-foreground">
                     /night
@@ -260,7 +270,7 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
                 </div>
                 <p className="text-sm elegant-subheading text-muted-foreground">
                   {/* Total: {hotel.totalPrice.toLocaleString()} VND */}
-                  Total: {room.price.toLocaleString()} VND
+                  Total: {room.price?.toLocaleString()} VND
                 </p>
                 <p className="text-sm elegant-subheading text-muted-foreground">
                   (1 room x 1 nights incl. taxes & fees)
@@ -453,7 +463,13 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
               </div>
 
               <Button
-                onClick={() => router.push(`/checkout?roomId=${room.id}`)}
+                onClick={() => {
+                  if (!user) {
+                    openSignIn();
+                  } else {
+                    router.push(`/checkout?roomId=${room.id}&${query}`);
+                  }
+                }}
                 className="w-full h-10 rounded-2xl mb-6"
               >
                 Select room
