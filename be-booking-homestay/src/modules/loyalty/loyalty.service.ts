@@ -1,9 +1,9 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
+import { sanitizeLoyalty } from 'src/utils/sanitize/loyalty.sanitize';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateLoyaltyLevelDto } from './dto/create-loyalty-level.dto';
 import { UpdateLoyaltyLevelDto } from './dto/update-loyalty-level.dto';
 import { UpdateUserLoyaltyDto } from './dto/update-user-loyalty.dto';
-import { cleanData } from 'src/utils/object.util';
 
 @Injectable()
 export class LoyaltyService {
@@ -14,7 +14,7 @@ export class LoyaltyService {
       orderBy: { minPoints: 'asc' },
     });
 
-    return cleanData(levels);
+    return sanitizeLoyalty(levels);
   }
 
   async findOneLevel(id: number) {
@@ -22,7 +22,7 @@ export class LoyaltyService {
       where: { id },
     });
     if (!level) throw new BadRequestException('Cấp độ không tồn tại');
-    return cleanData(level);
+    return sanitizeLoyalty(level);
   }
 
   async createLevel(dto: CreateLoyaltyLevelDto) {
@@ -117,7 +117,7 @@ export class LoyaltyService {
     });
     if (!program)
       throw new BadRequestException('Người dùng chưa có chương trình Loyalty');
-    return cleanData(program);
+    return sanitizeLoyalty(program);
   }
 
   async updateUserLoyalty(userId: number, dto: UpdateUserLoyaltyDto) {
@@ -152,7 +152,7 @@ export class LoyaltyService {
       include: { levels: true },
     });
 
-    return cleanData(program);
+    return sanitizeLoyalty(program);
   }
 
   async recomputeAllUserLevels() {

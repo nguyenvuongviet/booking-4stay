@@ -3,12 +3,13 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
+import { buildImageUrl } from 'src/utils/object.util';
+import { sanitizeLocation } from 'src/utils/sanitize/location.sanitize';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { CreateLocationDto } from './dto/create-location.dto';
 import { UpdateLocationDto } from './dto/update-location.dto';
-import { PrismaService } from '../prisma/prisma.service';
-import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
-import { buildImageUrl, cleanData } from 'src/utils/object.util';
-import { CloudinaryService } from '../cloudinary/cloudinary.service';
 
 @Injectable()
 export class LocationService {
@@ -22,7 +23,8 @@ export class LocationService {
       where: { isDeleted: false },
       orderBy: [{ province: 'asc' }, { district: 'asc' }, { ward: 'asc' }],
     });
-    return cleanData(locations);
+
+    return sanitizeLocation(locations);
   }
 
   async search(query: PaginationQueryDto) {
@@ -38,7 +40,8 @@ export class LocationService {
       },
       orderBy: [{ province: 'asc' }, { district: 'asc' }, { ward: 'asc' }],
     });
-    return cleanData(locations);
+
+    return sanitizeLocation(locations);
   }
 
   async listProvinces() {
@@ -94,7 +97,7 @@ export class LocationService {
       where: { id, isDeleted: false },
     });
     if (!location) throw new BadRequestException('Location không tồn tại');
-    return cleanData(location);
+    return sanitizeLocation(location);
   }
 
   async create(createLocationDto: CreateLocationDto) {
