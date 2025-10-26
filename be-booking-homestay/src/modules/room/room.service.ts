@@ -3,15 +3,18 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { CreateRoomDto } from './dto/create-room.dto';
-import { UpdateRoomDto } from './dto/update-room.dto';
-import { PrismaService } from '../prisma/prisma.service';
-import { RoomFilterDto } from './dto/filter-room.dto';
-import { Prisma } from '@prisma/client';
+import { ensureDateRange } from 'src/utils/date.util';
 import { sanitizeRoom } from 'src/utils/sanitize/room.sanitize';
-import { BedItemDto, BedType } from './dto/set-room-beds.dto';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
-import { ImageItemDto } from './dto/set-room-images.dto';
+import { PrismaService } from '../prisma/prisma.service';
+import { CreateRoomDto } from './dto/create-room.dto';
+import { RoomFilterDto } from './dto/filter-room.dto';
+import { BedItemDto, BedType } from './dto/set-room-beds.dto';
+import { UpdateRoomDto } from './dto/update-room.dto';
+
+const OVERLAP_STATUSES = ['PENDING', 'CONFIRMED', 'CHECKED_IN'] as const;
+const SORT_BY = new Set(['price', 'rating', 'createdAt']);
+const SORT_ORDER = new Set(['asc', 'desc']);
 
 @Injectable()
 export class RoomService {
@@ -21,7 +24,7 @@ export class RoomService {
   ) {}
 
   async findAll(query: RoomFilterDto) {
-    const {
+    let {
       province,
       minPrice,
       maxPrice,
@@ -36,61 +39,64 @@ export class RoomService {
       pageSize = 12,
     } = query;
 
-    if (minPrice && maxPrice && minPrice > maxPrice) {
+    province = province?.trim();
+    sortBy = SORT_BY.has(sortBy ?? '') ? sortBy! : 'createdAt';
+    sortOrder = SORT_ORDER.has(sortOrder ?? '') ? sortOrder! : 'desc';
+    page = Math.max(1, Number(page) || 1);
+    pageSize = Math.max(1, Number(pageSize) || 12);
+
+    if (minPrice && maxPrice && minPrice > maxPrice)
       throw new BadRequestException(
         'Giá tối thiểu không được lớn hơn giá tối đa',
       );
+
+    let inDate: Date | undefined;
+    let outDate: Date | undefined;
+    if (checkIn || checkOut) {
+      if (!checkIn || !checkOut)
+        throw new BadRequestException('Cần truyền đủ cả checkIn và checkOut');
+      const r = ensureDateRange(checkIn, checkOut);
+      inDate = r.inDate;
+      outDate = r.outDate;
     }
 
-    if (province?.trim()) {
-      const existProvince = await this.prisma.locations.findFirst({
-        where: { province: province.trim(), isDeleted: false },
+    if (province) {
+      const exists = await this.prisma.locations.findFirst({
+        where: { province, isDeleted: false },
         select: { id: true },
       });
-      if (!existProvince) {
+      if (!exists) {
         throw new NotFoundException(
           `Không tìm thấy province = "${province}" trong dữ liệu locations`,
         );
       }
     }
 
-    if ((checkIn && !checkOut) || (!checkIn && checkOut)) {
-      throw new BadRequestException('Cần truyền đủ cả checkIn và checkOut');
+    const where: any = { isDeleted: false };
+
+    if (province) where.locations = { province, isDeleted: false };
+
+    if (minPrice || maxPrice) {
+      where.price = {};
+      if (minPrice) where.price.gte = minPrice;
+      if (maxPrice) where.price.lte = maxPrice;
     }
 
-    if (checkIn && checkOut) {
-      const inDate = new Date(checkIn);
-      const outDate = new Date(checkOut);
-      if (!(inDate < outDate)) {
-        throw new BadRequestException('Khoảng ngày không hợp lệ');
-      }
-    }
+    if (adults) where.adultCapacity = { gte: adults };
+    if (children !== undefined) where.childCapacity = { gte: children };
+    if (minRating) where.rating = { gte: minRating };
 
-    const where: any = {
-      isDeleted: false,
-      ...(province?.trim()
-        ? { locations: { province: province.trim(), isDeleted: false } }
-        : {}),
-      ...(minPrice ? { price: { gte: minPrice } } : {}),
-      ...(maxPrice ? { price: { lte: maxPrice } } : {}),
-      ...(adults ? { adultCapacity: { gte: adults } } : {}),
-      ...(children !== undefined ? { childCapacity: { gte: children } } : {}),
-      ...(minRating ? { rating: { gte: minRating } } : {}),
-    };
-
-    if (checkIn && checkOut) {
-      const inDate = new Date(checkIn),
-        outDate = new Date(checkOut);
+    if (inDate && outDate) {
       where.bookings = {
         none: {
-          status: { in: ['PENDING', 'CONFIRMED', 'CHECKED_IN'] },
+          status: { in: OVERLAP_STATUSES as any },
           AND: [{ checkOut: { gt: inDate } }, { checkIn: { lt: outDate } }],
         },
       };
       where.room_availability = {
         none: {
           date: { gte: inDate, lt: outDate },
-          isAvailable: 0,
+          isAvailable: false,
           isDeleted: false,
         },
       };
@@ -260,7 +266,7 @@ export class RoomService {
     const uploaded = await Promise.all(
       files.map((file, i) =>
         this.cloudinary
-          .uploadImage(file.buffer, `rooms/${roomId}`)
+          .uploadImage(file.buffer, `rooms/${room.name}`)
           .then((res: any) => ({
             publicId: res.public_id,
             secureUrl: res.secure_url,

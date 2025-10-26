@@ -22,15 +22,21 @@ INSERT INTO `roles` (`id`, `name`, `description`, `isActive`, `deletedBy`, `isDe
 (2, 'HOST', 'Chủ homestay quản lý phòng', 0, 0, 0, NULL, '2025-10-02 09:46:12', '2025-10-02 09:46:12'),
 (3, 'ADMIN', 'Quản trị hệ thống', 1, 0, 0, NULL, '2025-10-02 09:46:12', '2025-10-02 09:46:12');
 
-INSERT INTO `users` (`id`, `email`,`password`,`firstName`,`lastName`,`phoneNumber`,`country`,`isVerified`,`isActive`)
-VALUES
-(1,'admin@gmail.com','$2b$10$ch/gepo7MiSD7MCZ9PpW0uSI.upAxnfdSvrbMLmrtzhY7.tZ0fKj6','admin','vieet','0901234567','Vietnam',1,1);
+INSERT INTO `users` (`id`, `email`, `password`, `firstName`, `lastName`, `phoneNumber`, `dateOfBirth`, `gender`, `avatar`, `country`, `isVerified`, `isActive`, `googleId`, `provider`, `lastLogin`, `deletedBy`, `isDeleted`, `deletedAt`, `createdAt`, `updatedAt`) VALUES
+(1, 'admin@gmail.com', '$2b$10$ch/gepo7MiSD7MCZ9PpW0uSI.upAxnfdSvrbMLmrtzhY7.tZ0fKj6', 'admin', 'vieet', '0901234567', NULL, NULL, '4stay/avatars/p04n8u1c9xhmwoy0mdmm', 'Vietnam', 1, 1, NULL, 'LOCAL', NULL, 0, 0, NULL, '2025-10-26 07:33:42', '2025-10-26 07:37:22'),
+(2, 'nguyenvana123@gmail.com', '$2b$10$fOrINX9SjqHDaW.tf3NhW.vmK4N5wG5DPM0DOk.Em96EvT2Pciumm', 'Nguyễn Văn', 'An', '0123456789', NULL, NULL, NULL, NULL, 1, 1, NULL, 'LOCAL', NULL, 0, 0, NULL, '2025-10-26 07:34:29', '2025-10-26 07:34:51');
 
 INSERT INTO `user_roles` (`id`, `userId`, `roleId`) VALUES
-(1, 1, 3);
+(1, 1, 3),
+(2, 2, 1);
 
 INSERT INTO `otp_codes` (`id`, `userId`, `email`, `otp`, `expiresAt`, `isUsed`, `deletedBy`, `isDeleted`, `deletedAt`, `createdAt`, `updatedAt`) VALUES
-(1, 1, 'admin@gmail.com', '318062', '2025-10-02 10:46:39', 1, 0, 0, NULL, '2025-10-02 10:41:39', '2025-10-02 10:41:56');
+(1, 1, 'admin@gmail.com', '318062', '2025-10-02 10:46:39', 1, 0, 0, NULL, '2025-10-02 10:41:39', '2025-10-02 10:41:56'),
+(2, 2, 'nguyenvana123@gmail.com', '404854', '2025-10-26 07:39:29', 1, 0, 0, NULL, '2025-10-26 07:34:29', '2025-10-26 07:34:51');
+
+INSERT INTO `loyalty_program` (`id`, `userId`, `totalBookings`, `totalNights`, `points`, `levelId`, `lastUpgradeDate`, `createdAt`, `updatedAt`) VALUES
+(1, 1, 0, 0, 0, 1, NULL, '2025-10-26 07:34:51', '2025-10-26 07:34:51');
+(2, 2, 0, 0, 0, 1, NULL, '2025-10-26 07:34:51', '2025-10-26 07:34:51');
 
 INSERT INTO `levels` (`id`, `name`, `minPoints`, `description`, `isActive`, `deletedBy`, `isDeleted`, `deletedAt`, `createdAt`, `updatedAt`) VALUES
 (1, 'BRONZE', 0, 'Cấp độ cơ bản', 1, 0, 0, NULL, '2025-10-02 09:46:12', '2025-10-06 04:10:20'),
@@ -64,6 +70,26 @@ INSERT INTO `amenities` (`id`, `name`, `description`, `category`, `deletedBy`, `
 (23, 'Breakfast', 'Bữa sáng miễn phí', 'COMMON', 0, 0, NULL, '2025-10-02 09:46:13', '2025-10-02 09:46:13'),
 (24, 'Coffee Maker', 'Máy pha cà phê', 'COMMON', 0, 0, NULL, '2025-10-02 09:46:13', '2025-10-02 09:46:13'),
 (25, 'Fan', 'Quạt máy', 'COMMON', 0, 0, NULL, '2025-10-02 09:46:13', '2025-10-02 09:46:13');
+
+INSERT INTO `locations` (`id`, `province`, `provinceImageUrl`, `district`, `ward`, `street`, `latitude`, `longitude`, `deletedBy`, `isDeleted`, `deletedAt`, `createdAt`, `updatedAt`) VALUES
+(1, 'Hà Nội', '4stay/provinces/Hà Nội/bm5qt3goh4qeb0w7z7mf', 'Ba Đình', 'Phúc Xá', '12 Hoàng Hoa Thám', NULL, NULL, 0, 0, NULL, '2025-10-26 07:41:00', '2025-10-26 07:41:30');
+
+INSERT INTO `room_amenities` (`id`, `roomId`, `amenityId`, `createdAt`, `updatedAt`) VALUES
+(1, 1, 1, '2025-10-26 07:43:13', '2025-10-26 07:43:13'),
+(2, 1, 2, '2025-10-26 07:43:13', '2025-10-26 07:43:13'),
+(3, 1, 4, '2025-10-26 07:43:13', '2025-10-26 07:43:13'),
+(4, 1, 7, '2025-10-26 07:43:13', '2025-10-26 07:43:13');
+
+INSERT INTO `room_beds` (`id`, `roomId`, `type`, `quantity`, `deletedBy`, `isDeleted`, `deletedAt`, `createdAt`, `updatedAt`) VALUES
+(1, 1, 'QUEEN', 1, 0, 0, NULL, '2025-10-26 07:43:20', '2025-10-26 07:43:20'),
+(2, 1, 'SOFA_BED', 1, 0, 0, NULL, '2025-10-26 07:43:20', '2025-10-26 07:43:20');
+
+INSERT INTO `room_images` (`id`, `roomId`, `imageUrl`, `isMain`, `position`, `createdAt`, `updatedAt`) VALUES
+(1, 1, '4stay/rooms/Phòng Deluxe view biển/e314m9rrli3epik3yfbj', 1, 1, '2025-10-26 07:42:49', '2025-10-26 07:42:49'),
+(2, 1, '4stay/rooms/Phòng Deluxe view biển/agg7tneya7dcreneomo9', 0, 2, '2025-10-26 07:42:49', '2025-10-26 07:42:49');
+
+INSERT INTO `rooms` (`id`, `hostId`, `locationId`, `name`, `description`, `price`, `adultCapacity`, `childCapacity`, `status`, `rating`, `reviewCount`, `deletedBy`, `isDeleted`, `deletedAt`, `createdAt`, `updatedAt`) VALUES
+(1, 1, 1, 'Phòng Deluxe view biển', 'Phòng rộng rãi, có ban công view biển', 500000.00, 2, 1, 'AVAILABLE', 0.0, 0, 0, 0, NULL, '2025-10-26 07:41:59', '2025-10-26 07:41:59');
 
 INSERT INTO `payment_methods` (`id`, `name`, `description`, `isActive`, `createdAt`, `updatedAt`) VALUES
 (1, 'CASH', 'Thanh toán tiền mặt', 1, '2025-10-02 09:46:13', '2025-10-02 09:46:13'),
