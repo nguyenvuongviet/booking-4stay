@@ -25,6 +25,7 @@ export class RoomService {
 
   async findAll(query: RoomFilterDto) {
     let {
+      search,
       province,
       minPrice,
       maxPrice,
@@ -39,6 +40,7 @@ export class RoomService {
       pageSize = 12,
     } = query;
 
+    search = search?.trim();
     province = province?.trim();
     sortBy = SORT_BY.has(sortBy ?? '') ? sortBy! : 'createdAt';
     sortOrder = SORT_ORDER.has(sortOrder ?? '') ? sortOrder! : 'desc';
@@ -73,6 +75,15 @@ export class RoomService {
     }
 
     const where: any = { isDeleted: false };
+
+    if (province) {
+      where.locations = { province, isDeleted: false };
+    } else if (search) {
+      where.locations = {
+        isDeleted: false,
+        province: { contains: search },
+      };
+    }
 
     if (province) where.locations = { province, isDeleted: false };
 
