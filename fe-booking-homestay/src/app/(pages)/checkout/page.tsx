@@ -6,13 +6,22 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@radix-ui/react-radio-group";
-import { ArrowLeft, CreditCard, Wallet, Building2, Check } from "lucide-react";
+import {
+  ArrowLeft,
+  CreditCard,
+  Wallet,
+  Building2,
+  Check,
+  Coins,
+  DollarSign,
+} from "lucide-react";
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
-import { room_detail } from "@/services/bookingApi";
+import { create_booking, room_detail } from "@/services/bookingApi";
+import toast from "react-hot-toast";
 
-type PaymentMethod = "momo" | "paypal" | "bank-transfer";
+type PaymentMethod = "momo" | "paypal" | "bank-transfer" | "money";
 
 export default function CheckoutPage() {
   const { user } = useAuth();
@@ -25,13 +34,14 @@ export default function CheckoutPage() {
   const [firstNameError, setFirstNameError] = useState("");
   const [lastNameError, setLastNameError] = useState("");
   const router = useRouter();
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("paypal");
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("money");
   const [cardDetails, setCardDetails] = useState({
     cardNumber: "",
     cardName: "",
     expiryDate: "",
     cvv: "",
   });
+
   useEffect(() => {
     if (user) {
       setFirstName(user.firstName || "");
@@ -40,14 +50,6 @@ export default function CheckoutPage() {
       setPhone(user.phoneNumber || "");
     }
   }, [user]);
-
-  const handleConfirmBooking = () => {
-    console.log("[v0] Confirming booking with payment method:", paymentMethod);
-    console.log("[v0] Card details:", cardDetails);
-    // In real app, process payment here
-    alert("Booking confirmed! Thank you for your reservation.");
-    router.push("/history");
-  };
 
   const searchParams = useSearchParams();
   const roomId = searchParams.get("roomId");
@@ -59,6 +61,29 @@ export default function CheckoutPage() {
   const [room, setRoom] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
+  const handleConfirmBooking = async () => {
+    try {
+      const resp = await create_booking({
+        roomId: roomId!,
+        checkIn: ci!,
+        checkOut: co!,
+        adults: Number(ad),
+        children: Number(ch),
+      });
+      toast.success("Booking confirmed! Thank you for your reservation.");
+      console.log("Booking created successfully:", resp);
+      setTimeout(() => {
+        router.push("/booking");
+      }, 5000);
+    } catch (error) {
+      console.error("Error creating booking:", error);
+    }
+
+    // For demo purposes, just log the details
+    console.log("[v0] Confirming booking with payment method:", paymentMethod);
+    console.log("[v0] Card details:", cardDetails);
+    // In real app, process payment here
+  };
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -87,7 +112,7 @@ export default function CheckoutPage() {
     adults: ad,
     children: ch,
     pricePerNight: room?.price,
-    hotelImage: "/images/home-hanoi-1.jpg",
+    hotelImage: room?.images?.main,
   };
 
   return (
@@ -207,6 +232,34 @@ export default function CheckoutPage() {
                 }
               >
                 <div className="space-y-3">
+                  {/* Cash Payment */}
+                  <label
+                    className={`flex items-center gap-4 p-4 border-2 rounded-lg cursor-pointer transition-colors ${
+                      paymentMethod === "money"
+                        ? "border-primary bg-primary-100"
+                        : "border-gray-200 hover:border-gray-300"
+                    }`}
+                  >
+                    <RadioGroupItem value="money" id="money" />
+                    <div className="flex items-center gap-3 flex-1">
+                      <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                        <DollarSign className="h-5 w-5 text-green-600" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-900">
+                          Cash Payment
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          Direct cash payment upon arrival
+                        </p>
+                      </div>
+                    </div>
+                    {paymentMethod === "money" && (
+                      <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
+                        <Check className="h-4 w-4 text-white" />
+                      </div>
+                    )}
+                  </label>
                   {/* PayPal */}
                   <label
                     className={`flex items-center gap-4 p-4 border-2 rounded-lg cursor-pointer transition-colors ${
@@ -325,6 +378,14 @@ export default function CheckoutPage() {
                   </p>
                 </div>
               )}
+              {/* PayPal Info */}
+              {paymentMethod === "money" && (
+                <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                  <p className="text-sm text-gray-700">
+                    You will be paying with cash upon arrival at the hotel.
+                  </p>
+                </div>
+              )}
             </Card>
             {/* Request  */}
             <Card className="p-6">
@@ -429,7 +490,7 @@ export default function CheckoutPage() {
 
               {/* Confirm Button */}
               <Button
-                onClick={handleConfirmBooking}
+                onClick={() => handleConfirmBooking()}
                 className="rounded-2xl w-full bg-primary hover:bg-primary/90 text-primary-foreground h-10 elegant-subheading text-md"
               >
                 Confirm booking

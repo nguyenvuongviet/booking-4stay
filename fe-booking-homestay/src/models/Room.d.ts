@@ -22,4 +22,5 @@ export interface Room {
     gallery: RoomImage[];
   };
   amenities?: Amenity[];
+  status?: "Available" | "Sold out";
 }

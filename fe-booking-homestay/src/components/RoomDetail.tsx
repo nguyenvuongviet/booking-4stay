@@ -4,17 +4,42 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
+  Wifi,
+  Snowflake,
+  Tv,
+  Refrigerator,
+  CookingPot,
+  Bath,
+  Car,
+  Dumbbell,
+  BedDouble,
+  Sofa,
+  Coffee,
+  Building2,
+  Waves,
+  Sun,
+  Check,
+  Users,
+  Star,
+  MapPin,
+  Loader2,
+  Calendar,
+} from "lucide-react";
+import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Room } from "@/models/Room";
-import { room_detail } from "@/services/bookingApi";
-import { Loader2, MapPin, Star, Users } from "lucide-react";
+import { room_available, room_detail } from "@/services/bookingApi";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useAuth } from "@/context/auth-context";
 import Header from "./Header";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import { format } from "date-fns";
+import toast from "react-hot-toast";
 import { SearchBar } from "./SearchBar";
 
 interface RoomDetailClientProps {
@@ -34,8 +59,8 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
     rating: 0,
     comment: "",
   });
-  const [checkIn, setCheckIn] = useState("");
-  const [checkOut, setCheckOut] = useState("");
+  const [checkIn, setCheckIn] = useState<Date | null>(null);
+  const [checkOut, setCheckOut] = useState<Date | null>(null);
   const router = useRouter();
   const [adults, setAdults] = useState(1);
   const [children, setChildren] = useState(0);
@@ -43,16 +68,13 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
   const [room, setRoom] = useState<Room | null>(null);
   const [loading, setLoading] = useState(true);
   const searchParams = useSearchParams();
-
-  const query = new URLSearchParams({
-    ...(checkIn ? { checkIn } : {}),
-    ...(checkOut ? { checkOut } : {}),
-    adults: adults.toString(),
-    children: children.toString(),
-  }).toString();
-
+  const [available, setAvailable] = useState<boolean | null>(null);
+  const checkInRef = useRef<HTMLInputElement>(null);
+  const checkOutRef = useRef<HTMLInputElement>(null);
+  const [focusCheckIn, setFocusCheckIn] = useState(false);
+  const [focusCheckOut, setFocusCheckOut] = useState(false);
   const getTotalGuests = () => adults + children;
-
+  const roomStatus = searchParams.get("status");
   const getGuestDisplayText = () => {
     const total = adults + children;
     return `${total} Guests`;
@@ -73,25 +95,41 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
   const amenitiesToDisplay = showAllAmenities
     ? room?.amenities ?? []
     : room?.amenities?.slice(0, 5) ?? [];
-  const getAmenityIcon = (amenityName: string) => {
-    switch (amenityName.toLowerCase()) {
+
+  const getAmenityIcon = (amenity: Amenity) => {
+    switch (amenity.name.toLowerCase()) {
       case "wifi":
-        return "📶"; // hoặc <Wifi className="h-5 w-5" />
+        return <Wifi className="h-4 w-4" />;
       case "air conditioner":
-        return "❄️"; // hoặc <AirConditioner className="h-5 w-5" />
+        return <Snowflake className="h-4 w-4" />;
       case "television":
-        return "📺"; // hoặc <Tv className="h-5 w-5" />
+        return <Tv className="h-4 w-4" />;
       case "refrigerator":
-        return "🧊";
+        return <Refrigerator className="h-4 w-4" />;
       case "kitchen":
-        return "🍳";
+        return <CookingPot className="h-4 w-4" />;
+      case "bath tub":
+        return <Bath className="h-4 w-4" />;
       case "parking":
-        return "🚗";
+        return <Car className="h-4 w-4" />;
+      case "elevator":
+        return <Building2 className="h-4 w-4" />;
+      case "swimming pool":
+        return <Waves className="h-4 w-4" />;
+      case "gym":
+        return <Dumbbell className="h-4 w-4" />;
+      case "bed":
       case "double bed":
       case "single bed":
-        return "🛏️";
+        return <BedDouble className="h-4 w-4" />;
+      case "sofa":
+        return <Sofa className="h-4 w-4" />;
+      case "balcony":
+        return <Sun className="h-4 w-4" />;
+      case "coffee maker":
+        return <Coffee className="h-4 w-4" />;
       default:
-        return "✔️";
+        return <Check className="h-4 w-4" />;
     }
   };
   // const getProgressBarColor = (score: number) => {
@@ -122,8 +160,8 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
     const ci = searchParams.get("checkIn");
     const co = searchParams.get("checkOut");
 
-    if (ci) setCheckIn(ci);
-    if (co) setCheckOut(co);
+    if (ci) setCheckIn(new Date(ci));
+    if (co) setCheckOut(new Date(co));
     if (ad) setAdults(Number(ad));
     if (ch) setChildren(Number(ch));
   }, [searchParams]);
@@ -136,6 +174,51 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
     );
 
   if (!room) return <p>Room not found</p>;
+
+  const handleRoomSelect = async (roomId: number | string) => {
+    if (!checkIn || !checkOut) {
+      if (!checkIn) {
+        setTimeout(() => checkInRef.current?.focus(), 0);
+        return;
+      }
+      if (!checkOut) {
+        setTimeout(() => checkOutRef.current?.focus(), 0);
+        return;
+      }
+    }
+    const formattedCheckIn = format(checkIn, "yyyy-MM-dd");
+    const formattedCheckOut = format(checkOut, "yyyy-MM-dd");
+
+    const query = new URLSearchParams({
+      checkIn: formattedCheckIn,
+      checkOut: formattedCheckOut,
+      adults: adults.toString(),
+      children: children.toString(),
+    }).toString();
+
+    router.replace(`/room/${room.id}?${query}`, { scroll: false });
+
+    try {
+      setLoading(true);
+      const data = await room_available(
+        roomId,
+        formattedCheckIn,
+        formattedCheckOut
+      );
+      setAvailable(data.available);
+      if (!data.available) {
+        toast.error(
+          "This room is not available for the selected dates or seleted guest."
+        );
+        return;
+      }
+      router.push(`/checkout?roomId=${room.id}&${query}`);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -214,7 +297,7 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
                     key={amenity.id}
                     className="flex items-center gap-2 text-sm text-gray-700"
                   >
-                    <span>{getAmenityIcon(amenity.name)}</span>
+                    <span>{getAmenityIcon(amenity)}</span>
                     <span>{amenity.name}</span>
                   </div>
                 ))}
@@ -276,22 +359,76 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
                   (1 room x 1 nights incl. taxes & fees)
                 </p>
               </div>
+              {/* Sold Out Banner */}
+              {available === false && (
+                <div className="absolute top-4 right-4 flex items-center h-12 bg-gradient-to-r from-red-500 to-red-600 text-white font-extrabold rounded-2xl shadow-xl py-2 px-6 uppercase tracking-wider text-sm animate-pulse">
+                  <svg
+                    className="w-5 h-5 mr-2"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                  SOLD OUT
+                </div>
+              )}
               {/* Info    */}
               <div className="grid md:grid-cols-2 gap-1">
                 <div className="relative">
-                  <Input
-                    type="date"
-                    value={checkIn}
-                    onChange={(e) => setCheckIn(e.target.value)}
-                    className="p-6 h-12 text-md elegant-subheading rounded-2xl"
+                  <Calendar
+                    className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground"
+                    size={20}
+                  />
+                  <DatePicker
+                    selected={checkIn}
+                    autoFocus={focusCheckIn}
+                    onChange={(date) => {
+                      setCheckIn(date);
+                      // Reset checkOut nếu nhỏ hơn checkIn
+                      if (checkOut && date && checkOut <= date) {
+                        setCheckOut(null);
+                      }
+                    }}
+                    selectsStart
+                    startDate={checkIn}
+                    endDate={checkOut}
+                    dateFormat="dd/MM/yyyy"
+                    placeholderText="Check-in date"
+                    className="pl-12 p-6 h-12 text-md elegant-subheading rounded-2xl w-full border border-gray-300 focus:ring-2 focus:ring-primary"
+                    minDate={new Date()}
                   />
                 </div>
                 <div className="relative">
-                  <Input
-                    type="date"
-                    value={checkOut}
-                    onChange={(e) => setCheckOut(e.target.value)}
-                    className="p-6 h-12 text-md elegant-subheading rounded-2xl"
+                  <Calendar
+                    className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground"
+                    size={20}
+                  />
+                  <DatePicker
+                    selected={checkOut}
+                    autoFocus={focusCheckOut}
+                    onChange={(date) => setCheckOut(date)}
+                    selectsEnd
+                    startDate={checkIn}
+                    endDate={checkOut}
+                    minDate={checkIn || new Date()}
+                    dateFormat="dd/MM/yyyy"
+                    placeholderText="Check-out date"
+                    onFocus={(e) => {
+                      if (!checkIn) {
+                        e.target.blur();
+                      }
+                    }}
+                    className={`p-6 h-12 text-md elegant-subheading rounded-2xl w-full border pl-12 ${
+                      !checkIn
+                        ? "bg-gray-100 cursor-not-allowed opacity-80"
+                        : "border-border"
+                    } focus:ring-2 focus:ring-primary`}
                   />
                 </div>
                 <div className="relative md:col-span-2">
@@ -304,7 +441,7 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
                     onOpenChange={setIsGuestPopoverOpen}
                   >
                     <PopoverTrigger asChild>
-                      <button className="w-full h-12 px-4 border border-border rounded-3xl focus:border-accent focus:ring-1 focus:ring-accent text-left flex items-center justify-between">
+                      <button className="w-full h-12 px-4 border border-border rounded-2xl focus:border-accent focus:ring-1 focus:ring-accent text-left flex items-center justify-between">
                         <div className="flex items-center justify-between ">
                           {/* <p className="text-sm text-muted-foreground elegant-subheading mr-4">
                             Guests:{" "}
@@ -461,16 +598,17 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
                   </Popover>
                 </div>
               </div>
-
+              {/* Select Room Button */}
               <Button
                 onClick={() => {
                   if (!user) {
                     openSignIn();
                   } else {
-                    router.push(`/checkout?roomId=${room.id}&${query}`);
+                    handleRoomSelect(room.id);
                   }
                 }}
-                className="w-full h-10 rounded-2xl mb-6"
+                
+                className={`w-full h-10 rounded-2xl mb-6 `}
               >
                 Select room
               </Button>

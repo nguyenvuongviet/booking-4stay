@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MapPin, Search, Users, X } from "lucide-react";
+import { MapPin, Search, Users, X, Calendar } from "lucide-react";
 import { useState, useEffect, useCallback, useRef } from "react";
 import {
   Popover,
@@ -12,10 +12,13 @@ import {
 import { useRouter, useSearchParams } from "next/navigation";
 import { location, search_location, search_room } from "@/services/bookingApi";
 import { Location } from "@/models/Location";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import { format } from "date-fns";
 
 export function SearchBar() {
-  const [checkIn, setCheckIn] = useState("");
-  const [checkOut, setCheckOut] = useState("");
+  const [checkIn, setCheckIn] = useState<Date | null>(null);
+  const [checkOut, setCheckOut] = useState<Date | null>(null);
   const [adults, setAdults] = useState(1);
   const [children, setChildren] = useState(0);
   const [isGuestPopoverOpen, setIsGuestPopoverOpen] = useState(false);
@@ -26,6 +29,8 @@ export function SearchBar() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const locationInputRef = useRef<HTMLInputElement>(null);
+  const [focusCheckIn, setFocusCheckIn] = useState(false);
+  const [focusCheckOut, setFocusCheckOut] = useState(false);
 
   useEffect(() => {
     const loc = searchParams.get("location");
@@ -35,8 +40,8 @@ export function SearchBar() {
     const co = searchParams.get("checkOut");
 
     if (loc) setLocationInput(decodeURIComponent(loc));
-    if (ci) setCheckIn(ci);
-    if (co) setCheckOut(co);
+    if (ci) setCheckIn(new Date(ci));
+    if (co) setCheckOut(new Date(co));
     if (ad) setAdults(Number(ad));
     if (ch) setChildren(Number(ch));
   }, [searchParams]);
@@ -97,8 +102,8 @@ export function SearchBar() {
 
       const query = new URLSearchParams({
         location: locationInput,
-        ...(checkIn ? { checkIn } : {}),
-        ...(checkOut ? { checkOut } : {}),
+        ...(checkIn ? { checkIn: format(checkIn, "yyyy-MM-dd") } : {}),
+        ...(checkOut ? { checkOut: format(checkOut, "yyyy-MM-dd") } : {}),
         adults: adults.toString(),
         children: children.toString(),
       }).toString();
@@ -149,19 +154,56 @@ export function SearchBar() {
         </div>
 
         <div className="relative">
-          <Input
-            type="date"
-            value={checkIn}
-            onChange={(e) => setCheckIn(e.target.value)}
-            className="p-6 h-12 text-md elegant-subheading rounded-4xl"
-          />
+          <div className="relative">
+            <Calendar
+              className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground"
+              size={20}
+            />
+            <DatePicker
+              selected={checkIn}
+              autoFocus={focusCheckIn}
+              onChange={(date) => {
+                setCheckIn(date);
+                // Reset checkOut nếu nhỏ hơn checkIn
+                if (checkOut && date && checkOut <= date) {
+                  setCheckOut(null);
+                }
+              }}
+              selectsStart
+              startDate={checkIn}
+              endDate={checkOut}
+              placeholderText="Check-in date"
+              dateFormat="dd/MM/yyyy" 
+              className="p-6 h-12 text-md elegant-subheading rounded-4xl w-full border border-border focus:ring-2 focus:ring-primary pl-12"
+              minDate={new Date()}
+            />
+          </div>
         </div>
         <div className="relative">
-          <Input
-            type="date"
-            value={checkOut}
-            onChange={(e) => setCheckOut(e.target.value)}
-            className="p-6 h-12 text-md elegant-subheading rounded-4xl"
+          <Calendar
+            className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground pointer-events-none"
+            size={20}
+          />
+          <DatePicker
+            selected={checkOut}
+            autoFocus={focusCheckOut}
+            onChange={(date) => setCheckOut(date)}
+            selectsEnd
+            startDate={checkIn}
+            endDate={checkOut}
+            minDate={checkIn || new Date()} 
+            dateFormat="dd/MM/yyyy" 
+            placeholderText="Check-out date"
+            onFocus={(e) => {
+              if (!checkIn) {
+                e.target.blur(); 
+              }
+            }}
+            className={`p-6 h-12 text-md elegant-subheading rounded-4xl w-full border pl-12 ${
+              !checkIn
+                ? "bg-gray-100 cursor-not-allowed opacity-80"
+                : "border-border"
+            } focus:ring-2 focus:ring-primary`}
           />
         </div>
         <div className="relative">
@@ -174,7 +216,7 @@ export function SearchBar() {
             onOpenChange={setIsGuestPopoverOpen}
           >
             <PopoverTrigger asChild>
-              <button className="w-full h-12 px-4 border border-border rounded-3xl focus:border-accent focus:ring-1 focus:ring-accent text-left flex items-center justify-between">
+              <button className="w-full h-12 px-4 border border-border rounded-4xl focus:border-accent focus:ring-1 focus:ring-accent text-left flex items-center justify-between">
                 <div className="flex items-center justify-between ">
                   {/* <p className="text-sm text-muted-foreground elegant-subheading mr-4">
                   Guests:{" "}
