@@ -8,14 +8,26 @@ import { Input } from "@/components/ui/input";
 import { Destination } from "@/models/Destination";
 import { Hotel } from "@/models/Hotel";
 import {
-  Car,
-  Coffee,
-  Dumbbell,
-  MapPin,
-  Search,
-  Star,
-  Users,
   Wifi,
+  Snowflake,
+  Tv,
+  Refrigerator,
+  CookingPot,
+  Bath,
+  Car,
+  Dumbbell,
+  BedDouble,
+  Sofa,
+  Coffee,
+  Building2,
+  Waves,
+  Sun,
+  Check,
+  Search,
+  Users,
+  Star,
+  MapPin,
+  Calendar,
 } from "lucide-react";
 import Image from "next/image";
 import { useState, useEffect, useCallback, useRef } from "react";
@@ -33,10 +45,13 @@ import {
   search_room,
 } from "@/services/bookingApi";
 import { Location } from "@/models/Location";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import { format } from "date-fns";
 
 export default function HomePage() {
-  const [checkIn, setCheckIn] = useState("");
-  const [checkOut, setCheckOut] = useState("");
+  const [checkIn, setCheckIn] = useState<Date | null>(null);
+  const [checkOut, setCheckOut] = useState<Date | null>(null);
   const [adults, setAdults] = useState(1);
   const [children, setChildren] = useState(0);
   const [isGuestPopoverOpen, setIsGuestPopoverOpen] = useState(false);
@@ -49,6 +64,8 @@ export default function HomePage() {
   const [error, setError] = useState("");
   const [hasMore, setHasMore] = useState(true);
   const locationInputRef = useRef<HTMLInputElement>(null);
+  const [focusCheckIn, setFocusCheckIn] = useState(false);
+  const [focusCheckOut, setFocusCheckOut] = useState(false);
 
   // 🔎 Từ khóa tìm kiếm (search)
   const [search, setSearch] = useState("");
@@ -60,35 +77,54 @@ export default function HomePage() {
 
   const router = useRouter();
 
-  const popularDestinations: Destination[] = [
-    {
-      id: 1,
-      name: "Ha Noi",
-      country: "Viet Nam",
-      image: "/images/ha-noi.jpg",
-    },
-    {
-      id: 2,
-      name: "Da Nang",
-      country: "Viet Nam",
-      image: "/images/da-nang.jpg",
-    },
-    {
-      id: 3,
-      name: "Ho Chi Minh",
-      country: "Viet Nam",
-      image: "/images/ho-chi-minh.jpg",
-    },
-  ];
+  useEffect(() => {
+    const fetchLocations = async () => {
+      try {
+        const data = await location();
+        setLocations(data.data || []);
+      } catch (error) {
+        console.error("Error fetching checkout data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchLocations();
+  }, []);
 
   const getAmenityIcon = (amenity: Amenity) => {
-    switch (amenity.category) {
-      case "BASIC":
-        return "🛏️";
-      case "COMMON":
-        return "🚗";
+    switch (amenity.name.toLowerCase()) {
+      case "wifi":
+        return <Wifi className="h-4 w-4" />;
+      case "air conditioner":
+        return <Snowflake className="h-4 w-4" />;
+      case "television":
+        return <Tv className="h-4 w-4" />;
+      case "refrigerator":
+        return <Refrigerator className="h-4 w-4" />;
+      case "kitchen":
+        return <CookingPot className="h-4 w-4" />;
+      case "bath tub":
+        return <Bath className="h-4 w-4" />;
+      case "parking":
+        return <Car className="h-4 w-4" />;
+      case "elevator":
+        return <Building2 className="h-4 w-4" />;
+      case "swimming pool":
+        return <Waves className="h-4 w-4" />;
+      case "gym":
+        return <Dumbbell className="h-4 w-4" />;
+      case "bed":
+      case "double bed":
+      case "single bed":
+        return <BedDouble className="h-4 w-4" />;
+      case "sofa":
+        return <Sofa className="h-4 w-4" />;
+      case "balcony":
+        return <Sun className="h-4 w-4" />;
+      case "coffee maker":
+        return <Coffee className="h-4 w-4" />;
       default:
-        return "✔️";
+        return <Check className="h-4 w-4" />;
     }
   };
 
@@ -185,8 +221,8 @@ export default function HomePage() {
       }
       const query = new URLSearchParams({
         location: locationInput,
-        ...(checkIn ? { checkIn } : {}),
-        ...(checkOut ? { checkOut } : {}),
+        ...(checkIn ? { checkIn: format(checkIn, "yyyy-MM-dd") } : {}),
+        ...(checkOut ? { checkOut: format(checkOut, "yyyy-MM-dd") } : {}),
         adults: adults.toString(),
         children: children.toString(),
       }).toString();
@@ -270,15 +306,27 @@ export default function HomePage() {
                   Check in
                 </label>
                 <div className="relative">
-                  {/* <Calendar
-                        className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground"
-                        size={20}
-                      /> */}
-                  <Input
-                    type="date"
-                    value={checkIn}
-                    onChange={(e) => setCheckIn(e.target.value)}
-                    className=" h-12 elegant-subheading  rounded-2xl"
+                  <Calendar
+                    className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground"
+                    size={20}
+                  />
+                  <DatePicker
+                    selected={checkIn}
+                    autoFocus={focusCheckIn}
+                    onChange={(date) => {
+                      setCheckIn(date);
+                      // Reset checkOut nếu nhỏ hơn checkIn
+                      if (checkOut && date && checkOut <= date) {
+                        setCheckOut(null);
+                      }
+                    }}
+                    selectsStart
+                    startDate={checkIn}
+                    endDate={checkOut}
+                    dateFormat="dd/MM/yyyy" 
+                    placeholderText="Check-in date"
+                    className="p-6 h-12 text-md elegant-subheading rounded-2xl w-full border border-border focus:ring-2 focus:ring-primary pl-12"
+                    minDate={new Date()}
                   />
                 </div>
               </div>
@@ -287,15 +335,30 @@ export default function HomePage() {
                   Check out
                 </label>
                 <div className="relative">
-                  {/* <Calendar
-                        className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground"
-                        size={20}
-                      /> */}
-                  <Input
-                    type="date"
-                    value={checkOut}
-                    onChange={(e) => setCheckOut(e.target.value)}
-                    className=" h-12 elegant-subheading  rounded-2xl"
+                  <Calendar
+                    className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground pointer-events-none"
+                    size={20}
+                  />
+                  <DatePicker
+                    selected={checkOut}
+                    autoFocus={focusCheckOut}
+                    onChange={(date) => setCheckOut(date)}
+                    selectsEnd
+                    startDate={checkIn}
+                    endDate={checkOut}
+                    minDate={checkIn || new Date()} 
+                    dateFormat="dd/MM/yyyy" 
+                    placeholderText="Check-out date"
+                    onFocus={(e) => {
+                      if (!checkIn) {
+                        e.target.blur(); 
+                      }
+                    }}
+                    className={`p-6 h-12 text-md elegant-subheading rounded-2xl w-full border pl-12 ${
+                      !checkIn
+                        ? "bg-gray-100 cursor-not-allowed opacity-80"
+                        : "border-border"
+                    } focus:ring-2 focus:ring-primary`}
                   />
                 </div>
               </div>
@@ -550,7 +613,7 @@ export default function HomePage() {
                         className="elegant-subheading text-muted-foreground flex items-center gap-1"
                       >
                         <span>{getAmenityIcon(amenity)}</span>
-                        <span>{amenity.name}</span>
+                        {/* <span>{amenity.name}</span> */}
                       </div>
                     ))}
                   </div>
@@ -590,29 +653,42 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {popularDestinations.map((destination) => (
-              <Card
-                key={destination.id}
-                className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
-              >
-                <div className="relative">
-                  <img
-                    src={destination.image || "/placeholder.svg"}
-                    alt={destination.name}
-                    className="w-full h-72 object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                  <div className="absolute bottom-4 left-4 text-white">
-                    <h3 className="text-2xl font-bold mb-1">
-                      {destination.name}
-                    </h3>
-                    <p className="text-sm opacity-90">{destination.country}</p>
+          {locations.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {locations.map((location) => (
+                <Card
+                  key={location.id}
+                  onClick={() =>
+                    router.push(
+                      `/room-list?location=${encodeURIComponent(
+                        location.province
+                      )}`
+                    )
+                  }
+                  className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
+                >
+                  <div className="relative">
+                    <img
+                      src={location.image || "/placeholder.svg"}
+                      alt={location.province}
+                      className="w-full h-72 object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                    <div className="absolute bottom-4 left-4 text-white">
+                      <h3 className="text-2xl font-bold mb-1">
+                        {location.province}
+                      </h3>
+                      {/* <p className="text-sm opacity-90">{location.country}</p> */}
+                    </div>
                   </div>
-                </div>
-              </Card>
-            ))}
-          </div>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <p className="text-center text-muted-foreground">
+              No destinations available.
+            </p>
+          )}
         </div>
       </section>
 

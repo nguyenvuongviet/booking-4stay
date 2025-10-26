@@ -9,7 +9,7 @@ import { RoomCard } from "@/components/RoomCard";
 import { SearchBar } from "@/components/SearchBar";
 import { Room } from "@/models/Room";
 import { Car, Coffee, Dumbbell, Loader2, Wifi } from "lucide-react";
-import { room_all } from "@/services/bookingApi";
+import { room_all, room_available } from "@/services/bookingApi";
 import { search_room } from "@/services/bookingApi";
 // import { motion, AnimatePresence } from "framer-motion";
 
@@ -24,6 +24,9 @@ export default function HotelsListPage() {
   const location = searchParams.get("location") || "";
   const adults = Number(searchParams.get("adults")) || 1;
   const children = Number(searchParams.get("children")) || 0;
+  const checkIn = searchParams.get("checkIn") || "";
+  const checkOut = searchParams.get("checkOut") || "";
+  const [available, setAvailable] = useState<boolean | null>(null);
 
   const getRoomImage = (url?: string) => url || "/images/da-nang.jpg";
 
@@ -33,7 +36,7 @@ export default function HotelsListPage() {
     setPage(1);
     setHasMore(true);
   }, [location, adults, children]);
-  
+
   // load data
   useEffect(() => {
     const loadRooms = async () => {
@@ -46,12 +49,12 @@ export default function HotelsListPage() {
         if (location) {
           // 🔍 Có location → tìm kiếm theo địa điểm
           result = await search_room(location, adults, children);
-          roomsData = result?.data?.data || result?.data || [];
+          roomsData = result?.data?.items || result?.items || [];
           totalPages = 1; // tìm kiếm 1 lần duy nhất, không phân trang
         } else {
           // 🏨 Không có location → lấy tất cả (có phân trang)
           result = await room_all({ page, pageSize: 6 });
-          roomsData = result?.rooms  || [];
+          roomsData = result?.rooms || [];
           totalPages = result?.totalPages || 1;
         }
 
@@ -76,11 +79,53 @@ export default function HotelsListPage() {
           image: getRoomImage(room.images?.main),
           images: room.images,
           amenities: room.amenities?.map((a: any) => a.name) || [],
+          status: "Available",
         }));
 
         // ⛓️ Nếu là page=1 (tìm kiếm mới) thì thay hoàn toàn danh sách
-        setRooms((prev) => (page === 1 ? mappedRooms : [...prev, ...mappedRooms]));
+        // setRooms((prev) =>
+        //   page === 1 ? mappedRooms : [...prev, ...mappedRooms]
+        // );
+        if (checkIn && checkOut) {
+          try {
+            // Gọi song song tất cả phòng
+            const availabilityResults = await Promise.all(
+              roomsData.map((room) =>
+                room_available(room.id, checkIn, checkOut)
+                  .then((res) => ({
+                    id: room.id,
+                    available: res.available ?? false,
+                  }))
+                  .catch(() => ({
+                    id: room.id,
+                    available: false,
+                  }))
+              )
+            );
 
+            // Map kết quả theo phòng
+            const updatedRooms = mappedRooms.map((room) => {
+              const found = availabilityResults.find((r) => r.id === room.id);
+              return {
+                ...room,
+                status: (found?.available
+                  ? "Available"
+                  : "Sold out") as Room["status"],
+              };
+            });
+
+            setRooms((prev) =>
+              page === 1 ? updatedRooms : [...prev, ...updatedRooms]
+            );
+          } catch (error) {
+            console.error("Error checking availability:", error);
+          }
+        } else {
+          // Nếu chưa chọn ngày → giữ nguyên danh sách
+          setRooms((prev) =>
+            page === 1 ? mappedRooms : [...prev, ...mappedRooms]
+          );
+        }
         if (page >= totalPages) setHasMore(false);
       } catch (err) {
         console.error("Error loading rooms:", err);
@@ -90,7 +135,7 @@ export default function HotelsListPage() {
     };
 
     loadRooms();
-  }, [page, location, adults, children]);
+  }, [page, location, adults, children, checkIn, checkOut]);
 
   // Infinite scroll
   useEffect(() => {
