@@ -13,6 +13,7 @@ import { RoomModule } from './modules/room/room.module';
 import { TokenModule } from './modules/token/token.module';
 import { UserModule } from './modules/user/user.module';
 import { BookingModule } from './modules/booking/booking.module';
+import { ReviewModule } from './modules/review/review.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { BookingModule } from './modules/booking/booking.module';
     LoyaltyModule,
     RoomModule,
     BookingModule,
+    ReviewModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService, ProtectStrategy],

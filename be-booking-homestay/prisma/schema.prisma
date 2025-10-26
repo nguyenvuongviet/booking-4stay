@@ -39,10 +39,11 @@ model bookings {
   users        users            @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "bookings_ibfk_1")
   rooms        rooms            @relation(fields: [roomId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "bookings_ibfk_2")
   payments     payments[]
-  reviews      reviews[]
+  reviews      reviews?
 
   @@index([roomId, checkIn, checkOut, status], map: "idx_bookings_overlap")
   @@index([userId], map: "userId")
+  @@index([status, checkOut], map: "idx_bookings_checkedout")
 }
 
 model contacts {
@@ -161,7 +162,7 @@ model payments {
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model reviews {
   id        Int       @id @default(autoincrement())
-  bookingId Int
+  bookingId Int       @unique(map: "uq_reviews_booking")
   userId    Int
   rating    Decimal?  @db.Decimal(2, 1)
   comment   String?   @db.VarChar(1000)
