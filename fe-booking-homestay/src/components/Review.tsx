@@ -1,30 +1,28 @@
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Popover,
-  PopoverTrigger,
   PopoverContent,
-} from "@/components/ui/popover"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Badge } from "@/components/ui/badge"
-import { X } from "lucide-react"
-import { useState } from "react"
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Textarea } from "@/components/ui/textarea";
+import { X } from "lucide-react";
+import { useState } from "react";
 
-
-export default function ReviewsPopover({ hotel }) {
-    
-  const [isReviewsPopoverOpen, setIsReviewsPopoverOpen] = useState(false)
-  const [isReviewPopoverOpen, setIsReviewPopoverOpen] = useState(false)
+export default function ReviewsPopover({ hotel }: { hotel: any }) {
+  const [isReviewsPopoverOpen, setIsReviewsPopoverOpen] = useState(false);
+  const [isReviewPopoverOpen, setIsReviewPopoverOpen] = useState(false);
   const [reviewForm, setReviewForm] = useState({
     userName: "",
     rating: 0,
     comment: "",
-  })
+  });
 
   const handleSubmitReview = () => {
-    console.log("Review submitted:", reviewForm)
-    setIsReviewPopoverOpen(false)
-  }
+    console.log("Review submitted:", reviewForm);
+    setIsReviewPopoverOpen(false);
+  };
 
   return (
     <Popover open={isReviewsPopoverOpen} onOpenChange={setIsReviewsPopoverOpen}>
@@ -59,7 +57,10 @@ export default function ReviewsPopover({ hotel }) {
           </div>
 
           {/* 👉 Nút mở popover viết review */}
-          <Popover open={isReviewPopoverOpen} onOpenChange={setIsReviewPopoverOpen}>
+          <Popover
+            open={isReviewPopoverOpen}
+            onOpenChange={setIsReviewPopoverOpen}
+          >
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
@@ -148,10 +149,8 @@ export default function ReviewsPopover({ hotel }) {
         </div>
 
         {/* Các phần còn lại của danh sách review */}
-        <div className="px-6 py-6">
-          {/* ... review list ... */}
-        </div>
+        <div className="px-6 py-6">{/* ... review list ... */}</div>
       </PopoverContent>
     </Popover>
-  )
+  );
 }

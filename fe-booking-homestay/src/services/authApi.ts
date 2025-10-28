@@ -19,7 +19,7 @@ export const register = async (data: {
 }) => {
   try {
     const response = await api.post("/auth/register", data);
-    
+
     return response.data;
   } catch (error) {
     console.error("Register error: ", error);
@@ -71,15 +71,14 @@ export const reset_password = async (data: {
   }
 };
 
-export const update_profile = async (
-  data: {
-    firstName?: string;
-    lastName?: string;
-    phoneNumber?: string;
-    country?: string;
-    dateOfBirth?: string;
-    gender?: string;
-  }) => {
+export const update_profile = async (data: {
+  firstName?: string;
+  lastName?: string;
+  phoneNumber?: string;
+  country?: string;
+  dateOfBirth?: string;
+  gender?: string;
+}) => {
   try {
     const resp = await api.patch("user/update", data);
     return resp.data;
@@ -90,7 +89,7 @@ export const update_profile = async (
 };
 
 export const upload_file = async (data: FormData) => {
-  try{
+  try {
     const resp = await api.post(`user/avatar-cloudinary`, data);
     return resp.data;
   } catch (error) {

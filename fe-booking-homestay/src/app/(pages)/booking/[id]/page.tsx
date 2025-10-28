@@ -1,7 +1,5 @@
 "use client";
 
-export default function HistoryDetail(){
-    return (
-        <div>History detail</div>
-    )
+export default function HistoryDetail() {
+  return <div>History detail</div>;
 }

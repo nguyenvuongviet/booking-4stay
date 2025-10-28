@@ -1,14 +1,12 @@
 "use client";
 
-import Image from "next/image";
-
 export default function Footer() {
   return (
     <footer className="bg-foreground text-background py-16">
       <div className="max-w-7xl mx-auto px-6 lg:px-8 ">
         <div className="text-center mb-12">
           <span className="elegant-heading text-4xl text-accent">
-            THE 4STAY 
+            THE 4STAY
           </span>
           <p className="elegant-subheading text-background/70 mt-4 max-w-md mx-auto">
             Where every moment becomes a cherished memory

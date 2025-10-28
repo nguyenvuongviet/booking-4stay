@@ -2,19 +2,19 @@
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MapPin, Search, Users, X, Calendar } from "lucide-react";
-import { useState, useEffect, useCallback, useRef } from "react";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { useRouter, useSearchParams } from "next/navigation";
-import { location, search_location, search_room } from "@/services/bookingApi";
 import { Location } from "@/models/Location";
+import { location, search_location } from "@/services/bookingApi";
+import { format } from "date-fns";
+import { Calendar, MapPin, Search, Users } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useRef, useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { format } from "date-fns";
 
 export function SearchBar() {
   const [checkIn, setCheckIn] = useState<Date | null>(null);
@@ -173,7 +173,7 @@ export function SearchBar() {
               startDate={checkIn}
               endDate={checkOut}
               placeholderText="Check-in date"
-              dateFormat="dd/MM/yyyy" 
+              dateFormat="dd/MM/yyyy"
               className="p-6 h-12 text-md elegant-subheading rounded-4xl w-full border border-border focus:ring-2 focus:ring-primary pl-12"
               minDate={new Date()}
             />
@@ -191,12 +191,12 @@ export function SearchBar() {
             selectsEnd
             startDate={checkIn}
             endDate={checkOut}
-            minDate={checkIn || new Date()} 
-            dateFormat="dd/MM/yyyy" 
+            minDate={checkIn || new Date()}
+            dateFormat="dd/MM/yyyy"
             placeholderText="Check-out date"
             onFocus={(e) => {
               if (!checkIn) {
-                e.target.blur(); 
+                e.target.blur();
               }
             }}
             className={`p-6 h-12 text-md elegant-subheading rounded-4xl w-full border pl-12 ${

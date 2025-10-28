@@ -1,20 +1,20 @@
 "use client";
 
-import {
-  createContext,
-  useContext,
-  useState,
-  ReactNode,
-  useEffect,
-} from "react";
+import ForgotPasswordModal from "@/components/auth/forgot-password-modal";
+import NewPasswordModal from "@/components/auth/new-password-modal";
+import OTPModal from "@/components/auth/otp-modal";
 import SignInModal from "@/components/auth/signin-modal";
 import SignUpModal from "@/components/auth/signup-modal";
-import ForgotPasswordModal from "@/components/auth/forgot-password-modal";
-import OTPModal from "@/components/auth/otp-modal";
-import NewPasswordModal from "@/components/auth/new-password-modal";
-import { IUser } from "../models/User";
-import { useRouter } from "next/navigation";
 import { STORAGE_KEYS } from "@/constants";
+import { useRouter } from "next/navigation";
+import {
+  createContext,
+  ReactNode,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
+import { IUser } from "../models/User";
 
 interface AuthContextType {
   user: IUser | null;
@@ -75,18 +75,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     );
   };
 
- const logout = () => {
-  localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
-  const role = user?.role;
-  setUser(null);
+  const logout = () => {
+    localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
+    const role = user?.role;
+    setUser(null);
 
-  if (role === 1) {
-    router.push("/admin/login");
-  } else {
-    router.push("/");
-  }
-};
-
+    if (role === 1) {
+      router.push("/admin/login");
+    } else {
+      router.push("/");
+    }
+  };
 
   const closeAll = () => {
     setShowSignIn(false);

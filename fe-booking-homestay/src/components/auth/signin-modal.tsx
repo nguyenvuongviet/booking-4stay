@@ -3,11 +3,11 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { STORAGE_KEYS } from "@/constants";
 import { useAuth } from "@/context/auth-context";
+import { login } from "@/services/authApi";
 import { Eye, EyeOff, X } from "lucide-react";
 import { useEffect, useState } from "react";
-import { login } from "@/services/authApi";
-import { STORAGE_KEYS } from "@/constants";
 
 interface SignInModalProps {
   show: boolean;

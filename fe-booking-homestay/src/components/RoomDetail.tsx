@@ -2,45 +2,43 @@
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import {
-  Wifi,
-  Snowflake,
-  Tv,
-  Refrigerator,
-  CookingPot,
-  Bath,
-  Car,
-  Dumbbell,
-  BedDouble,
-  Sofa,
-  Coffee,
-  Building2,
-  Waves,
-  Sun,
-  Check,
-  Users,
-  Star,
-  MapPin,
-  Loader2,
-  Calendar,
-} from "lucide-react";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { useAuth } from "@/context/auth-context";
 import { Room } from "@/models/Room";
 import { room_available, room_detail } from "@/services/bookingApi";
+import { format } from "date-fns";
+import {
+  Bath,
+  BedDouble,
+  Building2,
+  Calendar,
+  Car,
+  Check,
+  Coffee,
+  CookingPot,
+  Dumbbell,
+  Loader2,
+  MapPin,
+  Refrigerator,
+  Snowflake,
+  Sofa,
+  Star,
+  Sun,
+  Tv,
+  Users,
+  Waves,
+  Wifi,
+} from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState, useRef } from "react";
-import { useAuth } from "@/context/auth-context";
-import Header from "./Header";
+import { useEffect, useRef, useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { format } from "date-fns";
 import toast from "react-hot-toast";
-import { SearchBar } from "./SearchBar";
+import Header from "./Header";
 
 interface RoomDetailClientProps {
   roomId: string;
@@ -607,7 +605,6 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
                     handleRoomSelect(room.id);
                   }
                 }}
-                
                 className={`w-full h-10 rounded-2xl mb-6 `}
               >
                 Select room

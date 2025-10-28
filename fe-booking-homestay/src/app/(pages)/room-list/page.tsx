@@ -1,16 +1,15 @@
 "use client";
 
+import { FilterBar } from "@/components/FilterBar";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
-import { FilterBar } from "@/components/FilterBar";
 import { RoomCard } from "@/components/RoomCard";
 import { SearchBar } from "@/components/SearchBar";
 import { Room } from "@/models/Room";
-import { Car, Coffee, Dumbbell, Loader2, Wifi } from "lucide-react";
-import { room_all, room_available } from "@/services/bookingApi";
-import { search_room } from "@/services/bookingApi";
+import { room_all, room_available, search_room } from "@/services/bookingApi";
+import { Loader2 } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 // import { motion, AnimatePresence } from "framer-motion";
 
 export default function HotelsListPage() {

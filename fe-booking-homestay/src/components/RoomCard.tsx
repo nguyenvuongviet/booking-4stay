@@ -1,12 +1,10 @@
 "use client";
 
 import { Card, CardContent } from "@/components/ui/card";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
-import Image from "next/image";
-import { Hotel } from "@/models/Hotel";
-import { Star, MapPin } from "lucide-react";
 import { Room } from "@/models/Room";
+import { MapPin, Star } from "lucide-react";
+import Image from "next/image";
+import { useRouter, useSearchParams } from "next/navigation";
 
 type RoomCardProps = { room: Room };
 
@@ -32,7 +30,9 @@ export function RoomCard({ room }: RoomCardProps) {
 
   return (
     <Card
-      onClick={() => {router.push(`/room/${room.id}?${query}&status=${room.status}`);}}
+      onClick={() => {
+        router.push(`/room/${room.id}?${query}&status=${room.status}`);
+      }}
       className={`overflow-hidden rounded-2xl shadow-sm transition-all duration-500 hover:shadow-lg ${
         room.status === "Sold out"
           ? "opacity-70 cursor-pointer"

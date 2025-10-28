@@ -1,6 +1,5 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
 import Headers from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,10 +11,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useAuth } from "@/context/auth-context";
-import { update_profile, upload_file } from "@/services/authApi";
-import { IUser } from "@/models/User";
 import { COUNTRIES } from "@/constants/countries";
+import { useAuth } from "@/context/auth-context";
+import { IUser } from "@/models/User";
+import { update_profile, upload_file } from "@/services/authApi";
+import { useEffect, useRef, useState } from "react";
 
 export default function ProfilePage() {
   const { user, setUser, updateUser } = useAuth();
@@ -112,9 +112,7 @@ export default function ProfilePage() {
 
       {/* Main Content */}
       <div className="max-w-2xl mx-auto mt-24">
-        <h1 className="text-3xl elegant-heading  mb-4">
-          My profile
-        </h1>
+        <h1 className="text-3xl elegant-heading  mb-4">My profile</h1>
         {/* Profile Avatar */}
         <div className="flex justify-center mb-4">
           <div className="relative">

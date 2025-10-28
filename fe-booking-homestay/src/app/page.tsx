@@ -5,49 +5,42 @@ import Header from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Destination } from "@/models/Destination";
-import { Hotel } from "@/models/Hotel";
-import {
-  Wifi,
-  Snowflake,
-  Tv,
-  Refrigerator,
-  CookingPot,
-  Bath,
-  Car,
-  Dumbbell,
-  BedDouble,
-  Sofa,
-  Coffee,
-  Building2,
-  Waves,
-  Sun,
-  Check,
-  Search,
-  Users,
-  Star,
-  MapPin,
-  Calendar,
-} from "lucide-react";
-import Image from "next/image";
-import { useState, useEffect, useCallback, useRef } from "react";
-import { useRouter } from "next/navigation";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Room } from "@/models/Room";
-import {
-  location,
-  room_all,
-  search_location,
-  search_room,
-} from "@/services/bookingApi";
 import { Location } from "@/models/Location";
+import { Room } from "@/models/Room";
+import { location, room_all, search_location } from "@/services/bookingApi";
+import { format } from "date-fns";
+import {
+  Bath,
+  BedDouble,
+  Building2,
+  Calendar,
+  Car,
+  Check,
+  Coffee,
+  CookingPot,
+  Dumbbell,
+  MapPin,
+  Refrigerator,
+  Search,
+  Snowflake,
+  Sofa,
+  Star,
+  Sun,
+  Tv,
+  Users,
+  Waves,
+  Wifi,
+} from "lucide-react";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useRef, useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { format } from "date-fns";
 
 export default function HomePage() {
   const [checkIn, setCheckIn] = useState<Date | null>(null);
@@ -323,7 +316,7 @@ export default function HomePage() {
                     selectsStart
                     startDate={checkIn}
                     endDate={checkOut}
-                    dateFormat="dd/MM/yyyy" 
+                    dateFormat="dd/MM/yyyy"
                     placeholderText="Check-in date"
                     className="p-6 h-12 text-md elegant-subheading rounded-2xl w-full border border-border focus:ring-2 focus:ring-primary pl-12"
                     minDate={new Date()}
@@ -346,12 +339,12 @@ export default function HomePage() {
                     selectsEnd
                     startDate={checkIn}
                     endDate={checkOut}
-                    minDate={checkIn || new Date()} 
-                    dateFormat="dd/MM/yyyy" 
+                    minDate={checkIn || new Date()}
+                    dateFormat="dd/MM/yyyy"
                     placeholderText="Check-out date"
                     onFocus={(e) => {
                       if (!checkIn) {
-                        e.target.blur(); 
+                        e.target.blur();
                       }
                     }}
                     className={`p-6 h-12 text-md elegant-subheading rounded-2xl w-full border pl-12 ${

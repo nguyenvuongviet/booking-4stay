@@ -1,14 +1,14 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
-import { useState, useEffect } from "react";
 import { useAuth } from "@/context/auth-context";
 import {
   active_account,
   forgot_password,
   verify_otp,
 } from "@/services/authApi";
+import { X } from "lucide-react";
+import { useEffect, useState } from "react";
 
 interface OTPModalsProps {
   show: boolean;

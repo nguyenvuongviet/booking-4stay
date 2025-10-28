@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Eye, EyeOff, X } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
 import { forgot_password } from "@/services/authApi";
+import { X } from "lucide-react";
+import { useEffect, useState } from "react";
 
 interface ForgotPasswordModalProps {
   show: boolean;
@@ -83,7 +83,9 @@ export default function ForgotPasswordModal({
             </div>
 
             <div className="text-center mb-4">
-              <h2 className="text-3xl elegant-heading text-primary">Forgot password</h2>
+              <h2 className="text-3xl elegant-heading text-primary">
+                Forgot password
+              </h2>
             </div>
 
             <form
@@ -109,7 +111,9 @@ export default function ForgotPasswordModal({
                     error ? "border-destructive" : ""
                   }`}
                 />
-                {error && <p className="text-destructive text-sm mt-1">{error}</p>}
+                {error && (
+                  <p className="text-destructive text-sm mt-1">{error}</p>
+                )}
               </div>
               {apiError && (
                 <p className="text-destructive text-sm mb-4">{apiError}</p>

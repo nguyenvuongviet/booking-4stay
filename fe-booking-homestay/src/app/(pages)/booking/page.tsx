@@ -1,16 +1,13 @@
 "use client";
 
-import { Card, CardContent } from "@/components/ui/card";
-import { useRouter } from "next/navigation";
-import Image from "next/image";
-import { Button } from "@/components/ui/button";
 import Header from "@/components/Header";
-import { Hotel } from "@/models/Hotel";
-import { useState, useCallback, useEffect } from "react";
-import { Loader2, Star, MapPin } from "lucide-react";
-import { get } from "http";
-import { get_booking, get_booking_detail } from "@/services/bookingApi";
+import { Card, CardContent } from "@/components/ui/card";
 import { Room } from "@/models/Room";
+import { get_booking } from "@/services/bookingApi";
+import { Loader2, MapPin, Star } from "lucide-react";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
 
 export default function HistoryBooking() {
   const [rooms, setRooms] = useState<Room[]>([]);

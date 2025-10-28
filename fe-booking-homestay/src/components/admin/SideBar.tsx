@@ -1,129 +1,84 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { useAuth } from "@/context/auth-context";
-import { Button } from "@/components/ui/button";
-
+import { cn } from "@/lib/utils";
 import {
-  Home,
   BarChart3,
-  BedDouble,
-  CalendarCheck,
-  Menu,
-  ChevronLeft,
+  Calendar,
+  DoorOpen,
+  Gift,
+  Home,
+  LayoutDashboard,
   LogOut,
+  MapPin,
+  Settings,
+  Star,
+  TrendingUp,
+  Users,
 } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
-interface SideBarProps {
-  isOpen: boolean;
-  onToggle: () => void;
-}
+const menuItems = [
+  { icon: LayoutDashboard, label: "Dashboard", href: "/admin" },
+  { icon: Users, label: "Users", href: "/admin/users" },
+  { icon: Home, label: "Quản lý homestay", href: "/admin/properties" },
+  { icon: DoorOpen, label: "Rooms", href: "/admin/rooms" },
+  { icon: Calendar, label: "Bookings", href: "/admin/bookings" },
+  { icon: Star, label: "Reviews", href: "/admin/reviews" },
+  { icon: Gift, label: "Loyalty", href: "/admin/loyalty" },
+  { icon: MapPin, label: "Locations", href: "/admin/locations" },
+  { icon: BarChart3, label: "Báo cáo & Thống kê", href: "/admin/reports" },
+  { icon: TrendingUp, label: "Revenue", href: "/admin/revenue" },
+  { icon: Settings, label: "Settings", href: "/admin/settings" },
+];
 
-export default function SideBar({ isOpen, onToggle }: SideBarProps) {
+export function AdminSidebar() {
   const pathname = usePathname();
-  const router = useRouter();
-  const { openSignIn, user, logout } = useAuth();
-
-  const menuItems = [
-    { name: "Trang chủ", path: "/admin/home", icon: <Home size={20} /> },
-    {
-      name: "Thống kê",
-      path: "/admin/statistics",
-      icon: <BarChart3 size={20} />,
-    },
-    {
-      name: "Quản lý phòng",
-      path: "/admin/rooms",
-      icon: <BedDouble size={20} />,
-    },
-    {
-      name: "Quản lý đặt phòng",
-      path: "/admin/bookings",
-      icon: <CalendarCheck size={20} />,
-    },
-  ];
-
-  const handleSignIn = () => {
-    router.push("/admin/login");
-  };
 
   return (
-    <aside
-      className={`fixed top-0 left-0 h-screen bg-white border-r shadow-sm flex flex-col transition-all duration-300 z-40
-        ${isOpen ? "w-56" : "w-16"}
-        md:translate-x-0 
-        ${!isOpen ? "overflow-hidden" : ""}
-      `}
-    >
-      <div className="flex items-center justify-between p-4 border-b">
-        {isOpen && <img className="w-28" src="/4stay-logo.png" alt="logo" />}
-        <button onClick={onToggle} className="p-2 rounded-lg hover:bg-gray-100">
-          {isOpen ? <ChevronLeft size={20} /> : <Menu size={20} />}
-        </button>
+    <aside className="fixed left-0 top-0 h-screen w-64 bg-sidebar border-r border-sidebar-border flex flex-col">
+      <div className="h-20 px-4 border-b border-sidebar-border flex items-center">
+        <Link href="/admin" className="flex items-center gap-3">
+          <Image
+            src="/4stay-logo.png"
+            alt="4Stay"
+            width={45}
+            height={45}
+            className="rounded-md"
+            priority
+          />
+          <span className="text-xl font-bold tracking-tight">4Stay Admin</span>
+        </Link>
       </div>
 
-      <nav className="flex-1 p-2">
-        {menuItems.map((item) => (
-          <Link
-            key={item.name}
-            href={item.path}
-            className={`flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100 transition
-              ${
-                pathname === item.path
-                  ? "bg-primary/10 text-primary font-medium"
-                  : "text-gray-700"
-              }`}
-          >
-            {item.icon}
-            {isOpen && <span>{item.name}</span>}
-          </Link>
-        ))}
+      <nav className="flex-1 overflow-y-auto p-4 space-y-2">
+        {menuItems.map((item) => {
+          const Icon = item.icon;
+          const isActive = pathname === item.href;
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={cn(
+                "flex items-center gap-3 px-4 py-3 rounded-lg transition-colors",
+                isActive
+                  ? "bg-sidebar-primary text-sidebar-primary-foreground"
+                  : "text-sidebar-foreground hover:bg-sidebar-accent"
+              )}
+            >
+              <Icon className="w-5 h-5" />
+              <span className="text-sm font-medium">{item.label}</span>
+            </Link>
+          );
+        })}
       </nav>
 
-      <div className="p-4 border-t text-sm text-gray-500">
-        {user ? (
-          <div
-            className={`flex items-center ${
-              isOpen ? "justify-between" : "justify-center"
-            }`}
-          >
-            <div
-              className={`flex items-center ${
-                isOpen ? "" : "flex-col space-y-2 justify-center"
-              }`}
-            >
-              <img
-                src={user?.avatar || "/default-avatar.jpg"}
-                alt="avatar"
-                className="w-8 h-8 rounded-full object-cover"
-              />
-              {isOpen && (
-                <span className="ml-3 whitespace-nowrap">
-                  {user.firstName + " " + user.lastName}
-                </span>
-              )}
-            </div>
-
-            <button
-              onClick={logout}
-              className="flex items-center justify-center p-2 rounded-lg text-red-500 hover:bg-red-50"
-            >
-              {isOpen ? <LogOut size={20} /> : ""}
-            </button> 
-          </div>
-        ) : (
-          <div className="flex justify-center">
-            {isOpen && (
-              <Button
-                className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-2 elegant-subheading rounded-2xl"
-                onClick={handleSignIn}
-              >
-                Sign in
-              </Button>
-            )}
-          </div>
-        )}
+      <div className="p-4 border-t border-sidebar-border space-y-2">
+        <button className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent transition-colors">
+          <LogOut className="w-5 h-5" />
+          <span className="text-sm font-medium">Logout</span>
+        </button>
       </div>
     </aside>
   );

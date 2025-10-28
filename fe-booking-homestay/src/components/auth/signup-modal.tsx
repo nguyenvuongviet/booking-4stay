@@ -4,9 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/context/auth-context";
+import { register } from "@/services/authApi";
 import { Eye, EyeOff, X } from "lucide-react";
 import { useEffect, useState } from "react";
-import { register } from "@/services/authApi";
 
 interface SignUpModalProps {
   show: boolean;

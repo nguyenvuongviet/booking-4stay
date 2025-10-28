@@ -1,24 +1,22 @@
 "use client";
 
-import Header from "@/components/Header";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
+import { useAuth } from "@/context/auth-context";
+import { create_booking, room_detail } from "@/services/bookingApi";
 import { RadioGroup, RadioGroupItem } from "@radix-ui/react-radio-group";
 import {
   ArrowLeft,
-  CreditCard,
-  Wallet,
   Building2,
   Check,
-  Coins,
+  CreditCard,
   DollarSign,
+  Wallet,
 } from "lucide-react";
-import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useAuth } from "@/context/auth-context";
-import { create_booking, room_detail } from "@/services/bookingApi";
+import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
 type PaymentMethod = "momo" | "paypal" | "bank-transfer" | "money";

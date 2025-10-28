@@ -92,44 +92,43 @@ export const room_available = async (
   checkIn: string,
   checkOut: string
 ) => {
-  try { 
+  try {
     const resp = await api.get(`bookings/rooms/${roomId}/availability`, {
       params: {
         checkIn,
-        checkOut, 
+        checkOut,
       },
     });
     return resp.data?.data || {};
   } catch (error) {
     console.error("Check room available error:", error);
     throw error;
-  } 
+  }
 };
 
-export const create_booking = async (
-  data: {
-    roomId: number | string;
-    checkIn: string;
-    checkOut: string;
-    adults: number;
-    children: number; 
-  }) => {
+export const create_booking = async (data: {
+  roomId: number | string;
+  checkIn: string;
+  checkOut: string;
+  adults: number;
+  children: number;
+}) => {
   try {
     const resp = await api.post("/bookings", data);
     return resp.data || {};
   } catch (error) {
     console.error("Create booking error:", error);
     throw error;
-  } 
+  }
 };
 export const get_booking = async (params?: any) => {
   try {
-    const resp = await api.get(`/bookings/me`, { params});
+    const resp = await api.get(`/bookings/me`, { params });
     return resp.data?.data || {};
   } catch (error) {
     console.error("Get booking detail error:", error);
     throw error;
-  } 
+  }
 };
 
 export const get_booking_detail = async (bookingId: number | string) => {
@@ -139,5 +138,5 @@ export const get_booking_detail = async (bookingId: number | string) => {
   } catch (error) {
     console.error("Get booking detail error:", error);
     throw error;
-  } 
+  }
 };

@@ -8,7 +8,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { ArrowUpDown, ChevronDown, Check } from "lucide-react";
+import { ArrowUpDown, Check, ChevronDown } from "lucide-react";
 import { useState } from "react";
 
 function CheckboxPopup({
@@ -100,7 +100,11 @@ function OptionsPopup({
   return (
     <Popover open={open} onOpenChange={onOpenChange}>
       <PopoverTrigger asChild>{children}</PopoverTrigger>
-      <PopoverContent className="w-72 rounded-xl shadow-xl p-0 m-0" align="end" sideOffset={8}>
+      <PopoverContent
+        className="w-72 rounded-xl shadow-xl p-0 m-0"
+        align="end"
+        sideOffset={8}
+      >
         <div className="absolute inset-0 pl-2 -z-10 bg-black/20 backdrop-blur-sm rounded-xl" />
 
         <div className="bg-white rounded-xl pl-2">

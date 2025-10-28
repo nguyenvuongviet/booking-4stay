@@ -92,7 +92,9 @@ export default function NewPasswordModal({
             </div>
 
             <div className="text-center mb-4">
-              <h2 className="text-3xl elegant-heading text-primary">Create new password</h2>
+              <h2 className="text-3xl elegant-heading text-primary">
+                Create new password
+              </h2>
             </div>
             {apiError && (
               <p className="text-destructive text-sm mb-4">{apiError}</p>
@@ -126,7 +128,9 @@ export default function NewPasswordModal({
                     </button>
                   </div>
                   {passwordError && (
-                    <p className="text-destructive text-sm mb-1">{passwordError}</p>
+                    <p className="text-destructive text-sm mb-1">
+                      {passwordError}
+                    </p>
                   )}
                 </div>
                 <div>
