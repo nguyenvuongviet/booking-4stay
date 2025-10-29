@@ -79,7 +79,7 @@ export default function Header() {
             <div className="relative">
               <button
                 onClick={() => setOpenMenu((prev) => !prev)}
-                className="flex items-center gap-2"
+                className="flex items-center gap-2  hover:cursor-pointer"
               >
                 <img
                   src={user?.avatar || "/default-avatar.jpg"}

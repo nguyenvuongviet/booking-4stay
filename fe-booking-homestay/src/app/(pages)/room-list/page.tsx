@@ -5,7 +5,7 @@ import Header from "@/components/Header";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { FilterBar } from "@/components/FilterBar";
-import { RoomCard } from "@/components/RoomCard";
+import { RoomCard } from "@/components/rooms/RoomCard";
 import { SearchBar } from "@/components/SearchBar";
 import { Room } from "@/models/Room";
 import { Car, Coffee, Dumbbell, Loader2, Wifi } from "lucide-react";
