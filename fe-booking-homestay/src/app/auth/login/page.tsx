@@ -3,7 +3,7 @@
 import Loader from "@/components/loader/Loader";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "@/components/ui/use-toast";
 import { STORAGE_KEYS } from "@/constants";
 import { login } from "@/services/authApi";
 import { Eye, EyeOff, Lock, Mail } from "lucide-react";
@@ -15,7 +15,6 @@ import { useState } from "react";
 export default function LoginPage() {
   const router = useRouter();
   const params = useSearchParams();
-  const { toast } = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -110,7 +109,6 @@ export default function LoginPage() {
             </div>
           </div>
 
-          {/* Password */}
           <div>
             <label className="block text-sm font-medium text-foreground mb-2">
               Password
@@ -144,7 +142,6 @@ export default function LoginPage() {
             </div>
           </div>
 
-          {/* Remember & Forgot */}
           <div className="flex items-center justify-between text-sm">
             <label className="flex items-center gap-2 cursor-pointer">
               <input
@@ -159,7 +156,6 @@ export default function LoginPage() {
             </a>
           </div>
 
-          {/* Submit */}
           <Button
             type="submit"
             disabled={isLoading}
@@ -167,7 +163,7 @@ export default function LoginPage() {
           >
             {isLoading ? (
               <>
-                <Loader /> {/* dùng loader của bạn */}
+                <Loader />
                 <span>Signing in...</span>
               </>
             ) : (
@@ -176,7 +172,6 @@ export default function LoginPage() {
           </Button>
         </form>
 
-        {/* Demo */}
         <div className="mt-6 p-4 bg-muted rounded-lg">
           <p className="text-xs font-semibold text-muted-foreground mb-2">
             Demo Credentials:
