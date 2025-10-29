@@ -44,8 +44,8 @@ export class RoomController {
   }
 
   @Post('admin')
-  @ApiBearerAuth('AccessToken')
   @Roles('ADMIN')
+  @ApiBearerAuth('AccessToken')
   async create(@Req() req: Request, @Body() createRoomDto: CreateRoomDto) {
     const user = req['user'];
     return await this.roomService.create(+user.id, createRoomDto);

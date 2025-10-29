@@ -59,9 +59,9 @@ export class BookingController {
     );
   }
 
-  @Get('/admin')
-  @ApiBearerAuth('AccessToken')
+  @Get('/admin/all')
   @Roles('ADMIN')
+  @ApiBearerAuth('AccessToken')
   async adminList(@Query() q: ListBookingQuery) {
     return this.bookingService.listAll(q);
   }

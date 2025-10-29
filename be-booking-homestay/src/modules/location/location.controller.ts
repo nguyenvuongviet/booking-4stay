@@ -11,7 +11,13 @@ import {
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiBody, ApiConsumes, ApiQuery, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiConsumes,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
 import { Public } from 'src/common/decorator/public.decorator';
 import { Roles } from 'src/common/decorator/roles.decorator';
 import { CreateLocationDto } from './dto/create-location.dto';
@@ -60,22 +66,22 @@ export class LocationController {
   }
 
   @Post('admin')
-  @ApiBearerAuth('AccessToken')
   @Roles('ADMIN')
+  @ApiBearerAuth('AccessToken')
   async create(@Body() createLocationDto: CreateLocationDto) {
     return await this.locationService.create(createLocationDto);
   }
 
   @Get('admin/:id')
-  @ApiBearerAuth('AccessToken')
   @Roles('ADMIN')
+  @ApiBearerAuth('AccessToken')
   async findOne(@Param('id') id: string) {
     return await this.locationService.findOne(+id);
   }
 
   @Patch('admin/:id')
-  @ApiBearerAuth('AccessToken')
   @Roles('ADMIN')
+  @ApiBearerAuth('AccessToken')
   async update(
     @Param('id') id: string,
     @Body() updateLocationDto: UpdateLocationDto,
@@ -84,15 +90,15 @@ export class LocationController {
   }
 
   @Delete('admin/:id')
-  @ApiBearerAuth('AccessToken')
   @Roles('ADMIN')
+  @ApiBearerAuth('AccessToken')
   async remove(@Param('id') id: string) {
     return await this.locationService.remove(+id);
   }
 
   @Put('province-image')
-  @ApiBearerAuth('AccessToken')
   @Roles('ADMIN')
+  @ApiBearerAuth('AccessToken')
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('file'))
   @ApiBody({ type: UploadFileDto })
@@ -105,8 +111,8 @@ export class LocationController {
   }
 
   @Delete('province-image')
-  @ApiBearerAuth('AccessToken')
   @Roles('ADMIN')
+  @ApiBearerAuth('AccessToken')
   @ApiQuery({ name: 'province', required: true, example: 'Hà Nội' })
   async deleteProvinceImage(@Query('province') province: string) {
     return this.locationService.deleteProvinceImage(province);

@@ -1,10 +1,9 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
-import { IsOptional, IsInt, Min, IsString } from 'class-validator';
+import { IsOptional, IsString } from 'class-validator';
 import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
 
 export class ListBookingQuery extends PaginationQueryDto {
-  @ApiPropertyOptional({ example: 'desc', description: 'asc|desc' })
+  @ApiPropertyOptional({ example: 'desc', description: 'asc | desc' })
   @IsOptional()
   @IsString()
   sortOrder?: 'asc' | 'desc' = 'desc';

@@ -67,9 +67,9 @@ export class LoyaltyController {
     return this.loyaltyService.updateUserLoyalty(userId, dto);
   }
 
-  @ApiOperation({ summary: 'Cập nhật thông tin cấp độ loyalty (Admin)' })
-  @Roles('ADMIN')
   @Post('recompute')
+  @Roles('ADMIN')
+  @ApiOperation({ summary: 'Cập nhật thông tin cấp độ loyalty (Admin)' })
   async recomputeLevels() {
     return this.loyaltyService.recomputeAllUserLevels();
   }

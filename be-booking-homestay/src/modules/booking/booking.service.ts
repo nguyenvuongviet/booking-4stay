@@ -79,7 +79,20 @@ export class BookingService {
         orderBy: { createdAt: sortOrder },
         skip,
         take: pageSize,
-        include: { rooms: { include: { room_images: true } } },
+        include: {
+          rooms: {
+            include: {
+              locations: true,
+              room_images: true,
+              room_amenities: {
+                include: { amenities: true },
+              },
+              room_beds: true,
+              users: true,
+            },
+          },
+          users: true,
+        },
       }),
       this.prisma.bookings.count({ where: { userId } }),
     ]);
