@@ -7,6 +7,110 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model amenities {
+  id             Int                @id @default(autoincrement())
+  name           String             @unique(map: "name") @db.VarChar(100)
+  description    String?            @db.VarChar(255)
+  category       amenities_category @default(BASIC)
+  deletedBy      Int                @default(0)
+  isDeleted      Boolean            @default(false)
+  deletedAt      DateTime?          @db.Timestamp(0)
+  createdAt      DateTime           @default(now()) @db.Timestamp(0)
+  updatedAt      DateTime           @default(now()) @db.Timestamp(0)
+  room_amenities room_amenities[]
+}
+
+model bookings {
+  id           Int              @id @default(autoincrement())
+  userId       Int
+  roomId       Int
+  checkIn      DateTime         @db.Date
+  checkOut     DateTime         @db.Date
+  adults       Int
+  children     Int              @default(0)
+  totalPrice   Decimal          @db.Decimal(12, 2)
+  status       bookings_status? @default(PENDING)
+  cancelReason String?          @db.VarChar(255)
+  deletedBy    Int              @default(0)
+  isDeleted    Boolean          @default(false)
+  deletedAt    DateTime?        @db.Timestamp(0)
+  createdAt    DateTime         @default(now()) @db.Timestamp(0)
+  updatedAt    DateTime         @default(now()) @db.Timestamp(0)
+  users        users            @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "bookings_ibfk_1")
+  rooms        rooms            @relation(fields: [roomId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "bookings_ibfk_2")
+  payments     payments[]
+  reviews      reviews?
+
+  @@index([roomId, checkIn, checkOut, status], map: "idx_bookings_overlap")
+  @@index([userId], map: "userId")
+  @@index([status, checkOut], map: "idx_bookings_checkedout")
+}
+
+model contacts {
+  id        Int       @id @default(autoincrement())
+  userId    Int?
+  fullName  String    @db.VarChar(255)
+  email     String    @db.VarChar(255)
+  message   String    @db.VarChar(1000)
+  deletedBy Int       @default(0)
+  isDeleted Boolean   @default(false)
+  deletedAt DateTime? @db.Timestamp(0)
+  createdAt DateTime  @default(now()) @db.Timestamp(0)
+  updatedAt DateTime  @default(now()) @db.Timestamp(0)
+  users     users?    @relation(fields: [userId], references: [id], onUpdate: NoAction, map: "contacts_ibfk_1")
+
+  @@index([userId], map: "userId")
+}
+
+model levels {
+  id              Int               @id @default(autoincrement())
+  name            String            @unique(map: "name") @db.VarChar(50)
+  minPoints       Int               @default(0)
+  description     String?           @db.VarChar(255)
+  isActive        Boolean           @default(true)
+  deletedBy       Int               @default(0)
+  isDeleted       Boolean           @default(false)
+  deletedAt       DateTime?         @db.Timestamp(0)
+  createdAt       DateTime          @default(now()) @db.Timestamp(0)
+  updatedAt       DateTime          @default(now()) @db.Timestamp(0)
+  loyalty_program loyalty_program[]
+}
+
+model locations {
+  id               Int       @id @default(autoincrement())
+  province         String    @db.VarChar(100)
+  provinceImageUrl String?   @db.VarChar(255)
+  district         String    @db.VarChar(100)
+  ward             String?   @db.VarChar(100)
+  street           String?   @db.VarChar(255)
+  latitude         Decimal?  @db.Decimal(10, 7)
+  longitude        Decimal?  @db.Decimal(10, 7)
+  deletedBy        Int       @default(0)
+  isDeleted        Boolean   @default(false)
+  deletedAt        DateTime? @db.Timestamp(0)
+  createdAt        DateTime  @default(now()) @db.Timestamp(0)
+  updatedAt        DateTime  @default(now()) @db.Timestamp(0)
+  rooms            rooms[]
+
+  @@index([province], map: "idx_locations_province")
+}
+
+model loyalty_program {
+  id              Int       @id @default(autoincrement())
+  userId          Int       @unique(map: "userId")
+  totalBookings   Int       @default(0)
+  totalNights     Int       @default(0)
+  points          Int       @default(0)
+  levelId         Int
+  lastUpgradeDate DateTime? @db.Timestamp(0)
+  createdAt       DateTime  @default(now()) @db.Timestamp(0)
+  updatedAt       DateTime  @default(now()) @db.Timestamp(0)
+  users           users     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "loyalty_program_ibfk_1")
+  levels          levels    @relation(fields: [levelId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "loyalty_program_ibfk_2")
+
+  @@index([levelId], map: "levelId")
+}
+
 model otp_codes {
   id        Int       @id @default(autoincrement())
   userId    Int?
@@ -24,24 +128,192 @@ model otp_codes {
   @@index([userId], map: "userId")
 }
 
+model payment_methods {
+  id          Int        @id @default(autoincrement())
+  name        String     @unique(map: "name") @db.VarChar(50)
+  description String?    @db.VarChar(255)
+  isActive    Boolean    @default(false)
+  createdAt   DateTime   @default(now()) @db.Timestamp(0)
+  updatedAt   DateTime   @default(now()) @db.Timestamp(0)
+  payments    payments[]
+}
+
+model payments {
+  id              Int              @id @default(autoincrement())
+  bookingId       Int
+  amount          Decimal          @db.Decimal(12, 2)
+  paymentMethodId Int
+  paymentGateway  String?          @db.VarChar(50)
+  transactionId   String?          @db.VarChar(255)
+  status          payments_status? @default(PENDING)
+  transactionDate DateTime?        @default(now()) @db.Timestamp(0)
+  deletedBy       Int              @default(0)
+  isDeleted       Boolean          @default(false)
+  deletedAt       DateTime?        @db.Timestamp(0)
+  createdAt       DateTime         @default(now()) @db.Timestamp(0)
+  updatedAt       DateTime         @default(now()) @db.Timestamp(0)
+  bookings        bookings         @relation(fields: [bookingId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "payments_ibfk_1")
+  payment_methods payment_methods  @relation(fields: [paymentMethodId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "payments_ibfk_2")
+
+  @@index([bookingId], map: "bookingId")
+  @@index([paymentMethodId], map: "paymentMethodId")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model reviews {
+  id        Int       @id @default(autoincrement())
+  bookingId Int       @unique(map: "uq_reviews_booking")
+  userId    Int
+  rating    Decimal?  @db.Decimal(2, 1)
+  comment   String?   @db.VarChar(1000)
+  deletedBy Int       @default(0)
+  isDeleted Boolean   @default(false)
+  deletedAt DateTime? @db.Timestamp(0)
+  createdAt DateTime  @default(now()) @db.Timestamp(0)
+  updatedAt DateTime  @default(now()) @db.Timestamp(0)
+  bookings  bookings  @relation(fields: [bookingId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "reviews_ibfk_1")
+  users     users     @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "reviews_ibfk_2")
+
+  @@index([bookingId], map: "bookingId")
+  @@index([userId], map: "userId")
+}
+
 model roles {
+  id          Int          @id @default(autoincrement())
+  name        String       @unique(map: "name") @db.VarChar(50)
+  description String?      @db.Text
+  isActive    Boolean      @default(true)
+  deletedBy   Int          @default(0)
+  isDeleted   Boolean      @default(false)
+  deletedAt   DateTime?    @db.Timestamp(0)
+  createdAt   DateTime     @default(now()) @db.Timestamp(0)
+  updatedAt   DateTime     @default(now()) @db.Timestamp(0)
+  user_roles  user_roles[]
+}
+
+model room_amenities {
+  id        Int       @id @default(autoincrement())
+  roomId    Int
+  amenityId Int
+  createdAt DateTime  @default(now()) @db.Timestamp(0)
+  updatedAt DateTime  @default(now()) @db.Timestamp(0)
+  rooms     rooms     @relation(fields: [roomId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "room_amenities_ibfk_1")
+  amenities amenities @relation(fields: [amenityId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "room_amenities_ibfk_2")
+
+  @@unique([roomId, amenityId], map: "room_amenity_unique")
+  @@unique([roomId, amenityId], map: "uq_room_amenity")
+  @@index([amenityId], map: "amenityId")
+}
+
+model room_availability {
   id          Int       @id @default(autoincrement())
-  name        String    @unique(map: "name") @db.VarChar(50)
-  description String?   @db.Text
-  isActive    Boolean   @default(true)
+  roomId      Int
+  date        DateTime  @db.Date
+  isAvailable Boolean   @default(true)
   deletedBy   Int       @default(0)
   isDeleted   Boolean   @default(false)
   deletedAt   DateTime? @db.Timestamp(0)
   createdAt   DateTime  @default(now()) @db.Timestamp(0)
   updatedAt   DateTime  @default(now()) @db.Timestamp(0)
-  users       users[]
+  rooms       rooms     @relation(fields: [roomId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "room_availability_ibfk_1")
+
+  @@unique([roomId, date], map: "uq_room_available")
+  @@index([roomId, date, isAvailable], map: "idx_availability")
+}
+
+model room_beds {
+  id        Int            @id @default(autoincrement())
+  roomId    Int
+  type      room_beds_type
+  quantity  Int            @default(1)
+  deletedBy Int            @default(0)
+  isDeleted Boolean        @default(false)
+  deletedAt DateTime?      @db.Timestamp(0)
+  createdAt DateTime       @default(now()) @db.Timestamp(0)
+  updatedAt DateTime       @default(now()) @db.Timestamp(0)
+  rooms     rooms          @relation(fields: [roomId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "room_beds_ibfk_1")
+
+  @@index([roomId], map: "roomId")
+}
+
+model room_images {
+  id        Int      @id @default(autoincrement())
+  roomId    Int
+  imageUrl  String   @db.VarChar(255)
+  isMain    Boolean  @default(false)
+  position  Int?
+  createdAt DateTime @default(now()) @db.Timestamp(0)
+  updatedAt DateTime @default(now()) @db.Timestamp(0)
+  rooms     rooms    @relation(fields: [roomId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "room_images_ibfk_1")
+
+  @@index([roomId], map: "roomId")
+}
+
+model room_prices {
+  id        Int       @id @default(autoincrement())
+  roomId    Int
+  date      DateTime  @db.Date
+  price     Decimal   @db.Decimal(12, 2)
+  deletedBy Int       @default(0)
+  isDeleted Boolean   @default(false)
+  deletedAt DateTime? @db.Timestamp(0)
+  createdAt DateTime  @default(now()) @db.Timestamp(0)
+  updatedAt DateTime  @default(now()) @db.Timestamp(0)
+  rooms     rooms     @relation(fields: [roomId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "room_prices_ibfk_1")
+
+  @@unique([roomId, date], map: "uq_room_price")
+}
+
+model rooms {
+  id                Int                 @id @default(autoincrement())
+  hostId            Int
+  locationId        Int
+  name              String              @db.VarChar(255)
+  description       String?             @db.Text
+  price             Decimal             @db.Decimal(12, 2)
+  adultCapacity     Int
+  childCapacity     Int                 @default(0)
+  status            rooms_status?       @default(AVAILABLE)
+  rating            Decimal?            @default(0.0) @db.Decimal(2, 1)
+  reviewCount       Int?                @default(0)
+  deletedBy         Int                 @default(0)
+  isDeleted         Boolean             @default(false)
+  deletedAt         DateTime?           @db.Timestamp(0)
+  createdAt         DateTime            @default(now()) @db.Timestamp(0)
+  updatedAt         DateTime            @default(now()) @db.Timestamp(0)
+  bookings          bookings[]
+  room_amenities    room_amenities[]
+  room_availability room_availability[]
+  room_beds         room_beds[]
+  room_images       room_images[]
+  room_prices       room_prices[]
+  users             users               @relation(fields: [hostId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "rooms_ibfk_1")
+  locations         locations           @relation(fields: [locationId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "rooms_ibfk_2")
+
+  @@index([hostId], map: "hostId")
+  @@index([adultCapacity, childCapacity], map: "idx_rooms_caps")
+  @@index([locationId, isDeleted], map: "idx_rooms_loc_del")
+  @@index([price], map: "idx_rooms_price")
+  @@index([rating], map: "idx_rooms_rating")
+}
+
+model user_roles {
+  id     Int   @id @default(autoincrement())
+  userId Int
+  roleId Int
+  users  users @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "user_roles_ibfk_1")
+  roles  roles @relation(fields: [roleId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "user_roles_ibfk_2")
+
+  @@unique([userId, roleId], map: "user_role_unique")
+  @@index([roleId], map: "roleId")
 }
 
 model users {
   id              Int              @id @default(autoincrement())
   email           String           @unique(map: "email") @db.VarChar(255)
   password        String?          @db.VarChar(255)
-  fullName        String           @db.VarChar(255)
+  firstName       String           @db.VarChar(255)
+  lastName        String           @db.VarChar(255)
   phoneNumber     String?          @db.VarChar(20)
   dateOfBirth     DateTime?        @db.Date
   gender          users_gender?
@@ -52,30 +324,40 @@ model users {
   googleId        String?          @db.VarChar(255)
   provider        users_provider   @default(LOCAL)
   lastLogin       DateTime?        @db.Timestamp(0)
-  roleId          Int
   deletedBy       Int              @default(0)
   isDeleted       Boolean          @default(false)
   deletedAt       DateTime?        @db.Timestamp(0)
   createdAt       DateTime         @default(now()) @db.Timestamp(0)
   updatedAt       DateTime         @default(now()) @db.Timestamp(0)
+  bookings        bookings[]
+  contacts        contacts[]
   loyalty_program loyalty_program?
   otp_codes       otp_codes[]
-  roles           roles            @relation(fields: [roleId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "users_ibfk_1")
-
-  @@index([roleId], map: "roleId")
+  reviews         reviews[]
+  rooms           rooms[]
+  user_roles      user_roles[]
 }
 
-model loyalty_program {
-  id              Int                   @id @default(autoincrement())
-  userId          Int                   @unique(map: "userId")
-  totalBookings   Int                   @default(0)
-  totalNights     Int                   @default(0)
-  points          Int                   @default(0)
-  level           loyalty_program_level @default(BRONZE)
-  lastUpgradeDate DateTime?             @db.Timestamp(0)
-  createdAt       DateTime              @default(now()) @db.Timestamp(0)
-  updatedAt       DateTime              @default(now()) @db.Timestamp(0)
-  users           users                 @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "loyalty_program_ibfk_1")
+enum room_beds_type {
+  SINGLE
+  DOUBLE
+  QUEEN
+  KING
+  SOFA_BED
+  BUNK_BED
+}
+
+enum amenities_category {
+  BASIC
+  BATHROOM
+  BEDROOM
+  COMMON
+}
+
+enum payments_status {
+  PENDING
+  SUCCESS
+  FAILED
 }
 
 enum users_gender {
@@ -84,14 +366,22 @@ enum users_gender {
   OTHER
 }
 
+enum bookings_status {
+  PENDING
+  CONFIRMED
+  CHECKED_IN
+  CHECKED_OUT
+  CANCELLED
+  REFUNDED
+}
+
+enum rooms_status {
+  AVAILABLE
+  BOOKED
+  MAINTENANCE
+}
+
 enum users_provider {
   LOCAL
   GOOGLE
-}
-
-enum loyalty_program_level {
-  BRONZE
-  SILVER
-  GOLD
-  PLATINUM
 }

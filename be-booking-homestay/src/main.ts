@@ -5,7 +5,8 @@ import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { LoggingInterceptor } from './common/interceptor/logging.interceptor';
 import { ResponseSuccessInterceptor } from './common/interceptor/response-success.interceptor';
-import { ProtectGuard } from './modules/auth/protect/protect.guard';
+import { ProtectGuard } from './common/guard/protect/protect.guard';
+import { RolesGuard } from './common/guard/role/roles.guard';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -25,6 +26,7 @@ async function bootstrap() {
 
   const reflector = app.get(Reflector);
   app.useGlobalGuards(new ProtectGuard(reflector));
+  app.useGlobalGuards(new RolesGuard(reflector));
   app.useGlobalInterceptors(new LoggingInterceptor());
   app.useGlobalInterceptors(new ResponseSuccessInterceptor());
 

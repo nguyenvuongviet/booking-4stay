@@ -4,10 +4,11 @@ import { TokenModule } from '../token/token.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { OtpModule } from '../otp/otp.module';
+import { LoyaltyService } from 'src/helpers/loyalty.helper';
 
 @Module({
   imports: [TokenModule, OtpModule],
   controllers: [AuthController],
-  providers: [AuthService, PrismaService],
+  providers: [AuthService, PrismaService, LoyaltyService],
 })
 export class AuthModule {}
