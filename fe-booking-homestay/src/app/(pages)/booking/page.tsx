@@ -12,8 +12,6 @@ export default function HistoryBooking() {
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(1);
-  const [scrolled, setScrolled] = useState(false);
-
   const hasFetchedOnce = useRef(false);
 
   const fetchBookings = useCallback(async () => {
@@ -41,7 +39,7 @@ export default function HistoryBooking() {
   }, [loading, hasMore, page]);
 
   useEffect(() => {
-    // 🛑 Chặn gọi lần 2 trong Strict Mode
+    // Chặn gọi lần 2 trong Strict Mode
     if (hasFetchedOnce.current) return;
     hasFetchedOnce.current = true;
 
@@ -69,7 +67,7 @@ export default function HistoryBooking() {
     <div className="min-h-screen bg-background">
       <Header />
       <div className="container max-w-6xl mx-auto py-12 space-y-12 pt-20 px-4 sm:px-6 lg:px-8">
-        <h2 className="elegant-heading text-3xl">History booking</h2>
+        <h2 className="elegant-heading text-4xl my-6">History booking</h2>
         <div className="grid grid-cols-1 gap-8 ">
           {bookings.map((booking, index) => (
             <BookingCard key={`${booking.id}-${index}`} booking={booking} />

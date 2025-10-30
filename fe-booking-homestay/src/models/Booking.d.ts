@@ -1,16 +1,10 @@
-export interface RoomImage {
-  id: number;
-  isMain: boolean;
-  url: string;
-}
+import { Room } from "./Room";
 
-export interface Room {
-  id: number;
+interface User {
+  id: string | number;
   name: string;
-  price: number;
-  rating: number;
-  reviewCount: number;
-  images: RoomImage[];
+  email: string;  
+  avatar: string;
 }
 
 export interface Booking {
@@ -24,5 +18,6 @@ export interface Booking {
   createdAt: string;
   updatedAt: string;
   cancelReason: string | null;
+  user: User;
   room: Room;
 }

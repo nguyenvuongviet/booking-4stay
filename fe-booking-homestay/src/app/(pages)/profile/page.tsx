@@ -16,6 +16,7 @@ import { useAuth } from "@/context/auth-context";
 import { IUser } from "@/models/User";
 import { update_profile, upload_file } from "@/services/authApi";
 import { useEffect, useRef, useState } from "react";
+import toast from "react-hot-toast";
 
 export default function ProfilePage() {
   const { user, setUser, updateUser } = useAuth();
@@ -69,8 +70,10 @@ export default function ProfilePage() {
         ...res.data, // dữ liệu mới từ API
         avatar: user.avatar, // giữ avatar đang có
       });
+      toast.success("Profile updated successfully!");
       console.log("Profile updated successfully");
     } catch (error) {
+      toast.error("Update profile failed!");
       console.error("Update profile error:", error);
       alert("Có lỗi khi cập nhật!");
     }
@@ -98,9 +101,10 @@ export default function ProfilePage() {
         // update user trong context và localStorage
         updateUser({ ...user, avatar: data.imgUrl });
       }
-
+      toast.success("Upload avatar successfully!");
       console.log("Upload avatar thành công!");
     } catch (error) {
+      toast.error("Upload avatar failed!");
       console.error("Upload avatar error:", error);
       alert("Có lỗi khi upload avatar!");
     }
@@ -112,7 +116,7 @@ export default function ProfilePage() {
 
       {/* Main Content */}
       <div className="max-w-2xl mx-auto mt-24">
-        <h1 className="text-3xl elegant-heading  mb-4">My profile</h1>
+        <h1 className="text-4xl elegant-heading mb-4">My profile</h1>
         {/* Profile Avatar */}
         <div className="flex justify-center mb-4">
           <div className="relative">

@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/context/auth-context";
 import { create_booking, room_detail } from "@/services/bookingApi";
 import { RadioGroup, RadioGroupItem } from "@radix-ui/react-radio-group";
-import { format } from "date-fns";
+import { format, parse, parseISO } from "date-fns";
 import {
   ArrowLeft,
   Building2,
@@ -20,7 +20,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
-type PaymentMethod = "momo" | "paypal" | "bank-transfer" | "money";
+type PaymentMethod = "zalo" | "momo" | "paypal" | "card" | "money";
 
 export default function CheckoutPage() {
   const { user } = useAuth();
@@ -64,8 +64,10 @@ export default function CheckoutPage() {
     try {
       const resp = await create_booking({
         roomId: roomId!,
-        checkIn: new Date(ci!).toISOString(),
-        checkOut: new Date(co!).toISOString(),
+        // checkIn: format(ci!, "dd/MM/yyyy"),
+        // checkOut: format(co!, "dd/MM/yyyy"),
+        checkIn: format(parse(ci!, "dd/MM/yyyy", new Date()), "yyyy-MM-dd"),
+        checkOut: format(parse(co!, "dd/MM/yyyy", new Date()), "yyyy-MM-dd"),
         adults: Number(ad),
         children: Number(ch),
       });
@@ -97,15 +99,20 @@ export default function CheckoutPage() {
 
     if (roomId) fetchData();
   }, [roomId]);
+  console.log("checkIn param =", ci);
+  console.log("checkOut param =", co);
+
+  const parsedCheckIn = ci ? parse(ci, "dd/MM/yyyy", new Date()) : null;
+  const parsedCheckOut = co ? parse(co, "dd/MM/yyyy", new Date()) : null;
 
   const bookingData = {
     hotelName: room?.name,
     roomType: room?.description,
-    checkIn: format(ci!, "dd/MM/yyyy"),
-    checkOut: format(co!, "dd/MM/yyyy"),
+    checkIn: parsedCheckIn ? format(parsedCheckIn, "dd/MM/yyyy") : "",
+    checkOut: parsedCheckOut ? format(parsedCheckOut, "dd/MM/yyyy") : "",
     nights:
-      co && ci
-        ? (new Date(co).getTime() - new Date(ci).getTime()) /
+      parsedCheckIn && parsedCheckOut
+        ? (parsedCheckOut.getTime() - parsedCheckIn.getTime()) /
           (1000 * 60 * 60 * 24)
         : 1,
     adults: ad,
@@ -128,12 +135,12 @@ export default function CheckoutPage() {
             className="px-4 flex items-center gap-2 text-gray-900 hover:text-primary hover:cursor-pointer"
           >
             <ArrowLeft className="h-5 w-5" />
-            <span className="elegant-subheading">Back to hotel</span>
+            <span className="elegant-sanserif text-lg">Back</span>
           </button>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8 space-y-12 sm:px-6 lg:px-8">
+      <main className="container max-w-7xl mx-auto px-4 py-8 space-y-12 sm:px-6 lg:px-8">
         <h1 className="text-3xl elegant-heading">Confirm and Payment</h1>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left  */}
@@ -270,7 +277,7 @@ export default function CheckoutPage() {
                     <RadioGroupItem value="paypal" id="paypal" />
                     <div className="flex items-center gap-3 flex-1">
                       <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                        <Wallet className="h-5 w-5 text-blue-600" />
+                        <Wallet className="h-5 w-5 text-blue-900" />
                       </div>
                       <div>
                         <p className="font-medium text-gray-900">PayPal</p>
@@ -313,10 +320,37 @@ export default function CheckoutPage() {
                     )}
                   </label>
 
+                  {/* Zalopay */}
+                  <label
+                    className={`flex items-center gap-4 p-4 border-2 rounded-lg cursor-pointer transition-colors ${
+                      paymentMethod === "zalo"
+                        ? "border-primary bg-primary-100"
+                        : "border-gray-200 hover:border-gray-300"
+                    }`}
+                  >
+                    <RadioGroupItem value="zalo" id="zalo" />
+                    <div className="flex items-center gap-3 flex-1">
+                      <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
+                        <CreditCard className="h-5 w-5 text-blue-500" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-900">Zalopay</p>
+                        <p className="text-sm text-gray-600">
+                          Pay securely with your Zalopay account
+                        </p>
+                      </div>
+                    </div>
+                    {paymentMethod === "zalo" && (
+                      <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
+                        <Check className="h-4 w-4 text-white" />
+                      </div>
+                    )}
+                  </label>
+
                   {/* Bank Transfer */}
                   <label
                     className={`flex items-center gap-4 p-4 border-2 rounded-lg cursor-pointer transition-colors ${
-                      paymentMethod === "bank-transfer"
+                      paymentMethod === "card"
                         ? "border-primary bg-primary-100"
                         : "border-gray-200 hover:border-gray-300"
                     }`}
@@ -328,14 +362,14 @@ export default function CheckoutPage() {
                       </div>
                       <div>
                         <p className="font-medium text-gray-900">
-                          Bank Transfer
+                          Credit Card, Debit Card, MasterCard
                         </p>
                         <p className="text-sm text-gray-600">
-                          Direct bank transfer
+                          Pay securely using your credit card
                         </p>
                       </div>
                     </div>
-                    {paymentMethod === "bank-transfer" && (
+                    {paymentMethod === "card" && (
                       <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
                         <Check className="h-4 w-4 text-white" />
                       </div>
@@ -354,9 +388,19 @@ export default function CheckoutPage() {
                 </div>
               )}
 
+              {/* Momo Info */}
+              {paymentMethod === "zalo" && (
+                <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                  <p className="text-sm text-gray-700">
+                    You will be redirected to Zalopay to complete your payment
+                    securely.
+                  </p>
+                </div>
+              )}
+
               {/* PayPal Info */}
               {paymentMethod === "paypal" && (
-                <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <div className="mt-6 p-4 bg-blue-100 rounded-lg border border-blue-300">
                   <p className="text-sm text-gray-700">
                     You will be redirected to PayPal to complete your payment
                     securely.
@@ -365,7 +409,7 @@ export default function CheckoutPage() {
               )}
 
               {/* Bank Transfer Info */}
-              {paymentMethod === "bank-transfer" && (
+              {paymentMethod === "card" && (
                 <div className="mt-6 p-4 bg-purple-50 rounded-lg border border-purple-200">
                   <p className="text-sm text-gray-700 mb-2">
                     Bank transfer details will be provided after booking

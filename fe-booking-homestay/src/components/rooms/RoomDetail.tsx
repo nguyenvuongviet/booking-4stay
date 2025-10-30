@@ -134,6 +134,23 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
         return;
       }
     }
+
+    if (adults > (room.adultCapacity || 0)) {
+      toast.error(
+        `This room only allows up to ${room.adultCapacity} adult${
+          room.adultCapacity > 1 ? "s" : ""
+        }.`
+      );
+      return;
+    }
+
+    if (children > (room.childCapacity || 0)) {
+      toast.error(
+        `This room only allows up to ${room.childCapacity} children .`
+      );
+      return;
+    }
+
     const formattedCheckIn = format(checkIn, "dd/MM/yyyy");
     const formattedCheckOut = format(checkOut, "dd/MM/yyyy");
 
