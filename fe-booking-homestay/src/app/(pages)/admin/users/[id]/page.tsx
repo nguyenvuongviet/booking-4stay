@@ -1,256 +1,132 @@
 "use client";
 
-import { useState } from "react";
-import { Card } from "@/components/ui/card";
+import Loader from "@/components/loader/Loader";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Edit2, Mail, Phone, MapPin, Calendar } from "lucide-react";
-import Link from "next/link";
+import { Card } from "@/components/ui/card";
+import { toast } from "@/components/ui/use-toast";
+import { UserAvatar } from "@/components/UserAvatar";
+import { formatDate } from "@/lib/utils/date";
+import { getUserById } from "@/services/admin/usersApi";
+import type { User } from "@/types/user";
+import { Mail, MapPin, Phone, User as UserIcon } from "lucide-react";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
-export default function UserDetailsPage({
-  params,
-}: {
-  params: { id: string };
-}) {
-  const [user] = useState({
-    id: params.id,
-    name: "Nguyễn Văn A",
-    email: "nguyenvana@example.com",
-    phone: "+84 901 234 567",
-    role: "user",
-    status: "active",
-    joinDate: "2024-01-15",
-    lastLogin: "2024-12-20",
-    address: "123 Đường ABC, Hà Nội",
-    avatar: "/placeholder.svg",
-    totalBookings: 5,
-    totalSpent: 15000000,
-    loyaltyTier: "Silver",
-    bookings: [
-      {
-        id: 1,
-        property: "Homestay Hà Nội",
-        checkIn: "2024-12-20",
-        checkOut: "2024-12-22",
-        nights: 2,
-        totalPrice: 1000000,
-        status: "checked-out",
-      },
-      {
-        id: 2,
-        property: "Homestay Đà Nẵng",
-        checkIn: "2024-11-10",
-        checkOut: "2024-11-12",
-        nights: 2,
-        totalPrice: 1200000,
-        status: "checked-out",
-      },
-      {
-        id: 3,
-        property: "Homestay Hạ Long",
-        checkIn: "2024-10-05",
-        checkOut: "2024-10-07",
-        nights: 2,
-        totalPrice: 900000,
-        status: "checked-out",
-      },
-    ],
-    reviews: [
-      {
-        id: 1,
-        property: "Homestay Hà Nội",
-        rating: 5,
-        comment: "Phòng rất sạch sẽ, chủ nhà thân thiện",
-        date: "2024-12-22",
-      },
-      {
-        id: 2,
-        property: "Homestay Đà Nẵng",
-        rating: 4,
-        comment: "Tốt nhưng hơi ồn",
-        date: "2024-11-12",
-      },
-    ],
-  });
+function Info({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="border rounded-lg p-4 bg-warm-50 hover:bg-warm-100 transition-colors">
+      <p className="text-sm text-muted-foreground">{label}</p>
+      <p className="font-medium text-warm-900">{value}</p>
+    </div>
+  );
+}
+
+export default function UserDetailPage() {
+  const params = useParams();
+  const router = useRouter();
+  const userId = Number(params.id);
+
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const data = await getUserById(userId);
+        setUser(data);
+      } catch (err: any) {
+        if (err?.response?.status === 404) setNotFound(true);
+        toast({
+          variant: "destructive",
+          title: "Không thể tải thông tin người dùng",
+          description: err?.message || "Vui lòng thử lại.",
+        });
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [userId]);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-[50vh]">
+        <Loader />
+      </div>
+    );
+  }
+
+  if (notFound || !user) {
+    return (
+      <Card className="p-6 text-center text-red-600">
+        Không tìm thấy người dùng.
+        <div className="mt-4">
+          <Button variant="outline" onClick={() => router.push("/admin/users")}>
+            Quay lại danh sách
+          </Button>
+        </div>
+      </Card>
+    );
+  }
+
+  const fullName =
+    `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim() || user.email;
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-4 mb-6">
-        <Link href="/admin/users">
-          <Button variant="ghost" size="icon">
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-        </Link>
-        <div className="flex-1">
-          <h1 className="text-3xl font-bold text-warm-900">{user.name}</h1>
-          <p className="text-warm-600">{user.email}</p>
+      <h1 className="text-3xl font-bold text-warm-900">Thông tin người dùng</h1>
+
+      <Card className="p-6 space-y-4 border-warm-200">
+        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
+          <UserAvatar
+            avatarUrl={user.avatar}
+            fullName={fullName}
+            className="w-28 h-28 border"
+          />
+
+          <div className="flex-1 space-y-2">
+            <h2 className="text-xl font-semibold text-warm-900">{fullName}</h2>
+            <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
+              <p className="flex items-center gap-2">
+                <Mail className="w-4 h-4" /> {user.email}
+              </p>
+              {user.phoneNumber && (
+                <p className="flex items-center gap-2">
+                  <Phone className="w-4 h-4" /> {user.phoneNumber}
+                </p>
+              )}
+              {user.country && (
+                <p className="flex items-center gap-2">
+                  <MapPin className="w-4 h-4" /> {user.country}
+                </p>
+              )}
+            </div>
+          </div>
         </div>
-        <Button variant="outline" size="sm">
-          <Edit2 className="w-4 h-4 mr-2" />
-          Chỉnh sửa
-        </Button>
-      </div>
 
-      {/* User Info Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="p-4 border-warm-200">
-          <p className="text-sm text-warm-600 mb-1">Vai trò</p>
-          <Badge className="bg-blue-100 text-blue-800">Khách hàng</Badge>
-        </Card>
-        <Card className="p-4 border-warm-200">
-          <p className="text-sm text-warm-600 mb-1">Trạng thái</p>
-          <Badge className="bg-green-100 text-green-800">Hoạt động</Badge>
-        </Card>
-        <Card className="p-4 border-warm-200">
-          <p className="text-sm text-warm-600 mb-1">Lượt đặt</p>
-          <p className="text-2xl font-bold text-warm-900">
-            {user.totalBookings}
-          </p>
-        </Card>
-        <Card className="p-4 border-warm-200">
-          <p className="text-sm text-warm-600 mb-1">Tổng chi tiêu</p>
-          <p className="text-2xl font-bold text-warm-900">
-            {(user.totalSpent / 1000000).toFixed(1)}M VND
-          </p>
-        </Card>
-      </div>
-
-      {/* Contact Info */}
-      <Card className="p-6 border-warm-200">
-        <h2 className="text-lg font-semibold text-warm-900 mb-4">
-          Thông tin liên hệ
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="flex items-start gap-3">
-            <Mail className="w-5 h-5 text-warm-600 mt-1" />
-            <div>
-              <p className="text-sm text-warm-600">Email</p>
-              <p className="text-warm-900">{user.email}</p>
-            </div>
-          </div>
-          <div className="flex items-start gap-3">
-            <Phone className="w-5 h-5 text-warm-600 mt-1" />
-            <div>
-              <p className="text-sm text-warm-600">Số điện thoại</p>
-              <p className="text-warm-900">{user.phone}</p>
-            </div>
-          </div>
-          <div className="flex items-start gap-3">
-            <MapPin className="w-5 h-5 text-warm-600 mt-1" />
-            <div>
-              <p className="text-sm text-warm-600">Địa chỉ</p>
-              <p className="text-warm-900">{user.address}</p>
-            </div>
-          </div>
-          <div className="flex items-start gap-3">
-            <Calendar className="w-5 h-5 text-warm-600 mt-1" />
-            <div>
-              <p className="text-sm text-warm-600">Ngày tham gia</p>
-              <p className="text-warm-900">{user.joinDate}</p>
-            </div>
-          </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
+          <Info label="Vai trò" value={user.roles?.join(", ") ?? "–"} />
+          <Info label="Giới tính" value={user.gender ?? "–"} />
+          <Info label="Ngày sinh" value={formatDate(user.dateOfBirth)} />
+          <Info
+            label="Trạng thái"
+            value={user.isActive ? "Hoạt động" : "Không hoạt động"}
+          />
+          <Info
+            label="Xác minh"
+            value={user.isVerified ? "Đã xác minh" : "Chưa xác minh"}
+          />
+          <Info label="Cấp độ khách hàng" value={user.loyaltyLevel ?? "–"} />
+          <Info label="Provider" value={user.provider} />
+          <Info label="Ngày tạo tài khoản" value={formatDate(user.createdAt)} />
         </div>
       </Card>
 
-      {/* Tabs */}
-      <Tabs defaultValue="bookings" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="bookings">Đặt phòng</TabsTrigger>
-          <TabsTrigger value="reviews">Đánh giá</TabsTrigger>
-        </TabsList>
-
-        {/* Bookings Tab */}
-        <TabsContent value="bookings" className="space-y-4">
-          <Card className="overflow-hidden border-warm-200">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-warm-200 bg-warm-50">
-                    <th className="text-left py-3 px-4 font-semibold text-warm-900">
-                      Homestay
-                    </th>
-                    <th className="text-left py-3 px-4 font-semibold text-warm-900">
-                      Check-in
-                    </th>
-                    <th className="text-left py-3 px-4 font-semibold text-warm-900">
-                      Check-out
-                    </th>
-                    <th className="text-left py-3 px-4 font-semibold text-warm-900">
-                      Đêm
-                    </th>
-                    <th className="text-left py-3 px-4 font-semibold text-warm-900">
-                      Tổng tiền
-                    </th>
-                    <th className="text-left py-3 px-4 font-semibold text-warm-900">
-                      Trạng thái
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {user.bookings.map((booking) => (
-                    <tr
-                      key={booking.id}
-                      className="border-b border-warm-100 hover:bg-warm-50"
-                    >
-                      <td className="py-3 px-4 font-medium text-warm-900">
-                        {booking.property}
-                      </td>
-                      <td className="py-3 px-4 text-warm-700">
-                        {booking.checkIn}
-                      </td>
-                      <td className="py-3 px-4 text-warm-700">
-                        {booking.checkOut}
-                      </td>
-                      <td className="py-3 px-4 text-warm-700">
-                        {booking.nights}
-                      </td>
-                      <td className="py-3 px-4 font-semibold text-warm-900">
-                        {booking.totalPrice.toLocaleString()} VND
-                      </td>
-                      <td className="py-3 px-4">
-                        <Badge className="bg-gray-100 text-gray-800">
-                          Đã trả phòng
-                        </Badge>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </Card>
-        </TabsContent>
-
-        {/* Reviews Tab */}
-        <TabsContent value="reviews" className="space-y-4">
-          {user.reviews.map((review) => (
-            <Card key={review.id} className="p-4 border-warm-200">
-              <div className="flex items-start justify-between mb-2">
-                <div>
-                  <p className="font-semibold text-warm-900">
-                    {review.property}
-                  </p>
-                  <p className="text-sm text-warm-600">{review.date}</p>
-                </div>
-                <div className="flex gap-1">
-                  {[...Array(5)].map((_, i) => (
-                    <span
-                      key={i}
-                      className={
-                        i < review.rating ? "text-yellow-400" : "text-warm-300"
-                      }
-                    >
-                      ★
-                    </span>
-                  ))}
-                </div>
-              </div>
-              <p className="text-warm-700">{review.comment}</p>
-            </Card>
-          ))}
-        </TabsContent>
-      </Tabs>
+      <div className="flex justify-end items-center">
+        <Button variant="outline" onClick={() => router.push("/admin/users")}>
+          Quay lại
+        </Button>
+      </div>
     </div>
   );
 }

@@ -1,9 +1,9 @@
 "use client";
 
-import Image from "next/image";
 import { Bell, Lock, LogOut, Settings, User } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { STORAGE_KEYS } from "@/constants";
+import { UserAvatar } from "../UserAvatar";
 
 type Role = "USER" | "ADMIN" | "HOST" | string;
 
@@ -15,18 +15,6 @@ type CurrentUser = {
   avatar?: string | null;
   roles?: Role[];
 };
-
-function getInitials(name?: string | null, email?: string): string {
-  if (name && name.trim()) {
-    const parts = name.trim().split(/\s+/);
-    return parts
-      .slice(0, 2)
-      .map((p) => p[0]?.toUpperCase() ?? "")
-      .join("");
-  }
-  if (email) return email[0]?.toUpperCase() ?? "U";
-  return "U";
-}
 
 export function AdminHeader() {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
@@ -63,26 +51,11 @@ export function AdminHeader() {
   const displayName = useMemo(() => {
     if (!user) return "Admin";
     const name = `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim();
+    // displayName được sử dụng làm alt text và fallback name
     return name || user.email || "Admin";
   }, [user]);
 
   const email = user?.email ?? "admin@4stay.com";
-
-  const avatarEl = user?.avatar ? (
-    <Image
-      src={user.avatar}
-      alt={displayName}
-      width={40}
-      height={40}
-      className="w-10 h-10 rounded-full object-cover"
-    />
-  ) : (
-    <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-      <span className="text-xs font-semibold text-primary-foreground">
-        {getInitials(displayName, email)}
-      </span>
-    </div>
-  );
 
   return (
     <header className="h-20 bg-card border-b border-border flex items-center justify-end px-6 z-40">
@@ -102,7 +75,11 @@ export function AdminHeader() {
             aria-haspopup="menu"
             aria-expanded={showProfileMenu}
           >
-            {avatarEl}
+            <UserAvatar
+              avatarUrl={user?.avatar}
+              fullName={displayName}
+              size="md"
+            />
             <span className="text-sm font-medium max-w-[160px] truncate">
               {displayName}
             </span>

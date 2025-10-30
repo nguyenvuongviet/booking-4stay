@@ -3,7 +3,7 @@
 import { AdminHeader } from "@/components/admin/header";
 import { AdminSidebar } from "@/components/admin/SideBar";
 import Loader from "@/components/loader/Loader";
-import { getCurrentUser, isAdmin } from "@/lib/auth-client";
+import { getCurrentUser, isAdmin } from "@/lib/utils/auth-client";
 import { useRouter } from "next/navigation";
 import type React from "react";
 import { useEffect, useMemo, useState } from "react";

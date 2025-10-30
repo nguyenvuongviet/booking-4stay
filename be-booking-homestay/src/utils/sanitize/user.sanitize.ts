@@ -20,6 +20,7 @@ function sanitizeUser(user: any) {
     isActive: user.isActive,
     isVerified: user.isVerified,
     provider: user.provider,
+    createdAt: user.createdAt.toISOString(),
   };
 }
 

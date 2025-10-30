@@ -49,7 +49,9 @@ export default function LoginPage() {
       toast({
         variant: "success",
         title: "Đăng nhập thành công",
-        description: `Chào mừng ${user.firstName || user.email}!`,
+        description: `Chào mừng ${
+          user.firstName + " " + user.lastName || user.email
+        }!`,
         duration: 1000,
       });
 
