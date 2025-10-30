@@ -36,6 +36,8 @@ export function UserAvatar({
     );
   }
 
+  const fallbackIconClass = className ? "w-14 h-14" : icon;
+
   return (
     <div
       className={cn(
@@ -44,7 +46,7 @@ export function UserAvatar({
         className
       )}
     >
-      <UserIcon className={cn(icon, "text-muted-foreground")} />
+      <UserIcon className={cn(fallbackIconClass, "text-muted-foreground")} />
     </div>
   );
 }

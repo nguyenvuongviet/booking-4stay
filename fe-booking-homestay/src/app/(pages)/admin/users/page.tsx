@@ -1,6 +1,6 @@
 "use client";
 
-import { UserFormModal } from "@/components/admin/user-form-modal";
+import { UserCreateModal } from "@/components/admin/user-create-modal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -8,8 +8,8 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
 import { UserAvatar } from "@/components/UserAvatar";
 import { formatDate } from "@/lib/utils/date";
-import { getAllUsers } from "@/services/admin/usersApi";
-import type { User } from "@/types/user";
+import { createUser, deleteUser, getAllUsers } from "@/services/admin/usersApi";
+import type { CreateUserDto, User } from "@/types/user";
 import { Eye, Filter, Plus, Search, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
@@ -32,11 +32,9 @@ function getRoleColor(role: "USER" | "HOST" | "ADMIN" | string) {
 
 export default function UsersPage() {
   const { toast } = useToast();
-
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState<
     "all" | "USER" | "HOST" | "ADMIN"
@@ -81,11 +79,13 @@ export default function UsersPage() {
       const displayName = fullName || u.email;
       const uRole = (u.roles?.[0] || "USER") as "USER" | "HOST" | "ADMIN";
       const status = u.isActive ? "active" : "inactive";
+      const phone = u.phoneNumber?.toLowerCase() ?? "";
 
       const matchesSearch =
         !q ||
         displayName.toLowerCase().includes(q) ||
-        u.email.toLowerCase().includes(q);
+        u.email.toLowerCase().includes(q) ||
+        phone.includes(q);
 
       const matchesRole = roleFilter === "all" || uRole === roleFilter;
       const matchesStatus = statusFilter === "all" || status === statusFilter;
@@ -99,17 +99,47 @@ export default function UsersPage() {
     setOpenUserModal(true);
   };
 
-  const handleUserSubmit = async (data: any) => {
-    // TODO: gọi API create/update user tại đây
-    setOpenUserModal(false);
-    toast({ variant: "success", title: "Lưu người dùng thành công" });
-    fetchUsers();
+  const handleUserSubmit = async (data: CreateUserDto) => {
+    try {
+      await createUser(data);
+      toast({
+        variant: "success",
+        title: "Tạo người dùng thành công",
+        description: `Đã thêm ${data.email} vào hệ thống.`,
+      });
+      setOpenUserModal(false);
+      fetchUsers();
+    } catch (err: any) {
+      toast({
+        variant: "destructive",
+        title: "Tạo người dùng thất bại",
+        description:
+          err?.response?.data?.message || err?.message || "Vui lòng thử lại.",
+      });
+    }
   };
 
   const handleDelete = async (id: number) => {
-    // TODO: gọi API delete user tại đây
-    setUsers((prev) => prev.filter((u) => u.id !== id));
-    toast({ variant: "success", title: "Đã xóa người dùng" });
+    if (!confirm("Bạn có chắc muốn xóa người dùng này?")) return;
+
+    try {
+      await deleteUser(id);
+      setUsers((prev) => prev.filter((u) => u.id !== id));
+
+      toast({
+        variant: "success",
+        title: "Đã xóa người dùng",
+        description: `Người dùng có ID ${id} đã bị xóa khỏi hệ thống.`,
+      });
+    } catch (err: any) {
+      console.error("Delete error:", err);
+      toast({
+        variant: "destructive",
+        title: "Xóa người dùng thất bại",
+        description:
+          err?.response?.data?.message || err?.message || "Vui lòng thử lại.",
+      });
+    }
   };
 
   return (
@@ -300,10 +330,9 @@ export default function UsersPage() {
         </Card>
       )}
 
-      <UserFormModal
+      <UserCreateModal
         open={openUserModal}
         onOpenChange={setOpenUserModal}
-        user={selectedUser}
         onSubmit={handleUserSubmit}
       />
     </div>

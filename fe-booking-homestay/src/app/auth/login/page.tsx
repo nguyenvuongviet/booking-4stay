@@ -30,6 +30,7 @@ export default function LoginPage() {
         variant: "destructive",
         title: "Thiếu thông tin",
         description: "Vui lòng nhập đầy đủ Email và Mật khẩu.",
+        duration: 5000,
       });
       return;
     }
@@ -67,6 +68,7 @@ export default function LoginPage() {
         variant: "destructive",
         title: "Đăng nhập thất bại",
         description: message,
+        duration: 5000,
       });
     } finally {
       setIsLoading(false);
