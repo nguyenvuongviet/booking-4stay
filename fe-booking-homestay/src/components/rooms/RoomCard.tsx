@@ -19,6 +19,7 @@ export function RoomCard({ room }: RoomCardProps) {
   const formatPrice = (price: number) => {
     return `${price.toLocaleString()} VND`;
   };
+
   const getRoomImage = (url?: string) => url || "/images/da-nang.jpg";
   const query = new URLSearchParams({
     location: loc || "",
@@ -33,10 +34,10 @@ export function RoomCard({ room }: RoomCardProps) {
       onClick={() => {
         router.push(`/room/${room.id}?${query}&status=${room.status}`);
       }}
-      className={`overflow-hidden rounded-2xl shadow-sm transition-all duration-500 hover:shadow-lg ${
+      className={`overflow-hidden rounded-2xl shadow-sm transition-all duration-200 hover:shadow-lg ${
         room.status === "Sold out"
           ? "opacity-70 cursor-pointer"
-          : "cursor-pointer hover:-translate-y-1"
+          : "cursor-pointer hover:-translate-y-0.5 hover:scale-[1.02]"
       }`}
     >
       <div className="relative">
@@ -69,15 +70,15 @@ export function RoomCard({ room }: RoomCardProps) {
         </p>
 
         {/* <div className="flex items-center gap-2 mb-4">
-                  {hotel.amenities.map((amenity) => (
-                    <div
-                      key={amenity}
-                      className="elegant-subheading text-muted-foreground"
-                    >
-                      {getAmenityIcon(amenity)}
-                    </div>
-                  ))}
-                </div> */}
+          {room.amenities?.map((amenity) => (
+            <div
+              key={amenity.id}
+              className="elegant-subheading text-muted-foreground"
+            >
+              {getAmenityIcon(amenity)}
+            </div>
+          ))}
+        </div> */}
         <div className="flex flex-row-reverse">
           <div>
             <span className="text-2xl elegant-heading text-foreground">

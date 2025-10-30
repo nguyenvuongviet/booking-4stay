@@ -121,10 +121,11 @@ export const create_booking = async (data: {
     throw error;
   }
 };
+
 export const get_booking = async (params?: any) => {
   try {
     const resp = await api.get(`/bookings/me`, { params });
-    return resp.data?.data || {};
+    return resp.data || {};
   } catch (error) {
     console.error("Get booking detail error:", error);
     throw error;
@@ -134,7 +135,20 @@ export const get_booking = async (params?: any) => {
 export const get_booking_detail = async (bookingId: number | string) => {
   try {
     const resp = await api.get(`/bookings/${bookingId}`);
-    return resp.data?.data || {};
+    return resp.data || {};
+  } catch (error) {
+    console.error("Get booking detail error:", error);
+    throw error;
+  }
+};
+
+export const cancel_booking = async (
+  bookingId: number | string,
+  reason: string
+) => {
+  try {
+    const resp = await api.patch(`/bookings/${bookingId}/cancel`, { reason });
+    return resp.data || {};
   } catch (error) {
     console.error("Get booking detail error:", error);
     throw error;

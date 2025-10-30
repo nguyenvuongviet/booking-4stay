@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/context/auth-context";
 import { create_booking, room_detail } from "@/services/bookingApi";
 import { RadioGroup, RadioGroupItem } from "@radix-ui/react-radio-group";
+import { format } from "date-fns";
 import {
   ArrowLeft,
   Building2,
@@ -63,8 +64,8 @@ export default function CheckoutPage() {
     try {
       const resp = await create_booking({
         roomId: roomId!,
-        checkIn: ci!,
-        checkOut: co!,
+        checkIn: new Date(ci!).toISOString(),
+        checkOut: new Date(co!).toISOString(),
         adults: Number(ad),
         children: Number(ch),
       });
@@ -100,8 +101,8 @@ export default function CheckoutPage() {
   const bookingData = {
     hotelName: room?.name,
     roomType: room?.description,
-    checkIn: ci,
-    checkOut: co,
+    checkIn: format(ci!, "dd/MM/yyyy"),
+    checkOut: format(co!, "dd/MM/yyyy"),
     nights:
       co && ci
         ? (new Date(co).getTime() - new Date(ci).getTime()) /
@@ -495,15 +496,15 @@ export default function CheckoutPage() {
               </Button>
 
               {/* Cancellation Policy */}
-              {/* <div className="text-xs text-gray-600 space-y-1">
+              <div className="text-xs text-gray-600 space-y-1">
                 <p className="font-medium text-gray-900">
                   Cancellation policy:
                 </p>
                 <p>
-                  Free cancellation until 48 hours before check-in. After that,
+                  Free cancellation until 7+ days before check-in. After that,
                   cancellation fees may apply.
                 </p>
-              </div> */}
+              </div>
             </Card>
           </div>
         </div>

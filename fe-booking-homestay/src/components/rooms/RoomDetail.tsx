@@ -11,34 +11,14 @@ import { useAuth } from "@/context/auth-context";
 import { Room } from "@/models/Room";
 import { room_available, room_detail } from "@/services/bookingApi";
 import { format } from "date-fns";
-import {
-  Bath,
-  BedDouble,
-  Building2,
-  Calendar,
-  Car,
-  Check,
-  Coffee,
-  CookingPot,
-  Dumbbell,
-  Loader2,
-  MapPin,
-  Refrigerator,
-  Snowflake,
-  Sofa,
-  Star,
-  Sun,
-  Tv,
-  Users,
-  Waves,
-  Wifi,
-} from "lucide-react";
+import { Calendar, Loader2, MapPin, Star, Users } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import toast from "react-hot-toast";
-import Header from "./Header";
+import Header from "../Header";
+import { getAmenityIcon } from "./getAmenityIcon";
 
 interface RoomDetailClientProps {
   roomId: string;
@@ -66,7 +46,7 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
   const [room, setRoom] = useState<Room | null>(null);
   const [loading, setLoading] = useState(true);
   const searchParams = useSearchParams();
-  const [available, setAvailable] = useState<boolean | null>(null);
+  const [available, setAvailable] = useState<boolean | null>(true);
   const checkInRef = useRef<HTMLInputElement>(null);
   const checkOutRef = useRef<HTMLInputElement>(null);
   const [focusCheckIn, setFocusCheckIn] = useState(false);
@@ -94,42 +74,6 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
     ? room?.amenities ?? []
     : room?.amenities?.slice(0, 5) ?? [];
 
-  const getAmenityIcon = (amenity: Amenity) => {
-    switch (amenity.name.toLowerCase()) {
-      case "wifi":
-        return <Wifi className="h-4 w-4" />;
-      case "air conditioner":
-        return <Snowflake className="h-4 w-4" />;
-      case "television":
-        return <Tv className="h-4 w-4" />;
-      case "refrigerator":
-        return <Refrigerator className="h-4 w-4" />;
-      case "kitchen":
-        return <CookingPot className="h-4 w-4" />;
-      case "bath tub":
-        return <Bath className="h-4 w-4" />;
-      case "parking":
-        return <Car className="h-4 w-4" />;
-      case "elevator":
-        return <Building2 className="h-4 w-4" />;
-      case "swimming pool":
-        return <Waves className="h-4 w-4" />;
-      case "gym":
-        return <Dumbbell className="h-4 w-4" />;
-      case "bed":
-      case "double bed":
-      case "single bed":
-        return <BedDouble className="h-4 w-4" />;
-      case "sofa":
-        return <Sofa className="h-4 w-4" />;
-      case "balcony":
-        return <Sun className="h-4 w-4" />;
-      case "coffee maker":
-        return <Coffee className="h-4 w-4" />;
-      default:
-        return <Check className="h-4 w-4" />;
-    }
-  };
   // const getProgressBarColor = (score: number) => {
   //   if (score >= 9.0) return "bg-green-600";
   //   if (score >= 8.0) return "bg-blue-600";
@@ -137,6 +81,12 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
   // };
 
   useEffect(() => {
+    const status = searchParams.get("status");
+    if (status) {
+      setAvailable(status === "Available");
+    } else {
+      setAvailable(true); // ✅ Mặc định là true khi chưa có status
+    }
     const fetchRoom = async () => {
       try {
         setLoading(true);
@@ -184,8 +134,8 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
         return;
       }
     }
-    const formattedCheckIn = format(checkIn, "yyyy-MM-dd");
-    const formattedCheckOut = format(checkOut, "yyyy-MM-dd");
+    const formattedCheckIn = format(checkIn, "dd/MM/yyyy");
+    const formattedCheckOut = format(checkOut, "dd/MM/yyyy");
 
     const query = new URLSearchParams({
       checkIn: formattedCheckIn,
@@ -200,8 +150,8 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
       setLoading(true);
       const data = await room_available(
         roomId,
-        formattedCheckIn,
-        formattedCheckOut
+        checkIn.toISOString(),
+        checkOut.toISOString()
       );
       setAvailable(data.available);
       if (!data.available) {
@@ -330,6 +280,21 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
                   Show more
                 </button>
               )}
+            </div>
+
+            {/* Policy */}
+            <div className="p-4">
+              <div className="flex items-center gap-2 font-semibold">
+                {/* <Info className="w-4 h-4" /> */}
+                <h2 className="text-2xl elegant-heading mb-4">
+                  Cancellation Policy
+                </h2>
+              </div>
+              <ul className="list-disc pl-5 space-y-1 text-gray-700">
+                <li>Cancel 7+ days before check-in → Full refund (100%).</li>
+                <li>Cancel 3–6 days before check-in → 50% refund.</li>
+                <li>Cancel within 2 days → No refund.</li>
+              </ul>
             </div>
 
             {/* Review  */}

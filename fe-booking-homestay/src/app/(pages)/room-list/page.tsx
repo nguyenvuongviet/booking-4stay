@@ -3,7 +3,7 @@
 import { FilterBar } from "@/components/FilterBar";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
-import { RoomCard } from "@/components/RoomCard";
+import { RoomCard } from "@/components/rooms/RoomCard";
 import { SearchBar } from "@/components/SearchBar";
 import { Room } from "@/models/Room";
 import { room_all, room_available, search_room } from "@/services/bookingApi";

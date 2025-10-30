@@ -47,7 +47,7 @@
 
 :root {
   /* --background: oklch(0.98 0.005 85); Warm off-white */
-  --background: oklch(0.98 0.005 85); /* Warm off-white */
+  --background: oklch(98.809% 0.00011 271.152); /* Warm off-white */
   --foreground: oklch(0.15 0.01 85); /* Deep charcoal */
   --card: oklch(1 0 0); /* Pure white */
   --card-foreground: oklch(0.15 0.01 85);
