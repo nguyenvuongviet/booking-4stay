@@ -10,9 +10,10 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { Amenity } from "@/models/Amenity";
 import { Location } from "@/models/Location";
 import { Room } from "@/models/Room";
-import { location, room_all, search_location } from "@/services/bookingApi";
+import { location, room_all, search_location } from "@/services/roomApi";
 import { format } from "date-fns";
 import {
   Bath,

@@ -5,22 +5,16 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/context/auth-context";
-import { create_booking, room_detail } from "@/services/bookingApi";
+import { create_booking, pay_with_vnpay } from "@/services/bookingApi";
+import { room_detail } from "@/services/roomApi";
 import { RadioGroup, RadioGroupItem } from "@radix-ui/react-radio-group";
-import { format, parse, parseISO } from "date-fns";
-import {
-  ArrowLeft,
-  Building2,
-  Check,
-  CreditCard,
-  DollarSign,
-  Wallet,
-} from "lucide-react";
+import { format, parseISO } from "date-fns";
+import { ArrowLeft, Check, CreditCard, DollarSign } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
-type PaymentMethod = "zalo" | "momo" | "paypal" | "card" | "money";
+type PaymentMethod = "vnpay" | "cash";
 
 export default function CheckoutPage() {
   const { user } = useAuth();
@@ -33,13 +27,7 @@ export default function CheckoutPage() {
   const [firstNameError, setFirstNameError] = useState("");
   const [lastNameError, setLastNameError] = useState("");
   const router = useRouter();
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("money");
-  const [cardDetails, setCardDetails] = useState({
-    cardNumber: "",
-    cardName: "",
-    expiryDate: "",
-    cvv: "",
-  });
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cash");
 
   useEffect(() => {
     if (user) {
@@ -64,13 +52,31 @@ export default function CheckoutPage() {
     try {
       const resp = await create_booking({
         roomId: roomId!,
-        // checkIn: format(ci!, "dd/MM/yyyy"),
-        // checkOut: format(co!, "dd/MM/yyyy"),
-        checkIn: format(parse(ci!, "dd/MM/yyyy", new Date()), "yyyy-MM-dd"),
-        checkOut: format(parse(co!, "dd/MM/yyyy", new Date()), "yyyy-MM-dd"),
+        checkIn: ci!,
+        checkOut: co!,
         adults: Number(ad),
         children: Number(ch),
       });
+
+      //thanh toán qua VNPAY
+      if (paymentMethod === "vnpay") {
+        try {
+          const payment = await pay_with_vnpay(
+            room.price * bookingData.nights,
+            resp.data?.booking?.id,
+          );
+          window.location.href = payment.url; // redirect sang VNPAY
+        } catch (error) {
+          console.error("Error creating booking:", error);
+          return;
+        }
+      }
+
+      //trả tiền mặt
+      if (paymentMethod === "cash") {
+        router.push("/booking");
+      }
+
       toast.success("Booking confirmed! Thank you for your reservation.");
       console.log("Booking created successfully:", resp);
       setTimeout(() => {
@@ -80,10 +86,7 @@ export default function CheckoutPage() {
       console.error("Error creating booking:", error);
     }
 
-    // For demo purposes, just log the details
-    console.log("[v0] Confirming booking with payment method:", paymentMethod);
-    console.log("[v0] Card details:", cardDetails);
-    // In real app, process payment here
+    console.log("Confirming booking with payment method:", paymentMethod);
   };
   useEffect(() => {
     const fetchData = async () => {
@@ -99,17 +102,18 @@ export default function CheckoutPage() {
 
     if (roomId) fetchData();
   }, [roomId]);
+
   console.log("checkIn param =", ci);
   console.log("checkOut param =", co);
 
-  const parsedCheckIn = ci ? parse(ci, "dd/MM/yyyy", new Date()) : null;
-  const parsedCheckOut = co ? parse(co, "dd/MM/yyyy", new Date()) : null;
+  const parsedCheckIn = ci ? parseISO(ci) : null;
+  const parsedCheckOut = co ? parseISO(co) : null;
 
   const bookingData = {
     hotelName: room?.name,
     roomType: room?.description,
-    checkIn: parsedCheckIn ? format(parsedCheckIn, "dd/MM/yyyy") : "",
-    checkOut: parsedCheckOut ? format(parsedCheckOut, "dd/MM/yyyy") : "",
+    checkIn: parsedCheckIn ? format(parsedCheckIn, "yyyy-MM-dd") : "",
+    checkOut: parsedCheckOut ? format(parsedCheckOut, "yyyy-MM-dd") : "",
     nights:
       parsedCheckIn && parsedCheckOut
         ? (parsedCheckOut.getTime() - parsedCheckIn.getTime()) /
@@ -241,12 +245,12 @@ export default function CheckoutPage() {
                   {/* Cash Payment */}
                   <label
                     className={`flex items-center gap-4 p-4 border-2 rounded-lg cursor-pointer transition-colors ${
-                      paymentMethod === "money"
+                      paymentMethod === "cash"
                         ? "border-primary bg-primary-100"
                         : "border-gray-200 hover:border-gray-300"
                     }`}
                   >
-                    <RadioGroupItem value="money" id="money" />
+                    <RadioGroupItem value="cash" id="cash" />
                     <div className="flex items-center gap-3 flex-1">
                       <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
                         <DollarSign className="h-5 w-5 text-green-600" />
@@ -256,37 +260,43 @@ export default function CheckoutPage() {
                           Cash Payment
                         </p>
                         <p className="text-sm text-gray-600">
-                          Direct cash payment upon arrival
+                          Pay directly in cash when you arrive. No online
+                          payment required.
+                          {/* Thanh toán trực tiếp bằng tiền mặt khi đến nơi. Không cần thanh toán trực tuyến. */}
                         </p>
                       </div>
                     </div>
-                    {paymentMethod === "money" && (
+                    {paymentMethod === "cash" && (
                       <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
                         <Check className="h-4 w-4 text-white" />
                       </div>
                     )}
                   </label>
-                  {/* PayPal */}
+                  {/* Vnpay */}
                   <label
                     className={`flex items-center gap-4 p-4 border-2 rounded-lg cursor-pointer transition-colors ${
-                      paymentMethod === "paypal"
+                      paymentMethod === "vnpay"
                         ? "border-primary bg-primary-100"
                         : "border-gray-200 hover:border-gray-300"
                     }`}
                   >
-                    <RadioGroupItem value="paypal" id="paypal" />
+                    <RadioGroupItem value="vnpay" id="vnpay" />
                     <div className="flex items-center gap-3 flex-1">
                       <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                        <Wallet className="h-5 w-5 text-blue-900" />
+                        <CreditCard className="h-5 w-5 text-blue-600" />
                       </div>
                       <div>
-                        <p className="font-medium text-gray-900">PayPal</p>
+                        <p className="font-medium text-gray-900">
+                          VNPay (Bank transfer / QR code)
+                        </p>
                         <p className="text-sm text-gray-600">
-                          Pay securely with your PayPal account
+                          Secure and fast online payment via VNPay. Supports
+                          major banks and e-wallets.
+                          {/* Thanh toán trực tuyến an toàn và nhanh chóng qua VNPay. Hỗ trợ các ngân hàng lớn và ví điện tử. */}
                         </p>
                       </div>
                     </div>
-                    {paymentMethod === "paypal" && (
+                    {paymentMethod === "vnpay" && (
                       <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
                         <Check className="h-4 w-4 text-white" />
                       </div>
@@ -294,7 +304,7 @@ export default function CheckoutPage() {
                   </label>
 
                   {/* Momo */}
-                  <label
+                  {/* <label
                     className={`flex items-center gap-4 p-4 border-2 rounded-lg cursor-pointer transition-colors ${
                       paymentMethod === "momo"
                         ? "border-primary bg-primary-100"
@@ -318,114 +328,118 @@ export default function CheckoutPage() {
                         <Check className="h-4 w-4 text-white" />
                       </div>
                     )}
-                  </label>
-
-                  {/* Zalopay */}
-                  <label
-                    className={`flex items-center gap-4 p-4 border-2 rounded-lg cursor-pointer transition-colors ${
-                      paymentMethod === "zalo"
-                        ? "border-primary bg-primary-100"
-                        : "border-gray-200 hover:border-gray-300"
-                    }`}
-                  >
-                    <RadioGroupItem value="zalo" id="zalo" />
-                    <div className="flex items-center gap-3 flex-1">
-                      <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
-                        <CreditCard className="h-5 w-5 text-blue-500" />
-                      </div>
-                      <div>
-                        <p className="font-medium text-gray-900">Zalopay</p>
-                        <p className="text-sm text-gray-600">
-                          Pay securely with your Zalopay account
-                        </p>
-                      </div>
-                    </div>
-                    {paymentMethod === "zalo" && (
-                      <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
-                        <Check className="h-4 w-4 text-white" />
-                      </div>
-                    )}
-                  </label>
-
-                  {/* Bank Transfer */}
-                  <label
-                    className={`flex items-center gap-4 p-4 border-2 rounded-lg cursor-pointer transition-colors ${
-                      paymentMethod === "card"
-                        ? "border-primary bg-primary-100"
-                        : "border-gray-200 hover:border-gray-300"
-                    }`}
-                  >
-                    <RadioGroupItem value="bank-transfer" id="bank-transfer" />
-                    <div className="flex items-center gap-3 flex-1">
-                      <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                        <Building2 className="h-5 w-5 text-purple-600" />
-                      </div>
-                      <div>
-                        <p className="font-medium text-gray-900">
-                          Credit Card, Debit Card, MasterCard
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          Pay securely using your credit card
-                        </p>
-                      </div>
-                    </div>
-                    {paymentMethod === "card" && (
-                      <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
-                        <Check className="h-4 w-4 text-white" />
-                      </div>
-                    )}
-                  </label>
+                  </label> */}
                 </div>
               </RadioGroup>
 
-              {/* Momo Info */}
-              {paymentMethod === "momo" && (
-                <div className="mt-6 p-4 bg-pink-50 rounded-lg border border-pink-200">
+              {/* Vnpay Info */}
+              {paymentMethod === "vnpay" && (
+                <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-100 space-y-2">
+                  <h3 className="text-lg font-semibold text-blue-700 flex items-center gap-2">
+                    <CreditCard className="w-5 h-5 text-blue-700" />
+                    {/* VNPAY – Thanh toán nhanh & an toàn */}
+                    VNPAY – Fast & Secure Payment
+                  </h3>
+                  <p className="text-sm text-gray-700 leading-relaxed">
+                    VNPAY supports online payments via <strong>QR code</strong>{" "}
+                    or{" "}
+                    <strong>
+                      domestic/international bank cards (Visa, MasterCard)
+                    </strong>
+                    . You can choose one of the following methods:
+                    {/* VNPAY hỗ trợ thanh toán trực tuyến qua{" "}
+                    <strong>mã QR</strong> hoặc{" "}
+                    <strong>
+                      thẻ ngân hàng nội địa/quốc tế (Visa, MasterCard)
+                    </strong>
+                    . Bạn có thể lựa chọn một trong hai cách sau: */}
+                  </p>
+
+                  <ul className="list-disc list-inside text-sm text-gray-700 space-y-1">
+                    <li>
+                      <strong>Scan QR Code:</strong> Use your banking app or
+                      VNPAY Wallet to scan and confirm your payment instantly.
+                      {/* <strong>Quét mã QR:</strong> Sử dụng ứng dụng ngân hàng
+                      (Mobile Banking) hoặc ví VNPAY để quét mã và xác nhận
+                      thanh toán nhanh chóng. */}
+                    </li>
+                    <li>
+                      <strong>Card Payment:</strong> Enter your bank or
+                      credit/debit/master card details to complete the online
+                      transaction.
+                      {/* <strong>Thanh toán bằng thẻ:</strong> Nhập thông tin thẻ
+                      ngân hàng hoặc thẻ tín dụng để hoàn tất giao dịch trực
+                      tuyến. */}
+                    </li>
+                  </ul>
+
                   <p className="text-sm text-gray-700">
-                    You will be redirected to Momo to complete your payment
-                    securely.
+                    After clicking <strong>"Confirm booking"</strong>, you’ll be
+                    redirected to the VNPAY payment gateway to securely complete
+                    your transaction. Once the payment is successful, your
+                    booking will be automatically confirmed.
+                    {/* Sau khi nhấn <strong>"Confirm booking"</strong>, bạn sẽ được
+                    chuyển đến cổng thanh toán VNPAY để hoàn tất giao dịch an
+                    toàn. Sau khi thanh toán thành công, hệ thống sẽ tự động xác
+                    nhận đơn đặt phòng của bạn. */}
+                  </p>
+
+                  <p className="text-xs text-gray-500 italic">
+                    * All transactions are encrypted and secured by VNPAY
+                    standards.
+                    {/* * Mọi giao dịch đều được mã hóa và bảo mật theo tiêu chuẩn
+                    VNPAY. */}
                   </p>
                 </div>
               )}
 
-              {/* Momo Info */}
-              {paymentMethod === "zalo" && (
-                <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                  <p className="text-sm text-gray-700">
-                    You will be redirected to Zalopay to complete your payment
-                    securely.
+              {/* Money Info */}
+              {paymentMethod === "cash" && (
+                <div className="mt-6 p-4 bg-green-50 rounded-lg border border-green-100 space-y-2">
+                  <h3 className="text-lg font-semibold text-green-700 flex items-center gap-2">
+                    <DollarSign className="w-5 h-5 text-green-700" />
+                    Cash Payment
+                  </h3>
+                  <p className="text-sm text-gray-700 leading-relaxed">
+                    You can choose to pay in <strong>cash</strong> when you
+                    arrive at the accommodation. This is a convenient option if
+                    you prefer not to pay online.
+                    {/* Bạn có thể chọn thanh toán bằng <strong>tiền mặt</strong> khi đến nơi
+                    lưu trú. Đây là lựa chọn tiện lợi nếu bạn không muốn thanh toán trực
+                    tuyến. */}
                   </p>
-                </div>
-              )}
 
-              {/* PayPal Info */}
-              {paymentMethod === "paypal" && (
-                <div className="mt-6 p-4 bg-blue-100 rounded-lg border border-blue-300">
-                  <p className="text-sm text-gray-700">
-                    You will be redirected to PayPal to complete your payment
-                    securely.
-                  </p>
-                </div>
-              )}
+                  <ul className="list-disc list-inside text-sm text-gray-700 space-y-1">
+                    <li>
+                      Please make sure to prepare the exact amount for your stay
+                      to speed up the check-in process.
+                      {/* Vui lòng chuẩn bị số tiền chính xác để quá trình nhận phòng diễn ra nhanh chóng. */}
+                    </li>
+                    <li>
+                      The booking will be <strong>reserved temporarily</strong>{" "}
+                      until you complete the payment at the property.
+                      {/* Đơn đặt phòng sẽ được <strong>giữ tạm thời</strong> cho đến khi bạn
+                      hoàn tất thanh toán tại nơi lưu trú. */}
+                    </li>
+                    <li>
+                      If you fail to check in or pay on time, your booking may
+                      be canceled automatically.
+                      {/* Nếu bạn không đến hoặc không thanh toán đúng hạn, đơn đặt phòng có thể bị hủy tự động. */}
+                    </li>
+                  </ul>
 
-              {/* Bank Transfer Info */}
-              {paymentMethod === "card" && (
-                <div className="mt-6 p-4 bg-purple-50 rounded-lg border border-purple-200">
-                  <p className="text-sm text-gray-700 mb-2">
-                    Bank transfer details will be provided after booking
-                    confirmation.
-                  </p>
-                  <p className="text-xs text-gray-600">
-                    Please complete the transfer within 24 hours to secure your
-                    reservation.
-                  </p>
-                </div>
-              )}
-              {/* PayPal Info */}
-              {paymentMethod === "money" && (
-                <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
                   <p className="text-sm text-gray-700">
-                    You will be paying with cash upon arrival at the hotel.
+                    Once you confirm this booking, you will receive a
+                    confirmation email with all details and instructions for
+                    paying by cash.
+                    {/* Sau khi xác nhận đặt phòng, bạn sẽ nhận được email xác nhận kèm thông
+                    tin chi tiết và hướng dẫn thanh toán bằng tiền mặt. */}
+                  </p>
+
+                  <p className="text-xs text-gray-500 italic">
+                    * No deposit or online payment required. Payment is made
+                    directly at the property.
+                    {/* * Không yêu cầu đặt cọc hoặc thanh toán trực tuyến. Thanh toán trực tiếp tại nơi lưu trú. */}
                   </p>
                 </div>
               )}

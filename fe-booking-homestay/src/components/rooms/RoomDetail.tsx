@@ -9,8 +9,7 @@ import {
 } from "@/components/ui/popover";
 import { useAuth } from "@/context/auth-context";
 import { Room } from "@/models/Room";
-import { room_available, room_detail } from "@/services/bookingApi";
-import { format } from "date-fns";
+import { room_available, room_detail } from "@/services/roomApi";
 import { Calendar, Loader2, MapPin, Star, Users } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -85,7 +84,7 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
     if (status) {
       setAvailable(status === "Available");
     } else {
-      setAvailable(true); // ✅ Mặc định là true khi chưa có status
+      setAvailable(true); //Mặc định là true khi chưa có status
     }
     const fetchRoom = async () => {
       try {
@@ -151,8 +150,8 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
       return;
     }
 
-    const formattedCheckIn = format(checkIn, "dd/MM/yyyy");
-    const formattedCheckOut = format(checkOut, "dd/MM/yyyy");
+    const formattedCheckIn = checkIn.toISOString();
+    const formattedCheckOut = checkOut.toISOString();
 
     const query = new URLSearchParams({
       checkIn: formattedCheckIn,

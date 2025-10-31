@@ -6,7 +6,7 @@ import Header from "@/components/Header";
 import { RoomCard } from "@/components/rooms/RoomCard";
 import { SearchBar } from "@/components/SearchBar";
 import { Room } from "@/models/Room";
-import { room_all, room_available, search_room } from "@/services/bookingApi";
+import { room_all, room_available, search_room } from "@/services/roomApi";
 import { Loader2 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
