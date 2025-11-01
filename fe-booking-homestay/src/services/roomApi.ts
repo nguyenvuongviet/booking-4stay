@@ -68,22 +68,25 @@ export const search_location = async (keyword: string) => {
 export const search_room = async (
   keyword: string,
   adults: number,
-  children: number
+  children: number,
+  page: number = 1,
+  pageSize: number = 6
 ) => {
   try {
     const resp = await api.get("/room/all", {
-      params: {
-        search: keyword,
-        adults,
-        children,
-        page: 1,
-        pageSize: 6,
-      },
+      params: { search: keyword, adults, children, page, pageSize },
     });
-    return resp.data;
+
+    const mainData = resp.data?.data || {};
+    return {
+      rooms: Array.isArray(mainData.items) ? mainData.items : [],
+      totalPages: mainData.totalPages || 1,
+      total: mainData.total || 0,
+      page: mainData.page || page,
+    };
   } catch (error) {
     console.error("Get list room error:", error);
-    throw error;
+    return { rooms: [], totalPages: 1, total: 0, page };
   }
 };
 
@@ -102,6 +105,22 @@ export const room_available = async (
     return resp.data?.data || {};
   } catch (error) {
     console.error("Check room available error:", error);
+    throw error;
+  }
+};
+
+export const get_review = async (
+  roomId: number | string,
+  page = 1,
+  pageSize = 3
+) => {
+  try {
+    const resp = await api.get(`review/rooms/${roomId}`, {
+      params: { page, pageSize },
+    });
+    return resp.data;
+  } catch (error) {
+    console.error("Check review error:", error);
     throw error;
   }
 };

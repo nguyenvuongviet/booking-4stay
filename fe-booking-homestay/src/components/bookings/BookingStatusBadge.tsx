@@ -2,7 +2,7 @@ import { CheckCheck, CheckCircle, Clock, XCircle } from "lucide-react";
 import React from "react";
 
 interface BookingStatusBadgeProps {
-  status: "PENDING" | "CONFIRMED" | "CANCELLED" | "COMPLETED";
+  status: "PENDING" | "CONFIRMED" | "CANCELLED" | "COMPLETED" | "CHECKED_OUT";
   className?: string;
 }
 
@@ -30,10 +30,16 @@ export const BookingStatusBadge: React.FC<BookingStatusBadgeProps> = ({
           color: "bg-red-500",
           label: "Cancelled",
         };
-      case "COMPLETED":
+      case "COMPLETED" :
         return {
           icon: <CheckCheck className="w-4 h-4" />,
-          color: "bg-blue-500",
+          color: "bg-blue-400",
+          label: "Completed",
+        };
+        case "CHECKED_OUT" :
+        return {
+          icon: <CheckCheck className="w-4 h-4" />,
+          color: "bg-blue-400",
           label: "Completed",
         };
       default:

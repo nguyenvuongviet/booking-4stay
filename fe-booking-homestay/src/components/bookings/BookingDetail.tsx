@@ -47,25 +47,30 @@ export const BookingDetail = ({
   return (
     <div className="bg-white shadow-md rounded-2xl p-8 space-y-8">
       {/* Ảnh phòng */}
-      <div className="grid grid-cols-4 gap-2 h-[400px]">
-        <div className="col-span-2 row-span-2">
-          <img
-            src={booking.room?.images?.main || "/placeholder.svg"}
-            alt={booking?.room?.name}
-            className="w-full h-full object-cover rounded-l-lg"
-          />
-        </div>
-        {booking.room.images?.gallery
-          .filter((img) => !img.isMain) // loại bỏ ảnh chính
-          .slice(0, 4)
-          .map((img) => (
+      <div className="relative">
+        <div className="grid grid-cols-4 gap-2 h-[400px]">
+          {" "}
+          {/* cố định height */}
+          <div className="col-span-2 row-span-2 overflow-hidden rounded-l-lg">
             <img
-              key={img.id}
-              src={img.url || "/placeholder.svg"}
-              alt={`Room ${img.id}`}
-              className="w-full h-full object-cover"
+              src={booking.room?.images?.main || "/placeholder.svg"}
+              alt="Hotel main"
+              className="w-full h-full object-cover" // scale vừa container
             />
-          ))}
+          </div>
+          {booking.room?.images?.gallery
+            .filter((img) => !img.isMain)
+            .slice(0, 4)
+            .map((img) => (
+              <div key={img.id} className="overflow-hidden rounded">
+                <img
+                  src={img.url || "/placeholder.svg"}
+                  alt={`Room ${img.id}`}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            ))}
+        </div>
       </div>
 
       <div className="flex flex-col justify-between space-y-6">
@@ -165,19 +170,18 @@ export const BookingDetail = ({
                 <p className="mt-1 text-gray-700 elegant-subheading">
                   Reason: {booking.cancelReason}
                 </p>
-                {cancelInfo && (  
+                {cancelInfo && (
                   <p className="mt-1">
-                  Refund:{" "}
-                  {cancelInfo?.refundAmount && cancelInfo.refundAmount > 0 ? (
-                    <span className="text-green-600 font-medium">
-                      {cancelInfo.refundAmount.toLocaleString()} VND
-                    </span>
-                  ) : (
-                    <span className="text-red-500 font-medium"></span>
-                  )}
-                </p>
+                    Refund:{" "}
+                    {cancelInfo?.refundAmount && cancelInfo.refundAmount > 0 ? (
+                      <span className="text-green-600 font-medium">
+                        {cancelInfo.refundAmount.toLocaleString()} VND
+                      </span>
+                    ) : (
+                      <span className="text-red-500 font-medium"></span>
+                    )}
+                  </p>
                 )}
-                
               </div>
             </div>
           )}
@@ -201,7 +205,7 @@ export const BookingDetail = ({
           </div>
         </div>
         {/* Hủy booking */}
-        {booking.status !== "CANCELLED" && (
+        {booking.status !== "CANCELLED" && booking.status !== "CHECKED_OUT" && (
           <div className="flex items-center justify-end">
             <BookingCancelSection booking={booking} onCancel={handleCancel} />
           </div>

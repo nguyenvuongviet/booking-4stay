@@ -194,33 +194,38 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
       <Header />
 
       {/* Main Content */}
-      <div className="container mx-auto py-12 space-y-12 pt-20 px-4 sm:px-6 lg:px-8">
+      <div className="container max-w-7xl mx-auto py-12 space-y-12 pt-20 px-4 sm:px-6 lg:px-8">
         {/* <SearchBar /> */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-16">
           {/* Left Column - Main Content */}
           <div className="lg:col-span-2 space-y-6">
             {/* Photo Gallery */}
+            {/* Photo Gallery */}
             <div className="relative">
               <div className="grid grid-cols-4 gap-2 h-[400px]">
-                <div className="col-span-2 row-span-2">
+                {" "}
+                {/* cố định height */}
+                <div className="col-span-2 row-span-2 overflow-hidden rounded-l-lg">
                   <img
                     src={room.images?.main || "/placeholder.svg"}
                     alt="Hotel main"
-                    className="w-full h-full object-cover rounded-l-lg"
+                    className="w-full h-full object-cover" // scale vừa container
                   />
                 </div>
                 {room.images?.gallery
-                  .filter((img) => !img.isMain) // loại bỏ ảnh chính
+                  .filter((img) => !img.isMain)
                   .slice(0, 4)
                   .map((img) => (
-                    <img
-                      key={img.id}
-                      src={img.url || "/placeholder.svg"}
-                      alt={`Room ${img.id}`}
-                      className="w-full h-full object-cover"
-                    />
+                    <div key={img.id} className="overflow-hidden rounded">
+                      <img
+                        src={img.url || "/placeholder.svg"}
+                        alt={`Room ${img.id}`}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
                   ))}
               </div>
+
               <Button
                 onClick={() => setIsPhotoModalOpen(true)}
                 variant="secondary"

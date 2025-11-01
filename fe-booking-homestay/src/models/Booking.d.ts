@@ -9,7 +9,7 @@ interface User {
 
 export interface Booking {
   id: number | string;
-  status: "PENDING" | "CONFIRMED" | "CANCELLED" | "COMPLETED";
+  status: "PENDING" | "CONFIRMED" | "CANCELLED" | "CHECKED_OUT" ;
   checkIn: string;
   checkOut: string;
   adults: number;

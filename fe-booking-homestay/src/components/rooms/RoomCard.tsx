@@ -81,7 +81,7 @@ export function RoomCard({ room }: RoomCardProps) {
         </div> */}
         <div className="flex flex-row-reverse">
           <div>
-            <span className="text-2xl elegant-heading text-foreground">
+            <span className="text-xl font-bold text-foreground">
               {formatPrice(room.price)}
             </span>
             <span className="elegant-subheading text-muted-foreground">

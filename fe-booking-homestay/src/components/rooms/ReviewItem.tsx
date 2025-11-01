@@ -2,21 +2,44 @@ import React from "react";
 import { ReviewItem as ReviewItemType } from "@/models/Review";
 import { Star } from "lucide-react";
 
-export const ReviewItem: React.FC<{ review: ReviewItemType }> = ({ review }) => {
+export const ReviewItem: React.FC<{ review: ReviewItemType }> = ({
+  review,
+}) => {
   const { rating, comment, createdAt, user } = review;
 
-  const renderStars = (count: number) => (
-    <div className="flex gap-1 text-yellow-500">
-      {Array.from({ length: 5 }).map((_, i) => (
-        <Star
-          key={i}
-          size={16}
-          fill={i < Math.round(count) ? "#facc15" : "none"}
-          stroke={i < Math.round(count) ? "#facc15" : "#d1d5db"}
-        />
-      ))}
-    </div>
-  );
+  const renderStars = (count: number) => {
+    const fullStars = Math.floor(count);
+    const hasHalfStar = count - fullStars >= 0.5;
+
+    return (
+      <div className="flex gap-1">
+        {Array.from({ length: 5 }).map((_, i) => {
+          if (i < fullStars) {
+            return <Star key={i} size={16} fill="#facc15" stroke="#facc15" />;
+          } else if (i === fullStars && hasHalfStar) {
+            return (
+              <Star
+                key={i}
+                size={16}
+                fill="url(#halfGradient)"
+                stroke="#facc15"
+              />
+            );
+          } else {
+            return <Star key={i} size={16} fill="none" stroke="#d1d5db" />;
+          }
+        })}
+        <svg width="0" height="0">
+          <defs>
+            <linearGradient id="halfGradient">
+              <stop offset="50%" stopColor="#facc15" />
+              <stop offset="50%" stopColor="transparent" />
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+    );
+  };
 
   return (
     <div className="border-b py-4">
@@ -40,7 +63,7 @@ export const ReviewItem: React.FC<{ review: ReviewItemType }> = ({ review }) => 
         </div>
       </div>
 
-      {renderStars(rating)}
+      <p className="relative flex items-center text-sm text-muted-foreground">{renderStars(rating)} ({rating})</p>
 
       <p className="mt-2 text-gray-700">{comment}</p>
     </div>

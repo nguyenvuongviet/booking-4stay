@@ -38,104 +38,90 @@ export default function HotelsListPage() {
 
   // load data
   useEffect(() => {
-    const loadRooms = async () => {
-      try {
-        setLoading(true);
-        let result;
-        let roomsData: any[] = [];
-        let totalPages = 1;
+  const loadRooms = async () => {
+    try {
+      setLoading(true);
 
-        if (location) {
-          result = await search_room(location, adults, children, page, 6);
-          roomsData = result?.rooms || [];
-          totalPages =  Math.ceil( result?.total / 6);;
-        } else {
-          result = await room_all({ page, pageSize: 6 });
-          roomsData = result?.rooms || [];
-          totalPages =  Math.ceil( result?.total / 6);;
-        }
+      let result;
+      let roomsData: any[] = [];
+      let totalPages = 1;
 
-        if (!roomsData.length || page > totalPages) {
-          setHasMore(false);
-          return;
-        }
-
-        const mappedRooms: Room[] = roomsData.map((room: any) => ({
-          id: room.id,
-          name: room.name,
-          description: room.description,
-          price: room.price,
-          adultCapacity: room.adultCapacity,
-          childCapacity: room.childCapacity,
-          location: {
-            id: room.location?.id,
-            fullAddress: room.location?.fullAddress,
-            province: room.location?.province,
-          },
-          rating: room.rating || 0,
-          reviewCount: room.reviewCount || 0,
-          image: getRoomImage(room.images?.main),
-          images: room.images,
-          amenities: room.amenities?.map((a: any) => a.name) || [],
-          status: "Available",
-        }));
-
-        // ⛓️ Nếu là page=1 (tìm kiếm mới) thì thay hoàn toàn danh sách
-        setRooms((prev) =>
-          page === 1 ? mappedRooms : [...prev, ...mappedRooms]
-        );
-        if (checkIn && checkOut) {
-          try {
-            // Gọi song song tất cả phòng
-            const availabilityResults = await Promise.all(
-              roomsData.map((room) =>
-                room_available(room.id, checkIn, checkOut)
-                  .then((res) => ({
-                    id: room.id,
-                    available: res.available ?? false,
-                  }))
-                  .catch(() => ({
-                    id: room.id,
-                    available: false,
-                  }))
-              )
-            );
-
-            // Map kết quả theo phòng
-            const updatedRooms = mappedRooms.map((room) => {
-              const found = availabilityResults.find((r) => r.id === room.id);
-              return {
-                ...room,
-                status: (found?.available
-                  ? "Available"
-                  : "Sold out") as Room["status"],
-              };
-            });
-
-            setRooms((prev) =>
-              page === 1 ? updatedRooms : [...prev, ...updatedRooms]
-            );
-          } catch (error) {
-            console.error("Error checking availability:", error);
-          }
-        } else {
-          // Nếu chưa chọn ngày → giữ nguyên danh sách
-          setRooms((prev) =>
-            page === 1 ? mappedRooms : [...prev, ...mappedRooms]
-          );
-        }
-        if (page >= totalPages) setHasMore(false);
-      } catch (err) {
-        console.error("Error loading rooms:", err);
-      } finally {
-        setLoading(false);
+      // Gọi API
+      if (location) {
+        result = await search_room(location, adults, children, page, 6);
+        roomsData = result?.rooms || [];
+        totalPages = Math.ceil(result?.total / 6);
+      } else {
+        result = await room_all({ page, pageSize: 6 });
+        roomsData = result?.rooms || [];
+        totalPages = Math.ceil(result?.total / 6);
       }
-    };
 
-    loadRooms();
-  }, [page, location, adults, children, checkIn, checkOut]);
+      if (!roomsData.length || page > totalPages) {
+        setHasMore(false);
+        return;
+      }
 
-  // Infinite scroll
+      // Map dữ liệu cơ bản
+      const mappedRooms: Room[] = roomsData.map((room: any) => ({
+        id: room.id,
+        name: room.name,
+        description: room.description,
+        price: room.price,
+        adultCapacity: room.adultCapacity,
+        childCapacity: room.childCapacity,
+        location: {
+          id: room.location?.id,
+          fullAddress: room.location?.fullAddress,
+          province: room.location?.province,
+        },
+        rating: room.rating || 0,
+        reviewCount: room.reviewCount || 0,
+        image: getRoomImage(room.images?.main),
+        images: room.images,
+        amenities: room.amenities?.map((a: any) => a.name) || [],
+        status: "Available",
+      }));
+
+      let finalRooms = mappedRooms;
+
+      // Kiểm tra availability nếu có ngày checkIn/checkOut
+      if (checkIn && checkOut) {
+        try {
+          const availabilityResults = await Promise.all(
+            roomsData.map((room) =>
+              room_available(room.id, checkIn, checkOut)
+                .then((res) => ({ id: room.id, available: res.available ?? false }))
+                .catch(() => ({ id: room.id, available: false }))
+            )
+          );
+
+          finalRooms = mappedRooms.map((room) => {
+            const found = availabilityResults.find((r) => r.id === room.id);
+            return {
+              ...room,
+              status: found?.available ? "Available" : "Sold out",
+            };
+          });
+        } catch (error) {
+          console.error("Error checking availability:", error);
+        }
+      }
+
+      setRooms((prev) => (page === 1 ? finalRooms : [...prev, ...finalRooms]));
+
+      if (page >= totalPages) setHasMore(false);
+    } catch (err) {
+      console.error("Error loading rooms:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  loadRooms();
+}, [page, location, adults, children, checkIn, checkOut]);
+
+
   useEffect(() => {
     const handleScroll = () => {
       if (loading || !hasMore) return;
