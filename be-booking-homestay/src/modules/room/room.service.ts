@@ -11,6 +11,7 @@ import { CreateRoomDto } from './dto/create-room.dto';
 import { RoomFilterDto } from './dto/filter-room.dto';
 import { BedItemDto, BedType } from './dto/set-room-beds.dto';
 import { UpdateRoomDto } from './dto/update-room.dto';
+import { RoomHelper } from './room.helpers';
 
 const OVERLAP_STATUSES = ['PENDING', 'CONFIRMED', 'CHECKED_IN'] as const;
 const SORT_BY = new Set(['price', 'rating', 'createdAt']);
@@ -21,6 +22,7 @@ export class RoomService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly cloudinary: CloudinaryService,
+    private readonly roomHelper: RoomHelper,
   ) {}
 
   async findAll(query: RoomFilterDto) {
@@ -208,9 +210,12 @@ export class RoomService {
   }
 
   async setAmenities(roomId: number, amenityIds: number[]) {
+    await this.roomHelper.ensureRoomExists(roomId);
+
     const ids = Array.isArray(amenityIds)
       ? [...new Set(amenityIds.filter((x) => Number.isInteger(x) && x > 0))]
       : [];
+
     await this.prisma.$transaction(async (tx) => {
       await tx.room_amenities.deleteMany({ where: { roomId } });
       if (ids.length > 0) {
@@ -225,6 +230,8 @@ export class RoomService {
   }
 
   async setBeds(roomId: number, beds: BedItemDto[]) {
+    await this.roomHelper.ensureRoomExists(roomId);
+
     const merged = new Map<BedType, number>();
     for (const item of beds ?? []) {
       if (!item) continue;
@@ -318,6 +325,8 @@ export class RoomService {
   }
 
   async deleteRoomImagesByIds(roomId: number, imageIds: number[]) {
+    await this.roomHelper.ensureRoomExists(roomId);
+
     if (!imageIds?.length)
       throw new BadRequestException('Danh sách ảnh cần xoá không được rỗng.');
 

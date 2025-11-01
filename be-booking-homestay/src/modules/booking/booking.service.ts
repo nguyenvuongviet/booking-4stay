@@ -204,4 +204,12 @@ export class BookingService {
 
     return { roomId, available: !conflict, totalAmount };
   }
+
+  async listByRoom(roomId: number) {
+    const items = await this.prisma.bookings.findMany({
+      where: { roomId },
+      // include: { rooms: { include: { room_images: true } } },
+    });
+    return { items: sanitizeBooking(items) };
+  }
 }

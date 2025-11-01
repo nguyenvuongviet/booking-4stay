@@ -1,9 +1,7 @@
 "use client";
 
-import type React from "react";
-
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -13,6 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -20,80 +19,121 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { useState } from "react";
 
-interface RoomFormModalProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  room?: any;
-  onSubmit: (data: any) => void;
+import {
+  createLocation,
+  getAllProvinces,
+  getDistricts,
+  getWards,
+} from "@/services/admin/locationsApi";
+import type { CreateRoomDto } from "@/types/room";
+
+interface ProvinceItem {
+  province: string;
+  image?: string | null;
 }
-
-const AMENITIES = [
-  { id: "wifi", label: "WiFi" },
-  { id: "ac", label: "Điều hòa" },
-  { id: "tv", label: "TV" },
-  { id: "kitchen", label: "Bếp" },
-  { id: "parking", label: "Chỗ đỗ xe" },
-  { id: "pool", label: "Hồ bơi" },
-  { id: "gym", label: "Phòng tập" },
-  { id: "washer", label: "Máy giặt" },
-  { id: "dryer", label: "Máy sấy" },
-  { id: "heating", label: "Sưởi ấm" },
-  { id: "balcony", label: "Ban công" },
-  { id: "garden", label: "Vườn" },
-];
 
 export function RoomFormModal({
   open,
   onOpenChange,
-  room,
   onSubmit,
-}: RoomFormModalProps) {
-  const [formData, setFormData] = useState(
-    room || {
-      name: "",
-      roomNumber: "",
-      type: "standard",
-      capacity: 2,
-      price: "",
-      description: "",
-      amenities: [],
-      status: "available",
-    }
-  );
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSubmit: (data: CreateRoomDto) => void;
+}) {
+  const [formData, setFormData] = useState<CreateRoomDto>({
+    name: "",
+    description: "",
+    price: 0,
+    adultCapacity: 1,
+    childCapacity: 0,
+    locationId: 0,
+  });
 
-  const handleAmenityChange = (amenityId: string) => {
-    setFormData({
-      ...formData,
-      amenities: formData.amenities.includes(amenityId)
-        ? formData.amenities.filter((id: string) => id !== amenityId)
-        : [...formData.amenities, amenityId],
-    });
-  };
+  // --- LOCATION ---
+  const [provinces, setProvinces] = useState<ProvinceItem[]>([]);
+  const [districts, setDistricts] = useState<string[]>([]);
+  const [wards, setWards] = useState<string[]>([]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [province, setProvince] = useState("");
+  const [district, setDistrict] = useState("");
+  const [ward, setWard] = useState("");
+  const [street, setStreet] = useState("");
+
+  const [loading, setLoading] = useState(false);
+
+  // 🔹 Load provinces
+  useEffect(() => {
+    (async () => {
+      try {
+        const list = await getAllProvinces();
+        setProvinces(list);
+      } catch (err) {
+        console.error("Load provinces failed:", err);
+      }
+    })();
+  }, []);
+
+  // 🔹 Load districts
+  useEffect(() => {
+    if (!province) return;
+    (async () => {
+      const list = await getDistricts(province);
+      setDistricts(list);
+      setDistrict("");
+      setWards([]);
+    })();
+  }, [province]);
+
+  // 🔹 Load wards
+  useEffect(() => {
+    if (!province || !district) return;
+    (async () => {
+      const list = await getWards(province, district);
+      setWards(list);
+      setWard("");
+    })();
+  }, [district]);
+
+  // --- SUBMIT FORM ---
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(formData);
-    onOpenChange(false);
+
+    try {
+      setLoading(true);
+      const loc = await createLocation({
+        province,
+        district,
+        ward,
+        street,
+      });
+      const payload: CreateRoomDto = {
+        ...formData,
+        locationId: loc.id,
+      };
+      onSubmit(payload);
+      onOpenChange(false);
+    } catch (err) {
+      console.error("Submit room failed:", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>
-            {room ? "Chỉnh sửa phòng" : "Thêm phòng mới"}
-          </DialogTitle>
+          <DialogTitle>Thêm phòng mới</DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {/* THÔNG TIN PHÒNG */}
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Tên phòng</Label>
+            <div>
+              <Label>Tên phòng</Label>
               <Input
-                id="name"
                 placeholder="VD: Phòng Deluxe 101"
                 value={formData.name}
                 onChange={(e) =>
@@ -102,123 +142,135 @@ export function RoomFormModal({
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="roomNumber">Số phòng</Label>
+            <div>
+              <Label>Giá/đêm (VND)</Label>
               <Input
-                id="roomNumber"
-                placeholder="VD: 101"
-                value={formData.roomNumber}
+                type="number"
+                min={0}
+                value={formData.price}
                 onChange={(e) =>
-                  setFormData({ ...formData, roomNumber: e.target.value })
+                  setFormData({
+                    ...formData,
+                    price: Number(e.target.value),
+                  })
                 }
               />
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="type">Loại phòng</Label>
-              <Select
-                value={formData.type}
-                onValueChange={(value) =>
-                  setFormData({ ...formData, type: value })
-                }
-              >
-                <SelectTrigger id="type">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="standard">Standard</SelectItem>
-                  <SelectItem value="deluxe">Deluxe</SelectItem>
-                  <SelectItem value="suite">Suite</SelectItem>
-                  <SelectItem value="villa">Villa</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="capacity">Sức chứa</Label>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label>Người lớn</Label>
               <Input
-                id="capacity"
                 type="number"
-                min="1"
-                value={formData.capacity}
+                min={1}
+                value={formData.adultCapacity}
                 onChange={(e) =>
                   setFormData({
                     ...formData,
-                    capacity: Number.parseInt(e.target.value),
+                    adultCapacity: Number(e.target.value),
                   })
                 }
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="price">Giá/đêm (VND)</Label>
+            <div>
+              <Label>Trẻ em</Label>
               <Input
-                id="price"
                 type="number"
-                placeholder="500000"
-                value={formData.price}
+                min={0}
+                value={formData.childCapacity || 0}
                 onChange={(e) =>
-                  setFormData({ ...formData, price: e.target.value })
+                  setFormData({
+                    ...formData,
+                    childCapacity: Number(e.target.value),
+                  })
                 }
               />
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="description">Mô tả</Label>
+          <div>
+            <Label>Mô tả</Label>
             <Textarea
-              id="description"
-              placeholder="Nhập mô tả chi tiết về phòng"
+              rows={3}
+              placeholder="Mô tả ngắn về phòng..."
               value={formData.description}
               onChange={(e) =>
                 setFormData({ ...formData, description: e.target.value })
               }
-              rows={3}
             />
           </div>
 
+          {/* ĐỊA ĐIỂM */}
           <div className="space-y-3">
-            <Label>Tiện nghi</Label>
-            <div className="grid grid-cols-3 gap-3">
-              {AMENITIES.map((amenity) => (
-                <div key={amenity.id} className="flex items-center gap-2">
-                  <Checkbox
-                    id={amenity.id}
-                    checked={formData.amenities.includes(amenity.id)}
-                    onCheckedChange={() => handleAmenityChange(amenity.id)}
-                  />
-                  <Label
-                    htmlFor={amenity.id}
-                    className="font-normal cursor-pointer"
-                  >
-                    {amenity.label}
-                  </Label>
-                </div>
-              ))}
+            <Label>Vị trí phòng</Label>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {/* Province */}
+              <Select value={province} onValueChange={setProvince}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Tỉnh / Thành phố" />
+                </SelectTrigger>
+                <SelectContent>
+                  {provinces.map((p) => (
+                    <SelectItem key={p.province} value={p.province}>
+                      <div className="flex items-center gap-2">
+                        {p.image && (
+                          <img
+                            src={p.image}
+                            alt={p.province}
+                            className="w-5 h-5 rounded-sm object-cover"
+                          />
+                        )}
+                        <span>{p.province}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              {/* District */}
+              <Select
+                value={district}
+                onValueChange={setDistrict}
+                disabled={!province}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Quận / Huyện" />
+                </SelectTrigger>
+                <SelectContent>
+                  {districts.map((d) => (
+                    <SelectItem key={d} value={d}>
+                      {d}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              {/* Ward */}
+              <Select value={ward} onValueChange={setWard} disabled={!district}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Phường / Xã" />
+                </SelectTrigger>
+                <SelectContent>
+                  {wards.map((w) => (
+                    <SelectItem key={w} value={w}>
+                      {w}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              {/* Street */}
+              <Input
+                placeholder="Đường (nếu có)"
+                value={street}
+                onChange={(e) => setStreet(e.target.value)}
+              />
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="status">Trạng thái</Label>
-            <Select
-              value={formData.status}
-              onValueChange={(value) =>
-                setFormData({ ...formData, status: value })
-              }
-            >
-              <SelectTrigger id="status">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="available">Có sẵn</SelectItem>
-                <SelectItem value="booked">Đã đặt</SelectItem>
-                <SelectItem value="maintenance">Bảo trì</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
+          {/* FOOTER */}
           <DialogFooter>
             <Button
               type="button"
@@ -227,8 +279,8 @@ export function RoomFormModal({
             >
               Hủy
             </Button>
-            <Button type="submit" className="bg-warm-700 hover:bg-warm-800">
-              {room ? "Cập nhật" : "Thêm"}
+            <Button type="submit" disabled={loading}>
+              {loading ? "Đang lưu..." : "Thêm phòng"}
             </Button>
           </DialogFooter>
         </form>

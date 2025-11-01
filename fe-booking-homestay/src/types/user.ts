@@ -18,7 +18,7 @@ export interface User {
   createdAt: Date;
 }
 
-export type CreateUserDto = {
+export interface CreateUserDto {
   email: string;
   password: string;
   firstName: string;
@@ -26,9 +26,9 @@ export type CreateUserDto = {
   phoneNumber: string;
   country: string;
   roleName?: Role;
-};
+}
 
-export type UpdateUserDto = {
+export interface UpdateUserDto {
   firstName?: string | null;
   lastName?: string | null;
   phoneNumber?: string | null;
@@ -37,4 +37,4 @@ export type UpdateUserDto = {
   dateOfBirth?: string | null;
   gender?: "MALE" | "FEMALE" | "OTHER" | string;
   isActive?: boolean;
-};
+}

@@ -1,78 +1,99 @@
 "use client";
 
-import { useState } from "react";
+import { use, useEffect, useState, useMemo } from "react";
+import Link from "next/link";
+import {
+  ArrowLeft,
+  Edit2,
+  Trash2,
+  Loader2,
+  MapPin,
+  Image as ImageIcon,
+  User,
+  Mail,
+  Phone,
+  Star,
+  BedDouble,
+  Baby,
+  UserRound,
+  Bed,
+} from "lucide-react";
+
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Edit2, Trash2, Plus } from "lucide-react";
-import Link from "next/link";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { useToast } from "@/components/ui/use-toast";
 
-const AMENITIES_LIST = [
-  { id: "wifi", label: "WiFi", icon: "📡" },
-  { id: "ac", label: "Điều hòa", icon: "❄️" },
-  { id: "tv", label: "TV", icon: "📺" },
-  { id: "kitchen", label: "Bếp", icon: "🍳" },
-  { id: "parking", label: "Chỗ đỗ xe", icon: "🅿️" },
-  { id: "pool", label: "Hồ bơi", icon: "🏊" },
-  { id: "gym", label: "Phòng tập", icon: "💪" },
-  { id: "washer", label: "Máy giặt", icon: "🧺" },
-  { id: "dryer", label: "Máy sấy", icon: "🌬️" },
-  { id: "heating", label: "Sưởi ấm", icon: "🔥" },
-  { id: "balcony", label: "Ban công", icon: "🌳" },
-  { id: "garden", label: "Vườn", icon: "🌺" },
-];
+import { getRoomById } from "@/services/admin/roomsApi";
+import type { Room } from "@/types/room";
+import { getAmenityIcon } from "@/constants/amenity-icons";
 
 export default function RoomDetailsPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
-  const [room] = useState({
-    id: params.id,
-    name: "Phòng Deluxe 101",
-    roomNumber: "101",
-    type: "Deluxe",
-    capacity: 2,
-    price: 500000,
-    description:
-      "Phòng Deluxe rộng rãi với view đẹp, trang bị đầy đủ tiện nghi hiện đại.",
-    amenities: ["wifi", "ac", "tv", "kitchen", "balcony"],
-    status: "available",
-    images: ["/luxury-room.jpg"],
-    bookings: [
-      {
-        id: 1,
-        guest: "Nguyễn Văn A",
-        checkIn: "2024-01-15",
-        checkOut: "2024-01-18",
-        status: "confirmed",
-      },
-      {
-        id: 2,
-        guest: "Trần Thị B",
-        checkIn: "2024-01-20",
-        checkOut: "2024-01-22",
-        status: "pending",
-      },
-    ],
-    reviews: [
-      {
-        id: 1,
-        guest: "Nguyễn Văn A",
-        rating: 5,
-        comment: "Phòng rất sạch sẽ và thoải mái",
-        date: "2024-01-18",
-      },
-      {
-        id: 2,
-        guest: "Trần Thị B",
-        rating: 4,
-        comment: "Tốt nhưng hơi ồn",
-        date: "2024-01-22",
-      },
-    ],
-  });
+  const { id } = use(params); // ✅ unwrap Promise
+  const { toast } = useToast();
+  const [room, setRoom] = useState<Room | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  // 🧭 Fetch room data
+  useEffect(() => {
+    (async () => {
+      try {
+        const data = await getRoomById(Number(id));
+        setRoom(data);
+      } catch (err: any) {
+        toast({
+          variant: "destructive",
+          title: "Không thể tải thông tin phòng",
+          description:
+            err?.response?.data?.message || err?.message || "Vui lòng thử lại.",
+        });
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [id]);
+
+  // 📦 Group amenities by category
+  const groupedAmenities = useMemo(() => {
+    if (!room?.amenities?.length) return {};
+    return room.amenities.reduce((acc, a) => {
+      if (!acc[a.category]) acc[a.category] = [];
+      acc[a.category].push(a);
+      return acc;
+    }, {} as Record<string, typeof room.amenities>);
+  }, [room]);
+
+  // ⏳ Loading state
+  if (loading)
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="w-6 h-6 animate-spin text-warm-700" />
+      </div>
+    );
+
+  if (!room)
+    return (
+      <Card className="p-6 text-center text-red-600">
+        Không tìm thấy thông tin phòng.
+        <div className="mt-4">
+          <Link href="/admin/rooms">
+            <Button variant="outline">
+              <ArrowLeft className="w-4 h-4 mr-2" /> Quay lại
+            </Button>
+          </Link>
+        </div>
+      </Card>
+    );
 
   return (
     <div className="space-y-6">
@@ -86,9 +107,10 @@ export default function RoomDetailsPage({
           </Link>
           <div>
             <h1 className="text-3xl font-bold text-warm-900">{room.name}</h1>
-            <p className="text-warm-600">Phòng số {room.roomNumber}</p>
+            <p className="text-warm-600 capitalize">{room.status}</p>
           </div>
         </div>
+
         <div className="flex gap-2">
           <Button variant="outline" size="sm">
             <Edit2 className="w-4 h-4 mr-2" />
@@ -105,170 +127,189 @@ export default function RoomDetailsPage({
         </div>
       </div>
 
-      {/* Main Info */}
+      {/* Quick Info */}
       <div className="grid grid-cols-3 gap-4">
         <Card className="p-4">
-          <p className="text-sm text-warm-600 mb-1">Loại phòng</p>
-          <p className="text-lg font-semibold text-warm-900">{room.type}</p>
-        </Card>
-        <Card className="p-4">
-          <p className="text-sm text-warm-600 mb-1">Sức chứa</p>
+          <p className="text-sm text-muted-foreground">Giá / đêm</p>
           <p className="text-lg font-semibold text-warm-900">
-            {room.capacity} khách
+            {room.price.toLocaleString()}₫
           </p>
         </Card>
         <Card className="p-4">
-          <p className="text-sm text-warm-600 mb-1">Giá/đêm</p>
-          <p className="text-lg font-semibold text-warm-900">
-            {room.price.toLocaleString()} VND
+          <p className="text-sm text-muted-foreground">Sức chứa</p>
+          <div className="text-lg font-semibold text-warm-900 flex items-center gap-3">
+            <div className="flex items-center gap-1">
+              <UserRound className="w-4 h-4 text-muted-foreground" />
+              {room.adultCapacity}
+            </div>
+            {room.childCapacity ? (
+              <div className="flex items-center gap-1">
+                <Baby className="w-4 h-4 text-muted-foreground" />
+                {room.childCapacity}
+              </div>
+            ) : null}
+          </div>
+        </Card>
+        <Card className="p-4">
+          <p className="text-sm text-muted-foreground">Đánh giá</p>
+          <p className="text-lg font-semibold text-warm-900 flex items-center gap-1">
+            <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />{" "}
+            {room.rating ?? 0} ({room.reviewCount ?? 0})
           </p>
         </Card>
       </div>
 
       {/* Tabs */}
-      <Tabs defaultValue="amenities" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+      <Tabs defaultValue="info" className="w-full">
+        <TabsList className="grid grid-cols-4 w-full">
+          <TabsTrigger value="info">Thông tin</TabsTrigger>
           <TabsTrigger value="amenities">Tiện nghi</TabsTrigger>
-          <TabsTrigger value="bookings">Đặt phòng</TabsTrigger>
-          <TabsTrigger value="reviews">Đánh giá</TabsTrigger>
+          <TabsTrigger value="beds">Giường</TabsTrigger>
           <TabsTrigger value="images">Hình ảnh</TabsTrigger>
         </TabsList>
 
-        {/* Amenities Tab */}
-        <TabsContent value="amenities" className="space-y-4">
-          <Card className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-warm-900">
-                Tiện nghi phòng
+        {/* Info */}
+        <TabsContent value="info">
+          <Card className="p-6 space-y-4">
+            <div>
+              <h3 className="text-lg font-semibold text-warm-900 mb-1">
+                Mô tả
               </h3>
-              <Button size="sm" className="bg-warm-700 hover:bg-warm-800">
-                <Plus className="w-4 h-4 mr-2" />
-                Thêm tiện nghi
-              </Button>
+              <p className="text-sm text-muted-foreground">
+                {room.description || "Chưa có mô tả"}
+              </p>
             </div>
-            <div className="grid grid-cols-4 gap-4">
-              {AMENITIES_LIST.map((amenity) => (
-                <div
-                  key={amenity.id}
-                  className={`p-4 rounded-lg border-2 text-center cursor-pointer transition ${
-                    room.amenities.includes(amenity.id)
-                      ? "border-warm-400 bg-warm-50"
-                      : "border-warm-200 bg-white hover:border-warm-300"
-                  }`}
-                >
-                  <div className="text-2xl mb-2">{amenity.icon}</div>
-                  <p className="text-sm font-medium text-warm-900">
-                    {amenity.label}
+
+            <div>
+              <h3 className="text-lg font-semibold text-warm-900 mb-1">
+                Vị trí
+              </h3>
+              <p className="text-sm text-muted-foreground flex items-center gap-2">
+                <MapPin className="w-4 h-4" />
+                {room.location?.fullAddress || "Không rõ địa chỉ"}
+              </p>
+            </div>
+
+            <div>
+              <h3 className="text-lg font-semibold text-warm-900 mb-1">
+                Chủ sở hữu
+              </h3>
+              <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                {room.host.avatar ? (
+                  <img
+                    src={room.host.avatar}
+                    alt={room.host.name}
+                    className="w-10 h-10 rounded-full object-cover"
+                  />
+                ) : (
+                  <User className="w-6 h-6 text-warm-400" />
+                )}
+                <div>
+                  <p className="font-medium text-warm-900">{room.host.name}</p>
+                  <p className="flex items-center gap-1">
+                    <Mail className="w-3.5 h-3.5" /> {room.host.email}
+                  </p>
+                  <p className="flex items-center gap-1">
+                    <Phone className="w-3.5 h-3.5" /> {room.host.phoneNumber}
                   </p>
                 </div>
-              ))}
-            </div>
-          </Card>
-        </TabsContent>
-
-        {/* Bookings Tab */}
-        <TabsContent value="bookings" className="space-y-4">
-          <Card className="overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-warm-50 border-b border-warm-200">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-warm-900">
-                      Khách
-                    </th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-warm-900">
-                      Check-in
-                    </th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-warm-900">
-                      Check-out
-                    </th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-warm-900">
-                      Trạng thái
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {room.bookings.map((booking) => (
-                    <tr
-                      key={booking.id}
-                      className="border-b border-warm-100 hover:bg-warm-50"
-                    >
-                      <td className="px-6 py-4 text-sm text-warm-900">
-                        {booking.guest}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-warm-700">
-                        {booking.checkIn}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-warm-700">
-                        {booking.checkOut}
-                      </td>
-                      <td className="px-6 py-4 text-sm">
-                        <Badge
-                          variant={
-                            booking.status === "confirmed"
-                              ? "default"
-                              : "secondary"
-                          }
-                        >
-                          {booking.status === "confirmed"
-                            ? "Xác nhận"
-                            : "Chờ xác nhận"}
-                        </Badge>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </Card>
-        </TabsContent>
-
-        {/* Reviews Tab */}
-        <TabsContent value="reviews" className="space-y-4">
-          {room.reviews.map((review) => (
-            <Card key={review.id} className="p-4">
-              <div className="flex items-start justify-between mb-2">
-                <div>
-                  <p className="font-semibold text-warm-900">{review.guest}</p>
-                  <p className="text-sm text-warm-600">{review.date}</p>
-                </div>
-                <div className="flex gap-1">
-                  {[...Array(5)].map((_, i) => (
-                    <span
-                      key={i}
-                      className={
-                        i < review.rating ? "text-yellow-400" : "text-warm-300"
-                      }
-                    >
-                      ★
-                    </span>
-                  ))}
-                </div>
               </div>
-              <p className="text-warm-700">{review.comment}</p>
-            </Card>
-          ))}
+            </div>
+          </Card>
         </TabsContent>
 
-        {/* Images Tab */}
-        <TabsContent value="images" className="space-y-4">
+        {/* Amenities */}
+        <TabsContent value="amenities">
+          <Card className="p-6 space-y-6">
+            {Object.keys(groupedAmenities).length ? (
+              Object.entries(groupedAmenities).map(([category, list]) => (
+                <div key={category}>
+                  <h4 className="text-md font-semibold mb-3 text-warm-900 uppercase">
+                    {category}
+                  </h4>
+                  <div className="grid grid-cols-4 gap-3">
+                    {list.map((a) => (
+                      <Tooltip key={a.id}>
+                        <TooltipTrigger asChild>
+                          <div className="flex items-center gap-2 p-2 rounded-md border border-warm-200 bg-muted/30 hover:bg-muted/50 transition">
+                            {getAmenityIcon(a.name)}
+                            <div className="flex flex-col">
+                              <p className="text-sm font-medium text-warm-900">
+                                {a.name}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {a.category}
+                              </p>
+                            </div>
+                          </div>
+                        </TooltipTrigger>
+                      </Tooltip>
+                    ))}
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="text-muted-foreground text-center">
+                Chưa có tiện nghi nào.
+              </p>
+            )}
+          </Card>
+        </TabsContent>
+
+        {/* Beds */}
+        <TabsContent value="beds">
+          <Card className="p-6">
+            <h3 className="text-lg font-semibold text-warm-900 mb-4">
+              Loại giường
+            </h3>
+            {room.beds?.length ? (
+              <div className="grid grid-cols-3 gap-4">
+                {room.beds.map((b, i) => (
+                  <Card
+                    key={i}
+                    className="p-3 flex items-center justify-between border-warm-200"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Bed className="w-4 h-4 text-muted-foreground" />
+                      <p className="font-medium text-warm-900">{b.type}</p>
+                    </div>
+                    <Badge>{b.quantity}</Badge>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <p className="text-center text-muted-foreground">
+                Chưa có thông tin giường.
+              </p>
+            )}
+          </Card>
+        </TabsContent>
+
+        {/* Images */}
+        <TabsContent value="images">
           <Card className="p-6">
             <div className="grid grid-cols-3 gap-4">
-              {room.images.map((image, idx) => (
-                <div
-                  key={idx}
-                  className="relative aspect-video rounded-lg overflow-hidden bg-warm-100"
-                >
-                  <img
-                    src={image || "/placeholder.svg"}
-                    alt={`Room ${idx}`}
-                    className="w-full h-full object-cover"
-                  />
+              {room.images?.gallery?.length ? (
+                room.images.gallery.map((img) => (
+                  <div
+                    key={img.id}
+                    className="relative aspect-video rounded-lg overflow-hidden"
+                  >
+                    <img
+                      src={img.url}
+                      alt={room.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                ))
+              ) : (
+                <div className="col-span-3 text-center text-muted-foreground py-10">
+                  <div className="inline-flex flex-col items-center">
+                    <ImageIcon className="w-8 h-8 mb-2 opacity-70" />
+                    <p>Chưa có ảnh nào cho phòng này</p>
+                  </div>
                 </div>
-              ))}
-              <div className="aspect-video rounded-lg border-2 border-dashed border-warm-300 flex items-center justify-center cursor-pointer hover:bg-warm-50">
-                <Plus className="w-8 h-8 text-warm-400" />
-              </div>
+              )}
             </div>
           </Card>
         </TabsContent>
