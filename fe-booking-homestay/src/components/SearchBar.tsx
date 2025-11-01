@@ -8,7 +8,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Location } from "@/models/Location";
-import { location, search_location } from "@/services/bookingApi";
+import { location, search_location } from "@/services/roomApi";
 import { format } from "date-fns";
 import { Calendar, MapPin, Search, Users } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";

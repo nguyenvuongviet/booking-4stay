@@ -71,7 +71,7 @@ export default function BookingDetailClient({
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="bg-background border-b sticky top-0 z-50 mb-8">
-        <div className="max-w-5xl mx-auto px-10 py-4">
+        <div className="max-w-7xl mx-auto px-12 py-4">
           <button
             onClick={() => router.push("/booking")}
             className="px-4 flex items-center gap-2 text-gray-900 hover:text-primary hover:cursor-pointer"
@@ -82,8 +82,8 @@ export default function BookingDetailClient({
         </div>
       </header>
 
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold text-gray-800 mb-6">
+      <div className="max-w-6xl mx-auto">
+        <h1 className="text-4xl elegant-heading mb-6">
           Booking Details
         </h1>
         <BookingDetail booking={booking} />

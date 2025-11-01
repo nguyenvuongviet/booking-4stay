@@ -6,70 +6,56 @@ import { Booking } from "@/models/Booking";
 import { get_booking } from "@/services/bookingApi";
 import { Loader2 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import toast from "react-hot-toast";
+import { all } from "axios";
 
 export default function HistoryBooking() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(1);
-  const [scrolled, setScrolled] = useState(false);
-
   const hasFetchedOnce = useRef(false);
+  const searchParams = useSearchParams();
+  const status = searchParams.get("status");
+  const orderId = searchParams.get("orderId");
 
   const fetchBookings = useCallback(async () => {
-    if (loading || !hasMore) return;
-
     setLoading(true);
     try {
-      const res = await get_booking({ page, pageSize: 6 });
+      const res = await get_booking({ page: 1, pageSize: 9999999999999 });
       console.log("Booking API response:", res);
 
       const items: Booking[] = res?.data?.items || [];
-      if (!Array.isArray(items) || items.length === 0) {
-        setHasMore(false);
-        return;
-      }
-
-      setBookings((prev) => [...prev, ...items]);
-      if (items.length < 6) setHasMore(false);
-      setPage((prev) => prev + 1);
+      setBookings(items || []);
     } catch (err) {
       console.error("Fetch booking history error:", err);
     } finally {
       setLoading(false);
     }
-  }, [loading, hasMore, page]);
+  }, []);
 
   useEffect(() => {
-    // 🛑 Chặn gọi lần 2 trong Strict Mode
-    if (hasFetchedOnce.current) return;
-    hasFetchedOnce.current = true;
-
     fetchBookings();
+  }, [fetchBookings]);
 
-    const handleScroll = () => {
-      if (loading || !hasMore) return;
-
-      const scrollTop =
-        window.pageYOffset || document.documentElement.scrollTop;
-      const scrollHeight = document.documentElement.scrollHeight;
-      const clientHeight = window.innerHeight;
-
-      // Cách đáy 200px thì load thêm
-      if (scrollTop + clientHeight >= scrollHeight - 200) {
-        fetchBookings();
-      }
-    };
-
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [fetchBookings, loading, hasMore]);
+  useEffect(() => {
+    if (status === "success") {
+      toast.success(
+        `Payment successful! Your booking #${orderId} is confirmed.`
+      );
+    } else if (status === "failed") {
+      toast.error(
+        `Payment failed or canceled. Your booking #${orderId} is pending.`
+      );
+    }
+  }, [status, orderId]);
 
   return (
     <div className="min-h-screen bg-background">
       <Header />
       <div className="container max-w-6xl mx-auto py-12 space-y-12 pt-20 px-4 sm:px-6 lg:px-8">
-        <h2 className="elegant-heading text-3xl">History booking</h2>
+        <h2 className="elegant-heading text-4xl my-6">History booking</h2>
         <div className="grid grid-cols-1 gap-8 ">
           {bookings.map((booking, index) => (
             <BookingCard key={`${booking.id}-${index}`} booking={booking} />

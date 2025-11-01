@@ -13,6 +13,7 @@ import { CancelBookingDto } from './dto/cancel-booking.dto';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { ListBookingQuery } from './dto/list-booking.query';
 import { RoomAvailabilityDto } from './dto/room-availability.dto';
+import { bookings_status } from '@prisma/client';
 
 @Injectable()
 export class BookingService {
@@ -211,5 +212,12 @@ export class BookingService {
       // include: { rooms: { include: { room_images: true } } },
     });
     return { items: sanitizeBooking(items) };
+  }
+
+  async updateStatus(orderId: number, status: bookings_status) {
+    return this.prisma.bookings.update({
+      where: { id: orderId },
+      data: { status },
+    });
   }
 }

@@ -38,6 +38,11 @@ export default function RootLayout({
             toastOptions={{ duration: 10000 }}
           />
         </div>
+        <HotToaster
+          toastOptions={{ duration: 6000 }}
+          position="top-right"
+          reverseOrder={false}
+        />
       </body>
     </html>
   );

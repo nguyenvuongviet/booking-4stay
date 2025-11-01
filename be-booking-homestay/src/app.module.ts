@@ -14,6 +14,7 @@ import { TokenModule } from './modules/token/token.module';
 import { UserModule } from './modules/user/user.module';
 import { BookingModule } from './modules/booking/booking.module';
 import { ReviewModule } from './modules/review/review.module';
+import { VNPayModule } from './modules/payment/vnpay.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { ReviewModule } from './modules/review/review.module';
     RoomModule,
     BookingModule,
     ReviewModule,
+    VNPayModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService, ProtectStrategy],

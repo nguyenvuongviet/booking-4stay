@@ -10,9 +10,10 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { Amenity } from "@/models/Amenity";
 import { Location } from "@/models/Location";
 import { Room } from "@/models/Room";
-import { location, room_all, search_location } from "@/services/bookingApi";
+import { location, room_all, search_location } from "@/services/roomApi";
 import { format } from "date-fns";
 import {
   Bath,
@@ -613,7 +614,7 @@ export default function HomePage() {
 
                   <div className="flex justify-between items-center">
                     <div>
-                      <span className="text-2xl elegant-heading text-foreground">
+                      <span className="text-xl font-bold text-secondary-foreground">
                         {formatPrice(room.price)}
                       </span>
                       <span className="elegant-subheading text-muted-foreground">
@@ -668,7 +669,7 @@ export default function HomePage() {
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                     <div className="absolute bottom-4 left-4 text-white">
-                      <h3 className="text-2xl font-bold mb-1">
+                      <h3 className="text-2xl heading mb-1">
                         {location.province}
                       </h3>
                       {/* <p className="text-sm opacity-90">{location.country}</p> */}
