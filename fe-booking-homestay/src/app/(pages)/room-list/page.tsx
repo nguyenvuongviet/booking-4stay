@@ -46,15 +46,13 @@ export default function HotelsListPage() {
         let totalPages = 1;
 
         if (location) {
-          // 🔍 Có location → tìm kiếm theo địa điểm
-          result = await search_room(location, adults, children);
-          roomsData = result?.data?.items || result?.items || [];
-          totalPages = 1; // tìm kiếm 1 lần duy nhất, không phân trang
+          result = await search_room(location, adults, children, page, 6);
+          roomsData = result?.rooms || [];
+          totalPages =  Math.ceil( result?.total / 6);;
         } else {
-          // 🏨 Không có location → lấy tất cả (có phân trang)
           result = await room_all({ page, pageSize: 6 });
           roomsData = result?.rooms || [];
-          totalPages = result?.totalPages || 1;
+          totalPages =  Math.ceil( result?.total / 6);;
         }
 
         if (!roomsData.length || page > totalPages) {
@@ -75,6 +73,7 @@ export default function HotelsListPage() {
             province: room.location?.province,
           },
           rating: room.rating || 0,
+          reviewCount: room.reviewCount || 0,
           image: getRoomImage(room.images?.main),
           images: room.images,
           amenities: room.amenities?.map((a: any) => a.name) || [],
@@ -82,9 +81,9 @@ export default function HotelsListPage() {
         }));
 
         // ⛓️ Nếu là page=1 (tìm kiếm mới) thì thay hoàn toàn danh sách
-        // setRooms((prev) =>
-        //   page === 1 ? mappedRooms : [...prev, ...mappedRooms]
-        // );
+        setRooms((prev) =>
+          page === 1 ? mappedRooms : [...prev, ...mappedRooms]
+        );
         if (checkIn && checkOut) {
           try {
             // Gọi song song tất cả phòng

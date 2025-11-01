@@ -18,6 +18,9 @@ import "react-datepicker/dist/react-datepicker.css";
 import toast from "react-hot-toast";
 import Header from "../Header";
 import { getAmenityIcon } from "./getAmenityIcon";
+import { ReviewItem } from "@/models/Review";
+import { ReviewList } from "./ReviewList";
+import { PhotoGalleryModal } from "./PhotoGalleryModal";
 
 interface RoomDetailClientProps {
   roomId: string;
@@ -50,8 +53,10 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
   const checkOutRef = useRef<HTMLInputElement>(null);
   const [focusCheckIn, setFocusCheckIn] = useState(false);
   const [focusCheckOut, setFocusCheckOut] = useState(false);
-  const getTotalGuests = () => adults + children;
-  const roomStatus = searchParams.get("status");
+  const [review, setReview] = useState<ReviewItem | null>(null);
+  const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
+  const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
+
   const getGuestDisplayText = () => {
     const total = adults + children;
     return `${total} Guests`;
@@ -217,12 +222,21 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
                   ))}
               </div>
               <Button
-                onClick={() => setShowAllPhotos(true)}
+                onClick={() => setIsPhotoModalOpen(true)}
                 variant="secondary"
                 className="absolute bottom-4 right-4 bg-muted hover:cursor-pointer rounded-xl"
               >
                 More photos
               </Button>
+
+              {room?.images?.gallery && (
+                <PhotoGalleryModal
+                  images={room.images.gallery}
+                  initialIndex={currentPhotoIndex}
+                  isOpen={isPhotoModalOpen}
+                  onClose={() => setIsPhotoModalOpen(false)}
+                />
+              )}
             </div>
 
             {/* Hotel Info */}
@@ -298,22 +312,8 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
               )}
             </div>
 
-            {/* Policy */}
-            <div className="p-4">
-              <div className="flex items-center gap-2 font-semibold">
-                {/* <Info className="w-4 h-4" /> */}
-                <h2 className="text-2xl elegant-heading mb-4">
-                  Cancellation Policy
-                </h2>
-              </div>
-              <ul className="list-disc pl-5 space-y-1 text-gray-700">
-                <li>Cancel 7+ days before check-in → Full refund (100%).</li>
-                <li>Cancel 3–6 days before check-in → 50% refund.</li>
-                <li>Cancel within 2 days → No refund.</li>
-              </ul>
-            </div>
-
             {/* Review  */}
+            <ReviewList roomId={roomId} />
           </div>
 
           {/* Right Column - Booking Card */}
@@ -610,7 +610,7 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
               </div>
 
               {/* Map */}
-              <div className="mb-4">
+              {/* <div className="mb-4">
                 <div className="w-full h-48 bg-gray-200 rounded-lg relative overflow-hidden">
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className="bg-primary text-white p-2 rounded-full">
@@ -618,6 +618,21 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
                     </div>
                   </div>
                 </div>
+              </div> */}
+
+              {/* Policy */}
+              <div className="p-4">
+                <div className="flex items-center gap-2 font-semibold">
+                  {/* <Info className="w-4 h-4" /> */}
+                  <h2 className="text-2xl elegant-heading mb-4">
+                    Cancellation Policy
+                  </h2>
+                </div>
+                <ul className="list-disc pl-5 space-y-1 text-gray-700">
+                  <li>Cancel 7+ days before check-in → Full refund (100%).</li>
+                  <li>Cancel 3–6 days before check-in → 50% refund.</li>
+                  <li>Cancel within 2 days → No refund.</li>
+                </ul>
               </div>
 
               {/* Nearby Places */}
