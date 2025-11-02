@@ -74,3 +74,21 @@ export const verify_vnpay_return = async (query: any) => {
     throw error;
   }
 };
+
+export const post_review = async(
+  bookingId: number | string,
+  rating: number,
+  comment: string,
+) => {
+  try {
+    const resp = await api.post("/review", { 
+      bookingId,
+      rating,
+      comment,
+    });
+    return resp.data || {};
+  } catch (error) {
+    console.error("Post review error:", error);
+    throw error;
+  }
+}

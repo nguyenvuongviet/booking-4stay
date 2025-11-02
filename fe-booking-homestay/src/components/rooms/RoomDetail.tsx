@@ -200,15 +200,14 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
           {/* Left Column - Main Content */}
           <div className="lg:col-span-2 space-y-6">
             {/* Photo Gallery */}
-            {/* Photo Gallery */}
             <div className="relative">
               <div className="grid grid-cols-4 gap-2 h-[400px]">
                 {" "}
                 {/* cố định height */}
                 <div className="col-span-2 row-span-2 overflow-hidden rounded-l-lg">
                   <img
-                    src={room.images?.main || "/placeholder.svg"}
-                    alt="Hotel main"
+                    src={room.images?.main || "/default.jpg"}
+                    alt="room image"
                     className="w-full h-full object-cover" // scale vừa container
                   />
                 </div>

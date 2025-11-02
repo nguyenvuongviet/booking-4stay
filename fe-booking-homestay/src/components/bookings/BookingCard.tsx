@@ -41,7 +41,7 @@ export function BookingCard({ booking }: BookingCardProps) {
             alt={booking.room.name}
             width={400}
             height={600}
-            className="w-75 h-55 object-cover rounded-l-2xl"
+            className="w-80 h-60 object-cover rounded-l-2xl"
           />
           <div className="absolute top-2 left-2 bg-border px-2 py-1 rounded-full flex items-center gap-1">
             <Star className="text-chart-4 fill-current" size={16} />

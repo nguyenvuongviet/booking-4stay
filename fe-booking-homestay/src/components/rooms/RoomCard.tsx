@@ -20,7 +20,7 @@ export function RoomCard({ room }: RoomCardProps) {
     return `${price.toLocaleString()} VND`;
   };
 
-  const getRoomImage = (url?: string) => url || "/images/da-nang.jpg";
+  const getRoomImage = (url?: string) => url || "/default.jpg";
   const query = new URLSearchParams({
     location: loc || "",
     ...(ci ? { checkIn: ci } : {}),
@@ -42,7 +42,7 @@ export function RoomCard({ room }: RoomCardProps) {
     >
       <div className="relative">
         <Image
-          src={getRoomImage(room.images?.main)}
+          src={getRoomImage(room.images?.main)} 
           alt={room.name}
           width={400}
           height={600}
