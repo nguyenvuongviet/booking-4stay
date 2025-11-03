@@ -11,6 +11,9 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { BookingStatusBadge } from "./BookingStatusBadge";
+import { ReviewSection } from "./ReviewSection";
+import { post_review } from "@/services/bookingApi";
+import toast from "react-hot-toast";
 
 export const BookingDetail = ({
   booking: initialBooking,
@@ -33,6 +36,27 @@ export const BookingDetail = ({
       cancelReason: data.reason,
     }));
     setCancelInfo(data);
+  };
+
+  const handleReview = async (
+    bookingId: number | string,
+    rating: number,
+    comment: string
+  ) => {
+    try {
+      const resp = await post_review(bookingId, rating, comment);
+
+      // Sau khi submit thành công => đổi UI sang "Xem lại review"
+      setBooking((prev) => ({
+        ...prev,
+        review: resp, // nếu API trả về review
+      }));
+
+      toast.success("Review submitted successfully!");
+    } catch (error) {
+      toast.error("Failed to submit review. Please try again.");
+      console.error("Review submit error:", error);
+    }
   };
 
   const totalNights = differenceInDays(
@@ -208,6 +232,13 @@ export const BookingDetail = ({
         {booking.status !== "CANCELLED" && booking.status !== "CHECKED_OUT" && (
           <div className="flex items-center justify-end">
             <BookingCancelSection booking={booking} onCancel={handleCancel} />
+          </div>
+        )}
+        {/* Review  */}
+        {booking.status === "CHECKED_OUT" && (
+          <div className="flex items-center justify-end">
+
+              <ReviewSection booking={booking} onReview={handleReview} />
           </div>
         )}
       </div>

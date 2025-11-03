@@ -20,7 +20,7 @@ export function RoomCard({ room }: RoomCardProps) {
     return `${price.toLocaleString()} VND`;
   };
 
-  const getRoomImage = (url?: string) => url || "/images/da-nang.jpg";
+  const getRoomImage = (url?: string) => url || "/default.jpg";
   const query = new URLSearchParams({
     location: loc || "",
     ...(ci ? { checkIn: ci } : {}),
@@ -51,7 +51,7 @@ export function RoomCard({ room }: RoomCardProps) {
         />
         {/* sold out  */}
         {room.status === "Sold out" && (
-          <div className="absolute top-4 left-4 bg-red-600 text-white text-sm font-semibold px-3 py-1 rounded-full shadow-md">
+          <div className="absolute top-4 left-4 bg-gradient-to-r from-red-600 to-red-700 text-white text-sm font-semibold px-2 py-2 rounded-full shadow-md tracking-wider animate-pulse">
             Sold out
           </div>
         )}

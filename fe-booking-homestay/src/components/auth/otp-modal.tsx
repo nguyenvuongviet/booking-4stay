@@ -9,6 +9,7 @@ import {
 } from "@/services/authApi";
 import { X } from "lucide-react";
 import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 
 interface OTPModalsProps {
   show: boolean;
@@ -64,6 +65,7 @@ export default function OTPModals({
           });
           setOtp(otpCode);
           setShow(false);
+          toast.success("Sign up success!")
         } catch (error: any) {
           setApiError(error.response?.data?.message || "Fail!");
           setOtpValues(["", "", "", "", "", ""]);
@@ -126,6 +128,7 @@ export default function OTPModals({
     setApiError("");
     try {
       const { data } = await forgot_password({ email: email.trim() });
+
     } catch (error: any) {
       if (error.response?.status === 400) {
         setApiError(
@@ -151,12 +154,9 @@ export default function OTPModals({
         <div className="fixed inset-0 bg-foreground/50 flex items-center justify-center z-50">
           <div className="bg-card rounded-lg p-8 w-full max-w-md mx-4 shadow-2xl">
             <div className="text-center mb-4">
-              <span className="text-xl text-foreground elegant-heading">
-                4Stay
-              </span>
               <span className="text-3xl elegant-heading text-primary">
                 Enter OTP
-              </span>{" "}
+              </span>
               <div className="flex justify-end">
                 <button
                   onClick={() => setShow(false)}

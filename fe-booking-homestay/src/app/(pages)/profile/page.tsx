@@ -15,17 +15,19 @@ import { COUNTRIES } from "@/constants/countries";
 import { useAuth } from "@/context/auth-context";
 import { IUser } from "@/models/User";
 import { update_profile, upload_file } from "@/services/authApi";
+import { Calendar } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import DatePicker from "react-datepicker";
 import toast from "react-hot-toast";
 
 export default function ProfilePage() {
   const { user, setUser, updateUser } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
   // state local để edit
-  const [avatarUrl, setAvatarUrl] = useState("/default-avatar.jpg");
+  const [avatarUrl, setAvatarUrl] = useState("/default-avatar.png");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
-  const [dob, setDob] = useState("");
+  const [dob, setDob] = useState<Date | null>(null);
   const [gender, setGender] = useState("");
   const [country, setCountry] = useState("");
   const [email, setEmail] = useState("");
@@ -34,10 +36,10 @@ export default function ProfilePage() {
   // mỗi khi user thay đổi (từ context), sync vào state form
   useEffect(() => {
     if (user) {
-      setAvatarUrl(user.avatar || "/default-avatar.jpg");
+      setAvatarUrl(user.avatar || "/default-avatar.png");
       setFirstName(user.firstName || "");
       setLastName(user.lastName || "");
-      setDob(user.dateOfBirth ? user.dateOfBirth.split("T")[0] : "");
+      setDob(user.dateOfBirth ? new Date(user.dateOfBirth) : null);
       setGender(user.gender || "");
       setCountry(user.country || "");
       setEmail(user.email || "");
@@ -75,7 +77,6 @@ export default function ProfilePage() {
     } catch (error) {
       toast.error("Update profile failed!");
       console.error("Update profile error:", error);
-      alert("Có lỗi khi cập nhật!");
     }
   };
 
@@ -101,12 +102,11 @@ export default function ProfilePage() {
         // update user trong context và localStorage
         updateUser({ ...user, avatar: data.imgUrl });
       }
-      toast.success("Upload avatar successfully!");
+      // toast.success("Upload avatar successfully!");
       console.log("Upload avatar thành công!");
     } catch (error) {
       toast.error("Upload avatar failed!");
       console.error("Upload avatar error:", error);
-      alert("Có lỗi khi upload avatar!");
     }
   };
 
@@ -214,13 +214,25 @@ export default function ProfilePage() {
               <Label htmlFor="dob" className="text-[#292d32] font-medium">
                 Date of birth
               </Label>
-              <Input
-                id="dob"
-                type="date"
-                value={dob}
-                onChange={(e) => setDob(e.target.value)}
-                className="bg-[#f9fafb] border-[#e5e5e5] text-[#292d32]"
+               <div className="relative">
+              <Calendar
+                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-muted-foreground"
+                size={20}
               />
+              <DatePicker
+                id="dob"
+                selected={dob}
+                // autoFocus=
+                onChange={(date) => setDob(date)}
+                dateFormat="dd/MM/yyyy"
+                placeholderText="Select your date of birth"
+                className="p-3 w-2xl h-9 rounded-md border border-[#e5e5e5] bg-[#f9fafb] text-[#292d32] text-sm"
+                maxDate={new Date()}
+                showYearDropdown
+                showMonthDropdown
+                dropdownMode="select"
+              />
+              </div>
             </div>
 
             {/* Gender */}

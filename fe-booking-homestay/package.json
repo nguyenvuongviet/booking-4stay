@@ -40,6 +40,9 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
+    "@types/estree": "^1.0.8",
+    "@types/estree-jsx": "^1.0.5",
+    "@types/json-schema": "^7.0.15",
     "@types/node": "^20",
     "@types/react": "^19.1.12",
     "@types/react-dom": "^19.1.9",

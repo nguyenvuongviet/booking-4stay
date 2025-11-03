@@ -124,3 +124,15 @@ export const get_review = async (
     throw error;
   }
 };
+
+export const sort_price = async (sortBy: string) => {
+  try {
+    const resp = await api.get(`/room/all`, {
+      params: { sortBy },
+    });
+    return resp.data;
+  } catch (error) {
+    console.error("Check review error:", error);
+    throw error;
+  }
+};
