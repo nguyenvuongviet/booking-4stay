@@ -33,8 +33,9 @@ export async function getRoomById(id: number): Promise<Room> {
 
 export async function getBookingsByRoomId(id: number): Promise<any> {
   try {
-    const res = await api.get(`bookings/rooms/${id}`);
-    return res.data.data;
+    const res = await api.get(`/bookings/rooms/${id}`);
+    console.log(res.data.data);
+    return res.data.data.items;
   } catch (error) {
     console.error("Get room by id error:", error);
     throw error;
@@ -43,8 +44,10 @@ export async function getBookingsByRoomId(id: number): Promise<any> {
 
 export async function getReviewsByRoomId(id: number): Promise<any> {
   try {
-    const res = await api.get(`/reviews/rooms/${id}`);
-    return res.data.data;
+    const res = await api.get(`/review/rooms/${id}`);
+    console.log(res.data.data);
+
+    return res.data.data.items;
   } catch (error) {
     console.error("Get room by id error:", error);
     throw error;

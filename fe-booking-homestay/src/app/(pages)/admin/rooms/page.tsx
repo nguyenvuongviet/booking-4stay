@@ -23,7 +23,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/use-toast";
-import { RoomFormModal } from "@/components/admin/room-form-modal";
+// import { RoomFormModal } from "@/components/admin/room-form-modal";
 
 import type { Room } from "@/types/room";
 import { getAllRooms, deleteRoom } from "@/services/admin/roomsApi";
@@ -450,11 +450,13 @@ export default function RoomsPage() {
         </Card>
       )}
 
-      <RoomFormModal
+      {/* <RoomFormModal
         open={openRoomModal}
         onOpenChange={setOpenRoomModal}
         onSubmit={handleRoomSubmit}
-      />
+        initialData={roomData}
+        isEditMode={isRoomEditMode}
+      /> */}
     </div>
   );
 }

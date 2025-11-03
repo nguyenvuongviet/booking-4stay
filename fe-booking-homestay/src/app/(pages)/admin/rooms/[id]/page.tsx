@@ -1,69 +1,85 @@
 "use client";
 
-import { use, useEffect, useState, useMemo } from "react";
-import Link from "next/link";
 import {
   ArrowLeft,
-  Edit2,
-  Trash2,
-  Loader2,
-  MapPin,
-  Image as ImageIcon,
-  User,
-  Mail,
-  Phone,
-  Star,
-  BedDouble,
   Baby,
+  Loader2,
+  Pencil,
+  Star,
+  Trash2,
   UserRound,
-  Bed,
 } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { use, useEffect, useMemo, useState } from "react";
 
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
+import { formatDate } from "@/lib/utils/date";
 
-import { getRoomById } from "@/services/admin/roomsApi";
-import type { Room } from "@/types/room";
-import { getAmenityIcon } from "@/constants/amenity-icons";
+import {
+  deleteRoom,
+  getBookingsByRoomId,
+  getReviewsByRoomId,
+  getRoomById,
+  updateRoom,
+} from "@/services/admin/roomsApi";
+import type { Room, UpdateRoomDto } from "@/types/room";
+
+import { RoomFormModal } from "@/components/admin/room-form-modal";
+import { handleDeleteEntity } from "@/lib/utils/handleDelete";
+import RoomBookingsTab from "./room-tabs/RoomBookingsTab";
+import RoomImagesTab from "./room-tabs/RoomImagesTab";
+import RoomInfoTab from "./room-tabs/RoomInfoTab";
+import RoomReviewsTab from "./room-tabs/RoomReviewsTab";
 
 export default function RoomDetailsPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const { id } = use(params); // ✅ unwrap Promise
+  const { id } = use(params);
   const { toast } = useToast();
-  const [room, setRoom] = useState<Room | null>(null);
-  const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
-  // 🧭 Fetch room data
+  const [room, setRoom] = useState<Room | null>(null);
+  const [bookings, setBookings] = useState<any[]>([]);
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [openEdit, setOpenEdit] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  const fetchRoomData = async () => {
+    try {
+      const [roomData, bookingData, reviewData] = await Promise.all([
+        getRoomById(Number(id)),
+        getBookingsByRoomId(Number(id)),
+        getReviewsByRoomId(Number(id)),
+      ]);
+      setRoom(roomData);
+      setBookings(bookingData);
+      setReviews(reviewData);
+    } catch (err: any) {
+      toast({
+        variant: "destructive",
+        title: "Không thể tải thông tin phòng",
+        description:
+          err?.response?.data?.message ||
+          err?.message ||
+          "Vui lòng thử lại sau.",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    (async () => {
-      try {
-        const data = await getRoomById(Number(id));
-        setRoom(data);
-      } catch (err: any) {
-        toast({
-          variant: "destructive",
-          title: "Không thể tải thông tin phòng",
-          description:
-            err?.response?.data?.message || err?.message || "Vui lòng thử lại.",
-        });
-      } finally {
-        setLoading(false);
-      }
-    })();
+    fetchRoomData();
   }, [id]);
 
-  // 📦 Group amenities by category
   const groupedAmenities = useMemo(() => {
     if (!room?.amenities?.length) return {};
     return room.amenities.reduce((acc, a) => {
@@ -73,22 +89,57 @@ export default function RoomDetailsPage({
     }, {} as Record<string, typeof room.amenities>);
   }, [room]);
 
-  // ⏳ Loading state
+  const handleUpdate = async (data: UpdateRoomDto) => {
+    if (!room) return;
+    try {
+      setSaving(true);
+      await updateRoom(room.id, data);
+      toast({
+        title: "Cập nhật thành công!",
+        description: `Phòng "${data.name}" đã được cập nhật.`,
+      });
+      await fetchRoomData();
+      setOpenEdit(false);
+    } catch (err: any) {
+      toast({
+        variant: "destructive",
+        title: "Cập nhật thất bại",
+        description:
+          err?.response?.data?.message || "Không thể cập nhật phòng.",
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!room) return;
+    await handleDeleteEntity(
+      "phòng",
+      () => deleteRoom(room.id),
+      () => {
+        router.push("/admin/rooms");
+      }
+    );
+  };
+
   if (loading)
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="w-6 h-6 animate-spin text-warm-700" />
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
 
   if (!room)
     return (
-      <Card className="p-6 text-center text-red-600">
-        Không tìm thấy thông tin phòng.
-        <div className="mt-4">
+      <Card className="p-8 text-center border-red-300 bg-red-50">
+        <h2 className="text-xl font-semibold text-red-700">
+          Không tìm thấy thông tin phòng.
+        </h2>
+        <div className="mt-6">
           <Link href="/admin/rooms">
             <Button variant="outline">
-              <ArrowLeft className="w-4 h-4 mr-2" /> Quay lại
+              <ArrowLeft className="w-4 h-4 mr-2" /> Quay lại danh sách
             </Button>
           </Link>
         </div>
@@ -97,223 +148,127 @@ export default function RoomDetailsPage({
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Link href="/admin/rooms">
-            <Button variant="ghost" size="icon">
-              <ArrowLeft className="w-5 h-5" />
+            <Button variant="ghost" size="icon" className="hover:bg-muted">
+              <ArrowLeft className="w-6 h-6 text-warm-700" />
             </Button>
           </Link>
           <div>
-            <h1 className="text-3xl font-bold text-warm-900">{room.name}</h1>
-            <p className="text-warm-600 capitalize">{room.status}</p>
+            <h1 className="text-3xl font-extrabold text-warm-900">
+              {room.name}
+            </h1>
+            <Badge
+              className={`mt-1 font-semibold text-xs py-1 px-3 ${
+                room.status === "AVAILABLE"
+                  ? "bg-green-100 text-green-700 border border-green-200"
+                  : room.status === "BOOKED"
+                  ? "bg-yellow-100 text-yellow-700 border border-yellow-200"
+                  : "bg-red-100 text-red-700 border border-red-200"
+              }`}
+            >
+              {room.status.toUpperCase()}
+            </Badge>
           </div>
         </div>
 
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm">
-            <Edit2 className="w-4 h-4 mr-2" />
-            Chỉnh sửa
-          </Button>
+        <div className="flex items-center gap-2">
           <Button
             variant="outline"
-            size="sm"
-            className="text-red-600 hover:text-red-700 bg-transparent"
+            onClick={() => setOpenEdit(true)}
+            className="gap-2"
           >
-            <Trash2 className="w-4 h-4 mr-2" />
+            <Pencil className="w-4 h-4" />
+            Chỉnh sửa
+          </Button>
+
+          <Button
+            variant="destructive"
+            onClick={handleDelete}
+            className="gap-2"
+          >
+            <Trash2 className="w-4 h-4" />
             Xóa
           </Button>
         </div>
       </div>
 
-      {/* Quick Info */}
-      <div className="grid grid-cols-3 gap-4">
-        <Card className="p-4">
-          <p className="text-sm text-muted-foreground">Giá / đêm</p>
-          <p className="text-lg font-semibold text-warm-900">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <Card className="p-4 border-2 border-primary shadow-md">
+          <p className="text-sm text-muted-foreground font-medium">Giá / đêm</p>
+          <p className="text-2xl font-bold text-primary mt-1">
             {room.price.toLocaleString()}₫
           </p>
         </Card>
+
         <Card className="p-4">
-          <p className="text-sm text-muted-foreground">Sức chứa</p>
-          <div className="text-lg font-semibold text-warm-900 flex items-center gap-3">
-            <div className="flex items-center gap-1">
-              <UserRound className="w-4 h-4 text-muted-foreground" />
-              {room.adultCapacity}
-            </div>
+          <p className="text-sm text-muted-foreground font-medium">
+            Sức chứa tối đa
+          </p>
+          <div className="text-lg font-semibold text-warm-900 flex items-center gap-3 mt-1">
+            <UserRound className="w-5 h-5 text-primary" />
+            <span className="font-bold">{room.adultCapacity}</span>
             {room.childCapacity ? (
-              <div className="flex items-center gap-1">
-                <Baby className="w-4 h-4 text-muted-foreground" />
-                {room.childCapacity}
-              </div>
+              <>
+                <Baby className="w-5 h-5 text-primary ml-4" />
+                <span className="font-bold">{room.childCapacity}</span>
+              </>
             ) : null}
           </div>
         </Card>
+
         <Card className="p-4">
-          <p className="text-sm text-muted-foreground">Đánh giá</p>
-          <p className="text-lg font-semibold text-warm-900 flex items-center gap-1">
-            <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />{" "}
-            {room.rating ?? 0} ({room.reviewCount ?? 0})
+          <p className="text-sm text-muted-foreground font-medium">
+            Điểm đánh giá
+          </p>
+          <p className="text-xl font-bold text-warm-900 flex items-center gap-2 mt-1">
+            <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
+            <span className="text-2xl">{room.rating ?? 0}</span>
+            <span className="text-base font-normal text-muted-foreground">
+              ({room.reviewCount ?? 0})
+            </span>
           </p>
         </Card>
       </div>
 
-      {/* Tabs */}
       <Tabs defaultValue="info" className="w-full">
-        <TabsList className="grid grid-cols-4 w-full">
+        <TabsList className="grid grid-cols-4 w-full h-12">
           <TabsTrigger value="info">Thông tin</TabsTrigger>
-          <TabsTrigger value="amenities">Tiện nghi</TabsTrigger>
-          <TabsTrigger value="beds">Giường</TabsTrigger>
+          <TabsTrigger value="bookings">
+            Đặt phòng ({bookings.length})
+          </TabsTrigger>
+          <TabsTrigger value="reviews">Đánh giá ({reviews.length})</TabsTrigger>
           <TabsTrigger value="images">Hình ảnh</TabsTrigger>
         </TabsList>
 
-        {/* Info */}
         <TabsContent value="info">
-          <Card className="p-6 space-y-4">
-            <div>
-              <h3 className="text-lg font-semibold text-warm-900 mb-1">
-                Mô tả
-              </h3>
-              <p className="text-sm text-muted-foreground">
-                {room.description || "Chưa có mô tả"}
-              </p>
-            </div>
-
-            <div>
-              <h3 className="text-lg font-semibold text-warm-900 mb-1">
-                Vị trí
-              </h3>
-              <p className="text-sm text-muted-foreground flex items-center gap-2">
-                <MapPin className="w-4 h-4" />
-                {room.location?.fullAddress || "Không rõ địa chỉ"}
-              </p>
-            </div>
-
-            <div>
-              <h3 className="text-lg font-semibold text-warm-900 mb-1">
-                Chủ sở hữu
-              </h3>
-              <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                {room.host.avatar ? (
-                  <img
-                    src={room.host.avatar}
-                    alt={room.host.name}
-                    className="w-10 h-10 rounded-full object-cover"
-                  />
-                ) : (
-                  <User className="w-6 h-6 text-warm-400" />
-                )}
-                <div>
-                  <p className="font-medium text-warm-900">{room.host.name}</p>
-                  <p className="flex items-center gap-1">
-                    <Mail className="w-3.5 h-3.5" /> {room.host.email}
-                  </p>
-                  <p className="flex items-center gap-1">
-                    <Phone className="w-3.5 h-3.5" /> {room.host.phoneNumber}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </Card>
+          <RoomInfoTab room={room} groupedAmenities={groupedAmenities} />
         </TabsContent>
 
-        {/* Amenities */}
-        <TabsContent value="amenities">
-          <Card className="p-6 space-y-6">
-            {Object.keys(groupedAmenities).length ? (
-              Object.entries(groupedAmenities).map(([category, list]) => (
-                <div key={category}>
-                  <h4 className="text-md font-semibold mb-3 text-warm-900 uppercase">
-                    {category}
-                  </h4>
-                  <div className="grid grid-cols-4 gap-3">
-                    {list.map((a) => (
-                      <Tooltip key={a.id}>
-                        <TooltipTrigger asChild>
-                          <div className="flex items-center gap-2 p-2 rounded-md border border-warm-200 bg-muted/30 hover:bg-muted/50 transition">
-                            {getAmenityIcon(a.name)}
-                            <div className="flex flex-col">
-                              <p className="text-sm font-medium text-warm-900">
-                                {a.name}
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                {a.category}
-                              </p>
-                            </div>
-                          </div>
-                        </TooltipTrigger>
-                      </Tooltip>
-                    ))}
-                  </div>
-                </div>
-              ))
-            ) : (
-              <p className="text-muted-foreground text-center">
-                Chưa có tiện nghi nào.
-              </p>
-            )}
-          </Card>
+        <TabsContent value="bookings">
+          <RoomBookingsTab bookings={bookings} formatDate={formatDate} />
         </TabsContent>
 
-        {/* Beds */}
-        <TabsContent value="beds">
-          <Card className="p-6">
-            <h3 className="text-lg font-semibold text-warm-900 mb-4">
-              Loại giường
-            </h3>
-            {room.beds?.length ? (
-              <div className="grid grid-cols-3 gap-4">
-                {room.beds.map((b, i) => (
-                  <Card
-                    key={i}
-                    className="p-3 flex items-center justify-between border-warm-200"
-                  >
-                    <div className="flex items-center gap-2">
-                      <Bed className="w-4 h-4 text-muted-foreground" />
-                      <p className="font-medium text-warm-900">{b.type}</p>
-                    </div>
-                    <Badge>{b.quantity}</Badge>
-                  </Card>
-                ))}
-              </div>
-            ) : (
-              <p className="text-center text-muted-foreground">
-                Chưa có thông tin giường.
-              </p>
-            )}
-          </Card>
+        <TabsContent value="reviews">
+          <RoomReviewsTab reviews={reviews} formatDate={formatDate} />
         </TabsContent>
 
-        {/* Images */}
         <TabsContent value="images">
-          <Card className="p-6">
-            <div className="grid grid-cols-3 gap-4">
-              {room.images?.gallery?.length ? (
-                room.images.gallery.map((img) => (
-                  <div
-                    key={img.id}
-                    className="relative aspect-video rounded-lg overflow-hidden"
-                  >
-                    <img
-                      src={img.url}
-                      alt={room.name}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                ))
-              ) : (
-                <div className="col-span-3 text-center text-muted-foreground py-10">
-                  <div className="inline-flex flex-col items-center">
-                    <ImageIcon className="w-8 h-8 mb-2 opacity-70" />
-                    <p>Chưa có ảnh nào cho phòng này</p>
-                  </div>
-                </div>
-              )}
-            </div>
-          </Card>
+          <RoomImagesTab room={room} />
         </TabsContent>
       </Tabs>
+
+      {room && (
+        <RoomFormModal
+          open={openEdit}
+          onOpenChange={setOpenEdit}
+          isEditMode
+          initialData={room}
+          onSubmit={handleUpdate}
+          saving={saving}
+        />
+      )}
     </div>
   );
 }

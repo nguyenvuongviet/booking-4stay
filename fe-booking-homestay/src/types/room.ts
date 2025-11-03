@@ -36,7 +36,7 @@ export interface RoomLocation {
   fullAddress: string;
 }
 
-export interface Host {
+export interface User {
   id: number;
   name: string;
   email: string;
@@ -56,10 +56,42 @@ export interface Room {
   status: "AVAILABLE" | "BOOKED" | "MAINTENANCE" | string;
 
   location: RoomLocation;
-  host: Host;
+  host: User;
   images: RoomImages;
   beds: Bed[];
   amenities: Amenity[];
+}
+
+export interface Booking {
+  id: number;
+  user: User;
+  adults: number;
+  children: number;
+  checkIn: string;
+  checkOut: string;
+  status:
+    | "PENDING"
+    | "CONFIRMED"
+    | "CHECKED_IN"
+    | "CHECKED_OUT"
+    | "CANCELLED"
+    | "REFUNDED";
+  totalAmount?: number | null;
+  cancelReason?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Review {
+  id: number;
+  rating: number;
+  comment: string;
+  createdAt: string;
+  user: {
+    id: number;
+    name: string;
+    avatar?: string | null;
+  };
 }
 
 export interface PaginatedRooms {

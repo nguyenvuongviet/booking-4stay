@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
 import { UserAvatar } from "@/components/UserAvatar";
 import { formatDate } from "@/lib/utils/date";
+import { handleDeleteEntity } from "@/lib/utils/handleDelete";
 import { createUser, deleteUser, getAllUsers } from "@/services/admin/usersApi";
 import type { CreateUserDto, User } from "@/types/user";
 import { Eye, Filter, Plus, Search, Trash2 } from "lucide-react";
@@ -75,15 +76,12 @@ export default function UsersPage() {
   const filteredUsers = useMemo(() => {
     const q = searchTerm.trim().toLowerCase();
     return users.filter((u) => {
-      const fullName = `${u.firstName ?? ""} ${u.lastName ?? ""}`.trim();
-      const displayName = fullName || u.email;
       const uRole = (u.roles?.[0] || "USER") as "USER" | "HOST" | "ADMIN";
       const status = u.isActive ? "active" : "inactive";
       const phone = u.phoneNumber?.toLowerCase() ?? "";
 
       const matchesSearch =
         !q ||
-        displayName.toLowerCase().includes(q) ||
         u.email.toLowerCase().includes(q) ||
         phone.includes(q);
 
@@ -119,27 +117,14 @@ export default function UsersPage() {
     }
   };
 
-  const handleDelete = async (id: number) => {
-    if (!confirm("Bạn có chắc muốn xóa người dùng này?")) return;
-
-    try {
-      await deleteUser(id);
-      setUsers((prev) => prev.filter((u) => u.id !== id));
-
-      toast({
-        variant: "success",
-        title: "Đã xóa người dùng",
-        description: `Người dùng có ID ${id} đã bị xóa khỏi hệ thống.`,
-      });
-    } catch (err: any) {
-      console.error("Delete error:", err);
-      toast({
-        variant: "destructive",
-        title: "Xóa người dùng thất bại",
-        description:
-          err?.response?.data?.message || err?.message || "Vui lòng thử lại.",
-      });
-    }
+  const handleDelete = async (id: number, email?: string) => {
+    await handleDeleteEntity(
+      `người dùng ${email ?? `#${id}`}`,
+      () => deleteUser(id),
+      () => {
+        setUsers((prev) => prev.filter((u) => u.id !== id));
+      }
+    );
   };
 
   return (
@@ -219,9 +204,6 @@ export default function UsersPage() {
                     Avatar
                   </th>
                   <th className="text-left py-4 px-4 font-semibold text-warm-900">
-                    Tên
-                  </th>
-                  <th className="text-left py-4 px-4 font-semibold text-warm-900">
                     Email
                   </th>
                   <th className="text-left py-4 px-4 font-semibold text-warm-900">
@@ -243,10 +225,6 @@ export default function UsersPage() {
               </thead>
               <tbody>
                 {filteredUsers.map((u) => {
-                  const fullName =
-                    `${u.firstName ?? ""} ${u.lastName ?? ""}`.trim() ||
-                    u.email;
-
                   const role = (u.roles?.[0] || "USER").toUpperCase() as
                     | "USER"
                     | "HOST"
@@ -263,13 +241,10 @@ export default function UsersPage() {
                         <div className="flex justify-center items-center">
                           <UserAvatar
                             avatarUrl={u.avatar}
-                            fullName={fullName}
+                            fullName={u.email}
                             size="lg"
                           />
                         </div>
-                      </td>
-                      <td className="py-4 px-4 font-medium text-warm-900">
-                        {fullName}
                       </td>
                       <td className="py-4 px-4 text-warm-700">{u.email}</td>
                       <td className="py-4 px-4 text-warm-700">
@@ -306,7 +281,7 @@ export default function UsersPage() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => handleDelete(u.id)}
+                            onClick={() => handleDelete(u.id, u.email)}
                             className="text-red-600 hover:text-red-700"
                           >
                             <Trash2 className="w-4 h-4" />

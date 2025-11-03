@@ -23,7 +23,6 @@ import { formatDate } from "@/lib/utils/date";
 import type { Role, UpdateUserDto, User } from "@/types/user";
 import { useEffect, useState } from "react";
 import { Switch } from "../ui/switch";
-import { CalendarDays } from "lucide-react";
 
 interface UserEditModalProps {
   open: boolean;

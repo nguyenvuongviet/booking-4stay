@@ -1,29 +1,33 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
 
+import { UserEditModal } from "@/components/admin/user-edit-modal";
 import Loader from "@/components/loader/Loader";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { toast } from "@/components/ui/use-toast";
 import { UserAvatar } from "@/components/UserAvatar";
-import { UserEditModal } from "@/components/admin/user-edit-modal";
 
 import { formatDate } from "@/lib/utils/date";
-import { getUserById, updateUser } from "@/services/admin/usersApi";
+import { handleDeleteEntity } from "@/lib/utils/handleDelete";
+import { deleteUser, getUserById, updateUser } from "@/services/admin/usersApi"; // ⚠️ nhớ thêm hàm deleteUser
 import type { UpdateUserDto, User } from "@/types/user";
 import {
-  Mail,
-  Phone,
-  MapPin,
+  ArrowLeft,
   CalendarDays,
-  ShieldCheck,
-  ShieldAlert,
-  User as UserIcon,
   ChevronLeft,
+  Mail,
+  MapPin,
   Pencil,
+  Phone,
+  ShieldAlert,
+  ShieldCheck,
+  Trash2,
+  User as UserIcon,
 } from "lucide-react";
 
 function Line() {
@@ -62,9 +66,9 @@ function RoleBadge({ role }: { role: string }) {
 }
 
 export default function UserDetailPage() {
-  const router = useRouter();
   const params = useParams();
   const userId = Number(params.id);
+  const router = useRouter();
 
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -72,6 +76,7 @@ export default function UserDetailPage() {
 
   const [openEdit, setOpenEdit] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -84,7 +89,6 @@ export default function UserDetailPage() {
           variant: "destructive",
           title: "Không thể tải thông tin người dùng",
           description: err?.message || "Vui lòng thử lại.",
-          duration: 5000,
         });
       } finally {
         setLoading(false);
@@ -104,14 +108,12 @@ export default function UserDetailPage() {
     if (!user) return;
     try {
       setSaving(true);
-
       const updated = await updateUser(userId, payload);
       setUser(updated);
       setOpenEdit(false);
       toast({
         variant: "success",
         title: "Cập nhật thành công",
-        duration: 2000,
       });
     } catch (err: any) {
       toast({
@@ -119,34 +121,48 @@ export default function UserDetailPage() {
         title: "Cập nhật thất bại",
         description:
           err?.response?.data?.message || err?.message || "Vui lòng thử lại.",
-        duration: 5000,
       });
     } finally {
       setSaving(false);
     }
   }
 
-  if (loading) {
+  async function handleDelete() {
+    if (!user) return;
+    setDeleting(true);
+
+    await handleDeleteEntity(
+      "người dùng",
+      () => deleteUser(userId),
+      () => {
+        router.push("/admin/users");
+      }
+    );
+
+    setDeleting(false);
+  }
+
+  if (loading)
     return (
       <div className="flex justify-center items-center min-h-[50vh]">
         <Loader />
       </div>
     );
-  }
 
-  if (notFound || !user) {
+  if (notFound || !user)
     return (
       <Card className="p-6 text-center text-red-600">
         Không tìm thấy người dùng.
         <div className="mt-4 flex justify-center">
-          <Button variant="outline" onClick={() => router.push("/admin/users")}>
-            <ChevronLeft className="w-4 h-4 mr-1" />
-            Quay lại danh sách
-          </Button>
+          <Link href="/admin/users">
+            <Button variant="outline">
+              <ChevronLeft className="w-4 h-4 mr-1" />
+              Quay lại danh sách
+            </Button>
+          </Link>
         </div>
       </Card>
     );
-  }
 
   const statusBadge = user.isActive ? (
     <Badge className="bg-green-100 text-green-800">Hoạt động</Badge>
@@ -168,16 +184,44 @@ export default function UserDetailPage() {
 
   return (
     <div className="space-y-6 relative pb-20">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-warm-900">
-          Thông tin người dùng
-        </h1>
-        <Button onClick={() => setOpenEdit(true)} className="gap-2 mt-3">
-          <Pencil className="w-4 h-4" />
-          Chỉnh sửa
-        </Button>
+      {/* --- Header --- */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-4">
+          <Link href="/admin/users">
+            <Button variant="ghost" size="icon" className="hover:bg-muted">
+              <ArrowLeft className="w-6 h-6 text-warm-700" />
+            </Button>
+          </Link>
+          <div>
+            <h1 className="text-2xl font-bold text-warm-900">{fullName}</h1>
+            <p className="text-sm text-muted-foreground">
+              Chi tiết thông tin người dùng
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={() => setOpenEdit(true)}
+            className="gap-2"
+          >
+            <Pencil className="w-4 h-4" />
+            Chỉnh sửa
+          </Button>
+          <Button
+            variant="destructive"
+            onClick={handleDelete}
+            disabled={deleting}
+            className="gap-2"
+          >
+            <Trash2 className="w-4 h-4" />
+            {deleting ? "Đang xóa..." : "Xóa"}
+          </Button>
+        </div>
       </div>
 
+      {/* --- Main Content --- */}
       <Card className="p-6 border-warm-200">
         <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
           <UserAvatar
@@ -259,13 +303,6 @@ export default function UserDetailPage() {
           <LabelValue label="Cấp độ Loyalty" value={user.loyaltyLevel ?? "–"} />
         </div>
       </Card>
-
-      <div className="left-6 bottom-6 flex justify-end items-center gap-2">
-        <Button variant="outline" onClick={() => router.push("/admin/users")}>
-          <ChevronLeft className="w-4 h-4 mr-1" />
-          Quay lại
-        </Button>
-      </div>
 
       <UserEditModal
         open={openEdit}
