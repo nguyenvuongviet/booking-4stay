@@ -63,7 +63,7 @@ export default function CheckoutPage() {
         try {
           const payment = await pay_with_vnpay(
             room.price * bookingData.nights,
-            resp.data?.booking?.id,
+            resp.data?.booking?.id
           );
           window.location.href = payment.url; // redirect sang VNPAY
         } catch (error) {
@@ -115,10 +115,8 @@ export default function CheckoutPage() {
     checkIn: parsedCheckIn ? format(parsedCheckIn, "yyyy-MM-dd") : "",
     checkOut: parsedCheckOut ? format(parsedCheckOut, "yyyy-MM-dd") : "",
     nights:
-      parsedCheckIn && parsedCheckOut
-        ? (parsedCheckOut.getTime() - parsedCheckIn.getTime()) /
-          (1000 * 60 * 60 * 24)
-        : 1,
+      (parsedCheckOut!.getTime() - parsedCheckIn!.getTime()) /
+      (1000 * 60 * 60 * 24),
     adults: ad,
     children: ch,
     pricePerNight: room?.price,
@@ -458,8 +456,8 @@ export default function CheckoutPage() {
           {/* Right  */}
           <div className="lg:col-span-1 sticky top-20">
             {/* Booking Summary  */}
-            <Card className="p-6 sticky top-10 space-y-6">
-              <h2 className="text-2xl elegant-heading mb-4">Booking Summary</h2>
+            <Card className="p-6 sticky top-10 space-y-2">
+              <h2 className="text-2xl elegant-heading">Booking Summary</h2>
               <div className="w-full h-50 rounded-lg overflow-hidden">
                 <img
                   src={bookingData.hotelImage || "/placeholder.svg"}
@@ -469,7 +467,7 @@ export default function CheckoutPage() {
               </div>
               {/* Hotel Details */}
               <div>
-                <h3 className="font-semibold text-gray-900 mb-1">
+                <h3 className="elegant-sanserif text-xl text-gray-900 mb-1">
                   {bookingData.hotelName}
                 </h3>
                 <p className="text-sm text-gray-600 mb-3">

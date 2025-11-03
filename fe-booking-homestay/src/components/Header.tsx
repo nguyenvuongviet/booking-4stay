@@ -82,7 +82,7 @@ export default function Header() {
                 className="flex items-center gap-2  hover:cursor-pointer"
               >
                 <img
-                  src={user?.avatar || "/default-avatar.jpg"}
+                  src={user?.avatar || "/default-avatar.png"}
                   // src={"images/default-avatar.jpg"}
                   alt="avatar"
                   className="w-8 h-8 rounded-full object-cover"
