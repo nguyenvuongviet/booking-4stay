@@ -12,10 +12,7 @@ import { ListReviewQuery } from './dto/list-review.query';
 @Injectable()
 export class ReviewService {
   constructor(private readonly prisma: PrismaService) {}
-  async create(
-    userId: number,
-    dto: { bookingId: number; rating: number; comment?: string },
-  ) {
+  async create(userId: number, dto: CreateReviewDto) {
     const b = await this.prisma.bookings.findUnique({
       where: { id: dto.bookingId },
       select: { id: true, userId: true, status: true, isDeleted: true },

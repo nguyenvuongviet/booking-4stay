@@ -133,7 +133,11 @@ function OptionsPopup({
   );
 }
 
-export function FilterBar() {
+export function FilterBar({
+  onSort,
+}: {
+  onSort: (order: "asc" | "desc") => void;
+}) {
   const [starOpen, setStarOpen] = useState(false);
   const [selectedStars, setSelectedStars] = useState<number[]>([]);
   const [priceOpen, setPriceOpen] = useState(false);
@@ -141,6 +145,23 @@ export function FilterBar() {
   const [sortOpen, setSortOpen] = useState(false);
   const [selectedSort, setSelectedSort] = useState<string>("");
 
+  const handleSelectSort = (value: string) => {
+    setSelectedSort(value);
+    if (value === "asc" || value === "desc") {
+      onSort(value);
+    }
+    setSortOpen(false);
+  };
+
+  const sortOptions = [
+    { label: "Price lowest to highest", value: "asc" },
+    { label: "Price highest to lowest", value: "desc" },
+  ];
+
+  const getSortLabel = () => {
+    const option = sortOptions.find((opt) => opt.value === selectedSort);
+    return option?.label || "Sort";
+  };
   const handleToggle = <T,>(
     value: T,
     selectedValues: T[],
@@ -151,11 +172,6 @@ export function FilterBar() {
         ? selectedValues.filter((v) => v !== value)
         : [...selectedValues, value]
     );
-  };
-
-  const getSortLabel = () => {
-    const option = sortOptions.find((opt) => opt.value === selectedSort);
-    return option?.label || "Sort";
   };
 
   const starOptions = [
@@ -172,11 +188,6 @@ export function FilterBar() {
     { label: "1,000,000 VND - 2,000,000 VND", value: "1000000-2000000" },
     { label: "2,000,000 VND - 3,000,000 VND", value: "2000000-3000000" },
     { label: "Over 3,000,000VND", value: "3000000+" },
-  ];
-
-  const sortOptions = [
-    { label: "Price lowest to highest", value: "price-low-high" },
-    { label: "Price highest to lowest", value: "price-high-low" },
   ];
 
   return (
@@ -243,17 +254,14 @@ export function FilterBar() {
           <OptionsPopup
             options={sortOptions}
             selectedValue={selectedSort}
-            onSelect={(value) => {
-              setSelectedSort(value);
-              console.log("[v0] Selected sort:", value);
-            }}
+            onSelect={handleSelectSort}
             open={sortOpen}
             onOpenChange={setSortOpen}
           >
             <Button
               variant="outline"
               size="default"
-              className=" rounded-2xl elegant-subheading gap-3 bg-transparent hover:bg-secondary/50 hover:cursor-pointer"
+              className="rounded-2xl elegant-subheading gap-3 bg-transparent hover:bg-secondary/50 hover:cursor-pointer"
             >
               <ArrowUpDown className="h-4 w-4" />
               {getSortLabel()}

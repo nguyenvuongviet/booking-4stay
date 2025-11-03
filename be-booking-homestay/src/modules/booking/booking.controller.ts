@@ -74,4 +74,11 @@ export class BookingController {
   ) {
     return this.bookingService.roomAvailability(id, q);
   }
+
+  @Get('rooms/:roomId/')
+  @Roles('ADMIN')
+  @ApiBearerAuth('AccessToken')
+  async listByRoom(@Param('roomId', ParseIntPipe) roomId: number) {
+    return this.bookingService.listByRoom(roomId);
+  }
 }

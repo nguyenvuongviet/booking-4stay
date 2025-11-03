@@ -1,4 +1,4 @@
-type Role = "USER" | "ADMIN" | "HOST" | string;
+export type Role = "USER" | "ADMIN" | "HOST" | string;
 
 export interface User {
   id: number;
@@ -16,4 +16,25 @@ export interface User {
   isActive: boolean;
   isVerified: boolean;
   createdAt: Date;
+}
+
+export interface CreateUserDto {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  phoneNumber: string;
+  country: string;
+  roleName?: Role;
+}
+
+export interface UpdateUserDto {
+  firstName?: string | null;
+  lastName?: string | null;
+  phoneNumber?: string | null;
+  country?: string | null;
+  roleName?: Role;
+  dateOfBirth?: string | null;
+  gender?: "MALE" | "FEMALE" | "OTHER" | string;
+  isActive?: boolean;
 }

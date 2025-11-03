@@ -1,34 +1,82 @@
 "use client";
 
+import Link from "next/link";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
+
+import { UserEditModal } from "@/components/admin/user-edit-modal";
 import Loader from "@/components/loader/Loader";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { toast } from "@/components/ui/use-toast";
 import { UserAvatar } from "@/components/UserAvatar";
-import { formatDate } from "@/lib/utils/date";
-import { getUserById } from "@/services/admin/usersApi";
-import type { User } from "@/types/user";
-import { Mail, MapPin, Phone, User as UserIcon } from "lucide-react";
-import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
 
-function Info({ label, value }: { label: string; value: string }) {
+import { formatDate } from "@/lib/utils/date";
+import { handleDeleteEntity } from "@/lib/utils/handleDelete";
+import { deleteUser, getUserById, updateUser } from "@/services/admin/usersApi"; // ⚠️ nhớ thêm hàm deleteUser
+import type { UpdateUserDto, User } from "@/types/user";
+import {
+  ArrowLeft,
+  CalendarDays,
+  ChevronLeft,
+  Mail,
+  MapPin,
+  Pencil,
+  Phone,
+  ShieldAlert,
+  ShieldCheck,
+  Trash2,
+  User as UserIcon,
+} from "lucide-react";
+
+function Line() {
+  return <div className="border-t border-warm-200 my-4" />;
+}
+
+function LabelValue({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon?: React.ElementType;
+  label: string;
+  value: string;
+}) {
   return (
-    <div className="border rounded-lg p-4 bg-warm-50 hover:bg-warm-100 transition-colors">
-      <p className="text-sm text-muted-foreground">{label}</p>
-      <p className="font-medium text-warm-900">{value}</p>
+    <div className="rounded-lg border border-warm-200 p-4 bg-warm-50/60 hover:bg-warm-100 transition-colors">
+      <p className="text-xs uppercase tracking-wide text-muted-foreground mb-1 flex items-center gap-1.5">
+        {Icon ? <Icon className="w-3.5 h-3.5" /> : null}
+        {label}
+      </p>
+      <p className="font-medium text-warm-900">{value || "–"}</p>
     </div>
   );
 }
 
+function RoleBadge({ role }: { role: string }) {
+  const r = role.toUpperCase();
+  const cls =
+    r === "ADMIN"
+      ? "bg-purple-100 text-purple-800"
+      : r === "HOST"
+      ? "bg-blue-100 text-blue-800"
+      : "bg-amber-100 text-amber-800";
+  return <Badge className={cls}>{r}</Badge>;
+}
+
 export default function UserDetailPage() {
   const params = useParams();
-  const router = useRouter();
   const userId = Number(params.id);
+  const router = useRouter();
 
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+
+  const [openEdit, setOpenEdit] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -48,85 +96,235 @@ export default function UserDetailPage() {
     })();
   }, [userId]);
 
-  if (loading) {
+  const fullName = useMemo(
+    () =>
+      user
+        ? `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim() || user.email
+        : "",
+    [user]
+  );
+
+  async function onSave(payload: UpdateUserDto) {
+    if (!user) return;
+    try {
+      setSaving(true);
+      const updated = await updateUser(userId, payload);
+      setUser(updated);
+      setOpenEdit(false);
+      toast({
+        variant: "success",
+        title: "Cập nhật thành công",
+      });
+    } catch (err: any) {
+      toast({
+        variant: "destructive",
+        title: "Cập nhật thất bại",
+        description:
+          err?.response?.data?.message || err?.message || "Vui lòng thử lại.",
+      });
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleDelete() {
+    if (!user) return;
+    setDeleting(true);
+
+    await handleDeleteEntity(
+      "người dùng",
+      () => deleteUser(userId),
+      () => {
+        router.push("/admin/users");
+      }
+    );
+
+    setDeleting(false);
+  }
+
+  if (loading)
     return (
       <div className="flex justify-center items-center min-h-[50vh]">
         <Loader />
       </div>
     );
-  }
 
-  if (notFound || !user) {
+  if (notFound || !user)
     return (
       <Card className="p-6 text-center text-red-600">
         Không tìm thấy người dùng.
-        <div className="mt-4">
-          <Button variant="outline" onClick={() => router.push("/admin/users")}>
-            Quay lại danh sách
-          </Button>
+        <div className="mt-4 flex justify-center">
+          <Link href="/admin/users">
+            <Button variant="outline">
+              <ChevronLeft className="w-4 h-4 mr-1" />
+              Quay lại danh sách
+            </Button>
+          </Link>
         </div>
       </Card>
     );
-  }
 
-  const fullName =
-    `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim() || user.email;
+  const statusBadge = user.isActive ? (
+    <Badge className="bg-green-100 text-green-800">Hoạt động</Badge>
+  ) : (
+    <Badge className="bg-gray-100 text-gray-800">Không hoạt động</Badge>
+  );
+
+  const verifiedBadge = user.isVerified ? (
+    <Badge className="bg-emerald-100 text-emerald-800 flex items-center gap-1.5">
+      <ShieldCheck className="w-3.5 h-3.5" />
+      Đã xác minh
+    </Badge>
+  ) : (
+    <Badge className="bg-rose-100 text-rose-700 flex items-center gap-1.5">
+      <ShieldAlert className="w-3.5 h-3.5" />
+      Chưa xác minh
+    </Badge>
+  );
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-3xl font-bold text-warm-900">Thông tin người dùng</h1>
+    <div className="space-y-6 relative pb-20">
+      {/* --- Header --- */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-4">
+          <Link href="/admin/users">
+            <Button variant="ghost" size="icon" className="hover:bg-muted">
+              <ArrowLeft className="w-6 h-6 text-warm-700" />
+            </Button>
+          </Link>
+          <div>
+            <h1 className="text-2xl font-bold text-warm-900">{fullName}</h1>
+            <p className="text-sm text-muted-foreground">
+              Chi tiết thông tin người dùng
+            </p>
+          </div>
+        </div>
 
-      <Card className="p-6 space-y-4 border-warm-200">
-        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={() => setOpenEdit(true)}
+            className="gap-2"
+          >
+            <Pencil className="w-4 h-4" />
+            Chỉnh sửa
+          </Button>
+          <Button
+            variant="destructive"
+            onClick={handleDelete}
+            disabled={deleting}
+            className="gap-2"
+          >
+            <Trash2 className="w-4 h-4" />
+            {deleting ? "Đang xóa..." : "Xóa"}
+          </Button>
+        </div>
+      </div>
+
+      {/* --- Main Content --- */}
+      <Card className="p-6 border-warm-200">
+        <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
           <UserAvatar
             avatarUrl={user.avatar}
             fullName={fullName}
-            className="w-28 h-28 border"
+            className="w-28 h-28 border shrink-0"
           />
-
-          <div className="flex-1 space-y-2">
-            <h2 className="text-xl font-semibold text-warm-900">{fullName}</h2>
-            <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
-              <p className="flex items-center gap-2">
-                <Mail className="w-4 h-4" /> {user.email}
-              </p>
-              {user.phoneNumber && (
+          <div className="flex-1">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div>
+                <h2 className="text-xl font-semibold text-warm-900">
+                  {fullName}
+                </h2>
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  {(user.roles?.length ? user.roles : ["USER"]).map((r) => (
+                    <RoleBadge key={r} role={r} />
+                  ))}
+                  {statusBadge}
+                  {verifiedBadge}
+                </div>
+              </div>
+              <div className="text-sm text-muted-foreground space-y-1">
                 <p className="flex items-center gap-2">
-                  <Phone className="w-4 h-4" /> {user.phoneNumber}
+                  <CalendarDays className="w-4 h-4" />
+                  Ngày tạo:
+                  <span className="font-medium text-warm-900 ml-1">
+                    {formatDate(user.createdAt)}
+                  </span>
                 </p>
+                <p>
+                  Provider:
+                  <span className="font-medium text-warm-900">
+                    {user.provider}
+                  </span>
+                </p>
+              </div>
+            </div>
+
+            <Line />
+
+            <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+              <a
+                href={`mailto:${user.email}`}
+                className="flex items-center gap-2 hover:underline"
+              >
+                <Mail className="w-4 h-4" /> {user.email}
+              </a>
+              {user.phoneNumber && (
+                <a
+                  href={`tel:${user.phoneNumber}`}
+                  className="flex items-center gap-2 hover:underline"
+                >
+                  <Phone className="w-4 h-4" /> {user.phoneNumber}
+                </a>
               )}
               {user.country && (
-                <p className="flex items-center gap-2">
+                <span className="flex items-center gap-2">
                   <MapPin className="w-4 h-4" /> {user.country}
-                </p>
+                </span>
               )}
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
-          <Info label="Vai trò" value={user.roles?.join(", ") ?? "–"} />
-          <Info label="Giới tính" value={user.gender ?? "–"} />
-          <Info label="Ngày sinh" value={formatDate(user.dateOfBirth)} />
-          <Info
-            label="Trạng thái"
-            value={user.isActive ? "Hoạt động" : "Không hoạt động"}
+        <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <LabelValue
+            icon={UserIcon}
+            label="Họ"
+            value={user.firstName ?? "–"}
           />
-          <Info
-            label="Xác minh"
-            value={user.isVerified ? "Đã xác minh" : "Chưa xác minh"}
+          <LabelValue
+            icon={UserIcon}
+            label="Tên"
+            value={user.lastName ?? "–"}
           />
-          <Info label="Cấp độ khách hàng" value={user.loyaltyLevel ?? "–"} />
-          <Info label="Provider" value={user.provider} />
-          <Info label="Ngày tạo tài khoản" value={formatDate(user.createdAt)} />
+          <LabelValue label="Giới tính" value={user.gender ?? "–"} />
+          <LabelValue label="Ngày sinh" value={formatDate(user.dateOfBirth)} />
+          <LabelValue label="Quốc gia" value={user.country ?? "–"} />
+          <LabelValue label="Cấp độ Loyalty" value={user.loyaltyLevel ?? "–"} />
         </div>
       </Card>
 
-      <div className="flex justify-end items-center">
-        <Button variant="outline" onClick={() => router.push("/admin/users")}>
-          Quay lại
-        </Button>
-      </div>
+      <UserEditModal
+        open={openEdit}
+        onOpenChange={setOpenEdit}
+        saving={saving}
+        initialData={{
+          firstName: user.firstName ?? "",
+          lastName: user.lastName ?? "",
+          phoneNumber: user.phoneNumber ?? "",
+          country: user.country ?? "",
+          roleName: (user.roles?.[0] as any) ?? "USER",
+          dateOfBirth: user.dateOfBirth ?? "",
+          gender: (user.gender as any) ?? "OTHER",
+          isActive: user.isActive,
+        }}
+        meta={{
+          email: user.email,
+          createdAt: user.createdAt,
+          isVerified: user.isVerified,
+        }}
+        onSubmit={onSave}
+      />
     </div>
   );
 }

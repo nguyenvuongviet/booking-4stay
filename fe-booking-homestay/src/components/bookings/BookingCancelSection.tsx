@@ -20,7 +20,7 @@ export const BookingCancelSection = ({
   onCancel,
 }: {
   booking: Booking;
-  onCancel?: (id: number) => void;
+   onCancel?: (id: number | string, data: { reason: string; refundAmount: number | null }) => void;
 }) => {
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
@@ -63,11 +63,10 @@ export const BookingCancelSection = ({
           refundAmount && refundAmount > 0
             ? `Refunded ${refundAmount.toLocaleString()} VND.`
             : "No refund according to policy."
-        }`,
-        { duration: 10000 }
+        }`
       );
 
-      // onCancel?.(booking.id);
+      onCancel?.(booking.id, { reason, refundAmount });
       setOpen(false);
       setReason("");
     } catch (err) {
@@ -99,7 +98,7 @@ export const BookingCancelSection = ({
           </DialogHeader>
 
           <div className="space-y-4 py-2">
-            {/* 🧾 Cancellation Policy */}
+            {/* Cancellation Policy */}
             <div className="rounded-xl bg-background/25 text-sm text-primary">
               <div className="flex items-center gap-2 font-semibold">
                 <Info className="w-4 h-4" />

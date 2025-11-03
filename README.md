@@ -8,6 +8,7 @@ Dự án được xây dựng theo kiến trúc **Next.js + Nest.js + MySQL** v�
 ## Tính năng nổi bật
 
 ### Người dùng (Customer)
+
 - Đăng ký, đăng nhập, đăng xuất.
 - Tìm kiếm phòng theo **địa điểm, ngày, giá, số người**.
 - Xem chi tiết phòng: hình ảnh, đánh giá, mô tả, tiện ích.
@@ -16,6 +17,7 @@ Dự án được xây dựng theo kiến trúc **Next.js + Nest.js + MySQL** v�
 - Lưu danh sách yêu thích (wishlist).
 
 ### Quản trị viên (Admin)
+
 - Quản lý người dùng, phòng, đặt phòng.
 - Xem thống kê doanh thu và lượt đặt.
 - Quản lý phòng: thêm, chỉnh sửa, ẩn/hiện phòng.
@@ -27,17 +29,18 @@ Dự án được xây dựng theo kiến trúc **Next.js + Nest.js + MySQL** v�
 ## Kiến trúc hệ thống
 
 Frontend (Next.js + TailwindCSS)
-   |
-   |--> REST API (Nest.js)
-   |
+|
+|--> REST API (Nest.js)
+|
 Backend (MySQL)
 
 ## Công nghệ sử dụng
+
 | Thành phần   | Công nghệ                               |
 | ------------ | --------------------------------------- |
 | **Frontend** | Next.js, React, TailwindCSS, TypeScript |
 | **UI/UX**    | shadcn/ui, Lucide Icons                 |
-| **Backend**  | Nest.js, MySQL                  |
+| **Backend**  | Nest.js, MySQL                          |
 | **Auth**     | JWT                                     |
 | **ORM**      | Prisma                                  |
 | **Deploy**   | Vercel                                  |

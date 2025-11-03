@@ -8,5 +8,6 @@ import { BookingService } from './booking.service';
 @Module({
   controllers: [BookingController],
   providers: [BookingService, PrismaService, PricingHelper, AvailabilityHelper],
+  exports: [BookingService],
 })
 export class BookingModule {}

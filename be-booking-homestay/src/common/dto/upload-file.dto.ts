@@ -7,7 +7,7 @@ export class UploadFileDto {
 
 export class UploadRoomImagesDto {
   @ApiProperty({
-    description: 'Danh sách file ảnh cần upload',
+    description: 'Danh sách file ảnh cần upload dạng array (định dạng ảnh jpg|jpeg|png)',
     type: 'array',
     items: { type: 'string', format: 'binary' },
   })

@@ -1,21 +1,15 @@
-export interface RoomImage {
-  id: number;
-  isMain: boolean;
-  url: string;
-}
+import { Room } from "./Room";
 
-export interface Room {
-  id: number;
+interface User {
+  id: string | number;
   name: string;
-  price: number;
-  rating: number;
-  reviewCount: number;
-  images: RoomImage[];
+  email: string;  
+  avatar: string;
 }
 
 export interface Booking {
   id: number | string;
-  status: "PENDING" | "CONFIRMED" | "CANCELLED" | "COMPLETED";
+  status: "PENDING" | "CONFIRMED" | "CANCELLED" | "CHECKED_OUT" ;
   checkIn: string;
   checkOut: string;
   adults: number;
@@ -24,5 +18,6 @@ export interface Booking {
   createdAt: string;
   updatedAt: string;
   cancelReason: string | null;
+  user: User;
   room: Room;
 }

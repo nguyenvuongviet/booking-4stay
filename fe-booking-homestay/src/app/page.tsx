@@ -10,9 +10,10 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { Amenity } from "@/models/Amenity";
 import { Location } from "@/models/Location";
 import { Room } from "@/models/Room";
-import { location, room_all, search_location } from "@/services/bookingApi";
+import { location, room_all, search_location } from "@/services/roomApi";
 import { format } from "date-fns";
 import {
   Bath,
@@ -234,7 +235,7 @@ export default function HomePage() {
       <Header />
 
       {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center justify-center bg-gradient-to-b form-background to-secondary/30 pt-20 sm:pt-10">
+      <section className="relative min-h-screen flex items-center justify-center bg-linear-to-b form-background to-secondary/30 pt-20 sm:pt-10">
         <div className="max-w-5xl mx-auto px-6 lg:px-8 text-center">
           <div className="mb-12 max-w-3xl mx-auto">
             <h1 className="elegant-heading text-6xl md:text-8xl text-foreground mb-8 text-balance">
@@ -535,28 +536,6 @@ export default function HomePage() {
               {loading ? "Searching..." : "Search Hotels"}
             </Button>
           </div>
-
-          {/* --- Results --- */}
-          {/* {loading ? (
-              <p>Loading rooms...</p>
-            ) : rooms.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {rooms.map((room) => (
-                  <div
-                    key={room.id}
-                    className="border rounded-xl p-4 shadow hover:shadow-lg transition"
-                  >
-                    <h3 className="font-semibold text-lg">{room.name}</h3>
-                    <p className="text-sm text-gray-600">{room.description}</p>
-                    <p className="text-primary font-medium mt-1">
-                      ${room.price}/night
-                    </p>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-gray-500">No rooms found.</p>
-            )} */}
         </div>
       </section>
 
@@ -580,7 +559,7 @@ export default function HomePage() {
               >
                 <div className="relative">
                   <Image
-                    src={room.images?.main || "/images/da-nang.jpg"}
+                    src={room.images?.main || "/default.jpg"}
                     alt={room.name}
                     width={400}
                     height={600}
@@ -613,7 +592,7 @@ export default function HomePage() {
 
                   <div className="flex justify-between items-center">
                     <div>
-                      <span className="text-2xl elegant-heading text-foreground">
+                      <span className="text-xl font-bold text-secondary-foreground">
                         {formatPrice(room.price)}
                       </span>
                       <span className="elegant-subheading text-muted-foreground">
@@ -666,7 +645,7 @@ export default function HomePage() {
                       alt={location.province}
                       className="w-full h-72 object-cover"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                    <div className="absolute inset-0 bg-linear-to-t from-black/60 to-transparent" />
                     <div className="absolute bottom-4 left-4 text-white">
                       <h3 className="text-2xl font-bold mb-1">
                         {location.province}

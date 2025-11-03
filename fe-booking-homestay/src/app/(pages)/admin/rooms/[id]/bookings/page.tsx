@@ -16,7 +16,7 @@ export default function RoomBookingsPage({
   const bookings = [
     {
       id: "BK001",
-      guest: "John Doe",
+      guest: "John Doe", 
       email: "john@example.com",
       checkIn: "2025-01-15",
       checkOut: "2025-01-18",

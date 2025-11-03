@@ -17,6 +17,7 @@ export interface Room {
     province?: string;
   };
   rating?: number;
+  reviewCount: number;
   images?: {
     main: string;
     gallery: RoomImage[];

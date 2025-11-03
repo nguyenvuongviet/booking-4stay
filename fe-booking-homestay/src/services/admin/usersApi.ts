@@ -1,5 +1,5 @@
+import { CreateUserDto, UpdateUserDto, User } from "@/types/user";
 import api from "../api";
-import type { User } from "@/types/user";
 
 export async function getAllUsers(): Promise<User[]> {
   try {
@@ -17,11 +17,39 @@ export async function getAllUsers(): Promise<User[]> {
 export async function getUserById(id: number): Promise<User> {
   try {
     const res = await api.get(`/user/admin/profile/${id}`);
-    console.log(res.data.data);
-
-    return res.data.data;
+    return res.data.data as User;
   } catch (error) {
     console.error("Get user by id error:", error);
+    throw error;
+  }
+}
+
+export async function createUser(payload: CreateUserDto) {
+  try {
+    const res = await api.post("/user/admin/create", payload);
+    return res.data.data as User;
+  } catch (error) {
+    console.error("Create user error:", error);
+    throw error;
+  }
+}
+
+export async function updateUser(id: number, payload: UpdateUserDto) {
+  try {
+    const res = await api.patch(`/user/admin/update/${id}`, payload);
+    return res.data.data as User;
+  } catch (error) {
+    console.error("Update user error:", error);
+    throw error;
+  }
+}
+
+export async function deleteUser(id: number) {
+  try {
+    const res = await api.delete(`/user/admin/delete/${id}`);
+    return res.data.data as User;
+  } catch (error) {
+    console.error("Delete user error:", error);
     throw error;
   }
 }

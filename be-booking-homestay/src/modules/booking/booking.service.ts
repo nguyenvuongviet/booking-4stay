@@ -13,6 +13,7 @@ import { CancelBookingDto } from './dto/cancel-booking.dto';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { ListBookingQuery } from './dto/list-booking.query';
 import { RoomAvailabilityDto } from './dto/room-availability.dto';
+import { bookings_status } from '@prisma/client';
 
 @Injectable()
 export class BookingService {
@@ -144,7 +145,7 @@ export class BookingService {
   async detail(id: number, requesterId?: number | null, role?: string | null) {
     const booking = await this.prisma.bookings.findUnique({
       where: { id },
-      include: { rooms: { include: { room_images: true } } },
+      include: { rooms: { include: { room_images: true } }, users: true },
     });
     if (!booking) throw new NotFoundException('Không tìm thấy booking');
 
@@ -203,5 +204,21 @@ export class BookingService {
         );
 
     return { roomId, available: !conflict, totalAmount };
+  }
+
+  async listByRoom(roomId: number) {
+    const items = await this.prisma.bookings.findMany({
+      where: { roomId },
+      // include: { rooms: { include: { room_images: true } }, users: true },
+      include: { users: true },
+    });
+    return { items: sanitizeBooking(items) };
+  }
+
+  async updateStatus(orderId: number, status: bookings_status) {
+    return this.prisma.bookings.update({
+      where: { id: orderId },
+      data: { status },
+    });
   }
 }

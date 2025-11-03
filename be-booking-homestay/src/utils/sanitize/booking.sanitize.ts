@@ -14,7 +14,7 @@ function sanitize(booking: any) {
     checkOut: booking.checkOut,
     adults: booking.adults,
     children: booking.children,
-    totalAmount: Number(booking.totalAmount),
+    totalAmount: Number(booking.totalPrice),
     createdAt: booking.createdAt,
     updatedAt: booking.updatedAt,
     cancelReason: booking.cancelReason ?? null,
@@ -24,6 +24,7 @@ function sanitize(booking: any) {
           id: user.id,
           name: `${user.firstName} ${user.lastName}`,
           email: user.email,
+          phoneNumber: user.phoneNumber,
           avatar: buildImageUrl(user.avatar),
         }
       : undefined,

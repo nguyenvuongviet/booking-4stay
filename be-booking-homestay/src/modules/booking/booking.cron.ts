@@ -37,7 +37,7 @@ export class BookingCron {
       where: {
         isDeleted: false,
         status: 'CHECKED_IN',
-        checkOut: { lt: startTomorrowVN },
+        checkOut: { gte: startTodayVN, lt: startTomorrowVN },
       },
       data: { status: 'CHECKED_OUT', updatedAt: new Date() },
     });

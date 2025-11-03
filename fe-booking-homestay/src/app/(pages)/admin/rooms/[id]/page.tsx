@@ -1,278 +1,274 @@
 "use client";
 
-import { useState } from "react";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Edit2, Trash2, Plus } from "lucide-react";
+import {
+  ArrowLeft,
+  Baby,
+  Loader2,
+  Pencil,
+  Star,
+  Trash2,
+  UserRound,
+} from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { use, useEffect, useMemo, useState } from "react";
 
-const AMENITIES_LIST = [
-  { id: "wifi", label: "WiFi", icon: "📡" },
-  { id: "ac", label: "Điều hòa", icon: "❄️" },
-  { id: "tv", label: "TV", icon: "📺" },
-  { id: "kitchen", label: "Bếp", icon: "🍳" },
-  { id: "parking", label: "Chỗ đỗ xe", icon: "🅿️" },
-  { id: "pool", label: "Hồ bơi", icon: "🏊" },
-  { id: "gym", label: "Phòng tập", icon: "💪" },
-  { id: "washer", label: "Máy giặt", icon: "🧺" },
-  { id: "dryer", label: "Máy sấy", icon: "🌬️" },
-  { id: "heating", label: "Sưởi ấm", icon: "🔥" },
-  { id: "balcony", label: "Ban công", icon: "🌳" },
-  { id: "garden", label: "Vườn", icon: "🌺" },
-];
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useToast } from "@/components/ui/use-toast";
+import { formatDate } from "@/lib/utils/date";
+
+import {
+  deleteRoom,
+  getBookingsByRoomId,
+  getReviewsByRoomId,
+  getRoomById,
+  updateRoom,
+} from "@/services/admin/roomsApi";
+import type { Room, UpdateRoomDto } from "@/types/room";
+
+import { RoomFormModal } from "@/components/admin/room-form-modal";
+import { handleDeleteEntity } from "@/lib/utils/handleDelete";
+import RoomBookingsTab from "./room-tabs/RoomBookingsTab";
+import RoomImagesTab from "./room-tabs/RoomImagesTab";
+import RoomInfoTab from "./room-tabs/RoomInfoTab";
+import RoomReviewsTab from "./room-tabs/RoomReviewsTab";
 
 export default function RoomDetailsPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
-  const [room] = useState({
-    id: params.id,
-    name: "Phòng Deluxe 101",
-    roomNumber: "101",
-    type: "Deluxe",
-    capacity: 2,
-    price: 500000,
-    description:
-      "Phòng Deluxe rộng rãi với view đẹp, trang bị đầy đủ tiện nghi hiện đại.",
-    amenities: ["wifi", "ac", "tv", "kitchen", "balcony"],
-    status: "available",
-    images: ["/luxury-room.jpg"],
-    bookings: [
-      {
-        id: 1,
-        guest: "Nguyễn Văn A",
-        checkIn: "2024-01-15",
-        checkOut: "2024-01-18",
-        status: "confirmed",
-      },
-      {
-        id: 2,
-        guest: "Trần Thị B",
-        checkIn: "2024-01-20",
-        checkOut: "2024-01-22",
-        status: "pending",
-      },
-    ],
-    reviews: [
-      {
-        id: 1,
-        guest: "Nguyễn Văn A",
-        rating: 5,
-        comment: "Phòng rất sạch sẽ và thoải mái",
-        date: "2024-01-18",
-      },
-      {
-        id: 2,
-        guest: "Trần Thị B",
-        rating: 4,
-        comment: "Tốt nhưng hơi ồn",
-        date: "2024-01-22",
-      },
-    ],
-  });
+  const { id } = use(params);
+  const { toast } = useToast();
+  const router = useRouter();
+
+  const [room, setRoom] = useState<Room | null>(null);
+  const [bookings, setBookings] = useState<any[]>([]);
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [openEdit, setOpenEdit] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  const fetchRoomData = async () => {
+    try {
+      const [roomData, bookingData, reviewData] = await Promise.all([
+        getRoomById(Number(id)),
+        getBookingsByRoomId(Number(id)),
+        getReviewsByRoomId(Number(id)),
+      ]);
+      setRoom(roomData);
+      setBookings(bookingData);
+      setReviews(reviewData);
+    } catch (err: any) {
+      toast({
+        variant: "destructive",
+        title: "Không thể tải thông tin phòng",
+        description:
+          err?.response?.data?.message ||
+          err?.message ||
+          "Vui lòng thử lại sau.",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchRoomData();
+  }, [id]);
+
+  const groupedAmenities = useMemo(() => {
+    if (!room?.amenities?.length) return {};
+    return room.amenities.reduce((acc, a) => {
+      if (!acc[a.category]) acc[a.category] = [];
+      acc[a.category].push(a);
+      return acc;
+    }, {} as Record<string, typeof room.amenities>);
+  }, [room]);
+
+  const handleUpdate = async (data: UpdateRoomDto) => {
+    if (!room) return;
+    try {
+      setSaving(true);
+      await updateRoom(room.id, data);
+      toast({
+        title: "Cập nhật thành công!",
+        description: `Phòng "${data.name}" đã được cập nhật.`,
+      });
+      await fetchRoomData();
+      setOpenEdit(false);
+    } catch (err: any) {
+      toast({
+        variant: "destructive",
+        title: "Cập nhật thất bại",
+        description:
+          err?.response?.data?.message || "Không thể cập nhật phòng.",
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!room) return;
+    await handleDeleteEntity(
+      "phòng",
+      () => deleteRoom(room.id),
+      () => {
+        router.push("/admin/rooms");
+      }
+    );
+  };
+
+  if (loading)
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+
+  if (!room)
+    return (
+      <Card className="p-8 text-center border-red-300 bg-red-50">
+        <h2 className="text-xl font-semibold text-red-700">
+          Không tìm thấy thông tin phòng.
+        </h2>
+        <div className="mt-6">
+          <Link href="/admin/rooms">
+            <Button variant="outline">
+              <ArrowLeft className="w-4 h-4 mr-2" /> Quay lại danh sách
+            </Button>
+          </Link>
+        </div>
+      </Card>
+    );
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Link href="/admin/rooms">
-            <Button variant="ghost" size="icon">
-              <ArrowLeft className="w-5 h-5" />
+            <Button variant="ghost" size="icon" className="hover:bg-muted">
+              <ArrowLeft className="w-6 h-6 text-warm-700" />
             </Button>
           </Link>
           <div>
-            <h1 className="text-3xl font-bold text-warm-900">{room.name}</h1>
-            <p className="text-warm-600">Phòng số {room.roomNumber}</p>
+            <h1 className="text-3xl font-extrabold text-warm-900">
+              {room.name}
+            </h1>
+            <Badge
+              className={`mt-1 font-semibold text-xs py-1 px-3 ${
+                room.status === "AVAILABLE"
+                  ? "bg-green-100 text-green-700 border border-green-200"
+                  : room.status === "BOOKED"
+                  ? "bg-yellow-100 text-yellow-700 border border-yellow-200"
+                  : "bg-red-100 text-red-700 border border-red-200"
+              }`}
+            >
+              {room.status.toUpperCase()}
+            </Badge>
           </div>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm">
-            <Edit2 className="w-4 h-4 mr-2" />
-            Chỉnh sửa
-          </Button>
+
+        <div className="flex items-center gap-2">
           <Button
             variant="outline"
-            size="sm"
-            className="text-red-600 hover:text-red-700 bg-transparent"
+            onClick={() => setOpenEdit(true)}
+            className="gap-2"
           >
-            <Trash2 className="w-4 h-4 mr-2" />
+            <Pencil className="w-4 h-4" />
+            Chỉnh sửa
+          </Button>
+
+          <Button
+            variant="destructive"
+            onClick={handleDelete}
+            className="gap-2"
+          >
+            <Trash2 className="w-4 h-4" />
             Xóa
           </Button>
         </div>
       </div>
 
-      {/* Main Info */}
-      <div className="grid grid-cols-3 gap-4">
-        <Card className="p-4">
-          <p className="text-sm text-warm-600 mb-1">Loại phòng</p>
-          <p className="text-lg font-semibold text-warm-900">{room.type}</p>
-        </Card>
-        <Card className="p-4">
-          <p className="text-sm text-warm-600 mb-1">Sức chứa</p>
-          <p className="text-lg font-semibold text-warm-900">
-            {room.capacity} khách
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <Card className="p-4 border-2 border-primary shadow-md">
+          <p className="text-sm text-muted-foreground font-medium">Giá / đêm</p>
+          <p className="text-2xl font-bold text-primary mt-1">
+            {room.price.toLocaleString()}₫
           </p>
         </Card>
+
         <Card className="p-4">
-          <p className="text-sm text-warm-600 mb-1">Giá/đêm</p>
-          <p className="text-lg font-semibold text-warm-900">
-            {room.price.toLocaleString()} VND
+          <p className="text-sm text-muted-foreground font-medium">
+            Sức chứa tối đa
+          </p>
+          <div className="text-lg font-semibold text-warm-900 flex items-center gap-3 mt-1">
+            <UserRound className="w-5 h-5 text-primary" />
+            <span className="font-bold">{room.adultCapacity}</span>
+            {room.childCapacity ? (
+              <>
+                <Baby className="w-5 h-5 text-primary ml-4" />
+                <span className="font-bold">{room.childCapacity}</span>
+              </>
+            ) : null}
+          </div>
+        </Card>
+
+        <Card className="p-4">
+          <p className="text-sm text-muted-foreground font-medium">
+            Điểm đánh giá
+          </p>
+          <p className="text-xl font-bold text-warm-900 flex items-center gap-2 mt-1">
+            <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
+            <span className="text-2xl">{room.rating ?? 0}</span>
+            <span className="text-base font-normal text-muted-foreground">
+              ({room.reviewCount ?? 0})
+            </span>
           </p>
         </Card>
       </div>
 
-      {/* Tabs */}
-      <Tabs defaultValue="amenities" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="amenities">Tiện nghi</TabsTrigger>
-          <TabsTrigger value="bookings">Đặt phòng</TabsTrigger>
-          <TabsTrigger value="reviews">Đánh giá</TabsTrigger>
+      <Tabs defaultValue="info" className="w-full">
+        <TabsList className="grid grid-cols-4 w-full h-12">
+          <TabsTrigger value="info">Thông tin</TabsTrigger>
+          <TabsTrigger value="bookings">
+            Đặt phòng ({bookings.length})
+          </TabsTrigger>
+          <TabsTrigger value="reviews">Đánh giá ({reviews.length})</TabsTrigger>
           <TabsTrigger value="images">Hình ảnh</TabsTrigger>
         </TabsList>
 
-        {/* Amenities Tab */}
-        <TabsContent value="amenities" className="space-y-4">
-          <Card className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-warm-900">
-                Tiện nghi phòng
-              </h3>
-              <Button size="sm" className="bg-warm-700 hover:bg-warm-800">
-                <Plus className="w-4 h-4 mr-2" />
-                Thêm tiện nghi
-              </Button>
-            </div>
-            <div className="grid grid-cols-4 gap-4">
-              {AMENITIES_LIST.map((amenity) => (
-                <div
-                  key={amenity.id}
-                  className={`p-4 rounded-lg border-2 text-center cursor-pointer transition ${
-                    room.amenities.includes(amenity.id)
-                      ? "border-warm-400 bg-warm-50"
-                      : "border-warm-200 bg-white hover:border-warm-300"
-                  }`}
-                >
-                  <div className="text-2xl mb-2">{amenity.icon}</div>
-                  <p className="text-sm font-medium text-warm-900">
-                    {amenity.label}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </Card>
+        <TabsContent value="info">
+          <RoomInfoTab room={room} groupedAmenities={groupedAmenities} />
         </TabsContent>
 
-        {/* Bookings Tab */}
-        <TabsContent value="bookings" className="space-y-4">
-          <Card className="overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-warm-50 border-b border-warm-200">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-warm-900">
-                      Khách
-                    </th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-warm-900">
-                      Check-in
-                    </th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-warm-900">
-                      Check-out
-                    </th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-warm-900">
-                      Trạng thái
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {room.bookings.map((booking) => (
-                    <tr
-                      key={booking.id}
-                      className="border-b border-warm-100 hover:bg-warm-50"
-                    >
-                      <td className="px-6 py-4 text-sm text-warm-900">
-                        {booking.guest}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-warm-700">
-                        {booking.checkIn}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-warm-700">
-                        {booking.checkOut}
-                      </td>
-                      <td className="px-6 py-4 text-sm">
-                        <Badge
-                          variant={
-                            booking.status === "confirmed"
-                              ? "default"
-                              : "secondary"
-                          }
-                        >
-                          {booking.status === "confirmed"
-                            ? "Xác nhận"
-                            : "Chờ xác nhận"}
-                        </Badge>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </Card>
+        <TabsContent value="bookings">
+          <RoomBookingsTab bookings={bookings} formatDate={formatDate} />
         </TabsContent>
 
-        {/* Reviews Tab */}
-        <TabsContent value="reviews" className="space-y-4">
-          {room.reviews.map((review) => (
-            <Card key={review.id} className="p-4">
-              <div className="flex items-start justify-between mb-2">
-                <div>
-                  <p className="font-semibold text-warm-900">{review.guest}</p>
-                  <p className="text-sm text-warm-600">{review.date}</p>
-                </div>
-                <div className="flex gap-1">
-                  {[...Array(5)].map((_, i) => (
-                    <span
-                      key={i}
-                      className={
-                        i < review.rating ? "text-yellow-400" : "text-warm-300"
-                      }
-                    >
-                      ★
-                    </span>
-                  ))}
-                </div>
-              </div>
-              <p className="text-warm-700">{review.comment}</p>
-            </Card>
-          ))}
+        <TabsContent value="reviews">
+          <RoomReviewsTab reviews={reviews} formatDate={formatDate} />
         </TabsContent>
 
-        {/* Images Tab */}
-        <TabsContent value="images" className="space-y-4">
-          <Card className="p-6">
-            <div className="grid grid-cols-3 gap-4">
-              {room.images.map((image, idx) => (
-                <div
-                  key={idx}
-                  className="relative aspect-video rounded-lg overflow-hidden bg-warm-100"
-                >
-                  <img
-                    src={image || "/placeholder.svg"}
-                    alt={`Room ${idx}`}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              ))}
-              <div className="aspect-video rounded-lg border-2 border-dashed border-warm-300 flex items-center justify-center cursor-pointer hover:bg-warm-50">
-                <Plus className="w-8 h-8 text-warm-400" />
-              </div>
-            </div>
-          </Card>
+        <TabsContent value="images">
+          <RoomImagesTab room={room} />
         </TabsContent>
       </Tabs>
+
+      {room && (
+        <RoomFormModal
+          open={openEdit}
+          onOpenChange={setOpenEdit}
+          isEditMode
+          initialData={room}
+          onSubmit={handleUpdate}
+          saving={saving}
+        />
+      )}
     </div>
   );
 }

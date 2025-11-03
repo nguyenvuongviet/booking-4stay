@@ -3,7 +3,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Booking } from "@/models/Booking";
 import { format } from "date-fns";
-import { Star } from "lucide-react";
+import { MapPin, Star } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { BookingStatusBadge } from "./BookingStatusBadge";
@@ -17,8 +17,8 @@ export function BookingCard({ booking }: BookingCardProps) {
     return `${price.toLocaleString()} VND`;
   };
 
-  const formattedCheckIn = format(booking.checkIn, "dd//MM/yyyy");
-  const formattedCheckOut = format(booking.checkOut, "dd//MM/yyyy");
+  const formattedCheckIn = format(booking.checkIn, "dd/MM/yyyy");
+  const formattedCheckOut = format(booking.checkOut, "dd/MM/yyyy");
 
   const nights = Math.ceil(
     (new Date(booking.checkOut).getTime() -
@@ -35,13 +35,13 @@ export function BookingCard({ booking }: BookingCardProps) {
         <div className="relative">
           <Image
             src={
-              booking.room?.images?.find((img) => img.isMain)?.url ||
+              booking.room?.images?.main ||
               "/placeholder.svg"
             }
             alt={booking.room.name}
             width={400}
             height={600}
-            className="w-75 h-55 object-cover rounded-l-2xl"
+            className="w-80 h-60 object-cover rounded-l-2xl"
           />
           <div className="absolute top-2 left-2 bg-border px-2 py-1 rounded-full flex items-center gap-1">
             <Star className="text-chart-4 fill-current" size={16} />
@@ -52,12 +52,14 @@ export function BookingCard({ booking }: BookingCardProps) {
           <div className="absolute top-8 right-8">
             <BookingStatusBadge status={booking.status} />
           </div>
-          {/* <span className="text-sm ">{booking.status}</span> */}
-          {/* </div> */}
           <CardContent className="p-8 w-full">
             <h3 className="elegant-heading text-2xl text-foreground pb-6 truncate">
               {booking.room.name}
             </h3>
+             <p className="elegant-subheading text-muted-foreground mb-2 flex items-center gap-1">
+              <MapPin size={16} />
+              {booking.room?.location?.fullAddress}
+            </p>
             <p className="elegant-subheading text-muted-foreground mb-2 flex items-center gap-1">
               {/* <MapPin size={16} /> */}
               {formattedCheckIn} - {formattedCheckOut}
@@ -88,12 +90,7 @@ export function BookingCard({ booking }: BookingCardProps) {
                 </span>
               </div>
             </div>
-            {/* <Button
-                            onClick={() => router.push(`/history/${hotel.id}`)}
-                            className="mt-4 bg-primary hover:bg-primary/90 text-primary-foreground elegant-subheading hover:cursor-pointer rounded-xl"
-                          >
-                            See detail
-                          </Button> */}
+           
           </CardContent>
         </div>
       </div>

@@ -1,4 +1,5 @@
-import { Toaster } from "@/components/ui/toaster";
+import { Toaster as ShadcnToaster } from "@/components/ui/toaster";
+import { Toaster as HotToaster } from "react-hot-toast";
 import { AuthProvider } from "@/context/auth-context";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
@@ -30,8 +31,15 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <AuthProvider>{children}</AuthProvider>
-        <Toaster
-          toastOptions={{ duration: 10000 }}
+        <ShadcnToaster />
+        <div id="legacy-toaster">
+          <HotToaster
+            position="bottom-right"
+            toastOptions={{ duration: 10000 }}
+          />
+        </div>
+        <HotToaster
+          toastOptions={{ duration: 6000 }}
           position="top-right"
           reverseOrder={false}
         />

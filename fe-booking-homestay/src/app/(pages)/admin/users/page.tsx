@@ -1,6 +1,6 @@
 "use client";
 
-import { UserFormModal } from "@/components/admin/user-form-modal";
+import { UserCreateModal } from "@/components/admin/user-create-modal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -8,8 +8,9 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
 import { UserAvatar } from "@/components/UserAvatar";
 import { formatDate } from "@/lib/utils/date";
-import { getAllUsers } from "@/services/admin/usersApi";
-import type { User } from "@/types/user";
+import { handleDeleteEntity } from "@/lib/utils/handleDelete";
+import { createUser, deleteUser, getAllUsers } from "@/services/admin/usersApi";
+import type { CreateUserDto, User } from "@/types/user";
 import { Eye, Filter, Plus, Search, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
@@ -32,11 +33,9 @@ function getRoleColor(role: "USER" | "HOST" | "ADMIN" | string) {
 
 export default function UsersPage() {
   const { toast } = useToast();
-
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState<
     "all" | "USER" | "HOST" | "ADMIN"
@@ -77,15 +76,14 @@ export default function UsersPage() {
   const filteredUsers = useMemo(() => {
     const q = searchTerm.trim().toLowerCase();
     return users.filter((u) => {
-      const fullName = `${u.firstName ?? ""} ${u.lastName ?? ""}`.trim();
-      const displayName = fullName || u.email;
       const uRole = (u.roles?.[0] || "USER") as "USER" | "HOST" | "ADMIN";
       const status = u.isActive ? "active" : "inactive";
+      const phone = u.phoneNumber?.toLowerCase() ?? "";
 
       const matchesSearch =
         !q ||
-        displayName.toLowerCase().includes(q) ||
-        u.email.toLowerCase().includes(q);
+        u.email.toLowerCase().includes(q) ||
+        phone.includes(q);
 
       const matchesRole = roleFilter === "all" || uRole === roleFilter;
       const matchesStatus = statusFilter === "all" || status === statusFilter;
@@ -99,17 +97,34 @@ export default function UsersPage() {
     setOpenUserModal(true);
   };
 
-  const handleUserSubmit = async (data: any) => {
-    // TODO: gọi API create/update user tại đây
-    setOpenUserModal(false);
-    toast({ variant: "success", title: "Lưu người dùng thành công" });
-    fetchUsers();
+  const handleUserSubmit = async (data: CreateUserDto) => {
+    try {
+      await createUser(data);
+      toast({
+        variant: "success",
+        title: "Tạo người dùng thành công",
+        description: `Đã thêm ${data.email} vào hệ thống.`,
+      });
+      setOpenUserModal(false);
+      fetchUsers();
+    } catch (err: any) {
+      toast({
+        variant: "destructive",
+        title: "Tạo người dùng thất bại",
+        description:
+          err?.response?.data?.message || err?.message || "Vui lòng thử lại.",
+      });
+    }
   };
 
-  const handleDelete = async (id: number) => {
-    // TODO: gọi API delete user tại đây
-    setUsers((prev) => prev.filter((u) => u.id !== id));
-    toast({ variant: "success", title: "Đã xóa người dùng" });
+  const handleDelete = async (id: number, email?: string) => {
+    await handleDeleteEntity(
+      `người dùng ${email ?? `#${id}`}`,
+      () => deleteUser(id),
+      () => {
+        setUsers((prev) => prev.filter((u) => u.id !== id));
+      }
+    );
   };
 
   return (
@@ -189,9 +204,6 @@ export default function UsersPage() {
                     Avatar
                   </th>
                   <th className="text-left py-4 px-4 font-semibold text-warm-900">
-                    Tên
-                  </th>
-                  <th className="text-left py-4 px-4 font-semibold text-warm-900">
                     Email
                   </th>
                   <th className="text-left py-4 px-4 font-semibold text-warm-900">
@@ -213,10 +225,6 @@ export default function UsersPage() {
               </thead>
               <tbody>
                 {filteredUsers.map((u) => {
-                  const fullName =
-                    `${u.firstName ?? ""} ${u.lastName ?? ""}`.trim() ||
-                    u.email;
-
                   const role = (u.roles?.[0] || "USER").toUpperCase() as
                     | "USER"
                     | "HOST"
@@ -233,13 +241,10 @@ export default function UsersPage() {
                         <div className="flex justify-center items-center">
                           <UserAvatar
                             avatarUrl={u.avatar}
-                            fullName={fullName}
+                            fullName={u.email}
                             size="lg"
                           />
                         </div>
-                      </td>
-                      <td className="py-4 px-4 font-medium text-warm-900">
-                        {fullName}
                       </td>
                       <td className="py-4 px-4 text-warm-700">{u.email}</td>
                       <td className="py-4 px-4 text-warm-700">
@@ -276,7 +281,7 @@ export default function UsersPage() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => handleDelete(u.id)}
+                            onClick={() => handleDelete(u.id, u.email)}
                             className="text-red-600 hover:text-red-700"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -300,10 +305,9 @@ export default function UsersPage() {
         </Card>
       )}
 
-      <UserFormModal
+      <UserCreateModal
         open={openUserModal}
         onOpenChange={setOpenUserModal}
-        user={selectedUser}
         onSubmit={handleUserSubmit}
       />
     </div>

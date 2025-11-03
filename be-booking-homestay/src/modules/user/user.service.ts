@@ -270,7 +270,7 @@ export class UserService {
   async delete(id: number, deletedBy: number = 0) {
     const userExist = await this.prismaService.users.findFirst({
       where: { id, isDeleted: false },
-      select: { id: true },
+      select: { id: true, email: true },
     });
 
     if (!userExist) {
@@ -281,6 +281,7 @@ export class UserService {
       where: { id },
       data: {
         isDeleted: true,
+        email: `${userExist.email}__deleted_${userExist.id}`,
         deletedAt: new Date(),
         deletedBy,
       },

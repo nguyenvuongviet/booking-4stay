@@ -36,7 +36,7 @@ export class ReviewController {
     return this.reviewService.listByRoom(roomId, q);
   }
 
-  @Delete('reviews/:id')
+  @Delete('/:id')
   @ApiBearerAuth('AccessToken')
   async remove(@Param('id', ParseIntPipe) id: number, @Req() req: Request) {
     const user = req['user'];
