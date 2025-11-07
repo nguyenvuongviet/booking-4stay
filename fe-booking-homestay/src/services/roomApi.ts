@@ -125,10 +125,34 @@ export const get_review = async (
   }
 };
 
-export const sort_price = async (sortBy: string) => {
+export const sort_price = async ({
+  minPrice,
+  maxPrice,
+  minRating,
+  sortBy = "price",
+  sortOrder = "desc",
+  page = 1,
+  pageSize = 6,
+}: {
+  minPrice?: number;
+  maxPrice?: number;
+  minRating?: number;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
+  page?: number;
+  pageSize?: number;
+}) => {
   try {
     const resp = await api.get(`/room/all`, {
-      params: { sortBy },
+      params: {
+        minPrice,
+        maxPrice,
+        minRating,
+        sortBy,
+        sortOrder,
+        page,
+        pageSize,
+      },
     });
     return resp.data;
   } catch (error) {

@@ -34,7 +34,7 @@ export default function RootLayout({
         <ShadcnToaster />
         <div id="legacy-toaster">
           <HotToaster
-            position="bottom-right"
+            position="top-right"
             toastOptions={{ duration: 10000 }}
           />
         </div>

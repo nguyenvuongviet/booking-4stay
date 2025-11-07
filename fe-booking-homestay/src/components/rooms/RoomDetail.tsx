@@ -167,6 +167,30 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
 
     router.replace(`/room/${room.id}?${query}`, { scroll: false });
 
+    // try {
+    //   setLoading(true);
+    //   const data = await room_available(
+    //     roomId,
+    //     checkIn.toISOString(),
+    //     checkOut.toISOString()
+    //   );
+    //   setAvailable(data.available);
+    //   if (!data.available) {
+    //     toast.error(
+    //       "This room is not available for the selected dates or seleted guest."
+    //     );
+    //     return;
+    //   }
+    //   router.push(`/checkout?roomId=${room.id}&${query}`);
+    // } catch (error) {
+    //   console.error(error);
+    // } finally {
+    //   setLoading(false);
+    // }
+  };
+  const checkRoomAvailable = async () => {
+    if (!checkIn || !checkOut) return;
+
     try {
       setLoading(true);
       const data = await room_available(
@@ -175,15 +199,14 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
         checkOut.toISOString()
       );
       setAvailable(data.available);
+
       if (!data.available) {
-        toast.error(
-          "This room is not available for the selected dates or seleted guest."
-        );
-        return;
+        toast.error("This room is not available for the selected dates.");
+      } else {
+        toast.success("This room is available 🎉");
       }
-      router.push(`/checkout?roomId=${room.id}&${query}`);
     } catch (error) {
-      console.error(error);
+      console.error("Error checking availability:", error);
     } finally {
       setLoading(false);
     }
@@ -395,7 +418,12 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
                   <DatePicker
                     selected={checkOut}
                     autoFocus={focusCheckOut}
-                    onChange={(date) => setCheckOut(date)}
+                    onChange={async (date) => {
+                      setCheckOut(date);
+                      if (checkIn && date) {
+                        await checkRoomAvailable();
+                      }
+                    }}
                     selectsEnd
                     startDate={checkIn}
                     endDate={checkOut}

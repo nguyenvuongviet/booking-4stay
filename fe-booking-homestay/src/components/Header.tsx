@@ -4,7 +4,7 @@ import { useAuth } from "@/context/auth-context";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "./ui/button";
 
 export default function Header() {
@@ -12,6 +12,19 @@ export default function Header() {
   const [openMenu, setOpenMenu] = useState(false);
   const [openMobile, setOpenMobile] = useState(false);
   const pathname = usePathname();
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setOpenMenu(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   return (
     <header className="fixed top-0 left-0 right-0 bg-background/90 backdrop-blur-sm border-b z-50">
@@ -76,7 +89,7 @@ export default function Header() {
           </nav>
 
           {user ? (
-            <div className="relative">
+            <div className="relative" ref={menuRef}>
               <button
                 onClick={() => setOpenMenu((prev) => !prev)}
                 className="flex items-center gap-2  hover:cursor-pointer"
@@ -94,25 +107,33 @@ export default function Header() {
                 <div className="absolute right-0 mt-2 bg-white shadow-lg rounded-md w-48  border border-gray-100">
                   <Link
                     href="/profile"
+                    onClick={() => setOpenMenu(false)}
                     className="block px-4 py-2 hover:bg-gray-100 rounded-md"
                   >
                     My Profile
                   </Link>
                   <Link
                     href="/booking"
+                    onClick={() => setOpenMenu(false)}
                     className="block px-4 py-2 hover:bg-gray-100 rounded-md"
                   >
                     My Bookings
                   </Link>
                   <button
                     className="block w-full text-left px-4 py-2 hover:bg-gray-100 rounded-md"
-                    onClick={openNewPassword}
+                    onClick={() => {
+                      openNewPassword();
+                      setOpenMenu(false);
+                    }}
                   >
                     Change password
                   </button>
                   <button
                     className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-red-500 rounded-md"
-                    onClick={logout}
+                    onClick={() => {
+                      logout();
+                      setOpenMenu(false);
+                    }}
                   >
                     Logout
                   </button>
@@ -159,12 +180,14 @@ export default function Header() {
           <nav className="flex flex-col space-y-2 px-4 py-3">
             <a
               href="/"
+              onClick={() => setOpenMobile(false)}
               className="elegant-subheading text-muted-foreground hover:text-foreground transition-colors"
             >
               Home
             </a>
             <a
               href="/room-list"
+              onClick={() => setOpenMobile(false)}
               className="elegant-subheading text-muted-foreground hover:text-foreground transition-colors"
             >
               Hotels
@@ -172,6 +195,7 @@ export default function Header() {
 
             <a
               href="#"
+              onClick={() => setOpenMobile(false)}
               className="elegant-subheading text-muted-foreground hover:text-foreground transition-colors"
             >
               Contact
