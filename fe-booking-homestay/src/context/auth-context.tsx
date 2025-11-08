@@ -30,6 +30,8 @@ interface AuthContextType {
   setEmail: (email: string) => void;
   otp: string;
   setOtp: (otp: string) => void;
+  password: string;
+  setPassword: (password: string) => void;
   openNewPassword: () => void;
 }
 
@@ -43,6 +45,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
+  const [password, setPassword] = useState("");
+
   const [otpContext, setOtpContext] = useState<"signup" | "forgotPassword">(
     "signup"
   );
@@ -136,6 +140,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         openOTP,
         otp,
         setOtp,
+        password,
+        setPassword,
         openNewPassword,
       }}
     >

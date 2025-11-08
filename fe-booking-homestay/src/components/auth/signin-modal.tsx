@@ -64,7 +64,7 @@ export default function SignInModal({
     try {
       const { data } = await login({
         email: emailInput.trim(),
-        password,
+        password,     
       });
       setUser(data.user);
 

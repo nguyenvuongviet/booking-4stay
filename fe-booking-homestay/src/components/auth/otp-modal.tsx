@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/auth-context";
 import {
+  login,
   active_account,
   forgot_password,
   verify_otp,
@@ -10,7 +11,7 @@ import {
 import { X } from "lucide-react";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
-
+import { STORAGE_KEYS } from "@/constants";
 interface OTPModalsProps {
   show: boolean;
   setShow: (show: boolean) => void;
@@ -27,9 +28,7 @@ export default function OTPModals({
   const [otpValues, setOtpValues] = useState(["", "", "", "", "", ""]);
   const [error, setError] = useState("");
   const [apiError, setApiError] = useState("");
-  const { email } = useAuth();
-  const { setOtp } = useAuth();
-  // const [loading, setLoading] = useState(false);
+  const { email, password, setOtp, setUser } = useAuth();
 
   useEffect(() => {
     setOtpValues(["", "", "", "", "", ""]);
@@ -59,13 +58,28 @@ export default function OTPModals({
       if (context === "signup") {
         // alert("Sign up success!");
         try {
-          const { data } = await active_account({
+          await active_account({
             email: email.trim(),
             otp: otpCode,
           });
           setOtp(otpCode);
+
+          const { data } = await login({
+            email: email,
+            password: password,
+          });
+
+          setUser(data.user);
+          localStorage.setItem(
+            STORAGE_KEYS.CURRENT_USER,
+            JSON.stringify({
+              accessToken: data.accessToken,
+              refreshToken: data.refreshToken,
+              user: data.user,
+            })
+          );
           setShow(false);
-          toast.success("Sign up success!")
+          toast.success("Sign up success!");
         } catch (error: any) {
           setApiError(error.response?.data?.message || "Fail!");
           setOtpValues(["", "", "", "", "", ""]);
@@ -128,7 +142,6 @@ export default function OTPModals({
     setApiError("");
     try {
       const { data } = await forgot_password({ email: email.trim() });
-
     } catch (error: any) {
       if (error.response?.status === 400) {
         setApiError(

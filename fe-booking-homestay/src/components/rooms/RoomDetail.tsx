@@ -28,49 +28,77 @@ interface RoomDetailClientProps {
 
 export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
   const { openSignIn, user } = useAuth();
-  const [showAllPhotos, setShowAllPhotos] = useState(false);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // States
+  const [room, setRoom] = useState<Room | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [available, setAvailable] = useState<boolean | null>(true);
+  const [checkIn, setCheckIn] = useState<Date | null>(null);
+  const [checkOut, setCheckOut] = useState<Date | null>(null);
+  const [adults, setAdults] = useState(1);
+  const [children, setChildren] = useState(0);
   const [showAllAmenities, setShowAllAmenities] = useState(false);
+  const [isGuestPopoverOpen, setIsGuestPopoverOpen] = useState(false);
+  const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
+  const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
+
   const [showFullOverview, setShowFullOverview] = useState(false);
   const [isReviewDialogOpen, setIsReviewDialogOpen] = useState(false);
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
-  const [sortBy, setSortBy] = useState("most-relevant");
   const [reviewForm, setReviewForm] = useState({
     userName: "",
     rating: 0,
     comment: "",
   });
-  const [checkIn, setCheckIn] = useState<Date | null>(null);
-  const [checkOut, setCheckOut] = useState<Date | null>(null);
-  const router = useRouter();
-  const [adults, setAdults] = useState(1);
-  const [children, setChildren] = useState(0);
-  const [isGuestPopoverOpen, setIsGuestPopoverOpen] = useState(false);
-  const [room, setRoom] = useState<Room | null>(null);
-  const [loading, setLoading] = useState(true);
-  const searchParams = useSearchParams();
-  const [available, setAvailable] = useState<boolean | null>(true);
+
+  // Refs
   const checkInRef = useRef<HTMLInputElement>(null);
   const checkOutRef = useRef<HTMLInputElement>(null);
+
   const [focusCheckIn, setFocusCheckIn] = useState(false);
   const [focusCheckOut, setFocusCheckOut] = useState(false);
-  const [review, setReview] = useState<ReviewItem | null>(null);
-  const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
-  const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
 
-  const getGuestDisplayText = () => {
-    const total = adults + children;
-    return `${total} Guests`;
-  };
+  // fetch data
+  useEffect(() => {
+    (async () => {
+      try {
+        setLoading(true);
+        const data = await room_detail(roomId);
+        setRoom(data);
+      } catch (error) {
+        console.error("Fetch room failed:", error);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [roomId]);
 
-  const handleSubmitReview = () => {
-    console.log("[v0] Submitting review:", reviewForm);
-    setIsReviewDialogOpen(false);
-    setReviewForm({ userName: "", rating: 0, comment: "" });
-  };
+  // Load params from URL
+  useEffect(() => {
+    const ad = searchParams.get("adults");
+    const ch = searchParams.get("children");
+    const ci = searchParams.get("checkIn");
+    const co = searchParams.get("checkOut");
+    const status = searchParams.get("status");
 
-  const toggleTopic = (topic: string) => {
-    setSelectedTopics((prev) =>
-      prev.includes(topic) ? prev.filter((t) => t !== topic) : [...prev, topic]
+    if (ci) setCheckIn(new Date(ci));
+    if (co) setCheckOut(new Date(co));
+    if (ad) setAdults(Number(ad));
+    if (ch) setChildren(Number(ch));
+    setAvailable(status ? status === "Available" : true);
+  }, [searchParams]);
+
+  // Utils
+  const getGuestDisplayText = () => `${adults + children} Guests`;
+
+  const updateURL = (params: Record<string, string>) => {
+    router.replace(
+      `/room/${roomId}?${new URLSearchParams(params).toString()}`,
+      {
+        scroll: false,
+      }
     );
   };
 
@@ -78,56 +106,40 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
     ? room?.amenities ?? []
     : room?.amenities?.slice(0, 5) ?? [];
 
-  // const getProgressBarColor = (score: number) => {
-  //   if (score >= 9.0) return "bg-green-600";
-  //   if (score >= 8.0) return "bg-blue-600";
-  //   return "bg-blue-500";
-  // };
+  const checkRoomAvailable = async (inDate?: Date, outDate?: Date) => {
+    const checkInDate = inDate || checkIn;
+    const checkOutDate = outDate || checkOut;
+    if (!checkInDate || !checkOutDate) return;
 
-  useEffect(() => {
-    const status = searchParams.get("status");
-    if (status) {
-      setAvailable(status === "Available");
-    } else {
-      setAvailable(true); //Mặc định là true khi chưa có status
-    }
-    const fetchRoom = async () => {
-      try {
-        setLoading(true);
-        const data = await room_detail(roomId);
-        setRoom(data);
-      } catch (error) {
-        console.error(error);
-      } finally {
-        setLoading(false);
+    try {
+      setLoading(true);
+      const data = await room_available(
+        roomId,
+        checkInDate.toISOString(),
+        checkOutDate.toISOString()
+      );
+      const status = data.available ? "Available" : "SoldOut";
+      setAvailable(data.available);
+
+      if (!data.available) {
+        toast.error("This room is not available for the selected dates");
       }
-    };
 
-    fetchRoom();
-  }, [roomId]);
+      updateURL({
+        checkIn: checkInDate.toISOString(),
+        checkOut: checkOutDate.toISOString(),
+        adults: adults.toString(),
+        children: children.toString(),
+        status,
+      });
+    } catch (error) {
+      console.error("Check availability failed:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  useEffect(() => {
-    const ad = searchParams.get("adults");
-    const ch = searchParams.get("children");
-    const ci = searchParams.get("checkIn");
-    const co = searchParams.get("checkOut");
-
-    if (ci) setCheckIn(new Date(ci));
-    if (co) setCheckOut(new Date(co));
-    if (ad) setAdults(Number(ad));
-    if (ch) setChildren(Number(ch));
-  }, [searchParams]);
-
-  if (loading)
-    return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="animate-spin h-6 w-6 text-primary" />
-      </div>
-    );
-
-  if (!room) return <p>Room not found</p>;
-
-  const handleRoomSelect = async (roomId: number | string) => {
+  const handleRoomSelect = (roomId: number | string) => {
     if (!checkIn || !checkOut) {
       if (!checkIn) {
         setTimeout(() => checkInRef.current?.focus(), 0);
@@ -139,78 +151,39 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
       }
     }
 
-    if (adults > (room.adultCapacity || 0)) {
+    if (adults > (room!.adultCapacity || 0)) {
       toast.error(
-        `This room only allows up to ${room.adultCapacity} adult${
-          room.adultCapacity > 1 ? "s" : ""
+        `This room only allows up to ${room!.adultCapacity} adult${
+          room!.adultCapacity > 1 ? "s" : ""
         }.`
       );
       return;
     }
 
-    if (children > (room.childCapacity || 0)) {
+    if (children > (room?.childCapacity || 0)) {
       toast.error(
-        `This room only allows up to ${room.childCapacity} children .`
+        `This room only allows up to ${room?.childCapacity} children .`
       );
       return;
     }
 
-    const formattedCheckIn = checkIn.toISOString();
-    const formattedCheckOut = checkOut.toISOString();
-
-    const query = new URLSearchParams({
-      checkIn: formattedCheckIn,
-      checkOut: formattedCheckOut,
+    updateURL({
+      checkIn: checkIn.toISOString(),
+      checkOut: checkOut.toISOString(),
       adults: adults.toString(),
       children: children.toString(),
-    }).toString();
-
-    router.replace(`/room/${room.id}?${query}`, { scroll: false });
-
-    // try {
-    //   setLoading(true);
-    //   const data = await room_available(
-    //     roomId,
-    //     checkIn.toISOString(),
-    //     checkOut.toISOString()
-    //   );
-    //   setAvailable(data.available);
-    //   if (!data.available) {
-    //     toast.error(
-    //       "This room is not available for the selected dates or seleted guest."
-    //     );
-    //     return;
-    //   }
-    //   router.push(`/checkout?roomId=${room.id}&${query}`);
-    // } catch (error) {
-    //   console.error(error);
-    // } finally {
-    //   setLoading(false);
-    // }
+      status,
+    });
   };
-  const checkRoomAvailable = async () => {
-    if (!checkIn || !checkOut) return;
 
-    try {
-      setLoading(true);
-      const data = await room_available(
-        roomId,
-        checkIn.toISOString(),
-        checkOut.toISOString()
-      );
-      setAvailable(data.available);
+  if (loading)
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="animate-spin h-6 w-6 text-primary" />
+      </div>
+    );
 
-      if (!data.available) {
-        toast.error("This room is not available for the selected dates.");
-      } else {
-        toast.success("This room is available 🎉");
-      }
-    } catch (error) {
-      console.error("Error checking availability:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  if (!room) return <p>Room not found</p>;
 
   return (
     <div className="min-h-screen bg-background">
@@ -287,7 +260,7 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
                     <Star className="h-4 w-4 fill-chart-4 text-chart-4" />
                   </div>
                   <p className="text-sm elegant-subheading text-muted-foreground">
-                    Not Good
+                    {/* Not Good */}
                   </p>
                 </div>
               </div>
@@ -385,64 +358,33 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
                 </div>
               )}
               {/* Info    */}
-              <div className="grid md:grid-cols-2 gap-1">
-                <div className="relative">
+              <div className="grid gap-2">
+                <div className="relative md:col-span-1">
                   <Calendar
                     className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground"
                     size={20}
                   />
                   <DatePicker
                     selected={checkIn}
-                    autoFocus={focusCheckIn}
-                    onChange={(date) => {
-                      setCheckIn(date);
-                      // Reset checkOut nếu nhỏ hơn checkIn
-                      if (checkOut && date && checkOut <= date) {
-                        setCheckOut(null);
-                      }
+                    onChange={(dates: [Date | null, Date | null]) => {
+                      const [start, end] = dates;
+                      setCheckIn(start);
+                      setCheckOut(end);
+
+                      // Khi người dùng chọn đủ 2 ngày -> kiểm tra phòng
+                      if (start && end) checkRoomAvailable(start, end);
                     }}
-                    selectsStart
                     startDate={checkIn}
                     endDate={checkOut}
+                    selectsRange
                     dateFormat="dd/MM/yyyy"
-                    placeholderText="Check-in date"
-                    className="pl-12 p-6 h-12 text-md elegant-subheading rounded-2xl w-full border border-gray-300 focus:ring-2 focus:ring-primary"
+                    placeholderText="Select check-in and check-out"
+                    className="w-84 pl-16 h-12 text-sm md:text-md elegant-subheading rounded-2xl border border-border focus:border-accent focus:ring-1 focus:ring-accent"
                     minDate={new Date()}
+                    inline={false}
                   />
                 </div>
-                <div className="relative">
-                  <Calendar
-                    className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground"
-                    size={20}
-                  />
-                  <DatePicker
-                    selected={checkOut}
-                    autoFocus={focusCheckOut}
-                    onChange={async (date) => {
-                      setCheckOut(date);
-                      if (checkIn && date) {
-                        await checkRoomAvailable();
-                      }
-                    }}
-                    selectsEnd
-                    startDate={checkIn}
-                    endDate={checkOut}
-                    minDate={checkIn || new Date()}
-                    dateFormat="dd/MM/yyyy"
-                    placeholderText="Check-out date"
-                    onFocus={(e) => {
-                      if (!checkIn) {
-                        e.target.blur();
-                      }
-                    }}
-                    className={`p-6 h-12 text-md elegant-subheading rounded-2xl w-full border pl-12 ${
-                      !checkIn
-                        ? "bg-gray-100 cursor-not-allowed opacity-80"
-                        : "border-border"
-                    } focus:ring-2 focus:ring-primary`}
-                  />
-                </div>
-                <div className="relative md:col-span-2">
+                <div className="relative md:col-span-1">
                   <Users
                     className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground"
                     size={20}
@@ -452,7 +394,7 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
                     onOpenChange={setIsGuestPopoverOpen}
                   >
                     <PopoverTrigger asChild>
-                      <button className="w-full h-12 px-4 border border-border rounded-2xl focus:border-accent focus:ring-1 focus:ring-accent text-left flex items-center justify-between">
+                      <button className="w-full pl-6 h-12 pr-4 text-sm md:text-md elegant-subheading border border-border rounded-2xl focus:border-accent focus:ring-1 focus:ring-accent text-left flex items-center justify-between">
                         <div className="flex items-center justify-between ">
                           {/* <p className="text-sm text-muted-foreground elegant-subheading mr-4">
                             Guests:{" "}
@@ -600,7 +542,7 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
                         {/* Close Button */}
                         <Button
                           onClick={() => setIsGuestPopoverOpen(false)}
-                          className="w-full bg-white hover:bg-gray-50 text-gray-900 border border-border rounded-xl"
+                          className="w-full bg-white hover:bg-gray-50 text-primary border border-border rounded-xl"
                         >
                           Close
                         </Button>
@@ -609,18 +551,30 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
                   </Popover>
                 </div>
               </div>
+              
               {/* Select Room Button */}
               <Button
                 onClick={() => {
+                  if (available === false) {
+                    toast.error(
+                      "This room is sold out. Please choose other dates."
+                    );
+                    return;
+                  }
                   if (!user) {
                     openSignIn();
                   } else {
                     handleRoomSelect(room.id);
                   }
                 }}
-                className={`w-full h-10 rounded-2xl mb-6 `}
+                disabled={available === false}
+                className={`w-full h-10 rounded-2xl mb-6 ${
+                  available === false
+                    ? "bg-gray-400 cursor-not-allowed hover:bg-gray-400"
+                    : ""
+                }`}
               >
-                Select room
+                {available === false ? "Sold Out" : "Select room"}
               </Button>
 
               {/* Check-in/out */}
