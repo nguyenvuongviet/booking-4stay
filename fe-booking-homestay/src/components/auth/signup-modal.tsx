@@ -143,7 +143,7 @@ export default function SignUpModal({
             <div className="flex justify-end">
               <button
                 onClick={() => setShow(false)}
-                className="text-primary hover:text-primary/80"
+                className="hover:text-primary cursor-pointer"
               >
                 <X size={24} />
               </button>
@@ -297,7 +297,7 @@ export default function SignUpModal({
               </div>
 
               <Button
-                className="rounded-2xl w-full bg-primary hover:bg-primary/90 text-primary-foreground h-10 elegant-subheading text-md"
+                className="rounded-2xl w-full bg-primary hover:bg-primary/80 h-10 elegant-subheading text-md"
                 type="submit"
                 disabled={loading}
               >
@@ -306,7 +306,7 @@ export default function SignUpModal({
             </form>
 
             <div className="mt-2 text-center">
-              <span className="text-muted-foreground elegant-subheading text-sm">
+              <span className="text-muted-foreground elegant-subheading text-xs">
                 Already have an account?{" "}
               </span>
               <button
@@ -314,7 +314,7 @@ export default function SignUpModal({
                   setShow(false);
                   switchToSignIn(true);
                 }}
-                className="text-primary elegant-heading text-base hover:underline"
+                className="text-primary elegant-subheading text-sm hover:underline"
               >
                 Sign in
               </button>
@@ -331,7 +331,7 @@ export default function SignUpModal({
             <div className="mt-2">
               <Button
                 variant="outline"
-                className="rounded-2xl w-full border-border text-foreground bg-transparent hover:bg-muted flex items-center justify-center gap-2"
+                className="rounded-2xl w-full border-border text-foreground bg-transparent flex items-center justify-center gap-2"
               >
                 <svg width="18" height="18" viewBox="0 0 24 24">
                   <path

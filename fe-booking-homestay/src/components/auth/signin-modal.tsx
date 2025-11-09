@@ -108,7 +108,7 @@ export default function SignInModal({
             <div className="flex justify-end">
               <button
                 onClick={() => setShow(false)}
-                className="text-primary hover:text-primary/80"
+                className="hover:text-primary cursor-pointer"
               >
                 <X size={24} />
               </button>
@@ -172,7 +172,7 @@ export default function SignInModal({
               )}
 
               <Button
-                className="mt-4 rounded-2xl w-full bg-primary hover:bg-primary/90 text-primary-foreground h-10 elegant-subheading text-md"
+                className="mt-4 rounded-2xl w-full bg-primary hover:bg-primary/80 h-10 elegant-subheading text-md"
                 type="submit"
                 disabled={loading}
               >
@@ -182,7 +182,7 @@ export default function SignInModal({
 
             <div className="mt-4 flex justify-between items-center text-sm">
               <div>
-                <span className="text-muted-foreground elegant-subheading">
+                <span className="text-muted-foreground text-xs elegant-subheading">
                   Don{"'"}t have an account?{" "}
                 </span>
                 <button
@@ -190,7 +190,7 @@ export default function SignInModal({
                     setShow(false);
                     switchToSignUp(true);
                   }}
-                  className="text-primary elegant-heading text-base hover:underline"
+                  className="text-primary elegant-subheading text-sm hover:underline"
                 >
                   Sign up
                 </button>
@@ -220,7 +220,7 @@ export default function SignInModal({
               <Button
                 type="button"
                 variant="outline"
-                className="rounded-2xl w-full border-border text-foreground bg-transparent hover:bg-muted flex items-center justify-center gap-2"
+                className="rounded-2xl w-full border-border text-foreground bg-transparent flex items-center justify-center gap-2"
                 onClick={() => handleSocialSignIn("google")}
                 disabled={loading}
               >

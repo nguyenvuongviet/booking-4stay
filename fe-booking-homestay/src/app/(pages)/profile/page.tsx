@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select";
 import { COUNTRIES } from "@/constants/countries";
 import { useAuth } from "@/context/auth-context";
+import { cn } from "@/lib/utils";
 import { IUser } from "@/models/User";
 import { update_profile, upload_file } from "@/services/authApi";
 import { Calendar } from "lucide-react";
@@ -111,11 +112,11 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-secondary/20">
       <Headers />
 
       {/* Main Content */}
-      <div className="max-w-2xl mx-auto mt-24">
+      <div className="max-w-4xl mx-auto pt-20">
         <h1 className="text-4xl elegant-heading mb-4">My profile</h1>
         {/* Profile Avatar */}
         <div className="flex justify-center mb-4">
@@ -131,9 +132,9 @@ export default function ProfilePage() {
                   className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity cursor-pointer bg-black bg-opacity-50"
                   onClick={() => fileInputRef.current?.click()}
                 >
-                  <span className="text-white text-sm font-medium">Upload</span>
+                  <span className="text-white text-sm">Upload</span>
                 </div>
-                <input
+                <Input
                   ref={fileInputRef}
                   type="file"
                   accept="image/*"
@@ -141,7 +142,7 @@ export default function ProfilePage() {
                   className="hidden"
                 />
               </div>
-              <p className="text-sm text-gray-600">{email}</p>
+              <p className="text-sm text-secondary-foreground">{email}</p>
             </div>
           </div>
         </div>
@@ -152,38 +153,32 @@ export default function ProfilePage() {
             {/* First Name and Last Name */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <Label
-                  htmlFor="firstName"
-                  className="text-[#292d32] font-medium"
-                >
+                <Label htmlFor="firstName" className="elegant-subheading">
                   First Name
                 </Label>
                 <Input
                   id="firstName"
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
-                  className="bg-[#f9fafb] border-[#e5e5e5] text-[#292d32]"
+                  className="bg-input rounded-xl"
                 />
               </div>
               <div className="space-y-2">
-                <Label
-                  htmlFor="lastName"
-                  className="text-[#292d32] font-medium"
-                >
+                <Label htmlFor="lastName" className="elegant-subheading">
                   Last Name
                 </Label>
                 <Input
                   id="lastName"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
-                  className="bg-[#f9fafb] border-[#e5e5e5] text-[#292d32]"
+                  className="bg-input rounded-xl"
                 />
               </div>
             </div>
 
             {/* Email */}
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-[#292d32] font-medium">
+              <Label htmlFor="email" className="elegant-subheading">
                 Email
               </Label>
               <Input
@@ -191,57 +186,55 @@ export default function ProfilePage() {
                 type="email"
                 value={email}
                 readOnly
-                className="bg-[#f9fafb] border-[#e5e5e5] text-[#777]"
+                className="bg-input rounded-xl text-muted-foreground"
               />
             </div>
 
             {/* Phone Number */}
             <div className="space-y-2">
-              <Label htmlFor="phone" className="text-[#292d32] font-medium">
+              <Label htmlFor="phone" className="elegant-subheading">
                 Phone Number
               </Label>
               <Input
                 id="phone"
                 type="tel"
                 value={phone}
-                className="bg-[#f9fafb] border-[#e5e5e5] text-[#666]"
+                className="bg-input rounded-xl"
                 readOnly
               />
             </div>
 
             {/* Date of Birth */}
             <div className="space-y-2">
-              <Label htmlFor="dob" className="text-[#292d32] font-medium">
+              <Label htmlFor="dob" className="elegant-subheading">
                 Date of birth
               </Label>
-               <div className="relative">
-              <Calendar
-                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-muted-foreground"
-                size={20}
-              />
-              <DatePicker
-                id="dob"
-                selected={dob}
-                // autoFocus=
-                onChange={(date) => setDob(date)}
-                dateFormat="dd/MM/yyyy"
-                placeholderText="Select your date of birth"
-                className="p-3 w-2xl h-9 rounded-md border border-[#e5e5e5] bg-[#f9fafb] text-[#292d32] text-sm"
-                maxDate={new Date()}
-                showYearDropdown
-                showMonthDropdown
-                dropdownMode="select"
-              />
+              <div className="relative w-full">
+                <DatePicker
+                  id="dob"
+                  selected={dob}
+                  onChange={(date) => setDob(date)}
+                  dateFormat="dd/MM/yyyy"
+                  placeholderText="Select your date of birth"
+                  className="w-4xl rounded-xl border border-input bg-input px-3 py-2 text-sm shadow-xs outline-none
+                  focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]"
+                  maxDate={new Date()}
+                  inline={false}
+                />
+                <Calendar
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground"
+                  size={20}
+                />
               </div>
             </div>
 
             {/* Gender */}
             <div className="space-y-2">
-              <Label htmlFor="gender" className="text-[#292d32] font-medium">
+              <Label htmlFor="gender" className="elegant-subheading">
                 Gender
               </Label>
               <Select value={gender} onValueChange={setGender}>
-                <SelectTrigger className="w-full bg-[#f9fafb] border-[#e5e5e5] text-[#292d32]">
+                <SelectTrigger className="w-full bg-input rounded-xl placeholder:text-muted">
                   <SelectValue placeholder="Select gender" />
                 </SelectTrigger>
                 <SelectContent>
@@ -254,11 +247,11 @@ export default function ProfilePage() {
 
             {/* Country */}
             <div className="space-y-2">
-              <Label htmlFor="country" className="text-[#292d32] font-medium">
+              <Label htmlFor="country" className="elegant-subheading">
                 Country
               </Label>
               <Select value={country} onValueChange={setCountry}>
-                <SelectTrigger className="w-full bg-[#f9fafb] border-[#e5e5e5] text-[#292d32]">
+                <SelectTrigger className="w-full bg-input rounded-xl placeholder:text-muted">
                   <SelectValue placeholder="Select country" />
                 </SelectTrigger>
                 <SelectContent className="max-h-60">
@@ -273,7 +266,7 @@ export default function ProfilePage() {
 
             <Button
               onClick={handleSubmit}
-              className="my-4 rounded-2xl w-full bg-primary hover:bg-primary/90 text-primary-foreground h-10 elegant-subheading text-md"
+              className="my-4 rounded-2xl w-full bg-primary h-10 elegant-subheading text-md"
             >
               Save change
             </Button>

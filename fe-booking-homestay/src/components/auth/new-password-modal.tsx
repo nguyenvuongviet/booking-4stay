@@ -126,7 +126,7 @@ export default function NewPasswordModal({ show, setShow }: NewPasswordModalProp
     <div className="fixed inset-0 bg-foreground/50 flex items-center justify-center z-50">
       <div className="bg-card rounded-lg p-8 w-full max-w-md mx-4 shadow-2xl">
         <div className="flex justify-end">
-          <button onClick={() => setShow(false)} className="text-primary hover:text-primary/80">
+          <button onClick={() => setShow(false)} className="cursor-pointer hover:text-primary">
             <X size={24} />
           </button>
         </div>
@@ -150,7 +150,7 @@ export default function NewPasswordModal({ show, setShow }: NewPasswordModalProp
                 id="email"
                 type="email"
                 placeholder="Enter your email"
-                className="mt-2 mb-6 bg-input rounded-2xl"
+                className="mt-2 mb-6 bg-input rounded-2xl placeholder:text-muted"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
@@ -166,7 +166,7 @@ export default function NewPasswordModal({ show, setShow }: NewPasswordModalProp
           <form className="space-y-4" onSubmit={handleVerify}>
             <p className="text-foreground elegant-subheading mb-4 text-center">
               We have sent an OTP to{" "}
-              <span className="font-semibold text-[#3f9bda]">{email}</span>
+              <span className="font-semibold text-secondary-foreground">{email}</span>
             </p>
             <div className="flex justify-center gap-2 mb-6">
               {otpValues.map((value, index) => (

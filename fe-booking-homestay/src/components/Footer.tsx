@@ -5,7 +5,7 @@ export default function Footer() {
     <footer className="bg-foreground text-background py-16">
       <div className="max-w-7xl mx-auto px-6 lg:px-8 ">
         <div className="text-center mb-12">
-          <span className="elegant-heading text-4xl text-accent">
+          <span className="elegant-heading text-4xl text-primary">
             THE 4STAY
           </span>
           <p className="elegant-subheading text-background/70 mt-4 max-w-md mx-auto">
@@ -15,7 +15,7 @@ export default function Footer() {
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12 ">
           <div className="ml-12">
-            <h4 className="elegant-heading text-lg text-background mb-4">
+            <h4 className="elegant-heading text-primary text-lg mb-4">
               Hotel
             </h4>
             <ul className="space-y-3 elegant-subheading text-background/70">
@@ -37,7 +37,7 @@ export default function Footer() {
             </ul>
           </div>
           <div className="ml-12">
-            <h4 className="elegant-heading text-lg text-background mb-4">
+            <h4 className="elegant-heading text-lg text-primary mb-4">
               Experiences
             </h4>
             <ul className="space-y-3 elegant-subheading text-background/70">
@@ -59,7 +59,7 @@ export default function Footer() {
             </ul>
           </div>
           <div className="ml-12">
-            <h4 className="elegant-heading text-lg text-background mb-4">
+            <h4 className="elegant-heading text-lg text-primary mb-4">
               Services
             </h4>
             <ul className="space-y-3 elegant-subheading text-background/70">
@@ -81,7 +81,7 @@ export default function Footer() {
             </ul>
           </div>
           <div className="ml-12">
-            <h4 className="elegant-heading text-lg text-background mb-4">
+            <h4 className="elegant-heading text-lg text-primary mb-4">
               Contact
             </h4>
             <ul className="space-y-3 elegant-subheading text-background/70">
@@ -105,7 +105,7 @@ export default function Footer() {
         </div>
 
         <div className="border-t border-background/20 pt-8 text-center">
-          <p className="elegant-subheading text-background/50">
+          <p className="elegant-subheading text-background/70">
             © 2025 The 4Stay HomeStay. All rights reserved.
           </p>
         </div>

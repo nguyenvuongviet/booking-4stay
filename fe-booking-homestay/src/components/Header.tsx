@@ -27,10 +27,10 @@ export default function Header() {
   }, []);
 
   return (
-    <header className="fixed top-0 left-0 right-0 bg-background/90 backdrop-blur-sm border-b z-50">
+    <header className="fixed top-0 left-0 right-0 bg-background/70 backdrop-blur-sm border-b z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          <div className="flex items-center">
+          <div className="flex items-center justify-between">
             <a href="/">
               <Image
                 src="/4stay-logo.png"
@@ -50,8 +50,8 @@ export default function Header() {
               href="/"
               className={`elegant-subheading text-lg transition-colors ${
                 pathname === "/"
-                  ? "text-foreground"
-                  : "text-muted-foreground hover:text-foreground "
+                  ? "text-primary elegant-sans"
+                  : "text-muted-foreground hover:text-primary"
               }
               }`}
             >
@@ -61,8 +61,8 @@ export default function Header() {
               href="/room-list"
               className={`elegant-subheading text-lg transition-colors ${
                 pathname === "/room-list"
-                  ? "text-foreground"
-                  : "text-muted-foreground hover:text-foreground "
+                  ? "text-primary elegant-sans"
+                  : "text-muted-foreground hover:text-primary"
               }
               }`}
             >
@@ -82,7 +82,12 @@ export default function Header() {
             </a> */}
             <a
               href="#"
-              className="elegant-subheading text-lg text-muted-foreground hover:text-foreground transition-colors"
+              className={`elegant-subheading text-lg transition-colors ${
+                pathname === "/#"
+                  ? "text-primary elegant-sans"
+                  : "text-muted-foreground hover:text-primary"
+              }
+              }`}
             >
               Contact
             </a>
@@ -92,7 +97,7 @@ export default function Header() {
             <div className="relative" ref={menuRef}>
               <button
                 onClick={() => setOpenMenu((prev) => !prev)}
-                className="flex items-center gap-2  hover:cursor-pointer"
+                className="flex items-center gap-2 hover:cursor-pointer"
               >
                 <img
                   src={user?.avatar || "/default-avatar.png"}
@@ -100,27 +105,27 @@ export default function Header() {
                   alt="avatar"
                   className="w-8 h-8 rounded-full object-cover"
                 />
-                <span>{user.firstName + " " + user.lastName}</span>
+                <span className="text-secondary-foreground elegant-subheading">{user.firstName + " " + user.lastName}</span>
                 {/* <span>Thảo Ly</span> */}
               </button>
               {openMenu && (
-                <div className="absolute right-0 mt-2 bg-white shadow-lg rounded-md w-48  border border-gray-100">
+                <div className="absolute right-0 mt-2 bg-card shadow-lg rounded-md w-48  border border-gray-100">
                   <Link
                     href="/profile"
                     onClick={() => setOpenMenu(false)}
-                    className="block px-4 py-2 hover:bg-gray-100 rounded-md"
+                    className="block px-4 py-2 hover:bg-secondary/50 rounded-md"
                   >
                     My Profile
                   </Link>
                   <Link
                     href="/booking"
                     onClick={() => setOpenMenu(false)}
-                    className="block px-4 py-2 hover:bg-gray-100 rounded-md"
+                    className="block px-4 py-2 hover:bg-secondary/50  rounded-md"
                   >
                     My Bookings
                   </Link>
                   <button
-                    className="block w-full text-left px-4 py-2 hover:bg-gray-100 rounded-md"
+                    className="block w-full text-left px-4 py-2 hover:bg-secondary/50 rounded-md"
                     onClick={() => {
                       openNewPassword();
                       setOpenMenu(false);
@@ -129,7 +134,7 @@ export default function Header() {
                     Change password
                   </button>
                   <button
-                    className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-red-500 rounded-md"
+                    className="block w-full text-left px-4 py-2 hover:bg-secondary/50 text-red-500 rounded-md"
                     onClick={() => {
                       logout();
                       setOpenMenu(false);
@@ -142,7 +147,7 @@ export default function Header() {
             </div>
           ) : (
             <Button
-              className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-2 elegant-subheading rounded-2xl"
+              className="bg-primary hover:bg-primary/80 px-8 py-2 rounded-2xl"
               onClick={openSignIn}
             >
               Sign in

@@ -21,6 +21,7 @@ import { getAmenityIcon } from "./getAmenityIcon";
 import { ReviewItem } from "@/models/Review";
 import { ReviewList } from "./ReviewList";
 import { PhotoGalleryModal } from "./PhotoGalleryModal";
+import GuestPicker from "../GuestPicker";
 
 interface RoomDetailClientProps {
   roomId: string;
@@ -139,7 +140,7 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
     }
   };
 
-  const handleRoomSelect = (roomId: number | string) => {
+  const handleRoomSelect = async (roomId: number | string) => {
     if (!checkIn || !checkOut) {
       if (!checkIn) {
         setTimeout(() => checkInRef.current?.focus(), 0);
@@ -174,6 +175,35 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
       children: children.toString(),
       status,
     });
+
+    try {
+      setLoading(true);
+      const data = await room_available(
+        roomId,
+        checkIn.toISOString(),
+        checkOut.toISOString()
+      );
+      setAvailable(data.available);
+      if (!data.available) {
+        toast.error(
+          "This room is not available for the selected dates or seleted guest."
+        );
+        return;
+      }
+      router.push(
+        `/checkout?${new URLSearchParams({
+          roomId: String(roomId),
+          checkIn: checkIn?.toISOString() ?? "",
+          checkOut: checkOut?.toISOString() ?? "",
+          adults: String(adults),
+          children: String(children),
+        })}`
+      );
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (loading)
@@ -224,7 +254,7 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
               <Button
                 onClick={() => setIsPhotoModalOpen(true)}
                 variant="secondary"
-                className="absolute bottom-4 right-4 bg-muted hover:cursor-pointer rounded-xl"
+                className="absolute bottom-4 right-4 bg-background hover:cursor-pointer rounded-xl"
               >
                 More photos
               </Button>
@@ -239,7 +269,7 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
               )}
             </div>
 
-            {/* Hotel Info */}
+            {/* Room Info */}
             <div>
               <div className="flex items-start justify-between mb-4">
                 <div>
@@ -255,9 +285,9 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
                     {hotel.rating}
                   </Badge>
                    */}
-                  <div className="flex flex-row-reverse mb-2">
+                  <div className="flex flex-row-reverse items-center elegant-sans mb-2">
                     {room.rating}
-                    <Star className="h-4 w-4 fill-chart-4 text-chart-4" />
+                    <Star className="h-4 w-4 mr-1 fill-yellow-400 text-yellow-400" />
                   </div>
                   <p className="text-sm elegant-subheading text-muted-foreground">
                     {/* Not Good */}
@@ -268,12 +298,12 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
 
             {/* Amenities */}
             <div className="p-4">
-              <h2 className="text-2xl elegant-heading mb-4">Amenities</h2>
+              <h2 className="text-xl elegant-sans mb-4">Amenities</h2>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 {amenitiesToDisplay.map((amenity) => (
                   <div
                     key={amenity.id}
-                    className="flex items-center gap-2 text-sm text-gray-700"
+                    className="flex items-center gap-2 text-sm elegant-subheading text-muted-foreground"
                   >
                     <span>{getAmenityIcon(amenity)}</span>
                     <span>{amenity.name}</span>
@@ -293,10 +323,8 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
 
             {/* Overview */}
             <div className="p-4">
-              <h2 className="text-2xl elegant-heading font-bold mb-4">
-                Overview
-              </h2>
-              <p className="text-sm elegant-subheading leading-relaxed">
+              <h2 className="text-xl elegant-sans  mb-4">Overview</h2>
+              <p className="text-sm elegant-subheading leading-relaxed text-muted-foreground">
                 {/* {showFullOverview
                   ? room.overview
                   : room.overview.slice(0, 250) + "..."} */}
@@ -321,7 +349,7 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
             <Card className="p-6 sticky top-24">
               <div className="mb-4">
                 <div className="flex items-baseline gap-2 mb-1">
-                  <span className="text-4xl elegant-heading">
+                  <span className="text-4xl elegant-sans text-secondary-foreground">
                     {" "}
                     {/* {hotel.pricePerNight.toLocaleString()} VND */}
                     {room.price?.toLocaleString()} VND
@@ -340,7 +368,7 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
               </div>
               {/* Sold Out Banner */}
               {available === false && (
-                <div className="absolute top-4 right-4 flex items-center h-10 bg-gradient-to-r from-red-500 to-red-600 text-white font-extrabold rounded-2xl shadow-xl py-2 px-4 uppercase tracking-wider text-sm animate-pulse">
+                <div className="absolute top-4 right-4 flex items-center h-10 bg-gradient-to-r from-red-500 to-red-600 text-white elegant-sans rounded-2xl shadow-xl py-2 px-4 uppercase tracking-wider text-sm animate-pulse">
                   <svg
                     className="w-5 h-5 mr-2"
                     fill="none"
@@ -358,7 +386,7 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
                 </div>
               )}
               {/* Info    */}
-              <div className="grid gap-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                 <div className="relative md:col-span-1">
                   <Calendar
                     className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground"
@@ -378,8 +406,8 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
                     endDate={checkOut}
                     selectsRange
                     dateFormat="dd/MM/yyyy"
-                    placeholderText="Select check-in and check-out"
-                    className="w-84 pl-16 h-12 text-sm md:text-md elegant-subheading rounded-2xl border border-border focus:border-accent focus:ring-1 focus:ring-accent"
+                    placeholderText="Select Date"
+                    className="w-full pl-12 h-12 text-sm md:text-md elegant-subheading rounded-3xl border border-border focus:border-accent focus:ring-1 focus:ring-accent"
                     minDate={new Date()}
                     inline={false}
                   />
@@ -389,169 +417,15 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
                     className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground"
                     size={20}
                   />
-                  <Popover
-                    open={isGuestPopoverOpen}
-                    onOpenChange={setIsGuestPopoverOpen}
-                  >
-                    <PopoverTrigger asChild>
-                      <button className="w-full pl-6 h-12 pr-4 text-sm md:text-md elegant-subheading border border-border rounded-2xl focus:border-accent focus:ring-1 focus:ring-accent text-left flex items-center justify-between">
-                        <div className="flex items-center justify-between ">
-                          {/* <p className="text-sm text-muted-foreground elegant-subheading mr-4">
-                            Guests:{" "}
-                          </p> */}
-                          <p className="ml-10 text-sm elegant-subheading">
-                            {getGuestDisplayText()}
-                          </p>
-                        </div>
-                        <svg
-                          className="w-5 h-5 text-gray-400"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M19 9l-7 7-7-7"
-                          />
-                        </svg>
-                      </button>
-                    </PopoverTrigger>
-                    <PopoverContent
-                      className="w-[300px] p-0 rounded-2xl"
-                      align="start"
-                    >
-                      <div className="p-6 space-y-6">
-                        {/* Adults */}
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="font-semibold text-gray-900">
-                              Adults
-                            </p>
-                            <p className="text-sm text-gray-600">
-                              {" "}
-                              {`>`}13 ages{" "}
-                            </p>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <button
-                              onClick={() => setAdults(Math.max(1, adults - 1))}
-                              disabled={adults <= 1}
-                              className="w-8 h-8 rounded-full border-2 border-gray-300 flex items-center justify-center text-gray-600 hover:border-primary hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed"
-                            >
-                              <svg
-                                className="w-4 h-4"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M20 12H4"
-                                />
-                              </svg>
-                            </button>
-                            <span className="w-8 text-center font-semibold text-gray-900">
-                              {adults}
-                            </span>
-                            <button
-                              onClick={() => setAdults(adults + 1)}
-                              className="w-8 h-8 rounded-full border-2 border-gray-300 flex items-center justify-center text-gray-600 hover:border-primary hover:text-primary"
-                            >
-                              <svg
-                                className="w-4 h-4"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M12 4v16m8-8H4"
-                                />
-                              </svg>
-                            </button>
-                          </div>
-                        </div>
-
-                        {/* Children */}
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="font-semibold text-gray-900">
-                              Children
-                            </p>
-                            <p className="text-sm text-gray-600">2 – 12 ages</p>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <button
-                              onClick={() =>
-                                setChildren(Math.max(0, children - 1))
-                              }
-                              disabled={children <= 0}
-                              className="w-8 h-8 rounded-full border-2 border-gray-300 flex items-center justify-center text-gray-600 hover:border-primary hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed"
-                            >
-                              <svg
-                                className="w-4 h-4"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M20 12H4"
-                                />
-                              </svg>
-                            </button>
-                            <span className="w-8 text-center font-semibold text-gray-900">
-                              {children}
-                            </span>
-                            <button
-                              onClick={() => setChildren(children + 1)}
-                              className="w-8 h-8 rounded-full border-2 border-gray-300 flex items-center justify-center text-gray-600 hover:border-primary hover:text-primary"
-                            >
-                              <svg
-                                className="w-4 h-4"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M12 4v16m8-8H4"
-                                />
-                              </svg>
-                            </button>
-                          </div>
-                        </div>
-
-                        {/* Info Note */}
-                        {/* <div className="pt-4 border-t">
-                <p className="text-sm text-gray-600">
-                  Chỗ ở này cho phép tối đa 3 khách, không tính em bé. 
-                </p>
-              </div> */}
-
-                        {/* Close Button */}
-                        <Button
-                          onClick={() => setIsGuestPopoverOpen(false)}
-                          className="w-full bg-white hover:bg-gray-50 text-primary border border-border rounded-xl"
-                        >
-                          Close
-                        </Button>
-                      </div>
-                    </PopoverContent>
-                  </Popover>
+                  <GuestPicker
+                    adults={adults}
+                    children={children}
+                    setAdults={setAdults}
+                    setChildren={setChildren}
+                  />
                 </div>
               </div>
-              
+
               {/* Select Room Button */}
               <Button
                 onClick={() => {
@@ -568,9 +442,9 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
                   }
                 }}
                 disabled={available === false}
-                className={`w-full h-10 rounded-2xl mb-6 ${
+                className={`w-full h-10 rounded-3xl mb-6 hover:bg-primary/80 ${
                   available === false
-                    ? "bg-gray-400 cursor-not-allowed hover:bg-gray-400"
+                    ? "bg-muted cursor-not-allowed hover:bg-muted"
                     : ""
                 }`}
               >
@@ -584,13 +458,13 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
                     <p className="text-xs text-muted-foreground mb-1">
                       Check-in
                     </p>
-                    <p className="text-lg elegant-sanserif">14:00</p>
+                    <p className="text-lg elegant-sans">14:00</p>
                   </div>
                   <div className="flex flex-col items-center justify-center">
                     <p className="text-xs text-muted-foreground mb-1">
                       Check-out
                     </p>
-                    <p className="text-lg elegant-sanserif">12:00</p>
+                    <p className="text-lg elegant-sans">12:00</p>
                   </div>
                 </div>
               </div>
@@ -608,13 +482,13 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
 
               {/* Policy */}
               <div className="p-4">
-                <div className="flex items-center gap-2 font-semibold">
+                <div className="flex items-center gap-2 ">
                   {/* <Info className="w-4 h-4" /> */}
-                  <h2 className="text-2xl elegant-heading mb-4">
+                  <h2 className="text-xl elegant-sans mb-2">
                     Cancellation Policy
                   </h2>
                 </div>
-                <ul className="list-disc pl-5 space-y-1 text-gray-700">
+                <ul className="list-disc pl-5 space-y-1 elegant-subheading text-sm text-muted-foreground">
                   <li>Cancel 7+ days before check-in → Full refund (100%).</li>
                   <li>Cancel 3–6 days before check-in → 50% refund.</li>
                   <li>Cancel within 2 days → No refund.</li>

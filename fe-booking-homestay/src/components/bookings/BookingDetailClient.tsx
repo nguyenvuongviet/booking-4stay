@@ -74,10 +74,10 @@ export default function BookingDetailClient({
         <div className="max-w-7xl mx-auto px-12 py-4">
           <button
             onClick={() => router.push("/booking")}
-            className="px-4 flex items-center gap-2 text-gray-900 hover:text-primary hover:cursor-pointer"
+            className="px-4 flex items-center gap-2 hover:text-primary hover:cursor-pointer"
           >
             <ArrowLeft className="h-5 w-5" />
-            <span className="elegant-subheading">Back to hotel</span>
+            <span className="elegant-sans">Back</span>
           </button>
         </div>
       </header>

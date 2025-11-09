@@ -272,7 +272,7 @@ export default function HotelsListPage() {
         </div>
         {loading && (
           <div className="flex items-center justify-center py-8">
-            <div className="flex items-center gap-3 text-muted-foreground">
+            <div className="flex items-center gap-3 text-muted">
               <Loader2 className="h-6 w-6 animate-spin text-primary" />
               <span className="text-sm">Loading more hotels...</span>
             </div>
@@ -281,7 +281,7 @@ export default function HotelsListPage() {
 
         {!hasMore && !loading && (
           <div className="flex items-center justify-center py-1">
-            <div className="text-center text-muted-foreground ">
+            <div className="text-center text-muted">
               <p className="text-sm ">
                 You{"'"}ve reached the end of the results
               </p>

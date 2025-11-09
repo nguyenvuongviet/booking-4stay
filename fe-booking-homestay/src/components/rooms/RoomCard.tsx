@@ -56,16 +56,16 @@ export function RoomCard({ room }: RoomCardProps) {
           </div>
         )}
         <div className="absolute top-4 right-4 bg-border px-2 py-1 rounded-full flex items-center gap-1">
-          <Star className="text-chart-4 fill-current" size={16} />
-          <span className="text-sm font-medium">{room.rating}</span>
+          <Star className="text-yellow-400 fill-current" size={16} />
+          <span className="text-sm elegant-sans">{room.rating}</span>
         </div>
       </div>
       <CardContent className="pb-8 ">
-        <h3 className="elegant-heading text-2xl text-foreground pb-6 truncate">
+        <h3 className="elegant-heading text-xl text-secondary-foreground pb-4 truncate">
           {room.name}
         </h3>
-        <p className="elegant-subheading text-muted-foreground mb-2 flex items-center gap-1">
-          <MapPin size={16} />
+        <p className="elegant-subheading text-muted-foreground mb-4 flex items-center gap-1">
+          <MapPin size={20} className="mr-2"/>
           {room.location.fullAddress}
         </p>
 
@@ -84,7 +84,7 @@ export function RoomCard({ room }: RoomCardProps) {
             <span className="text-xl font-bold text-foreground">
               {formatPrice(room.price)}
             </span>
-            <span className="elegant-subheading text-muted-foreground">
+            <span className="elegant-subheading text-sm text-muted-foreground">
               /night
             </span>
           </div>

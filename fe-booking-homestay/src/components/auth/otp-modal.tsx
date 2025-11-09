@@ -160,6 +160,44 @@ export default function OTPModals({
     }
   };
 
+  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const pasteData = e.clipboardData.getData("text").trim();
+    if (/^\d{6}$/.test(pasteData)) {
+      const newOtp = pasteData.split("");
+      setOtpValues(newOtp);
+
+      // Hiệu ứng highlight nhẹ từng ô
+      newOtp.forEach((digit, i) => {
+        const input = document.getElementById(`otp-${i}`) as HTMLInputElement;
+        if (input) {
+          input.classList.add("animate-pulse", "border-primary");
+          setTimeout(() => {
+            input.classList.remove("animate-pulse", "border-primary");
+          }, 300 + i * 50);
+        }
+      });
+
+      // focus ô cuối cùng
+      const lastInput = document.getElementById("otp-5");
+      lastInput?.focus();
+    } else {
+      toast.error("Vui lòng dán đúng 6 số OTP!");
+    }
+    // Chỉ nhận đúng 6 ký tự số
+    // if (!/^\d{6}$/.test(pasteData)) {
+    //   setApiError("OTP không hợp lệ!");
+    //   return;
+    // }
+
+    // const newOtpValues = pasteData.split("");
+    // setOtpValues(newOtpValues);
+
+    // // Focus vào input cuối cùng để người dùng có thể nhấn Enter ngay
+    // const lastInput = document.getElementById(`otp-5`);
+    // lastInput?.focus();
+  };
+
   return (
     <>
       {/* OTP Modal */}
@@ -173,7 +211,7 @@ export default function OTPModals({
               <div className="flex justify-end">
                 <button
                   onClick={() => setShow(false)}
-                  className="text-primary hover:text-primary/80"
+                  className="cursor-pointer hover:text-primary"
                 >
                   <X size={24} />
                 </button>
@@ -184,7 +222,7 @@ export default function OTPModals({
             )}
             <p className="text-foreground elegant-subheading mb-6">
               We have sent a OTP to {""}
-              <span className="font-semibold text-[#3f9bda]">{email}</span>
+              <span className="font-semibold text-secondary-foreground">{email}</span>
             </p>
 
             <div className="flex justify-center gap-2 mb-6">
@@ -193,6 +231,8 @@ export default function OTPModals({
                   key={index}
                   id={`otp-${index}`}
                   type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   maxLength={1}
                   value={value}
                   onChange={(e) => handleOtpChange(index, e.target.value)}
@@ -211,13 +251,14 @@ export default function OTPModals({
                       prevInput?.focus();
                     }
                   }}
+                  onPaste={(e) => handlePaste(e)}
                 />
               ))}
             </div>
             {error && <p className="text-destructive text-sm mb-4">{error}</p>}
 
             <Button
-              className="mb-4 rounded-2xl w-full bg-primary hover:bg-primary/90 text-primary-foreground h-10 elegant-subheading text-md"
+              className="mb-4 rounded-2xl w-full bg-primary hover:bg-primary/80 h-10 elegant-subheading text-md"
               onClick={handleVerify}
             >
               Verify OTP

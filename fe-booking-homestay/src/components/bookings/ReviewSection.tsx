@@ -60,8 +60,8 @@ export const ReviewSection = ({
   return (
     <>
       <Button
-        variant={isReviewed ? "secondary" : "outline"}
-        className="rounded-xl bg-primary text-white hover:bg-primary/80 hover:text-white flex items-center gap-2"
+        variant={isReviewed ? "outline" : "secondary"}
+        className="rounded-xl flex items-center gap-2"
         onClick={() => setOpen(true)}
       >
         {isReviewed ? "View Review" : "Write Review"}

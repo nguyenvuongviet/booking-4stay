@@ -123,7 +123,7 @@ function CombinedFilterPopup({
           <div>
             <div className="flex items-center gap-2 mb-4">
               {/* <Star className="h-5 w-5 fill-amber-400 text-amber-400" /> */}
-              <h3 className="text-lg font-semibold">Rating</h3>
+              <h3 className="text-lg elegant-sans">Rating</h3>
             </div>
             <RadioGroup
               value={selectedStars[0]?.toString() || ""}
@@ -151,7 +151,7 @@ function CombinedFilterPopup({
                     </div>
                     <Label
                       htmlFor={`star-${option.value}`}
-                      className="text-sm font-normal cursor-pointer"
+                      className="text-sm elegant-subheading cursor-pointer"
                     >
                       {option.label}
                     </Label>
@@ -166,7 +166,7 @@ function CombinedFilterPopup({
 
           {/* Price Section */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">Price</h3>
+            <h3 className="text-lg elegant-sans mb-4">Price</h3>
             <div className="space-y-3">
               {priceRanges.map((option) => (
                 <div key={option.value} className="flex items-center space-x-3">
@@ -178,7 +178,7 @@ function CombinedFilterPopup({
                   />
                   <Label
                     htmlFor={`price-${option.value}`}
-                    className="text-sm font-normal cursor-pointer"
+                    className="text-sm elegant-subheading cursor-pointer"
                   >
                     {option.label}
                   </Label>
@@ -188,11 +188,11 @@ function CombinedFilterPopup({
           </div>
 
           {/* Action Buttons */}
-          <div className="flex gap-3 pt-4">
+          <div className="flex gap-3 pt-2">
             <Button
               variant="outline"
               onClick={() => onOpenChange(false)}
-              className="flex-1 rounded-full h-10 text-sm font-medium hover:bg-secondary/50"
+              className="flex-1 rounded-full h-10 text-sm elegant-sans"
             >
               Close
             </Button>
@@ -201,7 +201,7 @@ function CombinedFilterPopup({
                 onApplyFilters();
                 onOpenChange(false);
               }}
-              className="flex-1 rounded-full h-10 text-sm font-medium bg-primary hover:bg-primary/80 text-white"
+              className="flex-1 rounded-full h-10 text-sm elegant-sans bg-primary hover:bg-primary/80"
             >
               Apply
             </Button>
@@ -237,7 +237,7 @@ function OptionsPopup({
       >
         <div className="absolute inset-0 pl-2 -z-10 bg-black/20 backdrop-blur-sm rounded-xl" />
 
-        <div className="bg-white rounded-xl pl-2">
+        <div className="bg-background rounded-xl pl-2">
           <div className="space-y-1">
             {options.map((option) => (
               <button
@@ -248,7 +248,7 @@ function OptionsPopup({
                 }}
                 className="w-full flex items-center justify-between px-3 py-3 text-left hover:bg-gray-50 rounded-md transition-colors"
               >
-                <span className="text-base font-normal text-gray-900">
+                <span className="text-base elegant-subheading text-muted-foreground">
                   {option.label}
                 </span>
                 {selectedValue === option.value && (
@@ -396,14 +396,14 @@ export function FilterBar({
             variant="outline"
             size="default"
             className="rounded-full px-5 py-2 gap-2
-                      border border-gray-200 bg-white shadow-sm
-                      hover:shadow-md hover:bg-gray-50
+                      border border-border bg-card shadow-sm
+                      hover:shadow-md
                       transition-all duration-200
-                      text-gray-800 font-medium
+                      text-foreground elegant-subheading
                       flex items-center">
-            <Filter className="h-4 w-4 text-primary" />
+            <Filter className="h-4 w-4 text-muted-foreground" />
             <span>Filters</span>
-            <ChevronDown className="h-4 w-4 text-gray-500 transition-transform group-data-[state=open]:rotate-180" />
+            <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
           </Button>
         </CombinedFilterPopup>
 
@@ -419,15 +419,15 @@ export function FilterBar({
               variant="outline"
               size="default"
               className="rounded-full px-5 py-2 gap-2
-                      border border-gray-200 bg-white shadow-sm
-                      hover:shadow-md hover:bg-gray-50
+                      border border-border bg-card shadow-sm
+                      hover:shadow-md
                       transition-all duration-200
-                      text-gray-800 font-medium
+                      text-foreground elegant-subheading
                       flex items-center"
             >
-              <ArrowUpDown className="h-4 w-4" />
+              <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
               {getSortLabel()}
-              <ChevronDown className="h-4 w-4 text-gray-500 transition-transform group-data-[state=open]:rotate-180" />
+              <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
             </Button>
           </OptionsPopup>
         </div>
