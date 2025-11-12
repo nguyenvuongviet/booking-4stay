@@ -16,6 +16,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import GuestPicker from "./GuestPicker";
+import LocationSuggestions from "./LocationSuggestions";
 
 export function SearchBar() {
   const [checkIn, setCheckIn] = useState<Date | null>(null);
@@ -135,23 +136,12 @@ export function SearchBar() {
             className="pl-10 h-12 elegant-subheading rounded-4xl placeholder:text-muted border border-border"
           />
 
-          {/* Danh sách gợi ý */}
-          {showSuggestions && locations.length > 0 && (
-            <ul className="absolute z-50 left-0 right-0 bg-white border border-gray-200 mt-2 rounded-xl shadow-lg max-h-60 overflow-auto">
-              {locations.map((loc: Location) => (
-                <li
-                  key={loc.id}
-                  onClick={() => handleSelectLocation(loc)}
-                  className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm text-gray-700"
-                >
-                  {/* {loc.province
-                              ? `${loc.district}, ${loc.province}`
-                              : loc.province || "Unknown"} */}
-                  {loc.province || "Unknown"}
-                </li>
-              ))}
-            </ul>
-          )}
+          {/* Danh sách gợi ý location */}
+          <LocationSuggestions
+            locations={locations}
+            showSuggestions={showSuggestions}
+            onSelect={handleSelectLocation}
+          />
         </div>
 
         <div className="relative">

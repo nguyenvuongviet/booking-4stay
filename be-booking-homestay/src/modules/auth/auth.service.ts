@@ -21,6 +21,7 @@ import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { RegisterDto } from './dto/register.dto';
 import { ResetPasswordDto } from './dto/reset-password';
+import { verifyFirebaseToken } from 'src/common/firebaseAdmin';
 
 @Injectable()
 export class AuthService {
@@ -295,7 +296,51 @@ export class AuthService {
     }
   }
 
-  async googleLogin(loginAuthDto: LoginDto) {
-    return 'google login';
+  async googleLogin(googleToken: string) {
+    try {
+      // 1. Xác thực token Firebase
+      const decoded = await verifyFirebaseToken(googleToken);
+      const { uid, email, name, picture } = decoded;
+
+      // 2. Kiểm tra user đã tồn tại chưa
+      let user = await this.prismaService.users.findUnique({
+        where: { email },
+      });
+
+      if (!user) {
+        // Nếu chưa có, tạo user mới
+        const defaultRole = await this.prismaService.roles.findUnique({
+          where: { name: 'USER' },
+        });
+        if (!defaultRole)
+          throw new BadRequestException('Vai trò mặc định không tìm thấy');
+        if (!email) {
+          throw new BadRequestException('Email từ Google không hợp lệ');
+        }
+        user = await this.prismaService.users.create({
+          data: {
+            email,
+            firstName: name || '',
+            lastName: '',
+            isActive: true,
+            isVerified: true,
+            avatar: picture || null,
+            user_roles: { create: { roleId: defaultRole.id } },
+          },
+          include: { user_roles: { include: { roles: true } } },
+        });
+      }
+
+      // 3. Tạo JWT theo hệ thống hiện tại
+      const tokens = this.tokenService.createTokens(user.id);
+
+      return {
+        ...tokens,
+        user: sanitizeUserData(user),
+      };
+    } catch (error) {
+      console.error('Google login error:', error.message);
+      throw new BadRequestException('Đăng nhập Google thất bại');
+    }
   }
 }

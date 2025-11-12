@@ -5,7 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { STORAGE_KEYS } from "@/constants";
 import { useAuth } from "@/context/auth-context";
-import { login } from "@/services/authApi";
+import { auth } from "@/lib/firebase";
+import { googleLogin, login } from "@/services/authApi";
+import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { Eye, EyeOff, X } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -64,7 +66,7 @@ export default function SignInModal({
     try {
       const { data } = await login({
         email: emailInput.trim(),
-        password,     
+        password,
       });
       setUser(data.user);
 
@@ -94,9 +96,37 @@ export default function SignInModal({
     }
   };
 
-  const handleSocialSignIn = (provider: "google") => {
-    // Chuyển hướng tới backend OAuth endpoint
-    window.location.href = `http://localhost:3069/auth/${provider}`;
+  const handleGoogleLogin = async () => {
+    setLoading(true);
+    setApiError("");
+    try {
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+
+      const token = await result.user.getIdToken();
+
+      const { data } = await googleLogin(token);
+
+      setUser(data.user);
+
+      localStorage.setItem(
+        STORAGE_KEYS.CURRENT_USER,
+        JSON.stringify({
+          accessToken: data.accessToken,
+          refreshToken: data.refreshToken,
+          user: data.user,
+        })
+      );
+      console.log("Google login response:", data);
+      console.log("User set to:", data.user);
+
+      setShow(false);
+    } catch (err: any) {
+      console.error("Google login failed:", err);
+      setApiError("Google sign-in failed!");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -221,7 +251,7 @@ export default function SignInModal({
                 type="button"
                 variant="outline"
                 className="rounded-2xl w-full border-border text-foreground bg-transparent flex items-center justify-center gap-2"
-                onClick={() => handleSocialSignIn("google")}
+                onClick={handleGoogleLogin}
                 disabled={loading}
               >
                 <svg width="18" height="18" viewBox="0 0 24 24">

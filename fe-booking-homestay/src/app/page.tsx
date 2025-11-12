@@ -3,6 +3,7 @@
 import Footer from "@/components/Footer";
 import GuestPicker from "@/components/GuestPicker";
 import Header from "@/components/Header";
+import LocationSuggestions from "@/components/LocationSuggestions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -276,29 +277,18 @@ export default function HomePage() {
                     </p>
                   )}
 
-                  {/* Danh sách gợi ý */}
-                  {showSuggestions && locations.length > 0 && (
-                    <ul className="absolute z-50 left-0 right-0 bg-white border border-gray-200 mt-2 rounded-xl shadow-lg max-h-60 overflow-auto text-left">
-                      {locations.map((loc: Location) => (
-                        <li
-                          key={loc.id}
-                          onClick={() => handleSelectLocation(loc)}
-                          className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm text-gray-700"
-                        >
-                          {/* {loc.province
-                              ? `${loc.district}, ${loc.province}`
-                              : loc.province || "Unknown"} */}
-                          {loc.province || "Unknown"}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
+                  {/* Danh sách gợi ý location */}
+                  <LocationSuggestions
+                    locations={locations}
+                    showSuggestions={showSuggestions}
+                    onSelect={handleSelectLocation}
+                  />
                 </div>
               </div>
 
               <div>
                 <label className="elegant-subheading text-sm text-secondary-foreground mb-2 block">
-                  Check in & Check out 
+                  Check in & Check out
                 </label>
                 <div className="relative">
                   <Calendar
@@ -323,7 +313,7 @@ export default function HomePage() {
                   />
                 </div>
               </div>
-              
+
               <div>
                 <label className="elegant-subheading text-sm text-secondary-foreground mb-2 block">
                   Guests
@@ -389,7 +379,7 @@ export default function HomePage() {
                     {room.name}
                   </h3>
                   <p className="elegant-subheading text-sm text-muted-foreground mb-2 flex items-center gap-1">
-                    <MapPin size={20} className="mr-2"/>
+                    <MapPin size={20} className="mr-2" />
                     {room.location.fullAddress}
                   </p>
                   <div className="flex items-center gap-2 mb-4">
@@ -441,28 +431,26 @@ export default function HomePage() {
 
           {locations.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {locations.map((location) => (
+              {locations.map((loc: Location) => (
                 <Card
-                  key={location.id}
+                  key={loc.id}
                   onClick={() =>
                     router.push(
-                      `/room-list?location=${encodeURIComponent(
-                        location.province
-                      )}`
+                      `/room-list?location=${encodeURIComponent(loc.province)}`
                     )
                   }
                   className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
                 >
                   <div className="relative">
                     <img
-                      src={location.image || "/placeholder.svg"}
-                      alt={location.province}
+                      src={loc.provinceImageUrl || "/default.jpg"}
+                      alt={loc.province}
                       className="w-full h-72 object-cover"
                     />
                     <div className="absolute inset-0 bg-linear-to-t from-black/60 to-transparent" />
                     <div className="absolute bottom-4 left-6 text-accent">
                       <h3 className="text-2xl elegant-sans mb-1">
-                        {location.province}
+                        {loc.province || "Unknown"}
                       </h3>
                       {/* <p className="text-sm opacity-90">{location.country}</p> */}
                     </div>

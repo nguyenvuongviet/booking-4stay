@@ -8,6 +8,7 @@ import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { RegisterDto } from './dto/register.dto';
 import { ResetPasswordDto } from './dto/reset-password';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { GoogleLoginDto } from './dto/google-login.dto';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -67,9 +68,10 @@ export class AuthController {
     return await this.authService.resetPassword(resetPasswordDto);
   }
 
+
   @Public()
-  @Post('google-login')
-  async googleLogin(@Body() loginAuthDto: LoginDto) {
-    return await this.authService.googleLogin(loginAuthDto);
-  }
+@Post('google-login')
+async googleLogin(@Body() googleLoginDto: GoogleLoginDto) {
+  return await this.authService.googleLogin(googleLoginDto.token);
+}
 }

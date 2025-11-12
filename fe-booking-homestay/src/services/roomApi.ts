@@ -29,7 +29,7 @@ export const room_detail = async (id: number | string) => {
 
 export const location = async () => {
   try {
-    const resp = await api.get(`/location/provinces/list/all`);
+    const resp = await api.get(`/location/all`);
     return resp.data;
   } catch (error) {
     console.error("list location error: ", error);
