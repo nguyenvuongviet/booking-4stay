@@ -3,6 +3,7 @@
 import { FilterBar } from "@/components/FilterBar";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
+import MapRooms from "@/components/rooms/MapRoom";
 import { RoomCard } from "@/components/rooms/RoomCard";
 import { SearchBar } from "@/components/SearchBar";
 import { Room } from "@/models/Room";
@@ -109,6 +110,8 @@ export default function HotelsListPage() {
           id: room.location?.id,
           fullAddress: room.location?.fullAddress,
           province: room.location?.province,
+          latitude: room.location?.latitude,
+          longitude: room.location?.longitude,
         },
         rating: room.rating || 0,
         reviewCount: room.reviewCount || 0,
@@ -189,47 +192,10 @@ export default function HotelsListPage() {
     setHasMore(true);
   };
 
-  // const handleSort = async (order: "asc" | "desc") => {
-  //   try {
-  //     setLoading(true);
-  //     const res = await sort_price("price");
-  //     const sortedRooms = res?.items || res?.data?.items || [];
-  //     console.log("Sort API response:", res);
-
-  //     const mappedRooms: Room[] = sortedRooms.map((room: any) => ({
-  //       id: room.id,
-  //       name: room.name,
-  //       description: room.description,
-  //       price: room.price,
-  //       adultCapacity: room.adultCapacity,
-  //       childCapacity: room.childCapacity,
-  //       location: {
-  //         id: room.location?.id,
-  //         fullAddress: room.location?.fullAddress,
-  //         province: room.location?.province,
-  //       },
-  //       rating: room.rating || 0,
-  //       reviewCount: room.reviewCount || 0,
-  //       image: room.images?.main,
-  //       amenities: room.amenities?.map((a: any) => a.name) || [],
-  //       status: "Available",
-  //     }));
-
-  //     const finalRooms =
-  //       order === "asc" ? [...mappedRooms].reverse() : mappedRooms;
-
-  //     setRooms(finalRooms);
-  //     setHasMore(false); // Dừng load thêm khi sort xong
-  //   } catch (err) {
-  //     console.error("Error sorting rooms:", err);
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
   return (
     <div className="min-h-screen bg-background">
       <Header />
+      {/* Map */}
       {/* <AnimatePresence>
         {!scrolled && (
           <motion.div
@@ -261,34 +227,41 @@ export default function HotelsListPage() {
           <SearchBar />
         </div>
       </motion.div> */}
-      <main className="max-w-7xl container mx-auto py-12 space-y-12 pt-20 px-4 sm:px-6 lg:px-8">
+      <main className="max-w-9xl container mx-auto py-12 space-y-12 pt-20 px-4 sm:px-6 lg:px-8">
         <SearchBar />
         <FilterBar onFilterChange={handleFilterChange} />
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* Map */}
+          <div className="lg:w-1/4 h-full sticky top-24 rounded-lg overflow-hidden shadow-md">
+            <MapRooms rooms={rooms} height="h-[84vh]" />
+          </div>
+          <div className="lg:w-3/4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 ">
+            {rooms.map((room, index) => (
+              <RoomCard key={`${room.id}-${index}`} room={room} />
+            ))}
+            {loading && (
+              <div className="flex items-center justify-center py-8">
+                <div className="flex items-center gap-3 text-muted">
+                  <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                  <span className="text-sm">Loading more hotels...</span>
+                </div>
+              </div>
+            )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 ">
-          {rooms.map((room, index) => (
-            <RoomCard key={`${room.id}-${index}`} room={room} />
-          ))}
+            {!hasMore && !loading && (
+              <div className="flex items-center justify-center py-1">
+                <div className="text-center text-muted">
+                  <p className="text-sm ">
+                    You{"'"}ve reached the end of the results
+                  </p>
+                  <p className="text-xs mt-1">
+                    Total: {rooms.length} hotels found
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
-        {loading && (
-          <div className="flex items-center justify-center py-8">
-            <div className="flex items-center gap-3 text-muted">
-              <Loader2 className="h-6 w-6 animate-spin text-primary" />
-              <span className="text-sm">Loading more hotels...</span>
-            </div>
-          </div>
-        )}
-
-        {!hasMore && !loading && (
-          <div className="flex items-center justify-center py-1">
-            <div className="text-center text-muted">
-              <p className="text-sm ">
-                You{"'"}ve reached the end of the results
-              </p>
-              <p className="text-xs mt-1">Total: {rooms.length} hotels found</p>
-            </div>
-          </div>
-        )}
       </main>
 
       <Footer />

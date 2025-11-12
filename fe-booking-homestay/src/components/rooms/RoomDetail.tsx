@@ -2,11 +2,6 @@
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import { useAuth } from "@/context/auth-context";
 import { Room } from "@/models/Room";
 import { room_available, room_detail } from "@/services/roomApi";
@@ -16,12 +11,12 @@ import { useEffect, useRef, useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import toast from "react-hot-toast";
+import GuestPicker from "../GuestPicker";
 import Header from "../Header";
 import { getAmenityIcon } from "./getAmenityIcon";
-import { ReviewItem } from "@/models/Review";
-import { ReviewList } from "./ReviewList";
 import { PhotoGalleryModal } from "./PhotoGalleryModal";
-import GuestPicker from "../GuestPicker";
+import { ReviewList } from "./ReviewList";
+import MapRooms from "./MapRoom";
 
 interface RoomDetailClientProps {
   roomId: string;
@@ -470,15 +465,7 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
               </div>
 
               {/* Map */}
-              {/* <div className="mb-4">
-                <div className="w-full h-48 bg-gray-200 rounded-lg relative overflow-hidden">
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="bg-primary text-white p-2 rounded-full">
-                      <MapPin className="h-6 w-6" />
-                    </div>
-                  </div>
-                </div>
-              </div> */}
+              <MapRooms rooms={[room]} height="h-[30vh]" />
 
               {/* Policy */}
               <div className="p-4">
