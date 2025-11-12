@@ -18,6 +18,7 @@ import { IUser } from "../models/User";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { googleLogin } from "@/services/authApi";
+import { usePersistedState } from "@/hook/usePersistedState";
 
 interface AuthContextType {
   user: IUser | null;
@@ -53,69 +54,40 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [otpContext, setOtpContext] = useState<"signup" | "forgotPassword">(
     "signup"
   );
-  const [user, setUser] = useState<IUser | null>(null);
   const router = useRouter();
 
+  // Thay useState bằng usePersistedState để giữ user khi refresh
+  const [user, setUser] = usePersistedState<IUser | null>(
+    STORAGE_KEYS.CURRENT_USER,
+    null
+  );
+
+  // Sync với Firebase Auth
   useEffect(() => {
-    // Load khi mount
     const saved = localStorage.getItem(STORAGE_KEYS.CURRENT_USER);
     if (saved) {
-      const parsed = JSON.parse(saved);
-      if (parsed?.user) {
-        setUser(parsed.user); // chỉ set user, giữ accessToken & refreshToken nguyên vẹn
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed?.user) setUser(parsed.user);
+      } catch {
+        localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
       }
     }
-  }, []);
 
-  useEffect(() => {
+    // Chỉ subscribe firebase nhưng không override user từ localStorage
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
-        const token = await firebaseUser.getIdToken();
-        try {
-          const resp = await googleLogin(token);
-          if (resp?.user) {
-            setUser(resp.user);
-            localStorage.setItem(
-              STORAGE_KEYS.CURRENT_USER,
-              JSON.stringify({
-                accessToken: resp.accessToken,
-                refreshToken: resp.refreshToken,
-                user: resp.user,
-              })
-            );
-            router.refresh();
-          } else {
-            console.warn("googleLogin: invalid response", resp);
-            setUser(null);
-            localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
-          }
-        } catch (err) {
-          console.error("Google login backend failed:", err);
-          setUser(null);
-          localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
-        }
-      } else {
+      if (!firebaseUser) {
+        // Nếu user logout thì mới remove
         setUser(null);
         localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
       }
     });
+
     return () => unsubscribe();
   }, []);
 
   const updateUser = (newUser: IUser) => {
     setUser(newUser);
-
-    const currentData = JSON.parse(
-      localStorage.getItem(STORAGE_KEYS.CURRENT_USER) || "{}"
-    );
-    const updatedData = {
-      ...currentData,
-      user: newUser,
-    };
-    localStorage.setItem(
-      STORAGE_KEYS.CURRENT_USER,
-      JSON.stringify(updatedData)
-    );
   };
 
   const logout = async () => {
@@ -124,7 +96,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } catch (err) {
       console.warn("Firebase signOut failed:", err);
     } finally {
-      localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
       const role = user?.role;
       setUser(null);
       if (role === 1) router.push("/admin/login");

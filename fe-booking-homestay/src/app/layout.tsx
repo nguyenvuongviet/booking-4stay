@@ -42,16 +42,21 @@ export default function RootLayout({
       className={`${outfit.variable} ${firaMono.variable} ${lora.variable}`}
     >
       <body className="antialiased">
-        <AuthProvider>{children}</AuthProvider>
-        <ShadcnToaster />
-        <div id="legacy-toaster">
-          <HotToaster position="top-right" toastOptions={{ duration: 10000 }} />
-        </div>
-        <HotToaster
-          toastOptions={{ duration: 6000 }}
-          position="top-right"
-          reverseOrder={false}
-        />
+        <AuthProvider>
+          {children}
+          <ShadcnToaster />
+          <div id="legacy-toaster">
+            <HotToaster
+              position="top-right"
+              toastOptions={{ duration: 10000 }}
+            />
+          </div>
+          <HotToaster
+            toastOptions={{ duration: 6000 }}
+            position="top-right"
+            reverseOrder={false}
+          />
+        </AuthProvider>
       </body>
     </html>
   );
