@@ -36,5 +36,18 @@ export class CreateRoomDto {
 
   @ApiProperty({ example: 1 })
   @IsNumber()
-  locationId: number;
+  provinceId: number;
+
+  @ApiProperty({ example: 1 })
+  @IsNumber()
+  districtId: number;
+
+  @ApiProperty({ example: 1 })
+  @IsNumber()
+  wardId?: number;
+
+  @ApiPropertyOptional({ example: '47/57 Nguyễn Thái Bình' })
+  @IsString()
+  @IsOptional()
+  street: string;
 }

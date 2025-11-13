@@ -11,98 +11,135 @@ import {
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import {
   ApiBearerAuth,
   ApiBody,
   ApiConsumes,
+  ApiParam,
   ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
 import { Public } from 'src/common/decorator/public.decorator';
 import { Roles } from 'src/common/decorator/roles.decorator';
-import { CreateLocationDto } from './dto/create-location.dto';
+import { UploadFileDto } from 'src/common/dto/upload-file.dto';
+import { CreateCountryDto } from './dto/create-country.dto';
+import { CreateDistrictDto } from './dto/create-district.dto';
+import { CreateProvinceDto } from './dto/create-province.dto';
+import { CreateWardDto } from './dto/create-ward.dto';
 import { UpdateLocationDto } from './dto/update-location.dto';
 import { LocationService } from './location.service';
-import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
-import { FileInterceptor } from '@nestjs/platform-express';
-import { UploadFileDto } from 'src/common/dto/upload-file.dto';
 
 @ApiTags('location')
 @Controller('location')
 export class LocationController {
   constructor(private readonly locationService: LocationService) {}
 
-  @Get('all')
+  @Get('provinces/search')
   @Public()
-  async findAll() {
-    return await this.locationService.findAll();
+  @ApiQuery({ name: 'keyword', required: true, example: 'Hà' })
+  async searchProvinces(@Query('keyword') keyword: string) {
+    return this.locationService.searchProvinces(keyword);
   }
 
-  @Get('provinces/list/all')
+  // PUBLIC — Dropdown chọn vị trí
+  @Get('countries')
   @Public()
-  async provinces() {
-    return this.locationService.listProvinces();
+  async getCountries() {
+    return this.locationService.getCountries();
   }
 
-  @Get('search')
+  @Get('provinces')
   @Public()
-  async search(@Query() query: PaginationQueryDto) {
-    return this.locationService.search(query);
+  @ApiQuery({ name: 'countryId', required: true, example: 1 })
+  async getProvinces(@Query('countryId') countryId?: number) {
+    return this.locationService.getProvinces(countryId);
   }
 
-  @Get('provinces/:province/districts')
+  @Get('districts')
+  @ApiQuery({ name: 'provinceId', required: true, example: 1 })
   @Public()
-  async districts(@Param('province') province: string) {
-    return this.locationService.listDistricts(province);
+  async getDistricts(@Query('provinceId') provinceId: number) {
+    return this.locationService.getDistricts(provinceId);
   }
 
-  @Get('provinces/:province/districts/:district/wards')
+  @Get('wards')
+  @ApiQuery({ name: 'districtId', required: true, example: 1 })
   @Public()
-  async wards(
-    @Param('province') province: string,
-    @Param('district') district: string,
-  ) {
-    return this.locationService.listWards(province, district);
+  async getWards(@Query('districtId') districtId: number) {
+    return this.locationService.getWards(districtId);
   }
 
-  @Post('admin')
+  // ADMIN — CRUD + Upload + Import
+  // --- CREATE ---
+  @Post('admin/countries')
   @Roles('ADMIN')
   @ApiBearerAuth('AccessToken')
-  async create(@Body() createLocationDto: CreateLocationDto) {
-    return await this.locationService.create(createLocationDto);
+  async createCountry(@Body() dto: CreateCountryDto) {
+    return this.locationService.createCountry(dto);
   }
 
-  @Get('admin/:id')
+  @Post('admin/provinces')
   @Roles('ADMIN')
   @ApiBearerAuth('AccessToken')
-  async findOne(@Param('id') id: string) {
-    return await this.locationService.findOne(+id);
+  async createProvince(@Body() dto: CreateProvinceDto) {
+    return this.locationService.createProvince(dto);
   }
 
-  @Patch('admin/:id')
+  @Post('admin/districts')
   @Roles('ADMIN')
   @ApiBearerAuth('AccessToken')
-  async update(
+  async createDistrict(@Body() dto: CreateDistrictDto) {
+    return this.locationService.createDistrict(dto);
+  }
+
+  @Post('admin/wards')
+  @Roles('ADMIN')
+  @ApiBearerAuth('AccessToken')
+  async createWard(@Body() dto: CreateWardDto) {
+    return this.locationService.createWard(dto);
+  }
+
+  // --- UPDATE ---
+  @Patch('admin/:type/:id')
+  @Roles('ADMIN')
+  @ApiBearerAuth('AccessToken')
+  @ApiParam({
+    name: 'type',
+    required: true,
+    enum: ['country', 'province', 'district', 'ward'],
+    description: 'Loại location cần cập nhật hoặc xóa',
+  })
+  async updateLocation(
+    @Param('type') type: string,
     @Param('id') id: string,
-    @Body() updateLocationDto: UpdateLocationDto,
+    @Body() dto: UpdateLocationDto,
   ) {
-    return await this.locationService.update(+id, updateLocationDto);
+    return this.locationService.updateLocation(type, +id, dto);
   }
 
-  @Delete('admin/:id')
+  // --- DELETE ---
+  @Delete('admin/:type/:id')
   @Roles('ADMIN')
   @ApiBearerAuth('AccessToken')
-  async remove(@Param('id') id: string) {
-    return await this.locationService.remove(+id);
+  @ApiParam({
+    name: 'type',
+    required: true,
+    enum: ['country', 'province', 'district', 'ward'],
+    description: 'Loại location cần cập nhật hoặc xóa',
+  })
+  async deleteLocation(@Param('type') type: string, @Param('id') id: string) {
+    return this.locationService.deleteLocation(type, +id);
   }
 
-  @Put('province-image')
+  // --- UPLOAD ẢNH TỈNH/THÀNH ---
+  @Put('admin/province-image')
   @Roles('ADMIN')
   @ApiBearerAuth('AccessToken')
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('file'))
-  @ApiBody({ type: UploadFileDto })
   @ApiQuery({ name: 'province', required: true, example: 'Hà Nội' })
+  @ApiBody({ type: UploadFileDto })
   async setProvinceImage(
     @UploadedFile() file: Express.Multer.File,
     @Query('province') province: string,
@@ -110,11 +147,22 @@ export class LocationController {
     return this.locationService.setProvinceImage(province, file);
   }
 
-  @Delete('province-image')
+  @Delete('admin/province-image')
   @Roles('ADMIN')
   @ApiBearerAuth('AccessToken')
   @ApiQuery({ name: 'province', required: true, example: 'Hà Nội' })
   async deleteProvinceImage(@Query('province') province: string) {
     return this.locationService.deleteProvinceImage(province);
+  }
+
+  // --- IMPORT FILE CSV/EXCEL ---
+  @Post('admin/import')
+  @Roles('ADMIN')
+  @ApiBearerAuth('AccessToken')
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(FileInterceptor('file'))
+  @ApiBody({ type: UploadFileDto })
+  async importLocation(@UploadedFile() file: Express.Multer.File) {
+    return this.locationService.importFromFile(file);
   }
 }

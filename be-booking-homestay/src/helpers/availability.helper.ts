@@ -22,7 +22,6 @@ export class AvailabilityHelper {
     const blocked = await this.prisma.room_availability.findFirst({
       where: {
         roomId,
-        isDeleted: false,
         isAvailable: false,
         date: { gte: inDate, lt: outDate },
       },

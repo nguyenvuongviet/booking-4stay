@@ -1,4 +1,14 @@
-import { PartialType } from '@nestjs/swagger';
-import { CreateLocationDto } from './create-location.dto';
+import { ApiPropertyOptional } from '@nestjs/swagger';
+import { IsOptional, IsString } from 'class-validator';
 
-export class UpdateLocationDto extends PartialType(CreateLocationDto) {}
+export class UpdateLocationDto {
+  @ApiPropertyOptional({ example: 'Tên mới' })
+  @IsOptional()
+  @IsString()
+  name?: string;
+
+  @ApiPropertyOptional({ example: 'Mã mới' })
+  @IsOptional()
+  @IsString()
+  code?: string;
+}

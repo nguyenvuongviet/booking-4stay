@@ -78,14 +78,14 @@ export class ReviewService {
     return { page, pageSize, total, items: sanitizeReviewList(items) };
   }
 
-  async remove(id: number, actorId: number, role: string) {
+  async remove(id: number, role: string) {
     const r = await this.prisma.reviews.findUnique({
       where: { id },
       select: { id: true, userId: true, isDeleted: true },
     });
     if (!r || r.isDeleted) throw new NotFoundException('Review không tồn tại');
 
-    if (role !== 'ADMIN' && r.userId !== actorId) {
+    if (role !== 'ADMIN') {
       throw new ForbiddenException('Bạn không thể xoá review của người khác');
     }
 
@@ -94,7 +94,6 @@ export class ReviewService {
       data: {
         isDeleted: true,
         deletedAt: new Date(),
-        deletedBy: actorId,
         updatedAt: new Date(),
       },
     });

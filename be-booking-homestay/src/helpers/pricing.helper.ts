@@ -13,7 +13,7 @@ export class PricingHelper {
     outDate: Date,
   ) {
     const overrides = await this.prisma.room_prices.findMany({
-      where: { roomId, isDeleted: false, date: { gte: inDate, lt: outDate } },
+      where: { roomId, date: { gte: inDate, lt: outDate } },
       select: { date: true, price: true },
     });
     const map = new Map(
