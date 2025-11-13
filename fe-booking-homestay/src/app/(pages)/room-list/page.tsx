@@ -235,10 +235,12 @@ export default function HotelsListPage() {
           <div className="lg:w-1/4 h-full sticky top-24 rounded-lg overflow-hidden shadow-md">
             <MapRooms rooms={rooms} height="h-[84vh]" />
           </div>
-          <div className="lg:w-3/4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 ">
-            {rooms.map((room, index) => (
-              <RoomCard key={`${room.id}-${index}`} room={room} />
-            ))}
+          <div className="lg:w-3/4 ">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+              {rooms.map((room, index) => (
+                <RoomCard key={`${room.id}-${index}`} room={room} />
+              ))}
+            </div>
             {loading && (
               <div className="flex items-center justify-center py-8">
                 <div className="flex items-center gap-3 text-muted">

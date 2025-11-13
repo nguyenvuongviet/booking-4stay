@@ -60,8 +60,8 @@ export function RoomCard({ room }: RoomCardProps) {
           <span className="text-sm elegant-sans">{room.rating}</span>
         </div>
       </div>
-      <CardContent className="pb-8 ">
-        <h3 className="elegant-heading text-xl text-secondary-foreground pb-4 truncate">
+      <CardContent className="pb-6">
+        <h3 className="elegant-heading text-xl text-secondary-foreground pb-2 truncate">
           {room.name}
         </h3>
         <p className="elegant-subheading text-muted-foreground mb-4 flex items-center gap-1">

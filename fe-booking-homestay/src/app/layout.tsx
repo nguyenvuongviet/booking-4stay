@@ -4,6 +4,8 @@ import { AuthProvider } from "@/context/auth-context";
 import type { Metadata } from "next";
 import { Outfit, Fira_Mono, Lora } from "next/font/google";
 import "./globals.css";
+import "antd/dist/reset.css";
+import AntdProvider from "@/components/providers/AntdProvider";
 
 // Sans font
 const outfit = Outfit({
@@ -43,19 +45,21 @@ export default function RootLayout({
     >
       <body className="antialiased">
         <AuthProvider>
-          {children}
-          <ShadcnToaster />
-          <div id="legacy-toaster">
+          <AntdProvider>
+            {children}
+            <ShadcnToaster />
+            <div id="legacy-toaster">
+              <HotToaster
+                position="top-right"
+                toastOptions={{ duration: 10000 }}
+              />
+            </div>
             <HotToaster
+              toastOptions={{ duration: 6000 }}
               position="top-right"
-              toastOptions={{ duration: 10000 }}
+              reverseOrder={false}
             />
-          </div>
-          <HotToaster
-            toastOptions={{ duration: 6000 }}
-            position="top-right"
-            reverseOrder={false}
-          />
+          </AntdProvider>
         </AuthProvider>
       </body>
     </html>
