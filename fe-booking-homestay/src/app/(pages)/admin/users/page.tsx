@@ -1,6 +1,6 @@
 "use client";
 
-import { UserCreateModal } from "@/components/admin/user-create-modal";
+import { UserCreateModal } from "@/app/(pages)/admin/users/_components/UserCreateModal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import { UserEditModal } from "@/components/admin/user-edit-modal";
+import { UserEditModal } from "@/app/(pages)/admin/users/_components/UserEditModal";
 import Loader from "@/components/loader/Loader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";

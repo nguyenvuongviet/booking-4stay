@@ -75,41 +75,41 @@ export function AdminHeader() {
               className="absolute right-0 mt-2 w-56 bg-card border border-border rounded-lg shadow-lg z-50"
               role="menu"
             >
-              <div className="p-4 border-b border-border">
+              <div className="px-3.5 py-3 border-b border-border">
                 <p className="text-sm font-semibold truncate">{displayName}</p>
                 <p className="text-xs text-muted-foreground truncate">
                   {email}
                 </p>
               </div>
 
-              <div className="p-2 space-y-1">
+              <div className="p-1.5 space-y-1">
                 <button
                   // onClick={() => router.push(`/admin/users/${user?.id}`)}
-                  className="w-full flex items-center gap-3 px-4 py-2 text-sm hover:bg-muted rounded-lg transition-colors cursor-pointer"
+                  className="w-full flex items-center gap-3 px-2 py-2 text-sm hover:bg-muted rounded-lg transition-colors cursor-pointer"
                 >
                   <User className="w-4 h-4" />
                   <span>Hồ sơ</span>
                 </button>
                 <button
                   // onClick={() => router.push("/admin/change-password")}
-                  className="w-full flex items-center gap-3 px-4 py-2 text-sm hover:bg-muted rounded-lg transition-colors cursor-pointer"
+                  className="w-full flex items-center gap-3 px-2 py-2 text-sm hover:bg-muted rounded-lg transition-colors cursor-pointer"
                 >
                   <Lock className="w-4 h-4" />
                   <span>Đổi mật khẩu</span>
                 </button>
                 <button
                   // onClick={() => router.push("/admin/settings")}
-                  className="w-full flex items-center gap-3 px-4 py-2 text-sm hover:bg-muted rounded-lg transition-colors cursor-pointer"
+                  className="w-full flex items-center gap-3 px-2 py-2 text-sm hover:bg-muted rounded-lg transition-colors cursor-pointer"
                 >
                   <Settings className="w-4 h-4" />
                   <span>Cài đặt</span>
                 </button>
               </div>
 
-              <div className="p-2 border-t border-border">
+              <div className="p-1.5 border-t border-border">
                 <button
                   onClick={handleLogout}
-                  className="w-full flex items-center gap-3 px-4 py-2 text-sm text-destructive hover:bg-muted rounded-lg transition-colors cursor-pointer"
+                  className="w-full flex items-center gap-3 px-2 py-2 text-sm text-destructive hover:bg-muted rounded-lg transition-colors cursor-pointer"
                 >
                   <LogOut className="w-4 h-4" />
                   <span>Đăng xuất</span>

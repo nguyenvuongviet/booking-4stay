@@ -19,10 +19,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { formatDate } from "@/lib/utils/date";
 import type { Role, UpdateUserDto, User } from "@/types/user";
 import { useEffect, useState } from "react";
-import { Switch } from "../ui/switch";
 
 interface UserEditModalProps {
   open: boolean;

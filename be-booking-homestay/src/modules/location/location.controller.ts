@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   Param,
+  ParseIntPipe,
   Patch,
   Post,
   Put,
@@ -37,8 +38,8 @@ export class LocationController {
 
   @Get('provinces/search')
   @Public()
-  @ApiQuery({ name: 'keyword', required: true, example: 'Hà' })
-  async searchProvinces(@Query('keyword') keyword: string) {
+  @ApiQuery({ name: 'keyword', required: false, example: 'Hà' })
+  async searchProvinces(@Query('keyword') keyword?: string) {
     return this.locationService.searchProvinces(keyword);
   }
 
@@ -51,23 +52,27 @@ export class LocationController {
 
   @Get('provinces')
   @Public()
-  @ApiQuery({ name: 'countryId', required: true, example: 1 })
-  async getProvinces(@Query('countryId') countryId?: number) {
-    return this.locationService.getProvinces(countryId);
+  @ApiQuery({ name: 'countryId', required: false })
+  async getProvinces(@Query('countryId') countryId?: string) {
+    return this.locationService.getProvinces(
+      countryId ? +countryId : undefined,
+    );
   }
 
   @Get('districts')
-  @ApiQuery({ name: 'provinceId', required: true, example: 1 })
   @Public()
-  async getDistricts(@Query('provinceId') provinceId: number) {
-    return this.locationService.getDistricts(provinceId);
+  @ApiQuery({ name: 'provinceId', required: false })
+  async getDistricts(@Query('provinceId') provinceId?: string) {
+    return this.locationService.getDistricts(
+      provinceId ? +provinceId : undefined,
+    );
   }
 
   @Get('wards')
-  @ApiQuery({ name: 'districtId', required: true, example: 1 })
   @Public()
-  async getWards(@Query('districtId') districtId: number) {
-    return this.locationService.getWards(districtId);
+  @ApiQuery({ name: 'districtId', required: false })
+  async getWards(@Query('districtId') districtId?: string) {
+    return this.locationService.getWards(districtId ? +districtId : undefined);
   }
 
   // ADMIN — CRUD + Upload + Import
@@ -133,27 +138,27 @@ export class LocationController {
   }
 
   // --- UPLOAD ẢNH TỈNH/THÀNH ---
-  @Put('admin/province-image')
+  @Put('admin/provinces/:id/image')
   @Roles('ADMIN')
   @ApiBearerAuth('AccessToken')
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('file'))
-  @ApiQuery({ name: 'province', required: true, example: 'Hà Nội' })
   @ApiBody({ type: UploadFileDto })
+  @ApiParam({ name: 'id', required: true, example: '1' })
   async setProvinceImage(
     @UploadedFile() file: Express.Multer.File,
-    @Query('province') province: string,
+    @Param('id') id: string,
   ) {
-    return this.locationService.setProvinceImage(province, file);
+    return this.locationService.setProvinceImage(+id, file);
   }
 
-  @Delete('admin/province-image')
-  @Roles('ADMIN')
-  @ApiBearerAuth('AccessToken')
-  @ApiQuery({ name: 'province', required: true, example: 'Hà Nội' })
-  async deleteProvinceImage(@Query('province') province: string) {
-    return this.locationService.deleteProvinceImage(province);
-  }
+  // @Delete('admin/provinces/:id/image')
+  // @Roles('ADMIN')
+  // @ApiBearerAuth('AccessToken')
+  // @ApiParam({ name: 'id', required: true, example: '1' })
+  // async deleteProvinceImage(@Param('id') id: string) {
+  //   return this.locationService.deleteProvinceImage(+id);
+  // }
 
   // --- IMPORT FILE CSV/EXCEL ---
   @Post('admin/import')

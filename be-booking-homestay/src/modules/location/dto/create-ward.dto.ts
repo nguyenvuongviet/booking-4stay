@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Transform, TransformFnParams } from 'class-transformer';
 import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class CreateWardDto {
@@ -9,6 +10,13 @@ export class CreateWardDto {
   @ApiProperty({ example: 'Phường Phúc Xá', description: 'Tên phường/xã' })
   @IsString()
   @IsNotEmpty()
+  @Transform(({ value }: TransformFnParams) => {
+    const trimmed = value?.trim();
+    if (trimmed) {
+      return trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
+    }
+    return trimmed;
+  })
   name: string;
 
   @ApiPropertyOptional({
@@ -17,5 +25,8 @@ export class CreateWardDto {
   })
   @IsString()
   @IsOptional()
+  @Transform(({ value }: TransformFnParams) => {
+    return value?.trim().toUpperCase();
+  })
   code?: string;
 }
