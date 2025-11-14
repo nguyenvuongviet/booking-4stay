@@ -122,7 +122,8 @@ export default function RoomsPage() {
       case "capacityDesc":
         result = result.sort(
           (a, b) =>
-            b.adultCapacity + (b.childCapacity || 0) -
+            b.adultCapacity +
+            (b.childCapacity || 0) -
             (a.adultCapacity + (a.childCapacity || 0))
         );
         break;
@@ -398,8 +399,7 @@ export default function RoomsPage() {
                   <div className="flex items-center gap-1 text-sm text-muted-foreground">
                     <MapPin className="w-4 h-4" />
                     <span>
-                      {room.location?.street}, {room.location?.ward},{" "}
-                      {room.location?.district}, {room.location?.province}
+                      {room.location.fullAddress || "Không rõ địa chỉ"}
                     </span>
                   </div>
 

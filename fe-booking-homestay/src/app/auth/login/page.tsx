@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { toast } from "@/components/ui/use-toast";
 import { STORAGE_KEYS } from "@/constants";
+import { useAuth } from "@/context/auth-context";
 import { login } from "@/services/authApi";
 import { Eye, EyeOff, Lock, Mail } from "lucide-react";
 import Image from "next/image";
@@ -15,6 +16,7 @@ import { useState } from "react";
 export default function LoginPage() {
   const router = useRouter();
   const params = useSearchParams();
+  const { updateUser } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -30,7 +32,6 @@ export default function LoginPage() {
         variant: "destructive",
         title: "Thiếu thông tin",
         description: "Vui lòng nhập đầy đủ Email và Mật khẩu.",
-        duration: 5000,
       });
       return;
     }
@@ -42,33 +43,32 @@ export default function LoginPage() {
       const { accessToken, refreshToken, user } = data || {};
       if (!accessToken || !user) throw new Error("Đăng nhập thất bại");
 
+      const currentData = { accessToken, refreshToken, user };
       localStorage.setItem(
         STORAGE_KEYS.CURRENT_USER,
-        JSON.stringify({ accessToken, refreshToken, user })
+        JSON.stringify(currentData)
       );
+
+      updateUser(user);
 
       toast({
         variant: "success",
-        title: "Đăng nhập thành công",
+        title: "Đăng nhập thành công 🎉",
         description: `Chào mừng ${
-          user.firstName + " " + user.lastName || user.email
+          user.firstName && user.lastName
+            ? `${user.firstName} ${user.lastName}`
+            : user.email
         }!`,
-        duration: 1000,
       });
 
       const next = params.get("next") || "/admin";
       router.replace(next);
     } catch (err: any) {
-      const message =
-        err?.response?.data?.message ||
-        err?.message ||
-        "Đăng nhập thất bại, vui lòng thử lại.";
-
       toast({
         variant: "destructive",
         title: "Đăng nhập thất bại",
-        description: message,
-        duration: 5000,
+        description:
+          err?.response?.data?.message || err?.message || "Vui lòng thử lại.",
       });
     } finally {
       setIsLoading(false);

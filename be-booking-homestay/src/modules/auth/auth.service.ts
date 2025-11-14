@@ -10,7 +10,7 @@ import {
   REFRESH_TOKEN_SECRET,
 } from 'src/common/constant/app.constant';
 import { Validator } from 'src/common/validation';
-import { LoyaltyService } from 'src/helpers/loyalty.helper';
+import { LoyaltyProgram } from 'src/helpers/loyalty.helper';
 import { sanitizeUserData } from 'src/utils/sanitize/user.sanitize';
 import { VerifyOtpDto } from '../otp/dto/verifyOtp.dto';
 import { OtpService } from '../otp/otp.service';
@@ -28,7 +28,7 @@ export class AuthService {
     private readonly prismaService: PrismaService,
     private readonly tokenService: TokenService,
     private readonly otpService: OtpService,
-    private readonly loyaltyService: LoyaltyService,
+    private readonly loyaltyProgram: LoyaltyProgram,
   ) {}
 
   async register(
@@ -142,7 +142,7 @@ export class AuthService {
         data: { isActive: true, isVerified: true, updatedAt: new Date() },
       });
 
-      await this.loyaltyService.createLoyaltyProgram(userExist.id);
+      await this.loyaltyProgram.createLoyaltyProgram(userExist.id);
 
       return {
         message: 'Tài khoản đã được kích hoạt và gán loyalty mặc định!',

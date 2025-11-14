@@ -58,7 +58,6 @@ export function AdminSidebar({ isCollapsed, onToggle }: AdminSidebarProps) {
       title: "Đăng xuất thành công",
       description: "Hẹn gặp lại bạn 👋",
       variant: "success",
-      duration: 2000,
     });
     router.push("/auth/login");
   };

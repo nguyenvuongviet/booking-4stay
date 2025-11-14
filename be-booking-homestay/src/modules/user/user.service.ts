@@ -4,6 +4,7 @@ import * as bcrypt from 'bcrypt';
 import * as fs from 'fs';
 import * as path from 'path';
 import { PORT } from 'src/common/constant/app.constant';
+import { LoyaltyProgram } from 'src/helpers/loyalty.helper';
 import { sanitizeUserData } from 'src/utils/sanitize/user.sanitize';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -17,6 +18,7 @@ export class UserService {
   constructor(
     private readonly prismaService: PrismaService,
     private cloudinaryService: CloudinaryService,
+    private readonly loyaltyProgram: LoyaltyProgram,
   ) {}
 
   async findAll() {
@@ -126,7 +128,7 @@ export class UserService {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = await this.prismaService.$transaction(
-      async (tx: PrismaService) => {
+      async (tx) => {
         const newUser = await tx.users.create({
           data: {
             email,
@@ -145,6 +147,8 @@ export class UserService {
             user_roles: { include: { roles: true } },
           },
         });
+
+        await this.loyaltyProgram.createLoyaltyProgram(newUser.id, { tx });
 
         return tx.users.findUnique({
           where: { id: newUser.id },

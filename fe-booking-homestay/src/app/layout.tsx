@@ -32,14 +32,8 @@ export default function RootLayout({
       >
         <AuthProvider>{children}</AuthProvider>
         <ShadcnToaster />
-        <div id="legacy-toaster">
-          <HotToaster
-            position="bottom-right"
-            toastOptions={{ duration: 10000 }}
-          />
-        </div>
         <HotToaster
-          toastOptions={{ duration: 6000 }}
+          toastOptions={{ duration: 4000 }}
           position="top-right"
           reverseOrder={false}
         />

@@ -53,3 +53,18 @@ export async function deleteUser(id: number) {
     throw error;
   }
 }
+
+export async function uploadUserAvatar(id: number, file: File) {
+  try {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const res = await api.post(`/user/admin/${id}/avatar-cloudinary`, formData);
+    console.log(res.data.data);
+
+    return res.data.data;
+  } catch (error) {
+    console.error("Upload user avatar error:", error);
+    throw error;
+  }
+}
