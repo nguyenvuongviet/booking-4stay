@@ -7,11 +7,6 @@ import LocationSuggestions from "@/components/LocationSuggestions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import { Amenity } from "@/models/Amenity";
 import { Location } from "@/models/Location";
 import { Room } from "@/models/Room";
@@ -42,8 +37,10 @@ import {
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
+// import DatePicker from "react-datepicker";
+// import "react-datepicker/dist/react-datepicker.css";
+
+import DateRangePicker from "@/components/ui/date-range-picker";
 
 export default function HomePage() {
   const [checkIn, setCheckIn] = useState<Date | null>(null);
@@ -251,7 +248,7 @@ export default function HomePage() {
           </div>
 
           {/* Search Form */}
-          <div className="bg-card rounded-4xl p-8 shadow-xl ">
+<div className="bg-card rounded-4xl p-8 shadow-xl transition-transform duration-300 hover:-translate-y-2 hover:shadow-2xl">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mb-8">
               <div>
                 <label className="elegant-subheading text-sm text-secondary-foreground mb-2 block">
@@ -295,21 +292,16 @@ export default function HomePage() {
                     className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground"
                     size={20}
                   />
-                  <DatePicker
-                    selected={checkIn}
-                    onChange={(dates: [Date | null, Date | null]) => {
-                      const [start, end] = dates;
-                      setCheckIn(start);
-                      setCheckOut(end);
+                  <DateRangePicker
+                    value={
+                      checkIn && checkOut
+                        ? { from: checkIn, to: checkOut }
+                        : undefined
+                    }
+                    onChange={(range) => {
+                      setCheckIn(range?.from ?? null);
+                      setCheckOut(range?.to ?? null);
                     }}
-                    startDate={checkIn}
-                    endDate={checkOut}
-                    selectsRange
-                    dateFormat="dd/MM/yyyy"
-                    placeholderText="Select date"
-                    className="w-full pl-12 h-12 text-sm md:text-md elegant-subheading rounded-3xl border border-border focus:border-accent focus:ring-1 focus:ring-accent"
-                    minDate={new Date()}
-                    inline={false}
                   />
                 </div>
               </div>
@@ -334,7 +326,7 @@ export default function HomePage() {
             </div>
             <Button
               onClick={handleSearch}
-              className="rounded-3xl w-full bg-primary hover:bg-primary/90 h-12 elegant-subheading text-md"
+              className="rounded-3xl w-full bg-primary hover:bg-primary/90 h-12 elegant-subheading text-md transition-all duration-300 hover:shadow-lg hover:scale-[1.02]"
             >
               <Search className="mr-2" size={20} />
               {loading ? "Searching..." : "Search Hotels"}
@@ -367,7 +359,7 @@ export default function HomePage() {
                     alt={room.name}
                     width={400}
                     height={600}
-                    className="w-full h-64 object-cover rounded-t-2xl"
+  className="w-full h-64 object-cover rounded-t-2xl transition-transform duration-500 group-hover:scale-110"
                   />
                   <div className="absolute top-4 right-4 bg-white px-2 py-1 rounded-full flex items-center gap-1">
                     <Star className="text-yellow-400 fill-current" size={16} />
