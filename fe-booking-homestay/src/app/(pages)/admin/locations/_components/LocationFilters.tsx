@@ -21,7 +21,6 @@ export function LocationFilters({
   countries,
   provinces,
   districts,
-  openImport,
 }: any) {
   const parentOptions =
     dataType === "Province"
@@ -85,14 +84,6 @@ export function LocationFilters({
           className="pl-10 w-full"
         />
       </div>
-
-      <Button
-        variant="outline"
-        className="gap-2 flex-shrink-0"
-        onClick={openImport}
-      >
-        <Upload className="w-4 h-4" /> Import All
-      </Button>
     </div>
   );
 }

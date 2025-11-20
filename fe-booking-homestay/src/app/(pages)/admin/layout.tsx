@@ -1,11 +1,11 @@
 "use client";
 
-import { AdminHeader } from "@/components/admin/Header";
-import { AdminSidebar } from "@/components/admin/SideBar";
 import Loader from "@/components/loader/Loader";
 import { getCurrentUser, isAdmin } from "@/lib/utils/auth-client";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useMemo, useState } from "react";
+import { AdminSidebar } from "./_components/SideBar";
+import { AdminHeader } from "./_components/Header";
 
 const SIDEBAR_WIDTH = {
   expanded: 256,

@@ -2,7 +2,7 @@
 
 import { Card } from "@/components/ui/card";
 import { useState } from "react";
-import { useLocations } from "./hooks/useLocations";
+import { useLocations } from "./_hooks/useLocations";
 import { LocationHeader } from "./_components/LocationHeader";
 import { LocationFilters } from "./_components/LocationFilters";
 import { LocationList } from "./_components/LocationList";
@@ -35,10 +35,11 @@ export default function LocationsPage() {
       <LocationHeader
         onRefresh={state.fetchData}
         onAdd={() => setOpenAdd(true)}
+        openImport={() => alert("Import sau")}
       />
 
       <Card className="p-4">
-        <LocationFilters {...state} openImport={() => alert("Import sau")} />
+        <LocationFilters {...state} />
       </Card>
 
       <Card className="p-4">

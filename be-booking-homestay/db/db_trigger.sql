@@ -38,7 +38,8 @@ BEGIN
     NEW.street,
     (SELECT name FROM location_wards WHERE id = NEW.wardId),
     (SELECT name FROM location_districts WHERE id = NEW.districtId),
-    (SELECT name FROM location_provinces WHERE id = NEW.provinceId)
+    (SELECT name FROM location_provinces WHERE id = NEW.provinceId),
+    (SELECT name FROM location_countries WHERE id = NEW.countryId)
   );
 END $$
 

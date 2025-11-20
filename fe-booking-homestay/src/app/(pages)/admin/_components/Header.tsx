@@ -2,10 +2,10 @@
 
 import { Bell, Lock, LogOut, Settings, User } from "lucide-react";
 import { useMemo, useRef, useState, useEffect } from "react";
-import { UserAvatar } from "../UserAvatar";
-import { toast } from "../ui/use-toast";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
+import { UserAvatar } from "@/components/UserAvatar";
+import { toast } from "@/components/ui/use-toast";
 
 export function AdminHeader() {
   const router = useRouter();

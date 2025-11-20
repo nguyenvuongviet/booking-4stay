@@ -11,7 +11,7 @@ import { Eye, EyeOff, Lock, Mail } from "lucide-react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import type React from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -21,6 +21,26 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  const nextRoute = params.get("next") || "/admin";
+
+  useEffect(() => {
+    if (!isLoading) {
+      const storedData = localStorage.getItem(STORAGE_KEYS.CURRENT_USER);
+
+      if (storedData) {
+        try {
+          const data = JSON.parse(storedData);
+
+          if (data.user && data.accessToken) {
+            router.replace(nextRoute);
+          }
+        } catch (e) {
+          console.error("Lỗi parse dữ liệu người dùng:", e);
+        }
+      }
+    }
+  }, [router, nextRoute, isLoading]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -38,11 +58,14 @@ export default function LoginPage() {
 
     try {
       setIsLoading(true);
-
       const { data } = await login({ email: emailTrim, password: pwdTrim });
       const { accessToken, refreshToken, user } = data || {};
-      if (!accessToken || !user) throw new Error("Đăng nhập thất bại");
 
+      if (!accessToken || !user) throw new Error("Đăng nhập thất bại");
+      const userRoles = user.roles || [];
+      const isAdmin = userRoles.includes("ADMIN");
+      if (!isAdmin)
+        throw new Error("Tài khoản này không có quyền truy cập khu vực Admin.");
       const currentData = { accessToken, refreshToken, user };
       localStorage.setItem(
         STORAGE_KEYS.CURRENT_USER,
@@ -50,7 +73,6 @@ export default function LoginPage() {
       );
 
       updateUser(user);
-
       toast({
         variant: "success",
         title: "Đăng nhập thành công 🎉",
@@ -60,15 +82,14 @@ export default function LoginPage() {
             : user.email
         }!`,
       });
-
-      const next = params.get("next") || "/admin";
-      router.replace(next);
+      router.replace(nextRoute);
     } catch (err: any) {
+      const errorMessage =
+        err?.response?.data?.message || err?.message || "Vui lòng thử lại.";
       toast({
         variant: "destructive",
         title: "Đăng nhập thất bại",
-        description:
-          err?.response?.data?.message || err?.message || "Vui lòng thử lại.",
+        description: errorMessage,
       });
     } finally {
       setIsLoading(false);

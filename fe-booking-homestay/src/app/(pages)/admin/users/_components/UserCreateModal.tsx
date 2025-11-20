@@ -1,6 +1,5 @@
 "use client";
 
-import * as React from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -18,8 +17,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Eye, EyeOff } from "lucide-react";
 import type { CreateUserDto, Role } from "@/types/user";
+import { Eye, EyeOff } from "lucide-react";
+import { useEffect, useState } from "react";
 
 interface UserCreateModalProps {
   open: boolean;
@@ -44,12 +44,12 @@ export function UserCreateModal({
   onOpenChange,
   onSubmit,
 }: UserCreateModalProps) {
-  const [form, setForm] = React.useState<CreateUserDto>(initialState);
-  const [showPwd, setShowPwd] = React.useState(false);
-  const [submitting, setSubmitting] = React.useState(false);
-  const [errors, setErrors] = React.useState<Record<string, string>>({});
+  const [form, setForm] = useState<CreateUserDto>(initialState);
+  const [showPwd, setShowPwd] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (open) {
       setForm(initialState);
       setErrors({});

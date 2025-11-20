@@ -1,5 +1,12 @@
 "use client";
 
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { toast } from "@/components/ui/use-toast";
 import { STORAGE_KEYS } from "@/constants";
 import { cn } from "@/lib/utils";
 import {
@@ -20,14 +27,6 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import * as React from "react";
-import { toast } from "../ui/use-toast";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "../ui/tooltip";
 
 const menuItems = [
   { icon: LayoutDashboard, label: "Tổng quan", href: "/admin" },

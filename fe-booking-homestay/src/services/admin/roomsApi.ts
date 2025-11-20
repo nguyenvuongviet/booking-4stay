@@ -20,6 +20,26 @@ export async function getAllRooms(): Promise<PaginatedRooms> {
   }
 }
 
+export async function createRoom(dto: CreateRoomDto): Promise<Room> {
+  try {
+    const res = await api.post("/room/admin", dto);
+    return res.data.data;
+  } catch (error) {
+    console.error("Create room error:", error);
+    throw error;
+  }
+}
+
+export async function deleteRoom(id: number): Promise<Room> {
+  try {
+    const res = await api.delete(`/room/admin/${id}`);
+    return res.data.data;
+  } catch (error) {
+    console.error("Delete room error:", error);
+    throw error;
+  }
+}
+
 export async function getRoomById(id: number): Promise<Room> {
   try {
     const res = await api.get(`/room/${id}`);
@@ -27,6 +47,19 @@ export async function getRoomById(id: number): Promise<Room> {
     return res.data.data;
   } catch (error) {
     console.error("Get room by id error:", error);
+    throw error;
+  }
+}
+
+export async function updateRoom(
+  id: number,
+  dto: UpdateRoomDto
+): Promise<Room> {
+  try {
+    const res = await api.patch(`/room/admin/${id}`, dto);
+    return res.data.data;
+  } catch (error) {
+    console.error("Update room error:", error);
     throw error;
   }
 }
@@ -50,39 +83,6 @@ export async function getReviewsByRoomId(id: number): Promise<any> {
     return res.data.data.items;
   } catch (error) {
     console.error("Get room by id error:", error);
-    throw error;
-  }
-}
-
-export async function createRoom(dto: CreateRoomDto): Promise<Room> {
-  try {
-    const res = await api.post("/room/admin", dto);
-    return res.data.data;
-  } catch (error) {
-    console.error("Create room error:", error);
-    throw error;
-  }
-}
-
-export async function updateRoom(
-  id: number,
-  dto: UpdateRoomDto
-): Promise<Room> {
-  try {
-    const res = await api.patch(`/room/admin/${id}`, dto);
-    return res.data.data;
-  } catch (error) {
-    console.error("Update room error:", error);
-    throw error;
-  }
-}
-
-export async function deleteRoom(id: number): Promise<Room> {
-  try {
-    const res = await api.delete(`/room/admin/${id}`);
-    return res.data.data;
-  } catch (error) {
-    console.error("Delete room error:", error);
     throw error;
   }
 }

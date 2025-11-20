@@ -3,6 +3,7 @@ import { buildImageUrl, sanitizeCollection } from 'src/utils/object.util';
 function sanitize(room: any) {
   if (!room) return null;
 
+  const country = room.location_countries;
   const province = room.location_provinces;
   const district = room.location_districts;
   const ward = room.location_wards;
@@ -27,8 +28,9 @@ function sanitize(room: any) {
     rating: Number(room.rating),
     reviewCount: room.reviewCount,
     location:
-      province || district || ward || room.fullAddress || room.street
+      country || province || district || ward || room.fullAddress || room.street
         ? {
+            country: country?.name || null,
             province: province?.name || null,
             district: district?.name || null,
             ward: ward?.name || null,
