@@ -135,7 +135,8 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
       }
     }
 
-    if (adults > (room!.adultCapacity || 0)) {
+    if (!room) return;
+    if (adults > (room.adultCapacity ?? 0)) {
       toast.error(
         `This room only allows up to ${room!.adultCapacity} adult${
           room!.adultCapacity > 1 ? "s" : ""
