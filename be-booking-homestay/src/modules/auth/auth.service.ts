@@ -4,9 +4,12 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
+import { OAuth2Client } from 'google-auth-library';
 import * as jwt from 'jsonwebtoken';
 import {
   ACCESS_TOKEN_SECRET,
+  GOOGLE_CLIENT_ID,
+  GOOGLE_CLIENT_SECRET,
   REFRESH_TOKEN_SECRET,
 } from 'src/common/constant/app.constant';
 import { Validator } from 'src/common/validation';
@@ -17,6 +20,7 @@ import { OtpService } from '../otp/otp.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { TokenService } from '../token/token.service';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { GoogleLoginDto } from './dto/google-login.dto';
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { RegisterDto } from './dto/register.dto';
@@ -31,10 +35,8 @@ export class AuthService {
     private readonly loyaltyProgram: LoyaltyProgram,
   ) {}
 
-  async register(
-    registerDto: RegisterDto,
-  ): Promise<{ message: string; user: any }> {
-    const { email, password, phoneNumber, firstName, lastName } = registerDto;
+  async register(dto: RegisterDto): Promise<{ message: string; user: any }> {
+    const { email, password, phoneNumber, firstName, lastName } = dto;
 
     if (Validator.isValidEmail(email) === false) {
       throw new BadRequestException('Email không hợp lệ!');
@@ -102,7 +104,7 @@ export class AuthService {
     }
   }
 
-  async verifyOtp(verifyOtpDto: VerifyOtpDto) {
+  async verifyOtp(dto: VerifyOtpDto) {
     // try {
     //   return await this.otpService.verifyOtp(verifyOtpDto);
     // } catch (error) {
@@ -114,13 +116,11 @@ export class AuthService {
     //     : new BadRequestException('OTP không hợp lệ hoặc hết hạn!');
     // }
 
-    return await this.otpService.verifyOtp(verifyOtpDto);
+    return await this.otpService.verifyOtp(dto);
   }
 
-  async activateAccount(
-    verifyOtpDto: VerifyOtpDto,
-  ): Promise<{ message: string }> {
-    const { email } = verifyOtpDto;
+  async activateAccount(dto: VerifyOtpDto): Promise<{ message: string }> {
+    const { email } = dto;
 
     if (!Validator.isValidEmail(email)) {
       throw new BadRequestException('Email không hợp lệ!');
@@ -128,7 +128,7 @@ export class AuthService {
 
     try {
       const [verifyResult, userExist] = await Promise.all([
-        this.verifyOtp(verifyOtpDto),
+        this.verifyOtp(dto),
         this.prismaService.users.findUnique({ where: { email } }),
       ]);
 
@@ -155,8 +155,8 @@ export class AuthService {
     }
   }
 
-  async login(loginAuthDto: LoginDto): Promise<any> {
-    const { email, password } = loginAuthDto;
+  async login(dto: LoginDto): Promise<any> {
+    const { email, password } = dto;
 
     if (Validator.isValidEmail(email) === false) {
       throw new BadRequestException('Email không hợp lệ!');
@@ -196,8 +196,8 @@ export class AuthService {
     return sanitizeUserData(user);
   }
 
-  async refreshToken(refreshTokenDto: RefreshTokenDto) {
-    const { accessToken, refreshToken } = refreshTokenDto;
+  async refreshToken(dto: RefreshTokenDto) {
+    const { accessToken, refreshToken } = dto;
     if (!accessToken) throw new UnauthorizedException(`Không có accessToken`);
     if (!refreshToken) throw new UnauthorizedException(`Không có refreshToken`);
 
@@ -229,9 +229,9 @@ export class AuthService {
   }
 
   async forgotPassword(
-    forgotPasswordDto: ForgotPasswordDto,
+    dto: ForgotPasswordDto,
   ): Promise<{ message: string }> {
-    const { email } = forgotPasswordDto;
+    const { email } = dto;
     if (Validator.isValidEmail(email) === false) {
       throw new BadRequestException('Email không hợp lệ!');
     }
@@ -261,9 +261,9 @@ export class AuthService {
   }
 
   async resetPassword(
-    resetPasswordDto: ResetPasswordDto,
+    dto: ResetPasswordDto,
   ): Promise<{ message: string }> {
-    const { email, newPassword } = resetPasswordDto;
+    const { email, newPassword } = dto;
     if (Validator.isValidEmail(email) === false) {
       throw new BadRequestException('Email không hợp lệ!');
     }
@@ -295,7 +295,99 @@ export class AuthService {
     }
   }
 
-  async googleLogin(loginAuthDto: LoginDto) {
-    return 'google login';
+  async googleLogin(dto: GoogleLoginDto): Promise<any> {
+    const { code } = dto;
+    if (!code) throw new BadRequestException('Thiếu mã xác thực Google!');
+
+    try {
+      const oAuth2Client = new OAuth2Client(
+        GOOGLE_CLIENT_ID,
+        GOOGLE_CLIENT_SECRET,
+        'postmessage',
+      );
+
+      const { tokens: googleTokens } = await oAuth2Client.getToken(code);
+      if (!googleTokens?.id_token)
+        throw new BadRequestException('Không lấy được Google id_token!');
+
+      const googleUser: any = jwt.decode(googleTokens.id_token);
+
+      if (!googleUser?.email)
+        throw new BadRequestException('Không lấy được email Google.');
+      if (googleUser.email_verified === false)
+        throw new BadRequestException('Email Google chưa được xác minh!');
+
+      let user = await this.prismaService.users.findUnique({
+        where: { email: googleUser.email },
+        include: {
+          user_roles: { include: { roles: true } },
+          loyalty_program: { include: { levels: true } },
+        },
+      });
+
+      if (!user) {
+        const defaultRole = await this.prismaService.roles.findUnique({
+          where: { name: 'USER' },
+        });
+        if (!defaultRole)
+          throw new BadRequestException('Không tìm thấy role mặc định!');
+        const createdUser = await this.prismaService.users.create({
+          data: {
+            email: googleUser.email,
+            firstName: googleUser.given_name,
+            lastName: googleUser.family_name,
+            avatar: googleUser.picture,
+            googleId: googleUser.sub,
+            isActive: true,
+            isVerified: true,
+            provider: 'GOOGLE',
+            user_roles: {
+              create: { roleId: defaultRole.id },
+            },
+          },
+        });
+        if (this.loyaltyProgram?.createLoyaltyProgram)
+          await this.loyaltyProgram.createLoyaltyProgram(createdUser.id);
+
+        user = await this.prismaService.users.findUnique({
+          where: { id: createdUser.id },
+          include: {
+            user_roles: { include: { roles: true } },
+            loyalty_program: { include: { levels: true } },
+          },
+        });
+      } else {
+        const updateData: any = { provider: 'GOOGLE' };
+        if (!user.isVerified) {
+          updateData.isVerified = true;
+          updateData.isActive = true;
+        }
+        if (!user.googleId) updateData.googleId = googleUser.sub;
+        if (!user.avatar) updateData.avatar = googleUser.picture;
+        if (Object.keys(updateData).length > 1) {
+          await this.prismaService.users.update({
+            where: { id: user.id },
+            data: updateData,
+          });
+          user = await this.prismaService.users.findUnique({
+            where: { id: user.id },
+            include: {
+              user_roles: { include: { roles: true } },
+              loyalty_program: { include: { levels: true } },
+            },
+          });
+        }
+      }
+      if (!user)
+        throw new BadRequestException('Không tìm thấy user sau khi xử lý!');
+      const tokens = this.tokenService.createTokens(user.id);
+      return {
+        ...tokens,
+        user: sanitizeUserData(user),
+      };
+    } catch (err) {
+      console.log('Google Login Error:', err);
+      throw new BadRequestException('Đăng nhập Google thất bại!');
+    }
   }
 }

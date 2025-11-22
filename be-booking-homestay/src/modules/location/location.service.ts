@@ -26,7 +26,7 @@ export class LocationService {
     const where: any = { isDeleted: false };
 
     if (keyword?.trim()) {
-      where.name = { contains: keyword.trim(), mode: 'insensitive' };
+      where.name = { contains: keyword.trim() };
     }
 
     const provinces = await this.prisma.location_provinces.findMany({
@@ -50,7 +50,7 @@ export class LocationService {
         : 'Danh sách tất cả tỉnh/thành',
       keyword: keyword?.trim() || null,
       total: provinces.length,
-      data: provinces,
+      data: sanitizeLocation(provinces),
     };
   }
 

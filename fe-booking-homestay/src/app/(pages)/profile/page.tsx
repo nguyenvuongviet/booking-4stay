@@ -214,24 +214,24 @@ export default function ProfilePage() {
               <Label htmlFor="dob" className="text-[#292d32] font-medium">
                 Date of birth
               </Label>
-               <div className="relative">
-              <Calendar
-                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-muted-foreground"
-                size={20}
-              />
-              <DatePicker
-                id="dob"
-                selected={dob}
-                // autoFocus=
-                onChange={(date) => setDob(date)}
-                dateFormat="dd/MM/yyyy"
-                placeholderText="Select your date of birth"
-                className="p-3 w-2xl h-9 rounded-md border border-[#e5e5e5] bg-[#f9fafb] text-[#292d32] text-sm"
-                maxDate={new Date()}
-                showYearDropdown
-                showMonthDropdown
-                dropdownMode="select"
-              />
+              <div className="relative">
+                <Calendar
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-muted-foreground"
+                  size={20}
+                />
+                <DatePicker
+                  id="dob"
+                  selected={dob}
+                  // autoFocus=
+                  onChange={(date) => setDob(date)}
+                  dateFormat="dd/MM/yyyy"
+                  placeholderText="Select your date of birth"
+                  className="p-3 w-2xl h-9 rounded-md border border-[#e5e5e5] bg-[#f9fafb] text-[#292d32] text-sm"
+                  maxDate={new Date()}
+                  showYearDropdown
+                  showMonthDropdown
+                  dropdownMode="select"
+                />
               </div>
             </div>
 

@@ -1,9 +1,11 @@
 import { Toaster as ShadcnToaster } from "@/components/ui/toaster";
-import { Toaster as HotToaster } from "react-hot-toast";
 import { AuthProvider } from "@/context/auth-context";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Toaster as HotToaster } from "react-hot-toast";
 import "./globals.css";
+import { GOOGLE_CLIENT_ID } from "@/constants/app.constant";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,7 +32,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <AuthProvider>{children}</AuthProvider>
+        <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID!}>
+          <AuthProvider>{children}</AuthProvider>
+        </GoogleOAuthProvider>
         <ShadcnToaster />
         <HotToaster
           toastOptions={{ duration: 4000 }}

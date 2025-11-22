@@ -97,3 +97,13 @@ export const upload_file = async (data: FormData) => {
     throw error;
   }
 };
+
+export const login_with_google = async (data: { code: string }) => {
+  try {
+    const resp = await api.post("auth/google-login", data);
+    return resp.data.data;
+  } catch (error) {
+    console.error("Login with google error: ", error);
+    throw error;
+  }
+};

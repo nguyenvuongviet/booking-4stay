@@ -177,11 +177,11 @@ export class RoomService {
     });
   }
 
-  async update(id: number, updateRoomDto: UpdateRoomDto) {
+  async update(id: number, dto: UpdateRoomDto) {
     await this.findOne(id);
     return this.prisma.rooms.update({
       where: { id },
-      data: updateRoomDto,
+      data: dto,
     });
   }
 

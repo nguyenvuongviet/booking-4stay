@@ -15,8 +15,15 @@ export class ReviewService {
   async create(userId: number, dto: CreateReviewDto) {
     const b = await this.prisma.bookings.findUnique({
       where: { id: dto.bookingId },
-      select: { id: true, userId: true, status: true, isDeleted: true },
+      select: {
+        id: true,
+        userId: true,
+        status: true,
+        isDeleted: true,
+        isReview: true,
+      },
     });
+
     if (!b || b.isDeleted) throw new NotFoundException('Booking không tồn tại');
     if (b.userId !== userId)
       throw new ForbiddenException(
@@ -25,20 +32,22 @@ export class ReviewService {
     if (b.status !== 'CHECKED_OUT')
       throw new BadRequestException('Chỉ review được sau khi CHECKED_OUT');
 
-    const existed = await this.prisma.reviews.findFirst({
-      where: { bookingId: dto.bookingId, isDeleted: false },
-      select: { id: true },
-    });
-    if (existed) throw new BadRequestException('Booking này đã được review');
+    if (b.isReview) throw new BadRequestException('Booking này đã được review');
 
-    await this.prisma.reviews.create({
-      data: {
-        bookingId: dto.bookingId,
-        userId,
-        rating: dto.rating,
-        comment: dto.comment ?? null,
-      },
-    });
+    await this.prisma.$transaction([
+      this.prisma.reviews.create({
+        data: {
+          bookingId: dto.bookingId,
+          userId,
+          rating: dto.rating,
+          comment: dto.comment ?? null,
+        },
+      }),
+      this.prisma.bookings.update({
+        where: { id: dto.bookingId },
+        data: { isReview: true },
+      }),
+    ]);
 
     return { message: 'Tạo review thành công' };
   }
