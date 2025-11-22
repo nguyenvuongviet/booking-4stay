@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Transform, TransformFnParams } from 'class-transformer';
 import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
 
 export class LoginDto {
@@ -8,6 +9,7 @@ export class LoginDto {
   })
   @IsEmail({}, { message: 'Email không đúng định dạng' })
   @IsNotEmpty({ message: 'Email không được để trống' })
+  @Transform(({ value }: TransformFnParams) => value?.trim())
   email: string;
 
   @ApiProperty({ example: '123456', description: 'Mật khẩu của bạn' })

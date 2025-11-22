@@ -17,14 +17,14 @@ const outfit = Outfit({
 const firaMono = Fira_Mono({
   subsets: ["latin"],
   variable: "--font-mono",
-  weight: ["400"], // Fira Mono thường dùng 400
+  weight: ["400"], // Fira Mono thu?ng d�ng 400
 });
 
 // Serif font
 const lora = Lora({
   subsets: ["latin"],
   variable: "--font-serif",
-  weight: ["400", "500", "600", "700"], // Lora thường dùng nhiều weight
+  weight: ["400", "500", "600", "700"], // Lora thu?ng d�ng nhi?u weight
 });
 
 export const metadata: Metadata = {

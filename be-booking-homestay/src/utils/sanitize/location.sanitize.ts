@@ -5,14 +5,18 @@ function sanitize(location: any) {
 
   return {
     id: location.id,
-    province: location.province,
-    provinceImageUrl: buildImageUrl(location.provinceImageUrl),
-    district: location.district,
-    ward: location.ward,
-    street: location.street,
-    fullAddress: `${location.street}, ${location.ward}, ${location.district}, ${location.province}`,
-    latitude: location.latitude,
-    longitude: location.longitude,
+    name: location.name,
+    code: location.code ?? null,
+
+    countryId: location.countryId ?? null,
+    provinceId: location.provinceId ?? null,
+    districtId: location.districtId ?? null,
+
+    country: location.country ?? null,
+    province: location.province ?? null,
+    district: location.district ?? null,
+
+    imageUrl: buildImageUrl(location.imageUrl),
   };
 }
 

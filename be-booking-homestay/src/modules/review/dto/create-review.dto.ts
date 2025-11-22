@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
+import { Transform, TransformFnParams, Type } from 'class-transformer';
 import {
   IsInt,
   Min,
@@ -28,5 +28,6 @@ export class CreateReviewDto {
   @IsOptional()
   @IsString()
   @MaxLength(1000)
+  @Transform(({ value }: TransformFnParams) => value?.trim())
   comment?: string;
 }

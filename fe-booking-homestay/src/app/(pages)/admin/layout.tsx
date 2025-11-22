@@ -1,12 +1,11 @@
 "use client";
 
-import { AdminHeader } from "@/components/admin/header";
+import { AdminHeader } from "@/components/admin/Header";
 import { AdminSidebar } from "@/components/admin/SideBar";
 import Loader from "@/components/loader/Loader";
 import { getCurrentUser, isAdmin } from "@/lib/utils/auth-client";
 import { useRouter } from "next/navigation";
-import type React from "react";
-import { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 
 const SIDEBAR_WIDTH = {
   expanded: 256,
@@ -24,7 +23,6 @@ export default function AdminLayout({
 
   useEffect(() => {
     const user = getCurrentUser();
-
     if (!user || !isAdmin(user)) {
       router.replace("/auth/login?next=/admin");
       return;
@@ -34,12 +32,29 @@ export default function AdminLayout({
 
   useEffect(() => {
     const saved = localStorage.getItem("sidebar_collapsed");
-    if (saved != null) {
+
+    if (saved !== null) {
       setIsCollapsed(saved === "1");
-    } else if (window.innerWidth < 1024) {
-      setIsCollapsed(true);
+    } else {
+      if (typeof window !== "undefined" && window.innerWidth < 1024) {
+        setIsCollapsed(true);
+        localStorage.setItem("sidebar_collapsed", "1");
+      } else {
+        setIsCollapsed(false);
+        localStorage.setItem("sidebar_collapsed", "0");
+      }
     }
-  }, []);
+
+    const handleResize = () => {
+      if (window.innerWidth < 1024 && !isCollapsed) {
+        setIsCollapsed(true);
+        localStorage.setItem("sidebar_collapsed", "1");
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [isCollapsed]);
 
   const toggleSidebar = () => {
     setIsCollapsed((prev) => {
@@ -62,9 +77,12 @@ export default function AdminLayout({
     );
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex">
       <AdminSidebar isCollapsed={isCollapsed} onToggle={toggleSidebar} />
-      <div style={{ marginLeft: `${sidebarWidthPx}px` }}>
+      <div
+        className="flex-1 transition-all duration-300"
+        style={{ marginLeft: `${sidebarWidthPx}px` }}
+      >
         <AdminHeader />
         <main className="px-6 pb-6 pt-2">{children}</main>
       </div>

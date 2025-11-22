@@ -1,13 +1,15 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Express } from 'express';
 
 export class UploadFileDto {
   @ApiProperty({ type: 'string', format: 'binary', description: 'File upload' })
-  file: any;
+  file: Express.Multer.File;
 }
 
 export class UploadRoomImagesDto {
   @ApiProperty({
-    description: 'Danh sách file ảnh cần upload dạng array (định dạng ảnh jpg|jpeg|png)',
+    description:
+      'Danh sách file ảnh cần upload dạng array (định dạng ảnh jpg|jpeg|png)',
     type: 'array',
     items: { type: 'string', format: 'binary' },
   })

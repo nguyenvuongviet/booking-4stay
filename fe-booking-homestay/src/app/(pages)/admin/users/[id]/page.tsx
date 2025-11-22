@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
-import { UserEditModal } from "@/components/admin/user-edit-modal";
+import { UserEditModal } from "@/app/(pages)/admin/users/_components/UserEditModal";
 import Loader from "@/components/loader/Loader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,12 @@ import { UserAvatar } from "@/components/UserAvatar";
 
 import { formatDate } from "@/lib/utils/date";
 import { handleDeleteEntity } from "@/lib/utils/handleDelete";
-import { deleteUser, getUserById, updateUser } from "@/services/admin/usersApi"; // ⚠️ nhớ thêm hàm deleteUser
+import {
+  deleteUser,
+  getUserById,
+  updateUser,
+  uploadUserAvatar,
+} from "@/services/admin/usersApi";
 import type { UpdateUserDto, User } from "@/types/user";
 import {
   ArrowLeft,
@@ -27,8 +32,10 @@ import {
   ShieldAlert,
   ShieldCheck,
   Trash2,
+  Upload,
   User as UserIcon,
 } from "lucide-react";
+import { useAuth } from "@/context/auth-context";
 
 function Line() {
   return <div className="border-t border-warm-200 my-4" />;
@@ -70,13 +77,17 @@ export default function UserDetailPage() {
   const userId = Number(params.id);
   const router = useRouter();
 
+  const { user: currentUser, updateUser: updateAuthUser } = useAuth();
+
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
-
   const [openEdit, setOpenEdit] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [uploading, setUploading] = useState(false);
+
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -111,6 +122,17 @@ export default function UserDetailPage() {
       const updated = await updateUser(userId, payload);
       setUser(updated);
       setOpenEdit(false);
+
+      if (Number(currentUser?.id) === updated.id) {
+        updateAuthUser({
+          ...currentUser!,
+          firstName: updated.firstName ?? "",
+          lastName: updated.lastName ?? "",
+          email: updated.email ?? currentUser?.email,
+          avatar: updated.avatar ?? currentUser?.avatar,
+        });
+      }
+
       toast({
         variant: "success",
         title: "Cập nhật thành công",
@@ -126,6 +148,55 @@ export default function UserDetailPage() {
       setSaving(false);
     }
   }
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast({
+        variant: "destructive",
+        title: "Tệp không hợp lệ",
+        description: "Vui lòng chọn ảnh hợp lệ (.jpg, .png, .jpeg).",
+      });
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const res = await uploadUserAvatar(user.id, file);
+      const imgUrl = res.imgUrl;
+
+      if (!imgUrl) throw new Error("Không nhận được URL ảnh trả về");
+
+      setUser((prev) => (prev ? { ...prev, avatar: imgUrl } : prev));
+
+      if (Number(currentUser?.id) === user.id) {
+        updateAuthUser({
+          ...currentUser!,
+          avatar: imgUrl,
+        });
+      }
+
+      toast({
+        variant: "success",
+        title: "Cập nhật ảnh đại diện thành công!",
+      });
+    } catch (err: any) {
+      console.error("Upload avatar error:", err);
+      toast({
+        variant: "destructive",
+        title: "Tải ảnh thất bại",
+        description:
+          err?.response?.data?.message ||
+          err?.message ||
+          "Không thể tải lên ảnh.",
+      });
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
 
   async function handleDelete() {
     if (!user) return;
@@ -148,7 +219,6 @@ export default function UserDetailPage() {
         <Loader />
       </div>
     );
-
   if (notFound || !user)
     return (
       <Card className="p-6 text-center text-red-600">
@@ -184,7 +254,7 @@ export default function UserDetailPage() {
 
   return (
     <div className="space-y-6 relative pb-20">
-      {/* --- Header --- */}
+      {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-4">
           <Link href="/admin/users">
@@ -221,14 +291,38 @@ export default function UserDetailPage() {
         </div>
       </div>
 
-      {/* --- Main Content --- */}
+      {/* Main Card */}
       <Card className="p-6 border-warm-200">
         <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
-          <UserAvatar
-            avatarUrl={user.avatar}
-            fullName={fullName}
-            className="w-28 h-28 border shrink-0"
-          />
+          <div className="relative group w-fit">
+            <UserAvatar
+              avatarUrl={user.avatar}
+              fullName={fullName}
+              className="w-28 h-28 border shrink-0"
+            />
+            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center rounded-full cursor-pointer">
+              {uploading ? (
+                <Loader />
+              ) : (
+                <Button
+                  size="sm"
+                  className="bg-white/50 hover:bg-white text-warm-900 text-xs gap-1"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <Upload className="w-4 h-4" />
+                </Button>
+              )}
+            </div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              hidden
+              onChange={handleAvatarChange}
+            />
+          </div>
+
+          {/* Thông tin người dùng */}
           <div className="flex-1">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div>
@@ -252,7 +346,7 @@ export default function UserDetailPage() {
                   </span>
                 </p>
                 <p>
-                  Provider:
+                  Provider:{" "}
                   <span className="font-medium text-warm-900">
                     {user.provider}
                   </span>
@@ -286,6 +380,7 @@ export default function UserDetailPage() {
           </div>
         </div>
 
+        {/* Thông tin chi tiết */}
         <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <LabelValue
             icon={UserIcon}
@@ -304,6 +399,7 @@ export default function UserDetailPage() {
         </div>
       </Card>
 
+      {/* Modal edit user */}
       <UserEditModal
         open={openEdit}
         onOpenChange={setOpenEdit}

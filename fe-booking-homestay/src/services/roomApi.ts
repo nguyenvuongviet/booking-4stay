@@ -29,7 +29,7 @@ export const room_detail = async (id: number | string) => {
 
 export const location = async () => {
   try {
-    const resp = await api.get(`/location/all`);
+    const resp = await api.get(`/location/provinces/search`);
     return resp.data;
   } catch (error) {
     console.error("list location error: ", error);
@@ -39,16 +39,13 @@ export const location = async () => {
 
 export const search_location = async (keyword: string) => {
   try {
-    //keyword rỗng thì không gọi API
     if (!keyword.trim()) {
       return { data: { data: [] } };
     }
 
-    const resp = await api.get("/location/search", {
+    const resp = await api.get("/location/provinces/search", {
       params: {
-        search: keyword.trim(),
-        page: 1,
-        pageSize: 6,
+        keyword: keyword.trim(), 
       },
     });
 
@@ -64,6 +61,7 @@ export const search_location = async (keyword: string) => {
     return { data: { data: [] } };
   }
 };
+  
 
 export const search_room = async (
   keyword: string,

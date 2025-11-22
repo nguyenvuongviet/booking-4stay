@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { Location } from "@/models/Location";
 
 interface LocationSuggestionsProps {
@@ -25,11 +24,11 @@ export default function LocationSuggestions({
           className="flex items-center gap-3 px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm text-gray-700"
         >
           <img
-            src={loc.provinceImageUrl || "/default.jpg"}
-            alt={loc.province}
+            src={loc.imageUrl || "/default.jpg"}
+            alt={loc.name}
             className="w-10 h-10 rounded-md object-cover border"
           />
-          <span>{loc.province || "Unknown"}</span>
+          <span>{loc.name || "Unknown"}</span>
         </li>
       ))}
     </ul>

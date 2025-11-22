@@ -37,6 +37,8 @@ const initialState: CreateUserDto = {
   roleName: "USER",
 };
 
+const MIN_PASSWORD_LENGTH = 6;
+
 export function UserCreateModal({
   open,
   onOpenChange,
@@ -55,41 +57,50 @@ export function UserCreateModal({
     }
   }, [open]);
 
+  const cleanFormData = (values: CreateUserDto): CreateUserDto => ({
+    ...values,
+    email: values.email.trim(),
+    firstName: values.firstName.trim(),
+    lastName: values.lastName.trim(),
+    phoneNumber: values.phoneNumber.trim(),
+    country: values.country.trim(),
+    roleName: values.roleName as Role,
+  });
+
   function validate(values: CreateUserDto) {
     const e: Record<string, string> = {};
-    if (!values.email.trim()) e.email = "Email không được để trống";
+
+    if (!values.email) e.email = "Email không được để trống";
     else if (!/^\S+@\S+\.\S+$/.test(values.email))
       e.email = "Email không đúng định dạng";
 
-    if (!values.password.trim()) e.password = "Mật khẩu không được để trống";
+    if (!values.password) {
+      e.password = "Mật khẩu không được để trống";
+    } else if (values.password.length < MIN_PASSWORD_LENGTH) {
+      e.password = `Mật khẩu phải tối thiểu ${MIN_PASSWORD_LENGTH} ký tự`;
+    }
 
-    if (!values.firstName.trim()) e.firstName = "Họ không được để trống";
-    if (!values.lastName.trim()) e.lastName = "Tên không được để trống";
-    if (!values.phoneNumber.trim())
+    if (!values.firstName) e.firstName = "Họ không được để trống";
+    if (!values.lastName) e.lastName = "Tên không được để trống";
+    if (!values.phoneNumber)
       e.phoneNumber = "Số điện thoại không được để trống";
-    if (!values.country.trim()) e.country = "Quốc gia không được để trống";
+    if (!values.country) e.country = "Quốc gia không được để trống";
 
     return e;
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const eobj = validate(form);
+
+    const dataToSend = cleanFormData(form);
+    const eobj = validate(dataToSend);
+
     setErrors(eobj);
     if (Object.keys(eobj).length) return;
 
     try {
       setSubmitting(true);
-      await onSubmit({
-        ...form,
-        email: form.email.trim(),
-        password: form.password,
-        firstName: form.firstName.trim(),
-        lastName: form.lastName.trim(),
-        phoneNumber: form.phoneNumber.trim(),
-        country: form.country.trim(),
-        roleName: form.roleName as Role,
-      });
+      await onSubmit(dataToSend);
       onOpenChange(false);
     } finally {
       setSubmitting(false);
@@ -128,17 +139,17 @@ export function UserCreateModal({
                 id="password"
                 type={showPwd ? "text" : "password"}
                 autoComplete="new-password"
-                placeholder="Tối thiểu 6 ký tự"
+                placeholder={`Tối thiểu ${MIN_PASSWORD_LENGTH} ký tự`}
                 value={form.password}
                 onChange={(e) =>
                   setForm((s) => ({ ...s, password: e.target.value }))
                 }
-                className="pr-10"
+                className="pr-12"
               />
               <button
                 type="button"
                 onClick={() => setShowPwd((v) => !v)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                className="absolute right-1 top-1/2 -translate-y-1/2 p-2 text-muted-foreground hover:text-foreground cursor-pointer"
                 aria-label={showPwd ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
               >
                 {showPwd ? (

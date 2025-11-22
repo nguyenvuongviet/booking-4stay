@@ -4,7 +4,9 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { bookings_status } from '@prisma/client';
 import { AvailabilityHelper } from 'src/helpers/availability.helper';
+import { LoyaltyProgram } from 'src/helpers/loyalty.helper';
 import { PricingHelper } from 'src/helpers/pricing.helper';
 import { ensureDateRange } from 'src/utils/date.util';
 import { sanitizeBooking } from 'src/utils/sanitize/booking.sanitize';
@@ -13,7 +15,6 @@ import { CancelBookingDto } from './dto/cancel-booking.dto';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { ListBookingQuery } from './dto/list-booking.query';
 import { RoomAvailabilityDto } from './dto/room-availability.dto';
-import { bookings_status } from '@prisma/client';
 
 @Injectable()
 export class BookingService {
@@ -21,6 +22,7 @@ export class BookingService {
     private readonly prisma: PrismaService,
     private readonly pricing: PricingHelper,
     private readonly availability: AvailabilityHelper,
+    private readonly loyaltyProgram: LoyaltyProgram,
   ) {}
 
   async create(userId: number, dto: CreateBookingDto) {
@@ -83,7 +85,9 @@ export class BookingService {
         include: {
           rooms: {
             include: {
-              locations: true,
+              location_provinces: true,
+              location_districts: true,
+              location_wards: true,
               room_images: true,
               room_amenities: {
                 include: { amenities: true },
@@ -216,9 +220,18 @@ export class BookingService {
   }
 
   async updateStatus(orderId: number, status: bookings_status) {
-    return this.prisma.bookings.update({
+    const updated = await this.prisma.bookings.update({
       where: { id: orderId },
       data: { status },
     });
+
+    if (status === 'CHECKED_OUT') {
+      await this.loyaltyProgram.recalculateLoyaltyLevel(updated.userId);
+    }
+
+    return {
+      message: 'Cập nhật trạng thái booking thành công',
+      data: updated,
+    };
   }
 }

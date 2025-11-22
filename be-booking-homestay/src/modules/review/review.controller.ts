@@ -40,6 +40,6 @@ export class ReviewController {
   @ApiBearerAuth('AccessToken')
   async remove(@Param('id', ParseIntPipe) id: number, @Req() req: Request) {
     const user = req['user'];
-    return this.reviewService.remove(id, +user.id, user.role);
+    return this.reviewService.remove(id, user.role);
   }
 }

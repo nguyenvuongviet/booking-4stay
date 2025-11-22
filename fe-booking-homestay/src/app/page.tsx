@@ -62,20 +62,6 @@ export default function HomePage() {
   const [search, setSearch] = useState("");
   const router = useRouter();
 
-  useEffect(() => {
-    const fetchLocations = async () => {
-      try {
-        const data = await location();
-        setLocations(data.data || []);
-      } catch (error) {
-        console.error("Error fetching checkout data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchLocations();
-  }, []);
-
   const getAmenityIcon = (amenity: Amenity) => {
     switch (amenity.name.toLowerCase()) {
       case "wifi":
@@ -150,12 +136,27 @@ export default function HomePage() {
     [page, search, adults, children, loading]
   );
 
+  useEffect(() => {
+    const fetchLocations = async () => {
+      try {
+        const resp = await location();
+        console.log("Location API response:", resp);
+        setLocations(resp?.data?.data || []);
+      } catch (error) {
+        console.error("Error fetching checkout resp:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchLocations();
+  }, []);
+
   //Hàm fetch gợi ý location
   const fetchLocationSuggestions = useCallback(async (query: string) => {
     if (!query.trim()) {
       //input rỗng
       const res = await location();
-      const allData = res.data || [];
+      const allData = res?.data?.data || [];
       setLocations(allData);
       setShowSuggestions(allData.length > 0);
     } else {
@@ -184,7 +185,7 @@ export default function HomePage() {
   };
 
   const handleSelectLocation = (loc: Location) => {
-    setLocationInput(loc.province || "");
+    setLocationInput(loc.name || "");
     setShowSuggestions(false);
   };
 
@@ -387,7 +388,7 @@ export default function HomePage() {
                       <div className="flex items-center gap-2 mb-4 h-4">
                         {(room.amenities || []).map((amenity) => (
                           <div
-                            key={amenity.id} 
+                            key={amenity.id}
                             className="elegant-subheading text-muted-foreground flex items-center gap-1"
                           >
                             <span>{getAmenityIcon(amenity)}</span>
@@ -441,24 +442,22 @@ export default function HomePage() {
                     <Card
                       onClick={() =>
                         router.push(
-                          `/room-list?location=${encodeURIComponent(
-                            loc.province
-                          )}`
+                          `/room-list?location=${encodeURIComponent(loc.name)}`
                         )
                       }
                       className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
                     >
                       <div className="relative">
                         <img
-                          src={loc.provinceImageUrl || "/default.jpg"}
-                          alt={loc.province}
+                          src={loc.imageUrl || "/default.jpg"}
+                          alt={loc.name}
                           className="w-full h-72 object-cover"
                         />
                         <div className="absolute inset-0 bg-linear-to-t from-black/60 to-transparent" />
 
                         <div className="absolute bottom-4 left-6 text-accent">
                           <h3 className="text-2xl elegant-sans mb-1">
-                            {loc.province || "Unknown"}
+                            {loc.name || "Unknown"}
                           </h3>
                         </div>
                       </div>
