@@ -3,7 +3,6 @@
 import { FilterBar } from "@/components/FilterBar";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
-import MapRooms from "@/components/rooms/MapRoom";
 import { RoomCard } from "@/components/rooms/RoomCard";
 import { SearchBar } from "@/components/SearchBar";
 import { Room } from "@/models/Room";
@@ -13,10 +12,13 @@ import {
   search_room,
   sort_price,
 } from "@/services/roomApi";
+import HoverScale from "@/styles/animations/HoverScale";
+import StaggerItem from "@/styles/animations/StaggerItem";
+import { motion, useSpring } from "framer-motion";
 import { Loader2 } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-// import { motion, AnimatePresence } from "framer-motion";
+import dynamic from "next/dynamic";
 
 export default function HotelsListPage() {
   const [rooms, setRooms] = useState<Room[]>([]);
@@ -24,14 +26,12 @@ export default function HotelsListPage() {
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(1);
   const [scrolled, setScrolled] = useState(false);
-  const router = useRouter();
   const searchParams = useSearchParams();
   const location = searchParams.get("location") || "";
   const adults = Number(searchParams.get("adults")) || 1;
   const children = Number(searchParams.get("children")) || 0;
   const checkIn = searchParams.get("checkIn") || "";
   const checkOut = searchParams.get("checkOut") || "";
-  const [available, setAvailable] = useState<boolean | null>(null);
   const [sortOrder, setSortOrder] = useState<"asc" | "desc" | null>(null);
   const [filters, setFilters] = useState<{
     minPrice?: number;
@@ -39,6 +39,11 @@ export default function HotelsListPage() {
     minRating?: number;
     sortOrder?: "asc" | "desc";
   }>({});
+  const y = useSpring(scrolled ? -20 : 0, { stiffness: 120, damping: 25 });
+  const scale = useSpring(scrolled ? 0.9 : 1, { stiffness: 120, damping: 25 });
+  const MapRooms = dynamic(() => import("@/components/rooms/MapRoom"), {
+    ssr: false,
+  });
 
   const handleFilterChange = (newFilters: any) => {
     setFilters(newFilters);
@@ -159,8 +164,6 @@ export default function HotelsListPage() {
     }
   };
 
-  // loadRooms();
-  // }, [page, location, adults, children, checkIn, checkOut]);
   useEffect(() => {
     loadRooms(page, page > 1);
   }, [page, location, adults, children, filters]);
@@ -174,16 +177,35 @@ export default function HotelsListPage() {
       const clientHeight = window.innerHeight;
 
       // Khi gần chạm đáy, gọi thêm trang mới
-      if (scrollTop + clientHeight >= scrollHeight - 200) {
+      if (scrollTop + clientHeight >= scrollHeight - 1000) {
         setPage((prev) => prev + 1);
       }
-
-      setScrolled(scrollTop > 100);
     };
 
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, [loading, hasMore]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollTop = window.scrollY;
+
+      if (scrollTop < 50) {
+        setScrolled(false); // full
+        y.set(0);
+        scale.set(1);
+      } else {
+        setScrolled(true); // mini
+        y.set(-20);
+        scale.set(0.9);
+      }
+    };
+
+    const onScroll = () => requestAnimationFrame(handleScroll);
+
+    window.addEventListener("scroll", onScroll);
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [y, scale]);
 
   const handleSort = (order: "asc" | "desc") => {
     setSortOrder(order);
@@ -195,54 +217,42 @@ export default function HotelsListPage() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      {/* Map */}
-      {/* <AnimatePresence>
-        {!scrolled && (
-          <motion.div
-            key="header"
-            initial={{ y: 0, opacity: 1 }}
-            exit={{ y: -100, opacity: 0 }}
-            transition={{ duration: 0.5 }}
-            className="fixed top-0 left-0 w-full z-40"
-          >
-            <Header />
-          </motion.div>
-        )}
-      </AnimatePresence> */}
-
-      {/* SearchBar: trượt lên khi scroll */}
-      {/* <motion.div
-        key="searchbar"
-        initial={false}
-        animate={{
-          y: scrolled ? 0 : 80,
-          boxShadow: scrolled
-            ? "0px 4px 12px rgba(0,0,0,0.1)"
-            : "0px 0px 0px rgba(0,0,0,0)",
-        }}
-        transition={{ duration: 0.5, ease: "easeInOut" }}
-        className="fixed top-0 left-0 w-full z-30 bg-background"
-      >
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <SearchBar />
-        </div>
-      </motion.div> */}
-      <main className="max-w-9xl container mx-auto py-12 space-y-12 pt-20 px-4 sm:px-6 lg:px-8">
-        <SearchBar />
+      <main className="max-w-9xl container mx-auto space-y-12 mb:pt-36 sm:pt-40 px-3 pb-10 sm:px-4 md:px-6 lg:px-8">
+        <motion.div
+          layoutId="search-bar"
+          className={`
+            fixed left-1/2 -translate-x-1/2 z-50 
+            w-[95%] sm:w-full max-w-4xl 
+            transition-all duration-300
+            ${scrolled ? "top-0 scale-90" : "top-20 scale-100"}
+          `}
+          transition={{ layout: { duration: 0.35, ease: "easeInOut" } }}
+        >
+          <SearchBar compact={scrolled} />
+        </motion.div>
         <FilterBar onFilterChange={handleFilterChange} />
-        <div className="flex flex-col lg:flex-row gap-8">
+        <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
           {/* Map */}
-          <div className="lg:w-1/4 h-full sticky top-24 rounded-lg overflow-hidden shadow-md">
-            <MapRooms rooms={rooms} height="h-[84vh]" />
+          <div
+            className="w-full lg:w-1/4 
+            h-50 lg:h-120
+            sticky lg:top-24 
+            rounded-lg overflow-hidden shadow-md"
+          >
+            <MapRooms rooms={rooms} height="h-120" />
           </div>
-          <div className="lg:w-3/4 ">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+          <div className="w-full lg:w-3/4 mt-4 lg:mt-0">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 lg:gap-6 mb-6">
               {rooms.map((room, index) => (
-                <RoomCard key={`${room.id}-${index}`} room={room} />
+                <StaggerItem index={index} key={`${room.id}-${index}`}>
+                  <HoverScale>
+                    <RoomCard room={room} />
+                  </HoverScale>
+                </StaggerItem>
               ))}
             </div>
             {loading && (
-              <div className="flex items-center justify-center py-8">
+              <div className="flex items-center justify-center py-6">
                 <div className="flex items-center gap-3 text-muted">
                   <Loader2 className="h-6 w-6 animate-spin text-primary" />
                   <span className="text-sm">Loading more hotels...</span>
@@ -251,7 +261,7 @@ export default function HotelsListPage() {
             )}
 
             {!hasMore && !loading && (
-              <div className="flex items-center justify-center py-1">
+              <div className="flex items-center justify-center py-2">
                 <div className="text-center text-muted">
                   <p className="text-sm ">
                     You{"'"}ve reached the end of the results

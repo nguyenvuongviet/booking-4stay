@@ -118,7 +118,7 @@ function CombinedFilterPopup({
         sideOffset={4}
       >
         <div className="absolute inset-0 -z-10 bg-black/20 backdrop-blur-sm rounded-xl" />
-        <div className="bg-card rounded-xl p-6 space-y-6">
+        <div className="bg-card rounded-xl p-6 space-y-4">
           {/* Star Rating Section */}
           <div>
             <div className="flex items-center gap-2 mb-4">
@@ -129,11 +129,11 @@ function CombinedFilterPopup({
               value={selectedStars[0]?.toString() || ""}
               onValueChange={(value) => onToggleStar(Number(value))}
             >
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {starOptions.map((option) => (
                   <div
                     key={option.value}
-                    className="flex items-center space-x-3"
+                    className="flex items-center space-x-2"
                     onClick={() => onToggleStar(option.value)}
                   >
                     <RadioGroupItem
@@ -167,7 +167,7 @@ function CombinedFilterPopup({
           {/* Price Section */}
           <div>
             <h3 className="text-lg elegant-sans mb-4">Price</h3>
-            <div className="space-y-3">
+            <div className="space-y-2">
               {priceRanges.map((option) => (
                 <div key={option.value} className="flex items-center space-x-3">
                   <Checkbox
@@ -231,13 +231,11 @@ function OptionsPopup({
     <Popover open={open} onOpenChange={onOpenChange}>
       <PopoverTrigger asChild>{children}</PopoverTrigger>
       <PopoverContent
-        className="w-72 rounded-xl shadow-xl p-0 m-0"
+        className="w-58 rounded-xl shadow-xl p-0 m-0"
         align="end"
         sideOffset={8}
       >
-        <div className="absolute inset-0 pl-2 -z-10 bg-black/20 backdrop-blur-sm rounded-xl" />
-
-        <div className="bg-background rounded-xl pl-2">
+        <div className="bg-background rounded-xl">
           <div className="space-y-1">
             {options.map((option) => (
               <button
@@ -246,9 +244,9 @@ function OptionsPopup({
                   onSelect(option.value);
                   onOpenChange(false);
                 }}
-                className="w-full flex items-center justify-between px-3 py-3 text-left hover:bg-gray-50 rounded-md transition-colors"
+                className="w-full flex items-center justify-center px-2 py-3 hover:bg-accent/50 rounded-md transition-colors"
               >
-                <span className="text-base elegant-subheading text-muted-foreground">
+                <span className="elegant-subheading text-muted-foreground">
                   {option.label}
                 </span>
                 {selectedValue === option.value && (
@@ -291,11 +289,9 @@ export function FilterBar({
 
       selectedPriceRanges.forEach((range) => {
         if (range.includes("+")) {
-          // Ví dụ: "3000000+"
           const min = Number.parseInt(range.replace("+", ""));
           minList.push(min);
         } else {
-          // Ví dụ: "500000-1000000"
           const [min, max] = range.split("-").map(Number);
           minList.push(min);
           maxList.push(max);
@@ -308,7 +304,7 @@ export function FilterBar({
         maxPrice = Math.max(...maxList);
       }
 
-      // Nếu có dấu "+", nghĩa là không có giới hạn trên
+      // Nếu có dấu "+" là không có giới hạn trên
       if (selectedPriceRanges.some((r) => r.includes("+"))) {
         maxPrice = undefined;
       }
@@ -394,13 +390,9 @@ export function FilterBar({
         >
           <Button
             variant="outline"
-            size="default"
-            className="rounded-full px-5 py-2 gap-2
-                      border border-border bg-card shadow-sm
-                      hover:shadow-md
-                      transition-all duration-200
-                      text-foreground elegant-subheading
-                      flex items-center">
+            size="lg"
+            className="shadow-sm text-foreground elegant-subheading"
+          >
             <Filter className="h-4 w-4 text-muted-foreground" />
             <span>Filters</span>
             <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
@@ -417,13 +409,8 @@ export function FilterBar({
           >
             <Button
               variant="outline"
-              size="default"
-              className="rounded-full px-5 py-2 gap-2
-                      border border-border bg-card shadow-sm
-                      hover:shadow-md
-                      transition-all duration-200
-                      text-foreground elegant-subheading
-                      flex items-center"
+              size="lg"
+              className="shadow-sm text-foreground elegant-subheading"
             >
               <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
               {getSortLabel()}

@@ -39,17 +39,16 @@ export default function DateRangePicker({
       <PopoverTrigger asChild>
         <Button
           variant="outline"
-          className="w-full relative h-12 rounded-3xl"
+          className="w-full h-12 px-4 bg-transparent border border-border rounded-3xl hover:border-ring hover:bg-transparent text-left flex items-center justify-between"
         >
           <CalendarIcon
             className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground"
             size={20}
           />
-          {/* <CalendarIcon className="ml-2 h-4 w-4" /> */}
-          <div className="ml-6">{selectedRange?.from
+          <div className="ml-6 elegant-subheading truncate">{selectedRange?.from
             ? formatLabel(selectedRange.from)
-            : "Check-in"} -{" "}
-          {selectedRange?.to ? formatLabel(selectedRange.to) : "Check-out"}</div>
+            : <span className="text-muted">Check-in</span>}<span className="text-muted"> - </span>{" "} 
+          {selectedRange?.to ? formatLabel(selectedRange.to) : <span className="text-muted">Check-out</span>}</div>
         </Button>
       </PopoverTrigger>
 

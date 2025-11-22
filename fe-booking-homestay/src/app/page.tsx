@@ -6,17 +6,24 @@ import Header from "@/components/Header";
 import LocationSuggestions from "@/components/LocationSuggestions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import DateRangePicker from "@/components/ui/date-range-picker";
 import { Input } from "@/components/ui/input";
 import { Amenity } from "@/models/Amenity";
 import { Location } from "@/models/Location";
 import { Room } from "@/models/Room";
 import { location, room_all, search_location } from "@/services/roomApi";
+import BlurInScroll from "@/styles/animations/BlurInScroll";
+import HoverScale from "@/styles/animations/HoverScale";
+import ScrollFade from "@/styles/animations/ScrollFade";
+import ScrollScale from "@/styles/animations/ScrollScale";
+import StaggerItem from "@/styles/animations/StaggerItem";
+import Typing from "@/styles/animations/Typing";
 import { format } from "date-fns";
+import { motion } from "framer-motion";
 import {
   Bath,
   BedDouble,
   Building2,
-  Calendar,
   Car,
   Check,
   Coffee,
@@ -37,17 +44,12 @@ import {
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-// import DatePicker from "react-datepicker";
-// import "react-datepicker/dist/react-datepicker.css";
-
-import DateRangePicker from "@/components/ui/date-range-picker";
 
 export default function HomePage() {
   const [checkIn, setCheckIn] = useState<Date | null>(null);
   const [checkOut, setCheckOut] = useState<Date | null>(null);
   const [adults, setAdults] = useState(1);
   const [children, setChildren] = useState(0);
-  const [isGuestPopoverOpen, setIsGuestPopoverOpen] = useState(false);
   const [rooms, setRooms] = useState<Room[]>([]);
   const [page, setPage] = useState(1);
   const [locations, setLocations] = useState<any[]>([]);
@@ -57,17 +59,7 @@ export default function HomePage() {
   const [error, setError] = useState("");
   const [hasMore, setHasMore] = useState(true);
   const locationInputRef = useRef<HTMLInputElement>(null);
-  const [focusCheckIn, setFocusCheckIn] = useState(false);
-  const [focusCheckOut, setFocusCheckOut] = useState(false);
-
-  // 🔎 Từ khóa tìm kiếm (search)
   const [search, setSearch] = useState("");
-
-  const getGuestDisplayText = () => {
-    const total = adults + children;
-    return `${total} Guests`;
-  };
-
   const router = useRouter();
 
   useEffect(() => {
@@ -220,7 +212,9 @@ export default function HomePage() {
         children: children.toString(),
       }).toString();
 
-      router.push(`/room-list?${query}`);
+      setTimeout(() => {
+        router.push(`/room-list?${query}`);
+      }, 300);
     } catch (error) {
       console.error("search room error: ", error);
     } finally {
@@ -235,219 +229,242 @@ export default function HomePage() {
 
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center justify-center bg-linear-to-b form-background to-secondary/30 pt-20 sm:pt-10">
-        <div className="max-w-5xl mx-auto px-6 lg:px-8 text-center">
-          <div className="mb-12 max-w-3xl mx-auto">
-            <h1 className="elegant-heading text-6xl md:text-8xl text-foreground mb-8 text-balance">
-              Find
-              <span className="text-primary"> Your Perfect </span>
-              Stay
-            </h1>
-            <p className="elegant-subheading text-xl mb:text-2xl text-muted-foreground max-w-2xl mx-auto text-pretty">
+        <div className="max-w-5xl mx-auto px-6 lg:px-8 text-center ">
+          <div className="mb-12 max-w-2xl mx-auto">
+            <Typing
+              texts={["Find Your Perfect Stay", "Enjoy Your Trip"]}
+              speed={80}
+              deleteSpeed={60}
+              pause={1000}
+              loop={true}
+              className="elegant-heading md:text-8xl text-gradient mb-4 min-h-54"
+            />
+            <ScrollFade
+              delay={500}
+              className="elegant-subheading text-lg mb:text-xl text-muted-foreground mx-auto text-pretty"
+            >
               Discover amazing hotels, resorts, and accommodations worldwide
-            </p>
+            </ScrollFade>
           </div>
 
           {/* Search Form */}
-<div className="bg-card rounded-4xl p-8 shadow-xl transition-transform duration-300 hover:-translate-y-2 hover:shadow-2xl">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mb-8">
-              <div>
-                <label className="elegant-subheading text-sm text-secondary-foreground mb-2 block">
-                  Location
-                </label>
-                <div className="relative">
-                  <MapPin
-                    className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground"
-                    size={20}
-                  />
-                  <Input
-                    ref={locationInputRef}
-                    value={locationInput}
-                    onChange={(e) => setLocationInput(e.target.value)}
-                    onFocus={handleFocusLocation}
-                    onClick={(e) => e.stopPropagation()}
-                    placeholder="Where are you going?"
-                    className="pl-10 h-12 border-border focus:border-accent elegant-subheading rounded-3xl placeholder:text-muted"
-                  />
-                  {error && (
-                    <p className="text-sm text-red-500 mt-1 absolute">
-                      {error}
-                    </p>
-                  )}
+          <motion.div
+            layoutId="search-bar"
+            initial={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.3 }}
+          >
+            <div className="bg-card rounded-4xl p-8 shadow-xl transition-transform duration-300 hover:-translate-y-2 hover:shadow-2xl">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mb-8">
+                <div>
+                  <label className="elegant-subheading text-sm text-secondary-foreground mb-2 block">
+                    Location
+                  </label>
+                  <div className="relative">
+                    <MapPin
+                      className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground"
+                      size={20}
+                    />
+                    <Input
+                      ref={locationInputRef}
+                      value={locationInput}
+                      onChange={(e) => setLocationInput(e.target.value)}
+                      onFocus={handleFocusLocation}
+                      onClick={(e) => e.stopPropagation()}
+                      placeholder="Where are you going?"
+                      className="pl-10 h-12 border-border focus:border-accent elegant-subheading rounded-3xl placeholder:text-muted"
+                    />
+                    {error && (
+                      <p className="text-sm text-red-500 mt-1 absolute">
+                        {error}
+                      </p>
+                    )}
 
-                  {/* Danh sách gợi ý location */}
-                  <LocationSuggestions
-                    locations={locations}
-                    showSuggestions={showSuggestions}
-                    onSelect={handleSelectLocation}
-                  />
+                    {/* Danh sách gợi ý location */}
+                    <LocationSuggestions
+                      locations={locations}
+                      showSuggestions={showSuggestions}
+                      onSelect={handleSelectLocation}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="elegant-subheading text-sm text-secondary-foreground mb-2 block">
+                    Check in & Check out
+                  </label>
+                  <div className="relative">
+                    <DateRangePicker
+                      value={
+                        checkIn && checkOut
+                          ? { from: checkIn, to: checkOut }
+                          : undefined
+                      }
+                      onChange={(range) => {
+                        setCheckIn(range?.from ?? null);
+                        setCheckOut(range?.to ?? null);
+                      }}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="elegant-subheading text-sm text-secondary-foreground mb-2 block">
+                    Guests
+                  </label>
+                  <div className="relative">
+                    <Users
+                      className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground"
+                      size={20}
+                    />
+                    <GuestPicker
+                      adults={adults}
+                      children={children}
+                      setAdults={setAdults}
+                      setChildren={setChildren}
+                    />
+                  </div>
                 </div>
               </div>
-
-              <div>
-                <label className="elegant-subheading text-sm text-secondary-foreground mb-2 block">
-                  Check in & Check out
-                </label>
-                <div className="relative">
-                  <Calendar
-                    className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground"
-                    size={20}
-                  />
-                  <DateRangePicker
-                    value={
-                      checkIn && checkOut
-                        ? { from: checkIn, to: checkOut }
-                        : undefined
-                    }
-                    onChange={(range) => {
-                      setCheckIn(range?.from ?? null);
-                      setCheckOut(range?.to ?? null);
-                    }}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="elegant-subheading text-sm text-secondary-foreground mb-2 block">
-                  Guests
-                </label>
-                <div className="relative">
-                  <Users
-                    className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground"
-                    size={20}
-                  />
-                  <GuestPicker
-                    adults={adults}
-                    children={children}
-                    setAdults={setAdults}
-                    setChildren={setChildren}
-                  />
-                </div>
-              </div>
+              <Button
+                onClick={handleSearch}
+                className="rounded-3xl w-full bg-primary hover:bg-primary/90 h-12 elegant-subheading text-md transition-all duration-300 hover:shadow-lg hover:scale-[1.02]"
+              >
+                <Search className="mr-2" size={20} />
+                {loading ? "Searching..." : "Search Hotels"}
+              </Button>
             </div>
-            <Button
-              onClick={handleSearch}
-              className="rounded-3xl w-full bg-primary hover:bg-primary/90 h-12 elegant-subheading text-md transition-all duration-300 hover:shadow-lg hover:scale-[1.02]"
-            >
-              <Search className="mr-2" size={20} />
-              {loading ? "Searching..." : "Search Hotels"}
-            </Button>
-          </div>
+          </motion.div>
         </div>
       </section>
 
       {/* Featured Hotels */}
-      <section className="pt-24 bg-card">
+      <section className="py-26 bg-card">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-20">
-            <h2 className="elegant-heading text-5xl text-foreground mb-6">
+            <ScrollScale className="elegant-heading text-5xl text-foreground mb-6">
               Featured Hotels
-            </h2>
-            <p className="elegant-subheading text-xl text-muted-foreground max-w-2xl mx-auto">
+            </ScrollScale>
+            <ScrollFade className="elegant-subheading text-xl text-muted-foreground max-w-2xl mx-auto">
               Discover our handpicked selection of premium accommodations
-            </p>
+            </ScrollFade>
           </div>
-
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {rooms.map((room) => (
-              <Card
-                key={room.id}
-                className="overflow-hidden hover:shadow-xl transition-all duration-500 "
-              >
-                <div className="relative">
-                  <Image
-                    src={room.images?.main || "/default.jpg"}
-                    alt={room.name}
-                    width={400}
-                    height={600}
-  className="w-full h-64 object-cover rounded-t-2xl transition-transform duration-500 group-hover:scale-110"
-                  />
-                  <div className="absolute top-4 right-4 bg-white px-2 py-1 rounded-full flex items-center gap-1">
-                    <Star className="text-yellow-400 fill-current" size={16} />
-                    <span className="text-sm elegant-sans">{room.rating}</span>
-                  </div>
-                </div>
-                <CardContent className="pb-8">
-                  <h3 className="elegant-heading text-xl text-secondary-foreground mb-2">
-                    {room.name}
-                  </h3>
-                  <p className="elegant-subheading text-sm text-muted-foreground mb-2 flex items-center gap-1">
-                    <MapPin size={20} className="mr-2" />
-                    {room.location.fullAddress}
-                  </p>
-                  <div className="flex items-center gap-2 mb-4">
-                    {(room.amenities || []).map((amenity) => (
-                      <div
-                        key={amenity.id} // use id as key
-                        className="elegant-subheading text-muted-foreground flex items-center gap-1"
-                      >
-                        <span>{getAmenityIcon(amenity)}</span>
-                        {/* <span>{amenity.name}</span> */}
+            {rooms.map((room, index) => (
+              <StaggerItem index={index} key={room.id}>
+                <HoverScale>
+                  <Card
+                    // key={room.id}
+                    className="overflow-hidden hover:shadow-xl"
+                  >
+                    <div className="relative">
+                      <Image
+                        src={room.images?.main || "/default.jpg"}
+                        alt={room.name}
+                        width={400}
+                        height={600}
+                        className="w-full h-64 object-cover rounded-t-2xl transition-transform duration-500 group-hover:scale-110"
+                      />
+                      <div className="absolute top-4 right-4 bg-white px-2 py-1 rounded-full flex items-center gap-1">
+                        <Star
+                          className="text-yellow-400 fill-current"
+                          size={16}
+                        />
+                        <span className="text-sm elegant-sans">
+                          {room.rating}
+                        </span>
                       </div>
-                    ))}
-                  </div>
-
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <span className="text-xl elegant-sans text-foreground">
-                        {formatPrice(room.price)}
-                      </span>
-                      <span className="elegant-subheading text-sm text-muted-foreground">
-                        /night
-                      </span>
                     </div>
-                    <Button
-                      onClick={() => router.push(`/room/${room.id}`)}
-                      className="bg-primary hover:bg-primary/90 elegant-sans hover:cursor-pointer rounded-xl"
-                    >
-                      Book Now
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+                    <CardContent className="pb-8">
+                      <h3 className="elegant-heading text-xl text-secondary-foreground mb-2">
+                        {room.name}
+                      </h3>
+                      <p className="elegant-subheading text-sm text-muted-foreground mb-2 flex items-center gap-1">
+                        <MapPin size={20} className="mr-2" />
+                        <span className="line-clamp-1">
+                          {room.location.fullAddress}
+                        </span>
+                      </p>
+                      <div className="flex items-center gap-2 mb-4 h-4">
+                        {(room.amenities || []).map((amenity) => (
+                          <div
+                            key={amenity.id} 
+                            className="elegant-subheading text-muted-foreground flex items-center gap-1"
+                          >
+                            <span>{getAmenityIcon(amenity)}</span>
+                            {/* <span>{amenity.name}</span> */}
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <span className="text-xl elegant-sans text-foreground">
+                            {formatPrice(room.price)}
+                          </span>
+                          <span className="elegant-subheading text-sm text-muted-foreground">
+                            /night
+                          </span>
+                        </div>
+                        <Button
+                          onClick={() => router.push(`/room/${room.id}`)}
+                          className="bg-primary hover:bg-primary/90 elegant-sans hover:cursor-pointer rounded-xl"
+                        >
+                          Book Now
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </HoverScale>
+              </StaggerItem>
             ))}
           </div>
         </div>
       </section>
 
       {/* Popular Destinations */}
-      <section className="py-24 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="elegant-heading text-5xl text-foreground mb-6">
+      <section className="py-12 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-24">
+          <div className="text-center mb-20">
+            <ScrollScale className="elegant-heading text-5xl text-foreground mb-6">
               Popular Destinations
-            </h2>
-            <p className="elegant-subheading text-xl text-muted-foreground max-w-2xl mx-auto">
+            </ScrollScale>
+            <ScrollFade className="elegant-subheading text-xl text-muted-foreground max-w-2xl mx-auto">
               Explore the world{"'"}s most sought-after travel destinations
-            </p>
+            </ScrollFade>
           </div>
 
           {locations.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {locations.map((loc: Location) => (
-                <Card
-                  key={loc.id}
-                  onClick={() =>
-                    router.push(
-                      `/room-list?location=${encodeURIComponent(loc.province)}`
-                    )
-                  }
-                  className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
-                >
-                  <div className="relative">
-                    <img
-                      src={loc.provinceImageUrl || "/default.jpg"}
-                      alt={loc.province}
-                      className="w-full h-72 object-cover"
-                    />
-                    <div className="absolute inset-0 bg-linear-to-t from-black/60 to-transparent" />
-                    <div className="absolute bottom-4 left-6 text-accent">
-                      <h3 className="text-2xl elegant-sans mb-1">
-                        {loc.province || "Unknown"}
-                      </h3>
-                      {/* <p className="text-sm opacity-90">{location.country}</p> */}
-                    </div>
-                  </div>
-                </Card>
+              {locations.map((loc: Location, index) => (
+                <BlurInScroll key={loc.id} delay={index * 120}>
+                  <HoverScale>
+                    <Card
+                      onClick={() =>
+                        router.push(
+                          `/room-list?location=${encodeURIComponent(
+                            loc.province
+                          )}`
+                        )
+                      }
+                      className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
+                    >
+                      <div className="relative">
+                        <img
+                          src={loc.provinceImageUrl || "/default.jpg"}
+                          alt={loc.province}
+                          className="w-full h-72 object-cover"
+                        />
+                        <div className="absolute inset-0 bg-linear-to-t from-black/60 to-transparent" />
+
+                        <div className="absolute bottom-4 left-6 text-accent">
+                          <h3 className="text-2xl elegant-sans mb-1">
+                            {loc.province || "Unknown"}
+                          </h3>
+                        </div>
+                      </div>
+                    </Card>
+                  </HoverScale>
+                </BlurInScroll>
               ))}
             </div>
           ) : (
@@ -462,7 +479,7 @@ export default function HomePage() {
       <section className="py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="elegant-heading text-5xl text-foreground mb-6">
+            <h2 className="elegant-heading text-4xl text-foreground mb-6">
               Why Choose 4Stay?
             </h2>
             <p className="elegant-subheading text-xl text-muted-foreground max-w-2xl mx-auto">

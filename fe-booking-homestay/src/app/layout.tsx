@@ -4,14 +4,13 @@ import { AuthProvider } from "@/context/auth-context";
 import type { Metadata } from "next";
 import { Outfit, Fira_Mono, Lora } from "next/font/google";
 import "./globals.css";
-import "antd/dist/reset.css";
-import AntdProvider from "@/components/providers/AntdProvider";
+import PageTransition from "@/styles/animations/PageTransition";
 
 // Sans font
 const outfit = Outfit({
   subsets: ["latin"],
   variable: "--font-sans",
-  weight: ["400", "500", "600", "700"], // hoặc ["400"] nếu chỉ cần normal
+  weight: ["400", "500", "600", "700"],
 });
 
 // Monospace font
@@ -44,8 +43,8 @@ export default function RootLayout({
       className={`${outfit.variable} ${firaMono.variable} ${lora.variable}`}
     >
       <body className="antialiased">
-        <AuthProvider>
-          <AntdProvider>
+        <PageTransition>
+          <AuthProvider>
             {children}
             <ShadcnToaster />
             <div id="legacy-toaster">
@@ -59,8 +58,8 @@ export default function RootLayout({
               position="top-right"
               reverseOrder={false}
             />
-          </AntdProvider>
-        </AuthProvider>
+          </AuthProvider>
+        </PageTransition>
       </body>
     </html>
   );

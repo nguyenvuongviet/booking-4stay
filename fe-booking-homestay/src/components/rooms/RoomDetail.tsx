@@ -5,18 +5,18 @@ import { Card } from "@/components/ui/card";
 import { useAuth } from "@/context/auth-context";
 import { Room } from "@/models/Room";
 import { room_available, room_detail } from "@/services/roomApi";
-import { Calendar, Loader2, MapPin, Star, Users } from "lucide-react";
+import { Loader2, MapPin, Star, Users } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import toast from "react-hot-toast";
 import GuestPicker from "../GuestPicker";
 import Header from "../Header";
+import DateRangePicker from "../ui/date-range-picker";
 import { getAmenityIcon } from "./getAmenityIcon";
+import MapRooms from "./MapRoom";
 import { PhotoGalleryModal } from "./PhotoGalleryModal";
 import { ReviewList } from "./ReviewList";
-import MapRooms from "./MapRoom";
 
 interface RoomDetailClientProps {
   roomId: string;
@@ -36,25 +36,13 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
   const [adults, setAdults] = useState(1);
   const [children, setChildren] = useState(0);
   const [showAllAmenities, setShowAllAmenities] = useState(false);
-  const [isGuestPopoverOpen, setIsGuestPopoverOpen] = useState(false);
   const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
-
   const [showFullOverview, setShowFullOverview] = useState(false);
-  const [isReviewDialogOpen, setIsReviewDialogOpen] = useState(false);
-  const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
-  const [reviewForm, setReviewForm] = useState({
-    userName: "",
-    rating: 0,
-    comment: "",
-  });
 
   // Refs
   const checkInRef = useRef<HTMLInputElement>(null);
   const checkOutRef = useRef<HTMLInputElement>(null);
-
-  const [focusCheckIn, setFocusCheckIn] = useState(false);
-  const [focusCheckOut, setFocusCheckOut] = useState(false);
 
   // fetch data
   useEffect(() => {
@@ -383,28 +371,16 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
               {/* Info    */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                 <div className="relative md:col-span-1">
-                  <Calendar
-                    className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground"
-                    size={20}
-                  />
-                  <DatePicker
-                    selected={checkIn}
-                    onChange={(dates: [Date | null, Date | null]) => {
-                      const [start, end] = dates;
-                      setCheckIn(start);
-                      setCheckOut(end);
-
-                      // Khi người dùng chọn đủ 2 ngày -> kiểm tra phòng
-                      if (start && end) checkRoomAvailable(start, end);
+                  <DateRangePicker
+                    value={
+                      checkIn && checkOut
+                        ? { from: checkIn, to: checkOut }
+                        : undefined
+                    }
+                    onChange={(range) => {
+                      setCheckIn(range?.from ?? null);
+                      setCheckOut(range?.to ?? null);
                     }}
-                    startDate={checkIn}
-                    endDate={checkOut}
-                    selectsRange
-                    dateFormat="dd/MM/yyyy"
-                    placeholderText="Select Date"
-                    className="w-full pl-12 h-12 text-sm md:text-md elegant-subheading rounded-3xl border border-border focus:border-accent focus:ring-1 focus:ring-accent"
-                    minDate={new Date()}
-                    inline={false}
                   />
                 </div>
                 <div className="relative md:col-span-1">

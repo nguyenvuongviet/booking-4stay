@@ -2,28 +2,29 @@
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import { Location } from "@/models/Location";
 import { location, search_location } from "@/services/roomApi";
 import { format } from "date-fns";
-import { Calendar, MapPin, Search, Users } from "lucide-react";
+import {
+  useTransform,
+  useViewportScroll
+} from "framer-motion";
+import { MapPin, Search, Users } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import GuestPicker from "./GuestPicker";
 import LocationSuggestions from "./LocationSuggestions";
+import DateRangePicker from "./ui/date-range-picker";
 
-export function SearchBar() {
+interface SearchBarProps {
+  compact?: boolean; // nếu true: mini bar
+}
+export function SearchBar({ compact = false }: SearchBarProps) {
   const [checkIn, setCheckIn] = useState<Date | null>(null);
   const [checkOut, setCheckOut] = useState<Date | null>(null);
   const [adults, setAdults] = useState(1);
   const [children, setChildren] = useState(0);
-  const [isGuestPopoverOpen, setIsGuestPopoverOpen] = useState(false);
   const [locations, setLocations] = useState<any[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [locationInput, setLocationInput] = useState("");
@@ -31,8 +32,11 @@ export function SearchBar() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const locationInputRef = useRef<HTMLInputElement>(null);
-  const [focusCheckIn, setFocusCheckIn] = useState(false);
-  const [focusCheckOut, setFocusCheckOut] = useState(false);
+
+  // scroll smooth animation
+  const { scrollY } = useViewportScroll();
+  const scaleTransform = useTransform(scrollY, [0, 200], [1, 0.9]);
+  const yTransform = useTransform(scrollY, [0, 200], [0, -20]);
 
   useEffect(() => {
     const loc = searchParams.get("location");
@@ -119,9 +123,19 @@ export function SearchBar() {
   };
 
   return (
-    <div className="mx-auto max-w-7xl bg-card rounded-4xl shadow-lg p-3">
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-        <div className="col-span-2 relative ">
+    <div
+      className={`mx-auto w-full bg-card rounded-4xl shadow-lg transition-all duration-300 ${
+        compact ? "max-w-2xl p-2 sm:scale-[80%] md:scale-[100%]" : "max-w-5xl p-2 sm:scale-[80%] md:scale-[90%] md:p-3"
+      }`}
+    >
+      <div
+        className={`${
+          compact
+            ? "flex items-center gap-2"
+            : "grid grid-cols-5 gap-4"
+        }`}
+      >
+        <div className={`relative ${compact ? "flex-1" : "col-span-2"}`}>
           <MapPin
             className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground"
             size={20}
@@ -133,7 +147,7 @@ export function SearchBar() {
             onFocus={handleFocusLocation}
             onClick={(e) => e.stopPropagation()}
             placeholder="Where are you going?"
-            className="pl-10 h-12 elegant-subheading rounded-4xl placeholder:text-muted border border-border"
+            className="pl-10 h-12 elegant-subheading rounded-4xl placeholder:text-muted border border-border text-[15px]"
           />
 
           {/* Danh sách gợi ý location */}
@@ -144,30 +158,19 @@ export function SearchBar() {
           />
         </div>
 
-        <div className="relative">
-          <Calendar
-            className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground"
-            size={20}
-          />
-          <DatePicker
-            selected={checkIn}
-            onChange={(dates: [Date | null, Date | null]) => {
-              const [start, end] = dates;
-              setCheckIn(start);
-              setCheckOut(end);
+        <div className={`relative ${compact ? "flex-1 " : "col-span-1"}`}>
+          <DateRangePicker
+            value={
+              checkIn && checkOut ? { from: checkIn, to: checkOut } : undefined
+            }
+            onChange={(range) => {
+              setCheckIn(range?.from ?? null);
+              setCheckOut(range?.to ?? null);
             }}
-            startDate={checkIn}
-            endDate={checkOut}
-            selectsRange
-            dateFormat="dd/MM/yyyy"
-            placeholderText="Select date"
-            className="w-full pl-12 h-12 text-sm md:text-md elegant-subheading rounded-3xl border border-border"
-            minDate={new Date()}
-            inline={false}
           />
         </div>
 
-        <div className="relative">
+        <div className={`relative ${compact ? "flex-1 " : "col-span-1"}`}>
           <Users
             className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground"
             size={20}
@@ -181,10 +184,14 @@ export function SearchBar() {
         </div>
         <Button
           onClick={handleSearch}
-          className="rounded-3xl w-full bg-primary hover:bg-primary/80 h-12 elegant-subheading text-md"
+          className={`h-12 rounded-3xl bg-primary hover:bg-primary/80 ${
+            compact
+              ? "w-12 p-0 flex justify-center items-center"
+              : "elegant-subheading text-md"
+          }`}
         >
           <Search className="mr-1" size={20} />
-          Search
+          {!compact && <span className="ml-1">Search</span>}{" "}
         </Button>
       </div>
     </div>
