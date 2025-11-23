@@ -205,11 +205,11 @@ export default function SignInModal({
             </div>
 
             <div className="flex items-center mt-6">
-              <div className="flex-grow border-t border-border"></div>
+              <div className="grow border-t border-border"></div>
               <span className="mx-4 elegant-subheading text-muted-foreground text-sm">
                 OR
               </span>
-              <div className="flex-grow border-t border-border"></div>
+              <div className="grow border-t border-border"></div>
             </div>
 
             <div className="mt-6">

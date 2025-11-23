@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { toast } from "@/components/ui/use-toast";
 import { STORAGE_KEYS } from "@/constants";
 import { useAuth } from "@/context/auth-context";
+import { isAdmin } from "@/lib/utils/auth-client";
 import { login } from "@/services/authApi";
 import { Eye, EyeOff, Lock, Mail } from "lucide-react";
 import Image from "next/image";
@@ -26,21 +27,20 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (!isLoading) {
-      const storedData = localStorage.getItem(STORAGE_KEYS.CURRENT_USER);
+      const raw = localStorage.getItem(STORAGE_KEYS.CURRENT_USER);
+      if (!raw) return;
 
-      if (storedData) {
-        try {
-          const data = JSON.parse(storedData);
+      const data = JSON.parse(raw);
+      const user = data.user;
 
-          if (data.user && data.accessToken) {
-            router.replace(nextRoute);
-          }
-        } catch (e) {
-          console.error("Lỗi parse dữ liệu người dùng:", e);
-        }
+      if (!user) return;
+
+      if (!isAdmin(user)) {
+        return;
       }
+      router.replace(nextRoute);
     }
-  }, [router, nextRoute, isLoading]);
+  }, [isLoading]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -97,7 +97,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted flex items-center justify-center p-4">
+    <div className="min-h-screen bg-linear-to-br from-background to-muted flex items-center justify-center p-4">
       <Card className="w-full max-w-md p-8 shadow-lg">
         <div className="flex flex-col items-center gap-3">
           <Image

@@ -28,7 +28,7 @@ export default function AdminLayout({
       return;
     }
     setReady(true);
-  }, [router]);
+  }, []);
 
   useEffect(() => {
     const saved = localStorage.getItem("sidebar_collapsed");
@@ -36,7 +36,7 @@ export default function AdminLayout({
     if (saved !== null) {
       setIsCollapsed(saved === "1");
     } else {
-      if (typeof window !== "undefined" && window.innerWidth < 1024) {
+      if (window.innerWidth < 1024) {
         setIsCollapsed(true);
         localStorage.setItem("sidebar_collapsed", "1");
       } else {
