@@ -307,7 +307,7 @@ body {
 
 /* Gradient text */
 .text-gradient {
-  background: linear-gradient(90deg, #ff7f6b, #feca57, #72a8e3, #1dd1a1);
+  background: linear-gradient(90deg, #538ad6, #63d4e3, #72a8e3);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   animation: gradientShift 5s ease infinite;

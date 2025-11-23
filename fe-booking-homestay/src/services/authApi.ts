@@ -97,13 +97,3 @@ export const upload_file = async (data: FormData) => {
     throw error;
   }
 };
-
-export const googleLogin = async (token: string) => {
-  try {
-    const resp = await api.post("/auth/google-login", { token });
-    return resp.data;
-  } catch (error) {
-    console.error("Google login error: ", error);
-    throw error;
-  }
-};

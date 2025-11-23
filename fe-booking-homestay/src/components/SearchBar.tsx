@@ -32,11 +32,10 @@ export function SearchBar({ compact = false }: SearchBarProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const locationInputRef = useRef<HTMLInputElement>(null);
+  const [error, setError] = useState("");
 
   // scroll smooth animation
   const { scrollY } = useViewportScroll();
-  const scaleTransform = useTransform(scrollY, [0, 200], [1, 0.9]);
-  const yTransform = useTransform(scrollY, [0, 200], [0, -20]);
 
   useEffect(() => {
     const loc = searchParams.get("location");
@@ -52,23 +51,20 @@ export function SearchBar({ compact = false }: SearchBarProps) {
     if (ch) setChildren(Number(ch));
   }, [searchParams]);
 
-  const getGuestDisplayText = () => {
-    const total = adults + children;
-    return `${total} Guests`;
-  };
   //Hàm fetch gợi ý location
   const fetchLocationSuggestions = useCallback(async (query: string) => {
     if (!query.trim()) {
       //input rỗng
       const res = await location();
-      const allData = res.data || [];
+      const allData = res?.data?.data || [];
       setLocations(allData);
       setShowSuggestions(allData.length > 0);
     } else {
-      // có text
+      //có text
       const res = await search_location(query);
       const data = res.data?.data || [];
       setLocations(data);
+      setError("");
       setShowSuggestions(data.length > 0);
     }
   }, []);
@@ -88,7 +84,7 @@ export function SearchBar({ compact = false }: SearchBarProps) {
   };
 
   const handleSelectLocation = (loc: Location) => {
-    setLocationInput(loc.province || "");
+    setLocationInput(loc.name || "");
     setShowSuggestions(false);
   };
 
@@ -99,13 +95,15 @@ export function SearchBar({ compact = false }: SearchBarProps) {
   }, []);
 
   const handleSearch = async () => {
+    setLoading(true);
     try {
-      if (!locationInput.trim()) {
+      if (!locationInput || locationInput.trim() === "") {
+        // setError("Please enter a location.");
+        setShowSuggestions(false);
         locationInputRef.current?.focus();
-        setShowSuggestions(true);
+
         return;
       }
-
       const query = new URLSearchParams({
         location: locationInput,
         ...(checkIn ? { checkIn: format(checkIn, "yyyy-MM-dd") } : {}),
@@ -114,7 +112,9 @@ export function SearchBar({ compact = false }: SearchBarProps) {
         children: children.toString(),
       }).toString();
 
-      router.push(`/room-list?${query}`);
+      setTimeout(() => {
+        router.push(`/room-list?${query}`);
+      }, 300);
     } catch (error) {
       console.error("search room error: ", error);
     } finally {
@@ -147,7 +147,7 @@ export function SearchBar({ compact = false }: SearchBarProps) {
             onFocus={handleFocusLocation}
             onClick={(e) => e.stopPropagation()}
             placeholder="Where are you going?"
-            className="pl-10 h-12 elegant-subheading rounded-4xl placeholder:text-muted border border-border text-[15px]"
+            className="pl-10 h-12 bg-card elegant-subheading rounded-4xl placeholder:text-muted border border-border text-[15px]"
           />
 
           {/* Danh sách gợi ý location */}

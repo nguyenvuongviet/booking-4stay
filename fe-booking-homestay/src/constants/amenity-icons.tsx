@@ -1,25 +1,26 @@
 import {
   AirVent,
   Bath,
+  Bed,
+  BedDouble,
+  BedSingle,
   Building2,
   Coffee,
-  CoffeeIcon,
-  Droplets,
+  Columns2,
   Dumbbell,
   Fan,
   Flame,
-  Hammer,
   Heater,
-  Home,
+  House,
   Microwave,
-  Notebook,
   ParkingCircle,
   Refrigerator,
-  Shirt,
   ShowerHead,
+  SoapDispenserDroplet,
   Sofa,
-  Toilet,
-  Trees,
+  StickyNote,
+  Sun,
+  Table,
   Tv,
   Utensils,
   WashingMachine,
@@ -27,41 +28,66 @@ import {
   Wifi,
   Wind,
 } from "lucide-react";
-import type { JSX } from "react";
 
-export const AMENITY_ICONS: Record<string, JSX.Element> = {
-  Wifi: <Wifi className="w-4 h-4 text-blue-500" />,
-  "Air Conditioner": <AirVent className="w-4 h-4 text-sky-500" />,
-  Heating: <Heater className="w-4 h-4 text-orange-500" />,
-  Television: <Tv className="w-4 h-4 text-purple-500" />,
-  Refrigerator: <Refrigerator className="w-4 h-4 text-cyan-600" />,
-  Microwave: <Microwave className="w-4 h-4 text-amber-500" />,
-  Kitchen: <Utensils className="w-4 h-4 text-amber-600" />,
-  "Washing Machine": <WashingMachine className="w-4 h-4 text-green-600" />,
-  Iron: <Hammer className="w-4 h-4 text-slate-600" />,
-  "Hair Dryer": <Wind className="w-4 h-4 text-pink-500" />,
-
-  Shower: <ShowerHead className="w-4 h-4 text-blue-400" />,
-  "Bath Tub": <Bath className="w-4 h-4 text-blue-500" />,
-  Toiletries: <Droplets className="w-4 h-4 text-rose-500" />,
-  "Toilet Paper": <Toilet className="w-4 h-4 text-gray-500" />,
-
-  Wardrobe: <Shirt className="w-4 h-4 text-slate-700" />,
-  Desk: <Notebook className="w-4 h-4 text-slate-600" />,
-  "Sofa Bed": <Sofa className="w-4 h-4 text-amber-500" />,
-
-  Balcony: <Trees className="w-4 h-4 text-green-600" />,
-  Parking: <ParkingCircle className="w-4 h-4 text-gray-600" />,
-  Elevator: <Building2 className="w-4 h-4 text-slate-500" />,
-  "Swimming Pool": <Waves className="w-4 h-4 text-cyan-500" />,
-  Gym: <Dumbbell className="w-4 h-4 text-red-500" />,
-  Breakfast: <Coffee className="w-4 h-4 text-amber-700" />,
-  "Coffee Maker": <CoffeeIcon className="w-4 h-4 text-brown-600" />,
-  Fan: <Fan className="w-4 h-4 text-sky-500" />,
-
-  default: <Home className="w-4 h-4 text-muted-foreground" />,
-};
-
-export function getAmenityIcon(name: string): JSX.Element {
-  return AMENITY_ICONS[name] ?? AMENITY_ICONS["default"];
+export function getAmenityIcon(name: string) {
+  switch (name.toLowerCase()) {
+    case "wifi":
+      return <Wifi className="h-4 w-4" />;
+    case "air conditioner":
+      return <AirVent className="h-4 w-4" />;
+    case "heating":
+      return <Heater className="h-4 w-4" />;
+    case "television":
+      return <Tv className="h-4 w-4" />;
+    case "refrigerator":
+      return <Refrigerator className="h-4 w-4" />;
+    case "microwave":
+      return <Microwave className="h-4 w-4" />;
+     case "washing machine":
+      return <WashingMachine className="h-4 w-4" />;
+    case "iron":
+      return <Flame className="h-4 w-4" />;
+    case "bath tub":
+      return <Bath className="h-4 w-4" />;
+    case "hair dryer":
+      return <Wind className="h-4 w-4" />;
+    case "shower":
+      return <ShowerHead className="h-4 w-4" />;
+    case "bath tub":
+      return <Bath className="h-4 w-4" />;
+    case "toiletries":
+      return <SoapDispenserDroplet className="h-4 w-4" />;
+    case "toilet paper":
+      return <StickyNote className="h-4 w-4" />;
+    case "wardrobe":
+      return <Columns2 className="h-4 w-4" />;
+    case "desk":
+      return <Table className="h-4 w-4" />;
+    case "parking":
+      return <ParkingCircle className="h-4 w-4" />;
+    case "elevator":
+      return <Building2 className="h-4 w-4" />;
+    case "swimming pool":
+      return <Waves className="h-4 w-4" />;
+    case "gym":
+      return <Dumbbell className="h-4 w-4" />;
+    case "bed":
+      return <Bed className="h-4 w-4" />;
+    case "double bed":
+      return <BedDouble className="h-4 w-4" />;
+    case "single bed":
+      return <BedSingle className="h-4 w-4" />;
+    case "sofa bed":
+      return <Sofa className="h-4 w-4" />;
+    case "balcony":
+      return <Sun className="h-4 w-4" />;
+    case "breakfast":
+      return <Utensils className="h-4 w-4" />;
+    case "fan":
+      return <Fan className="h-4 w-4" />;
+    case "coffee maker":
+      return <Coffee className="h-4 w-4" />;
+    default:
+      return <House className="h-4 w-4" />;
+  }
 }

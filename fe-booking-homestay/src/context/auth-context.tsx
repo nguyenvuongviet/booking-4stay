@@ -15,9 +15,6 @@ import {
   useState,
 } from "react";
 import { IUser } from "../models/User";
-import { onAuthStateChanged, signOut } from "firebase/auth";
-import { auth } from "@/lib/firebase";
-import { googleLogin } from "@/services/authApi";
 import { usePersistedState } from "@/hook/usePersistedState";
 
 interface AuthContextType {
@@ -73,17 +70,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
       }
     }
-
-    // Chỉ subscribe firebase nhưng không override user từ localStorage
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (!firebaseUser) {
-        // Nếu user logout thì mới remove
-        setUser(null);
-        localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
-      }
-    });
-
-    return () => unsubscribe();
   }, []);
 
   const updateUser = (newUser: IUser) => {
@@ -91,16 +77,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const logout = async () => {
-    try {
-      await signOut(auth);
-    } catch (err) {
-      console.warn("Firebase signOut failed:", err);
-    } finally {
-      const role = user?.role;
-      setUser(null);
-      if (role === 1) router.push("/admin/login");
-      else router.push("/");
-    }
+    const role = user?.role;
+    setUser(null);
+    if (role === 1) router.push("/admin/login");
+    else router.push("/");
   };
 
   const closeAll = () => {

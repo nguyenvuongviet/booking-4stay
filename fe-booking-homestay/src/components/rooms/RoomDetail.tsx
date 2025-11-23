@@ -13,10 +13,10 @@ import toast from "react-hot-toast";
 import GuestPicker from "../GuestPicker";
 import Header from "../Header";
 import DateRangePicker from "../ui/date-range-picker";
-import { getAmenityIcon } from "./getAmenityIcon";
 import MapRooms from "./MapRoom";
 import { PhotoGalleryModal } from "./PhotoGalleryModal";
 import { ReviewList } from "./ReviewList";
+import { getAmenityIcon } from "@/constants/amenity-icons";
 
 interface RoomDetailClientProps {
   roomId: string;
@@ -289,7 +289,7 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
                     key={amenity.id}
                     className="flex items-center gap-2 text-sm elegant-subheading text-muted-foreground"
                   >
-                    <span>{getAmenityIcon(amenity)}</span>
+                    <span>{getAmenityIcon(amenity.name)}</span>
                     <span>{amenity.name}</span>
                   </div>
                 ))}
@@ -352,7 +352,7 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
               </div>
               {/* Sold Out Banner */}
               {available === false && (
-                <div className="absolute top-4 right-4 flex items-center h-10 bg-gradient-to-r from-red-500 to-red-600 text-white elegant-sans rounded-2xl shadow-xl py-2 px-4 uppercase tracking-wider text-sm animate-pulse">
+                <div className="absolute top-4 right-4 flex items-center h-10 bg-linear-to-r from-red-500 to-red-600 text-white elegant-sans rounded-2xl shadow-xl py-2 px-4 uppercase tracking-wider text-sm animate-pulse">
                   <svg
                     className="w-5 h-5 mr-2"
                     fill="none"

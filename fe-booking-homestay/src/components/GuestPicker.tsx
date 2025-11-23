@@ -27,7 +27,7 @@ export default function GuestPicker({
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
-        <button className="w-full h-12 px-4 border border-border rounded-3xl focus:border-ring focus:ring-1 focus:ring-accent text-left flex items-center justify-between">
+        <button className="w-full h-12 px-4 border border-border rounded-3xl hover:border-ring focus:border-ring focus:ring-2 focus:ring-accent text-left flex items-center justify-between">
           <span className="ml-10 text-sm elegant-subheading">{getGuestDisplayText()}</span>
           <svg
             className="w-5 h-5 text-muted-foreground"

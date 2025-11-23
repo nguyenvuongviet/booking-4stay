@@ -39,7 +39,7 @@ export default function DateRangePicker({
       <PopoverTrigger asChild>
         <Button
           variant="outline"
-          className="w-full h-12 px-4 bg-transparent border border-border rounded-3xl hover:border-ring hover:bg-transparent text-left flex items-center justify-between"
+          className="w-full h-12 px-4 bg-transparent border border-border rounded-3xl hover:border-ring focus:border-ring focus:ring-2 focus:ring-accent hover:bg-transparent text-left flex items-center justify-between"
         >
           <CalendarIcon
             className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground"
@@ -52,8 +52,8 @@ export default function DateRangePicker({
         </Button>
       </PopoverTrigger>
 
-      <PopoverContent className="w-auto p-4">
-        <div className="flex flex-col sm:flex-row gap-4">
+      <PopoverContent className="w-auto p-2">
+        <div className="flex flex-col sm:flex-row gap-2">
           {[0, 1].map((i) => (
             <Calendar
               key={i}

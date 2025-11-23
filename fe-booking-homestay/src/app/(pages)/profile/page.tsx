@@ -1,5 +1,6 @@
 "use client";
 
+import { BookingCard } from "@/components/bookings/BookingCard";
 import Headers from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,15 +12,27 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { UserAvatar } from "@/components/UserAvatar";
 import { COUNTRIES } from "@/constants/countries";
 import { useAuth } from "@/context/auth-context";
-import { cn } from "@/lib/utils";
+import { Booking } from "@/models/Booking";
 import { IUser } from "@/models/User";
 import { update_profile, upload_file } from "@/services/authApi";
-import { Calendar } from "lucide-react";
+import {
+  BookOpen,
+  Calendar,
+  CalendarX,
+  Edit2,
+  Loader2,
+  Save,
+  Upload,
+  User,
+} from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import DatePicker from "react-datepicker";
 import toast from "react-hot-toast";
+import { format } from "date-fns";
 
 export default function ProfilePage() {
   const { user, setUser, updateUser } = useAuth();
@@ -33,6 +46,10 @@ export default function ProfilePage() {
   const [country, setCountry] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [activeTab, setActiveTab] = useState("profile");
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
 
   // mỗi khi user thay đổi (từ context), sync vào state form
   useEffect(() => {
@@ -63,21 +80,17 @@ export default function ProfilePage() {
       );
 
       const res = await update_profile(updatedUser);
-      if (!res?.data) {
-        console.error("User data undefined, cannot update localStorage");
-        return;
-      }
+      if (!res?.data) return;
 
-      // setUser(res.data);
       updateUser({
-        ...res.data, // dữ liệu mới từ API
-        avatar: user.avatar, // giữ avatar đang có
+        ...res.data,
+        avatar: user.avatar,
       });
       toast.success("Profile updated successfully!");
-      console.log("Profile updated successfully");
+      setIsEditing(false);
     } catch (error) {
       toast.error("Update profile failed!");
-      console.error("Update profile error:", error);
+      console.error(error);
     }
   };
 
@@ -103,6 +116,7 @@ export default function ProfilePage() {
         // update user trong context và localStorage
         updateUser({ ...user, avatar: data.imgUrl });
       }
+      setIsEditing(false);
       // toast.success("Upload avatar successfully!");
       console.log("Upload avatar thành công!");
     } catch (error) {
@@ -111,170 +125,288 @@ export default function ProfilePage() {
     }
   };
 
-  return (
-    <div className="min-h-screen bg-secondary/20">
-      <Headers />
+  const handleEditClick = () => setIsEditing(true);
 
-      {/* Main Content */}
-      <div className="max-w-4xl mx-auto pt-20">
-        <h1 className="text-4xl elegant-heading mb-4">My profile</h1>
-        {/* Profile Avatar */}
-        <div className="flex justify-center mb-4">
-          <div className="relative">
-            <div className="flex flex-col items-center text-center mb-4">
-              <div className="relative w-32 h-32 mb-2 rounded-full overflow-hidden">
+  return (
+    <div className="min-h-screen bg-background">
+      <Headers />
+      <main className="min-h-screen p-4 md:p-8 mt-18">
+        <div className="mx-auto max-w-5xl">
+          <div className="mb-8 rounded-2xl bg-secondary/60 p-4 px-8 shadow-lg">
+            <div className="flex flex-col items-start gap-6 md:flex-row md:items-center md:justify-between">
+              <div className="flex items-center gap-6">
                 <img
-                  className="w-full h-full object-cover"
+                  className="h-28 w-28 object-cover"
                   src={avatarUrl}
                   alt="avatar"
                 />
-                <div
-                  className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity cursor-pointer bg-black bg-opacity-50"
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  <span className="text-white text-sm">Upload</span>
+                <div>
+                  <h1 className="text-2xl elegant-sans">
+                    {firstName} {lastName}
+                  </h1>
+                  <p className="text-muted-foreground text-sm">{email}</p>
+                  <p className="text-muted-foreground text-sm">{phone}</p>
+
+                  <p className="text-muted text-sm">
+                    Member since{" "}
+                    {user?.createdAt
+                      ? new Date(user.createdAt).toLocaleDateString("en-GB")
+                      : "-"}
+                  </p>
                 </div>
-                <Input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={handleAvatarUpload}
-                  className="hidden"
-                />
               </div>
-              <p className="text-sm text-secondary-foreground">{email}</p>
+
+              <div className="mt-8 grid gap-4 grid-row-1">
+                {/* Stats */}
+                <div className="grid grid-cols-2 gap-4 w-full md:w-auto">
+                  <div className="bg-white/20 p-4 rounded-xl backdrop-blur-md">
+                    <p className="text-sm ">Total Bookings</p>
+                    <p className="text-2xl elegant-sans">—</p>
+                  </div>
+
+                  <div className="bg-white/20 p-4 rounded-xl backdrop-blur-md">
+                    <p className="text-sm">Loyalty Points</p>
+                    <p className="text-2xl elegant-sans">—</p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-
-        {/* Form Fields */}
-        {user ? (
-          <div className="space-y-4">
-            {/* First Name and Last Name */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <Label htmlFor="firstName" className="elegant-subheading">
-                  First Name
-                </Label>
-                <Input
-                  id="firstName"
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                  className="bg-input rounded-xl"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="lastName" className="elegant-subheading">
-                  Last Name
-                </Label>
-                <Input
-                  id="lastName"
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                  className="bg-input rounded-xl"
-                />
-              </div>
-            </div>
-
-            {/* Email */}
-            <div className="space-y-2">
-              <Label htmlFor="email" className="elegant-subheading">
-                Email
-              </Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                readOnly
-                className="bg-input rounded-xl text-muted-foreground"
-              />
-            </div>
-
-            {/* Phone Number */}
-            <div className="space-y-2">
-              <Label htmlFor="phone" className="elegant-subheading">
-                Phone Number
-              </Label>
-              <Input
-                id="phone"
-                type="tel"
-                value={phone}
-                className="bg-input rounded-xl"
-                readOnly
-              />
-            </div>
-
-            {/* Date of Birth */}
-            <div className="space-y-2">
-              <Label htmlFor="dob" className="elegant-subheading">
-                Date of birth
-              </Label>
-              <div className="relative w-full">
-                <DatePicker
-                  id="dob"
-                  selected={dob}
-                  onChange={(date) => setDob(date)}
-                  dateFormat="dd/MM/yyyy"
-                  placeholderText="Select your date of birth"
-                  className="w-4xl rounded-xl border border-input bg-input px-3 py-2 text-sm shadow-xs outline-none
-                  focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]"
-                  maxDate={new Date()}
-                  inline={false}
-                />
-                <Calendar
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground"
-                  size={20}
-                />
-              </div>
-            </div>
-
-            {/* Gender */}
-            <div className="space-y-2">
-              <Label htmlFor="gender" className="elegant-subheading">
-                Gender
-              </Label>
-              <Select value={gender} onValueChange={setGender}>
-                <SelectTrigger className="w-full bg-input rounded-xl placeholder:text-muted">
-                  <SelectValue placeholder="Select gender" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="FEMALE">Female</SelectItem>
-                  <SelectItem value="MALE">Male</SelectItem>
-                  <SelectItem value="OTHER">Other</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Country */}
-            <div className="space-y-2">
-              <Label htmlFor="country" className="elegant-subheading">
-                Country
-              </Label>
-              <Select value={country} onValueChange={setCountry}>
-                <SelectTrigger className="w-full bg-input rounded-xl placeholder:text-muted">
-                  <SelectValue placeholder="Select country" />
-                </SelectTrigger>
-                <SelectContent className="max-h-60">
-                  {COUNTRIES.map((c) => (
-                    <SelectItem key={c.code} value={c.code}>
-                      {c.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <Button
-              onClick={handleSubmit}
-              className="my-4 rounded-2xl w-full bg-primary h-10 elegant-subheading text-md"
+          <Tabs
+            value={activeTab}
+            onValueChange={setActiveTab}
+            className="w-full"
+          >
+            <TabsList className="grid w-full grid-cols-2 gap-2 bg-transparent p-0 md:gap-4">
+              <TabsTrigger
+                value="profile"
+                className="rounded-lg shadow-sm transition-all gap-2 py-3"
+              >
+                <User className="h-4 w-4" />
+                <span className="hidden sm:inline">My profile</span>
+              </TabsTrigger>
+              <TabsTrigger
+                value="bookings"
+                className="rounded-lg shadow-sm transition-all gap-2 py-3"
+              >
+                <BookOpen className="h-4 w-4" />
+                <span className="hidden sm:inline">My Bookings</span>
+              </TabsTrigger>
+            </TabsList>
+            <TabsContent
+              value="profile"
+              className="mt-2 px-16 py-8 rounded-xl space-y-4 bg-card "
             >
-              Save change
-            </Button>
-          </div>
-        ) : (
-          <p className="text-center text-gray-500">No user info found.</p>
-        )}
-      </div>
+              <div className="flex justify-between mb-8">
+                <h1 className="text-4xl elegant-heading mb-4">My profile</h1>
+                <Button
+                  onClick={isEditing ? handleSubmit : handleEditClick}
+                  className="gap-2 rounded-lg"
+                  variant={isEditing ? "default" : "secondary"}
+                >
+                  {isEditing ? (
+                    <Save className="h-4 w-4" />
+                  ) : (
+                    <Edit2 className="h-4 w-4" />
+                  )}
+                  {isEditing ? "Save" : "Edit"}
+                </Button>
+              </div>
+              {/* Profile Avatar */}
+              <div className="flex flex-col md:flex-row items-center gap-6 md:gap-8">
+                {/* Avatar */}
+                <div className="w-full md:w-1/3 flex justify-center items-center">
+                  <div className="relative w-48 h-48 rounded-full overflow-hidden group">
+                    <img
+                      className="w-full h-full object-cover"
+                      src={avatarUrl}
+                      alt="avatar"
+                    />
+                    {isEditing && (
+                      <div
+                        className="absolute inset-0 flex flex-col items-center justify-center bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer rounded-full"
+                        onClick={() => fileInputRef.current?.click()}
+                      >
+                        <Upload className="text-white h-6 w-6 mb-1" />
+                        <span className="text-xs text-white">Upload</span>
+                      </div>
+                    )}
+                    <Input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleAvatarUpload}
+                      className="hidden"
+                    />
+                  </div>
+                </div>
+
+                {/* Form Fields */}
+                {user ? (
+                  <div className="w-full md:w-2/3 grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Name */}
+                    <div className="space-y-2">
+                      <Label htmlFor="firstName" className="elegant-subheading">
+                        First Name
+                      </Label>
+                      <Input
+                        id="firstName"
+                        value={firstName}
+                        onChange={(e) => setFirstName(e.target.value)}
+                        className="bg-input rounded-xl"
+                        readOnly={!isEditing}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="lastName" className="elegant-subheading">
+                        Last Name
+                      </Label>
+                      <Input
+                        id="lastName"
+                        value={lastName}
+                        onChange={(e) => setLastName(e.target.value)}
+                        className="bg-input rounded-xl"
+                        readOnly={!isEditing}
+                      />
+                    </div>
+
+                    {/* Contact Info */}
+                    <div className="space-y-2 md:col-span-2">
+                      <Label htmlFor="email" className="elegant-subheading">
+                        Email
+                      </Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        value={email}
+                        readOnly
+                        className="bg-input rounded-xl text-muted-foreground"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="phone" className="elegant-subheading">
+                        Phone Number
+                      </Label>
+                      <Input
+                        id="phone"
+                        type="tel"
+                        value={phone}
+                        readOnly
+                        className="bg-input rounded-xl text-muted-foreground"
+                      />
+                    </div>
+
+                    {/* Personal Info */}
+                    <div className="space-y-2">
+                      <Label htmlFor="dob" className="elegant-subheading">
+                        Date of Birth
+                      </Label>
+                      <div className="relative w-full">
+                        <DatePicker
+                          id="dob"
+                          selected={dob}
+                          onChange={(date) => setDob(date)}
+                          dateFormat="dd/MM/yyyy"
+                          className={`w-full rounded-xl border border-input bg-input px-3 py-2 text-sm shadow-xs outline-none ${
+                            !isEditing ? "opacity-70 cursor-not-allowed" : ""
+                          }`}
+                          maxDate={new Date()}
+                          disabled={!isEditing}
+                        />
+                        <Calendar
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                          size={20}
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="gender" className="elegant-subheading">
+                        Gender
+                      </Label>
+                      <Select
+                        value={gender}
+                        onValueChange={setGender}
+                        disabled={!isEditing}
+                      >
+                        <SelectTrigger
+                          className={`w-full bg-input rounded-xl placeholder:text-muted ${
+                            !isEditing ? "opacity-70 cursor-not-allowed" : ""
+                          }`}
+                        >
+                          <SelectValue placeholder="Select gender" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="FEMALE">Female</SelectItem>
+                          <SelectItem value="MALE">Male</SelectItem>
+                          <SelectItem value="OTHER">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="country" className="elegant-subheading">
+                        Country
+                      </Label>
+                      <Select
+                        value={country}
+                        onValueChange={setCountry}
+                        disabled={!isEditing}
+                      >
+                        <SelectTrigger
+                          className={`w-full bg-input rounded-xl placeholder:text-muted ${
+                            !isEditing ? "opacity-70 cursor-not-allowed" : ""
+                          }`}
+                        >
+                          <SelectValue placeholder="Select country" />
+                        </SelectTrigger>
+                        <SelectContent className="max-h-60 overflow-auto">
+                          {COUNTRIES.map((c) => (
+                            <SelectItem key={c.code} value={c.code}>
+                              {c.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-center text-gray-500">
+                    No user info found.
+                  </p>
+                )}
+              </div>
+            </TabsContent>
+            <TabsContent value="bookings" className="mt-2 px-16 py-8 rounded-xl space-y-4">
+              <h2 className="elegant-heading text-4xl my-6">History booking</h2>
+
+              {loading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="flex items-center gap-3 text-muted-foreground">
+                    <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                    <span className="text-sm">Loading your bookings...</span>
+                  </div>
+                </div>
+              ) : bookings.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-16 text-center text-muted-foreground ">
+                  <CalendarX className="h-12 w-12 mb-4 text-gray-400" />
+                  <p className="text-lg font-medium">No bookings yet</p>
+                  <p className="text-sm text-gray-500 mt-1">
+                    When you make a booking, it will appear here.
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 gap-8 mt-2 p-8 rounded-xl space-y-4 bg-card">
+                  {bookings.map((booking, index) => (
+                    <BookingCard
+                      key={`${booking.id}-${index}`}
+                      booking={booking}
+                    />
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
+        </div>
+      </main>
     </div>
   );
 }
