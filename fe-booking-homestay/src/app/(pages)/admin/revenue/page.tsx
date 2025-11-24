@@ -13,8 +13,8 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { Card } from "@/components/ui/card";
-import { StatCard } from "@/components/admin/stat-card";
 import { DollarSign, TrendingUp, Users, Calendar } from "lucide-react";
+import { StatCard } from "../_components/stat-card";
 
 const revenueData = [
   { month: "Jan", revenue: 12000, bookings: 40, guests: 85 },

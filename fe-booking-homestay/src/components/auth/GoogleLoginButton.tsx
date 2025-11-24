@@ -20,7 +20,6 @@ export default function GoogleLoginButton() {
         const { accessToken, refreshToken, user } = await login_with_google({
           code: response.code,
         });
-        console.log({ accessToken, refreshToken, user });
 
         localStorage.setItem(
           STORAGE_KEYS.CURRENT_USER,
