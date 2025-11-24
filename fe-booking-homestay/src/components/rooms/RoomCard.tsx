@@ -53,7 +53,7 @@ export function RoomCard({ room }: RoomCardProps) {
           />
           {/* sold out  */}
           {room.status === "Sold out" && (
-            <div className="absolute top-4 left-4 bg-gradient-to-r from-red-600 to-red-700 text-white text-sm font-semibold px-2 py-2 rounded-full shadow-md tracking-wider animate-pulse">
+            <div className="absolute top-4 left-4 bg-linear-to-r from-red-600 to-red-700 text-white text-sm font-semibold px-2 py-2 rounded-full shadow-md tracking-wider animate-pulse">
               Sold out
             </div>
           )}

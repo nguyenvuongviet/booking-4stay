@@ -1,14 +1,19 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { RefreshCcw, Plus } from "lucide-react";
+import { RefreshCcw, Plus, Upload } from "lucide-react";
 
 interface LocationHeaderProps {
   onRefresh: () => void;
   onAdd: () => void;
+  openImport: () => void;
 }
 
-export function LocationHeader({ onRefresh, onAdd }: LocationHeaderProps) {
+export function LocationHeader({
+  onRefresh,
+  onAdd,
+  openImport,
+}: LocationHeaderProps) {
   return (
     <div className="flex items-center justify-between">
       <div>
@@ -28,6 +33,13 @@ export function LocationHeader({ onRefresh, onAdd }: LocationHeaderProps) {
           onClick={onAdd}
         >
           <Plus className="w-4 h-4" /> Add New
+        </Button>
+        <Button
+          variant="outline"
+          className="gap-2 flex-shrink-0"
+          onClick={openImport}
+        >
+          <Upload className="w-4 h-4" /> Import All
         </Button>
       </div>
     </div>

@@ -105,7 +105,9 @@ export default function Header() {
                   alt="avatar"
                   className="w-8 h-8 rounded-full object-cover"
                 />
-                <span className="text-secondary-foreground elegant-subheading">{user.firstName + " " + user.lastName}</span>
+                <span className="text-secondary-foreground elegant-subheading">
+                  {user.firstName + " " + user.lastName}
+                </span>
                 {/* <span>Thảo Ly</span> */}
               </button>
               {openMenu && (

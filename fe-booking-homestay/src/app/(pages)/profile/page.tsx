@@ -13,7 +13,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { UserAvatar } from "@/components/UserAvatar";
 import { COUNTRIES } from "@/constants/countries";
 import { useAuth } from "@/context/auth-context";
 import { Booking } from "@/models/Booking";
@@ -32,12 +31,10 @@ import {
 import { useEffect, useRef, useState } from "react";
 import DatePicker from "react-datepicker";
 import toast from "react-hot-toast";
-import { format } from "date-fns";
 
 export default function ProfilePage() {
   const { user, setUser, updateUser } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  // state local để edit
   const [avatarUrl, setAvatarUrl] = useState("/default-avatar.png");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -51,7 +48,6 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
 
-  // mỗi khi user thay đổi (từ context), sync vào state form
   useEffect(() => {
     if (user) {
       setAvatarUrl(user.avatar || "/default-avatar.png");
@@ -107,17 +103,12 @@ export default function ProfilePage() {
       const formData = new FormData();
       formData.append("file", file);
 
-      // gọi API upload avatar
       const { data } = await upload_file(formData);
-      // giả sử res.data.avatar là URL mới của avatar
       if (data?.imgUrl) {
         setAvatarUrl(data.imgUrl);
-
-        // update user trong context và localStorage
         updateUser({ ...user, avatar: data.imgUrl });
       }
       setIsEditing(false);
-      // toast.success("Upload avatar successfully!");
       console.log("Upload avatar thành công!");
     } catch (error) {
       toast.error("Upload avatar failed!");
@@ -157,7 +148,6 @@ export default function ProfilePage() {
               </div>
 
               <div className="mt-8 grid gap-4 grid-row-1">
-                {/* Stats */}
                 <div className="grid grid-cols-2 gap-4 w-full md:w-auto">
                   <div className="bg-white/20 p-4 rounded-xl backdrop-blur-md">
                     <p className="text-sm ">Total Bookings</p>
@@ -375,7 +365,10 @@ export default function ProfilePage() {
                 )}
               </div>
             </TabsContent>
-            <TabsContent value="bookings" className="mt-2 px-16 py-8 rounded-xl space-y-4">
+            <TabsContent
+              value="bookings"
+              className="mt-2 px-16 py-8 rounded-xl space-y-4"
+            >
               <h2 className="elegant-heading text-4xl my-6">History booking</h2>
 
               {loading ? (

@@ -6,12 +6,13 @@ import { Card } from "@/components/ui/card";
 import { toast } from "@/components/ui/use-toast";
 import { STORAGE_KEYS } from "@/constants";
 import { useAuth } from "@/context/auth-context";
+import { isAdmin } from "@/lib/utils/auth-client";
 import { login } from "@/services/authApi";
 import { Eye, EyeOff, Lock, Mail } from "lucide-react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import type React from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -21,6 +22,25 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  const nextRoute = params.get("next") || "/admin";
+
+  useEffect(() => {
+    if (!isLoading) {
+      const raw = localStorage.getItem(STORAGE_KEYS.CURRENT_USER);
+      if (!raw) return;
+
+      const data = JSON.parse(raw);
+      const user = data.user;
+
+      if (!user) return;
+
+      if (!isAdmin(user)) {
+        return;
+      }
+      router.replace(nextRoute);
+    }
+  }, [isLoading]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -38,11 +58,16 @@ export default function LoginPage() {
 
     try {
       setIsLoading(true);
-
       const { data } = await login({ email: emailTrim, password: pwdTrim });
-      const { accessToken, refreshToken, user } = data || {};
-      if (!accessToken || !user) throw new Error("Đăng nhập thất bại");
+      console.log(data);
 
+      const { accessToken, refreshToken, user } = data || {};
+
+      if (!accessToken || !user) throw new Error("Đăng nhập thất bại");
+      const userRoles = user.roles || [];
+      const isAdmin = userRoles.includes("ADMIN");
+      if (!isAdmin)
+        throw new Error("Tài khoản này không có quyền truy cập khu vực Admin.");
       const currentData = { accessToken, refreshToken, user };
       localStorage.setItem(
         STORAGE_KEYS.CURRENT_USER,
@@ -50,7 +75,6 @@ export default function LoginPage() {
       );
 
       updateUser(user);
-
       toast({
         variant: "success",
         title: "Đăng nhập thành công 🎉",
@@ -60,15 +84,14 @@ export default function LoginPage() {
             : user.email
         }!`,
       });
-
-      const next = params.get("next") || "/admin";
-      router.replace(next);
+      router.replace(nextRoute);
     } catch (err: any) {
+      const errorMessage =
+        err?.response?.data?.message || err?.message || "Vui lòng thử lại.";
       toast({
         variant: "destructive",
         title: "Đăng nhập thất bại",
-        description:
-          err?.response?.data?.message || err?.message || "Vui lòng thử lại.",
+        description: errorMessage,
       });
     } finally {
       setIsLoading(false);
@@ -76,7 +99,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted flex items-center justify-center p-4">
+    <div className="min-h-screen bg-linear-to-br from-background to-muted flex items-center justify-center p-4">
       <Card className="w-full max-w-md p-8 shadow-lg">
         <div className="flex flex-col items-center gap-3">
           <Image

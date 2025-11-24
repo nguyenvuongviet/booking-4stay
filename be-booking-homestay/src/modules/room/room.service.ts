@@ -118,6 +118,7 @@ export class RoomService {
           room_images: true,
           room_amenities: { include: { amenities: true } },
           room_beds: true,
+          location_countries: true,
           location_provinces: true,
           location_districts: true,
           location_wards: true,
@@ -150,6 +151,7 @@ export class RoomService {
         },
       },
       include: {
+        location_countries: true,
         location_provinces: true,
         location_districts: true,
         location_wards: true,
@@ -175,11 +177,11 @@ export class RoomService {
     });
   }
 
-  async update(id: number, updateRoomDto: UpdateRoomDto) {
+  async update(id: number, dto: UpdateRoomDto) {
     await this.findOne(id);
     return this.prisma.rooms.update({
       where: { id },
-      data: updateRoomDto,
+      data: dto,
     });
   }
 

@@ -1,11 +1,11 @@
 "use client";
 
-import { AdminHeader } from "@/components/admin/Header";
-import { AdminSidebar } from "@/components/admin/SideBar";
 import Loader from "@/components/loader/Loader";
 import { getCurrentUser, isAdmin } from "@/lib/utils/auth-client";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useMemo, useState } from "react";
+import { AdminSidebar } from "./_components/SideBar";
+import { AdminHeader } from "./_components/Header";
 
 const SIDEBAR_WIDTH = {
   expanded: 256,
@@ -28,7 +28,7 @@ export default function AdminLayout({
       return;
     }
     setReady(true);
-  }, [router]);
+  }, []);
 
   useEffect(() => {
     const saved = localStorage.getItem("sidebar_collapsed");
@@ -36,7 +36,7 @@ export default function AdminLayout({
     if (saved !== null) {
       setIsCollapsed(saved === "1");
     } else {
-      if (typeof window !== "undefined" && window.innerWidth < 1024) {
+      if (window.innerWidth < 1024) {
         setIsCollapsed(true);
         localStorage.setItem("sidebar_collapsed", "1");
       } else {

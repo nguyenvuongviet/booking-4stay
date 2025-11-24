@@ -125,7 +125,7 @@ export const ReviewSection = ({
                 onChange={(e) => setComment(e.target.value)}
                 disabled={isReviewed}
                 placeholder="Write your comment here..."
-                className="w-full min-h-[100px] resize-none break-words whitespace-pre-wrap overflow-y-auto rounded-lg border border-border p-2 focus:ring-2 focus:ring-primary transition-all"
+                className="w-full min-h-[100px] resize-none wrap-break-word whitespace-pre-wrap overflow-y-auto rounded-lg border border-border p-2 focus:ring-2 focus:ring-primary transition-all"
                 rows={4}
               />
             </div>

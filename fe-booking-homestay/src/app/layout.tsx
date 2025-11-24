@@ -1,30 +1,29 @@
 import { Toaster as ShadcnToaster } from "@/components/ui/toaster";
-import { Toaster as HotToaster } from "react-hot-toast";
+import { GOOGLE_CLIENT_ID } from "@/constants/app.constant";
 import { AuthProvider } from "@/context/auth-context";
-import type { Metadata } from "next";
-import { Outfit, Fira_Mono, Lora } from "next/font/google";
-import "./globals.css";
 import PageTransition from "@/styles/animations/PageTransition";
+import { GoogleOAuthProvider } from "@react-oauth/google";
+import type { Metadata } from "next";
+import { Fira_Mono, Lora, Outfit } from "next/font/google";
+import { Toaster as HotToaster } from "react-hot-toast";
+import "./globals.css";
 
-// Sans font
 const outfit = Outfit({
   subsets: ["latin"],
   variable: "--font-sans",
   weight: ["400", "500", "600", "700"],
 });
 
-// Monospace font
 const firaMono = Fira_Mono({
   subsets: ["latin"],
   variable: "--font-mono",
-  weight: ["400"], // Fira Mono thu?ng d�ng 400
+  weight: ["400"],
 });
 
-// Serif font
 const lora = Lora({
   subsets: ["latin"],
   variable: "--font-serif",
-  weight: ["400", "500", "600", "700"], // Lora thu?ng d�ng nhi?u weight
+  weight: ["400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
@@ -38,28 +37,21 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      className={`${outfit.variable} ${firaMono.variable} ${lora.variable}`}
-    >
-      <body className="antialiased">
-        <PageTransition>
-          <AuthProvider>
-            {children}
-            <ShadcnToaster />
-            <div id="legacy-toaster">
-              <HotToaster
-                position="top-right"
-                toastOptions={{ duration: 10000 }}
-              />
-            </div>
-            <HotToaster
-              toastOptions={{ duration: 6000 }}
-              position="top-right"
-              reverseOrder={false}
-            />
-          </AuthProvider>
-        </PageTransition>
+    <html lang="en">
+      <body
+        className={`${outfit.variable} ${firaMono.variable} ${lora.variable} antialiased`}
+      >
+        <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID ?? ""}>
+          <PageTransition>
+            <AuthProvider>{children}</AuthProvider>
+          </PageTransition>
+        </GoogleOAuthProvider>
+        <ShadcnToaster />
+        <HotToaster
+          toastOptions={{ duration: 4000 }}
+          position="top-right"
+          reverseOrder={false}
+        />
       </body>
     </html>
   );
