@@ -118,5 +118,5 @@ SELECT
 FROM `rooms` r
 LEFT JOIN `location_wards` w ON w.`id` = r.`wardId`
 LEFT JOIN `location_districts` d ON d.`id` = r.`districtId`
-LEFT JOIN `location_provinces` p ON p.`id` = r.`provinceId`;
+LEFT JOIN `location_provinces` p ON p.`id` = r.`provinceId`
 LEFT JOIN `location_countries` AS c ON c.`id` = r.`countryId`;
