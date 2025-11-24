@@ -2,25 +2,21 @@
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import { useAuth } from "@/context/auth-context";
 import { Room } from "@/models/Room";
 import { room_available, room_detail } from "@/services/roomApi";
-import { Calendar, Loader2, MapPin, Star, Users } from "lucide-react";
+import { Loader2, MapPin, Star, Users } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import toast from "react-hot-toast";
+import GuestPicker from "../GuestPicker";
 import Header from "../Header";
-import { getAmenityIcon } from "./getAmenityIcon";
-import { ReviewItem } from "@/models/Review";
-import { ReviewList } from "./ReviewList";
+import DateRangePicker from "../ui/date-range-picker";
+import MapRooms from "./MapRoom";
 import { PhotoGalleryModal } from "./PhotoGalleryModal";
+import { ReviewList } from "./ReviewList";
+import { getAmenityIcon } from "@/constants/amenity-icons";
 
 interface RoomDetailClientProps {
   roomId: string;
@@ -28,49 +24,65 @@ interface RoomDetailClientProps {
 
 export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
   const { openSignIn, user } = useAuth();
-  const [showAllPhotos, setShowAllPhotos] = useState(false);
-  const [showAllAmenities, setShowAllAmenities] = useState(false);
-  const [showFullOverview, setShowFullOverview] = useState(false);
-  const [isReviewDialogOpen, setIsReviewDialogOpen] = useState(false);
-  const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
-  const [sortBy, setSortBy] = useState("most-relevant");
-  const [reviewForm, setReviewForm] = useState({
-    userName: "",
-    rating: 0,
-    comment: "",
-  });
-  const [checkIn, setCheckIn] = useState<Date | null>(null);
-  const [checkOut, setCheckOut] = useState<Date | null>(null);
   const router = useRouter();
-  const [adults, setAdults] = useState(1);
-  const [children, setChildren] = useState(0);
-  const [isGuestPopoverOpen, setIsGuestPopoverOpen] = useState(false);
+  const searchParams = useSearchParams();
+
+  // States
   const [room, setRoom] = useState<Room | null>(null);
   const [loading, setLoading] = useState(true);
-  const searchParams = useSearchParams();
   const [available, setAvailable] = useState<boolean | null>(true);
-  const checkInRef = useRef<HTMLInputElement>(null);
-  const checkOutRef = useRef<HTMLInputElement>(null);
-  const [focusCheckIn, setFocusCheckIn] = useState(false);
-  const [focusCheckOut, setFocusCheckOut] = useState(false);
-  const [review, setReview] = useState<ReviewItem | null>(null);
+  const [checkIn, setCheckIn] = useState<Date | null>(null);
+  const [checkOut, setCheckOut] = useState<Date | null>(null);
+  const [adults, setAdults] = useState(1);
+  const [children, setChildren] = useState(0);
+  const [showAllAmenities, setShowAllAmenities] = useState(false);
   const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
+  const [showFullOverview, setShowFullOverview] = useState(false);
 
-  const getGuestDisplayText = () => {
-    const total = adults + children;
-    return `${total} Guests`;
-  };
+  // Refs
+  const checkInRef = useRef<HTMLInputElement>(null);
+  const checkOutRef = useRef<HTMLInputElement>(null);
 
-  const handleSubmitReview = () => {
-    console.log("[v0] Submitting review:", reviewForm);
-    setIsReviewDialogOpen(false);
-    setReviewForm({ userName: "", rating: 0, comment: "" });
-  };
+  // fetch data
+  useEffect(() => {
+    (async () => {
+      try {
+        setLoading(true);
+        const data = await room_detail(roomId);
+        setRoom(data);
+      } catch (error) {
+        console.error("Fetch room failed:", error);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [roomId]);
 
-  const toggleTopic = (topic: string) => {
-    setSelectedTopics((prev) =>
-      prev.includes(topic) ? prev.filter((t) => t !== topic) : [...prev, topic]
+  // Load params from URL
+  useEffect(() => {
+    const ad = searchParams.get("adults");
+    const ch = searchParams.get("children");
+    const ci = searchParams.get("checkIn");
+    const co = searchParams.get("checkOut");
+    const status = searchParams.get("status");
+
+    if (ci) setCheckIn(new Date(ci));
+    if (co) setCheckOut(new Date(co));
+    if (ad) setAdults(Number(ad));
+    if (ch) setChildren(Number(ch));
+    setAvailable(status ? status === "Available" : true);
+  }, [searchParams]);
+
+  // Utils
+  const getGuestDisplayText = () => `${adults + children} Guests`;
+
+  const updateURL = (params: Record<string, string>) => {
+    router.replace(
+      `/room/${roomId}?${new URLSearchParams(params).toString()}`,
+      {
+        scroll: false,
+      }
     );
   };
 
@@ -78,54 +90,38 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
     ? room?.amenities ?? []
     : room?.amenities?.slice(0, 5) ?? [];
 
-  // const getProgressBarColor = (score: number) => {
-  //   if (score >= 9.0) return "bg-green-600";
-  //   if (score >= 8.0) return "bg-blue-600";
-  //   return "bg-blue-500";
-  // };
+  const checkRoomAvailable = async (inDate?: Date, outDate?: Date) => {
+    const checkInDate = inDate || checkIn;
+    const checkOutDate = outDate || checkOut;
+    if (!checkInDate || !checkOutDate) return;
 
-  useEffect(() => {
-    const status = searchParams.get("status");
-    if (status) {
-      setAvailable(status === "Available");
-    } else {
-      setAvailable(true); //Mặc định là true khi chưa có status
-    }
-    const fetchRoom = async () => {
-      try {
-        setLoading(true);
-        const data = await room_detail(roomId);
-        setRoom(data);
-      } catch (error) {
-        console.error(error);
-      } finally {
-        setLoading(false);
+    try {
+      setLoading(true);
+      const data = await room_available(
+        roomId,
+        checkInDate.toISOString(),
+        checkOutDate.toISOString()
+      );
+      const status = data.available ? "Available" : "SoldOut";
+      setAvailable(data.available);
+
+      if (!data.available) {
+        toast.error("This room is not available for the selected dates");
       }
-    };
 
-    fetchRoom();
-  }, [roomId]);
-
-  useEffect(() => {
-    const ad = searchParams.get("adults");
-    const ch = searchParams.get("children");
-    const ci = searchParams.get("checkIn");
-    const co = searchParams.get("checkOut");
-
-    if (ci) setCheckIn(new Date(ci));
-    if (co) setCheckOut(new Date(co));
-    if (ad) setAdults(Number(ad));
-    if (ch) setChildren(Number(ch));
-  }, [searchParams]);
-
-  if (loading)
-    return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="animate-spin h-6 w-6 text-primary" />
-      </div>
-    );
-
-  if (!room) return <p>Room not found</p>;
+      updateURL({
+        checkIn: checkInDate.toISOString(),
+        checkOut: checkOutDate.toISOString(),
+        adults: adults.toString(),
+        children: children.toString(),
+        status,
+      });
+    } catch (error) {
+      console.error("Check availability failed:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleRoomSelect = async (roomId: number | string) => {
     if (!checkIn || !checkOut) {
@@ -139,33 +135,30 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
       }
     }
 
-    if (adults > (room.adultCapacity || 0)) {
+    if (!room) return;
+    if (adults > (room.adultCapacity ?? 0)) {
       toast.error(
-        `This room only allows up to ${room.adultCapacity} adult${
-          room.adultCapacity > 1 ? "s" : ""
+        `This room only allows up to ${room!.adultCapacity} adult${
+          room!.adultCapacity > 1 ? "s" : ""
         }.`
       );
       return;
     }
 
-    if (children > (room.childCapacity || 0)) {
+    if (children > (room?.childCapacity || 0)) {
       toast.error(
-        `This room only allows up to ${room.childCapacity} children .`
+        `This room only allows up to ${room?.childCapacity} children .`
       );
       return;
     }
 
-    const formattedCheckIn = checkIn.toISOString();
-    const formattedCheckOut = checkOut.toISOString();
-
-    const query = new URLSearchParams({
-      checkIn: formattedCheckIn,
-      checkOut: formattedCheckOut,
+    updateURL({
+      checkIn: checkIn.toISOString(),
+      checkOut: checkOut.toISOString(),
       adults: adults.toString(),
       children: children.toString(),
-    }).toString();
-
-    router.replace(`/room/${room.id}?${query}`, { scroll: false });
+      status,
+    });
 
     try {
       setLoading(true);
@@ -181,13 +174,30 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
         );
         return;
       }
-      router.push(`/checkout?roomId=${room.id}&${query}`);
+      router.push(
+        `/checkout?${new URLSearchParams({
+          roomId: String(roomId),
+          checkIn: checkIn?.toISOString() ?? "",
+          checkOut: checkOut?.toISOString() ?? "",
+          adults: String(adults),
+          children: String(children),
+        })}`
+      );
     } catch (error) {
       console.error(error);
     } finally {
       setLoading(false);
     }
   };
+
+  if (loading)
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="animate-spin h-6 w-6 text-primary" />
+      </div>
+    );
+
+  if (!room) return <p>Room not found</p>;
 
   return (
     <div className="min-h-screen bg-background">
@@ -228,7 +238,7 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
               <Button
                 onClick={() => setIsPhotoModalOpen(true)}
                 variant="secondary"
-                className="absolute bottom-4 right-4 bg-muted hover:cursor-pointer rounded-xl"
+                className="absolute bottom-4 right-4 bg-background hover:cursor-pointer rounded-xl"
               >
                 More photos
               </Button>
@@ -243,7 +253,7 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
               )}
             </div>
 
-            {/* Hotel Info */}
+            {/* Room Info */}
             <div>
               <div className="flex items-start justify-between mb-4">
                 <div>
@@ -259,12 +269,12 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
                     {hotel.rating}
                   </Badge>
                    */}
-                  <div className="flex flex-row-reverse mb-2">
+                  <div className="flex flex-row-reverse items-center elegant-sans mb-2">
                     {room.rating}
-                    <Star className="h-4 w-4 fill-chart-4 text-chart-4" />
+                    <Star className="h-4 w-4 mr-1 fill-yellow-400 text-yellow-400" />
                   </div>
                   <p className="text-sm elegant-subheading text-muted-foreground">
-                    Not Good
+                    {/* Not Good */}
                   </p>
                 </div>
               </div>
@@ -272,14 +282,14 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
 
             {/* Amenities */}
             <div className="p-4">
-              <h2 className="text-2xl elegant-heading mb-4">Amenities</h2>
+              <h2 className="text-xl elegant-sans mb-4">Amenities</h2>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 {amenitiesToDisplay.map((amenity) => (
                   <div
                     key={amenity.id}
-                    className="flex items-center gap-2 text-sm text-gray-700"
+                    className="flex items-center gap-2 text-sm elegant-subheading text-muted-foreground"
                   >
-                    <span>{getAmenityIcon(amenity)}</span>
+                    <span>{getAmenityIcon(amenity.name)}</span>
                     <span>{amenity.name}</span>
                   </div>
                 ))}
@@ -297,10 +307,8 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
 
             {/* Overview */}
             <div className="p-4">
-              <h2 className="text-2xl elegant-heading font-bold mb-4">
-                Overview
-              </h2>
-              <p className="text-sm elegant-subheading leading-relaxed">
+              <h2 className="text-xl elegant-sans  mb-4">Overview</h2>
+              <p className="text-sm elegant-subheading leading-relaxed text-muted-foreground">
                 {/* {showFullOverview
                   ? room.overview
                   : room.overview.slice(0, 250) + "..."} */}
@@ -325,7 +333,7 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
             <Card className="p-6 sticky top-24">
               <div className="mb-4">
                 <div className="flex items-baseline gap-2 mb-1">
-                  <span className="text-4xl elegant-heading">
+                  <span className="text-4xl elegant-sans text-secondary-foreground">
                     {" "}
                     {/* {hotel.pricePerNight.toLocaleString()} VND */}
                     {room.price?.toLocaleString()} VND
@@ -344,7 +352,7 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
               </div>
               {/* Sold Out Banner */}
               {available === false && (
-                <div className="absolute top-4 right-4 flex items-center h-10 bg-gradient-to-r from-red-500 to-red-600 text-white font-extrabold rounded-2xl shadow-xl py-2 px-4 uppercase tracking-wider text-sm animate-pulse">
+                <div className="absolute top-4 right-4 flex items-center h-10 bg-linear-to-r from-red-500 to-red-600 text-white elegant-sans rounded-2xl shadow-xl py-2 px-4 uppercase tracking-wider text-sm animate-pulse">
                   <svg
                     className="w-5 h-5 mr-2"
                     fill="none"
@@ -362,237 +370,57 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
                 </div>
               )}
               {/* Info    */}
-              <div className="grid md:grid-cols-2 gap-1">
-                <div className="relative">
-                  <Calendar
-                    className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground"
-                    size={20}
-                  />
-                  <DatePicker
-                    selected={checkIn}
-                    autoFocus={focusCheckIn}
-                    onChange={(date) => {
-                      setCheckIn(date);
-                      // Reset checkOut nếu nhỏ hơn checkIn
-                      if (checkOut && date && checkOut <= date) {
-                        setCheckOut(null);
-                      }
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                <div className="relative md:col-span-1">
+                  <DateRangePicker
+                    value={
+                      checkIn && checkOut
+                        ? { from: checkIn, to: checkOut }
+                        : undefined
+                    }
+                    onChange={(range) => {
+                      setCheckIn(range?.from ?? null);
+                      setCheckOut(range?.to ?? null);
                     }}
-                    selectsStart
-                    startDate={checkIn}
-                    endDate={checkOut}
-                    dateFormat="dd/MM/yyyy"
-                    placeholderText="Check-in date"
-                    className="pl-12 p-6 h-12 text-md elegant-subheading rounded-2xl w-full border border-gray-300 focus:ring-2 focus:ring-primary"
-                    minDate={new Date()}
                   />
                 </div>
-                <div className="relative">
-                  <Calendar
-                    className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground"
-                    size={20}
-                  />
-                  <DatePicker
-                    selected={checkOut}
-                    autoFocus={focusCheckOut}
-                    onChange={(date) => setCheckOut(date)}
-                    selectsEnd
-                    startDate={checkIn}
-                    endDate={checkOut}
-                    minDate={checkIn || new Date()}
-                    dateFormat="dd/MM/yyyy"
-                    placeholderText="Check-out date"
-                    onFocus={(e) => {
-                      if (!checkIn) {
-                        e.target.blur();
-                      }
-                    }}
-                    className={`p-6 h-12 text-md elegant-subheading rounded-2xl w-full border pl-12 ${
-                      !checkIn
-                        ? "bg-gray-100 cursor-not-allowed opacity-80"
-                        : "border-border"
-                    } focus:ring-2 focus:ring-primary`}
-                  />
-                </div>
-                <div className="relative md:col-span-2">
+                <div className="relative md:col-span-1">
                   <Users
                     className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground"
                     size={20}
                   />
-                  <Popover
-                    open={isGuestPopoverOpen}
-                    onOpenChange={setIsGuestPopoverOpen}
-                  >
-                    <PopoverTrigger asChild>
-                      <button className="w-full h-12 px-4 border border-border rounded-2xl focus:border-accent focus:ring-1 focus:ring-accent text-left flex items-center justify-between">
-                        <div className="flex items-center justify-between ">
-                          {/* <p className="text-sm text-muted-foreground elegant-subheading mr-4">
-                            Guests:{" "}
-                          </p> */}
-                          <p className="ml-10 text-sm elegant-subheading">
-                            {getGuestDisplayText()}
-                          </p>
-                        </div>
-                        <svg
-                          className="w-5 h-5 text-gray-400"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M19 9l-7 7-7-7"
-                          />
-                        </svg>
-                      </button>
-                    </PopoverTrigger>
-                    <PopoverContent
-                      className="w-[300px] p-0 rounded-2xl"
-                      align="start"
-                    >
-                      <div className="p-6 space-y-6">
-                        {/* Adults */}
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="font-semibold text-gray-900">
-                              Adults
-                            </p>
-                            <p className="text-sm text-gray-600">
-                              {" "}
-                              {`>`}13 ages{" "}
-                            </p>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <button
-                              onClick={() => setAdults(Math.max(1, adults - 1))}
-                              disabled={adults <= 1}
-                              className="w-8 h-8 rounded-full border-2 border-gray-300 flex items-center justify-center text-gray-600 hover:border-primary hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed"
-                            >
-                              <svg
-                                className="w-4 h-4"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M20 12H4"
-                                />
-                              </svg>
-                            </button>
-                            <span className="w-8 text-center font-semibold text-gray-900">
-                              {adults}
-                            </span>
-                            <button
-                              onClick={() => setAdults(adults + 1)}
-                              className="w-8 h-8 rounded-full border-2 border-gray-300 flex items-center justify-center text-gray-600 hover:border-primary hover:text-primary"
-                            >
-                              <svg
-                                className="w-4 h-4"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M12 4v16m8-8H4"
-                                />
-                              </svg>
-                            </button>
-                          </div>
-                        </div>
-
-                        {/* Children */}
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="font-semibold text-gray-900">
-                              Children
-                            </p>
-                            <p className="text-sm text-gray-600">2 – 12 ages</p>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <button
-                              onClick={() =>
-                                setChildren(Math.max(0, children - 1))
-                              }
-                              disabled={children <= 0}
-                              className="w-8 h-8 rounded-full border-2 border-gray-300 flex items-center justify-center text-gray-600 hover:border-primary hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed"
-                            >
-                              <svg
-                                className="w-4 h-4"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M20 12H4"
-                                />
-                              </svg>
-                            </button>
-                            <span className="w-8 text-center font-semibold text-gray-900">
-                              {children}
-                            </span>
-                            <button
-                              onClick={() => setChildren(children + 1)}
-                              className="w-8 h-8 rounded-full border-2 border-gray-300 flex items-center justify-center text-gray-600 hover:border-primary hover:text-primary"
-                            >
-                              <svg
-                                className="w-4 h-4"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M12 4v16m8-8H4"
-                                />
-                              </svg>
-                            </button>
-                          </div>
-                        </div>
-
-                        {/* Info Note */}
-                        {/* <div className="pt-4 border-t">
-                <p className="text-sm text-gray-600">
-                  Chỗ ở này cho phép tối đa 3 khách, không tính em bé. 
-                </p>
-              </div> */}
-
-                        {/* Close Button */}
-                        <Button
-                          onClick={() => setIsGuestPopoverOpen(false)}
-                          className="w-full bg-white hover:bg-gray-50 text-gray-900 border border-border rounded-xl"
-                        >
-                          Close
-                        </Button>
-                      </div>
-                    </PopoverContent>
-                  </Popover>
+                  <GuestPicker
+                    adults={adults}
+                    children={children}
+                    setAdults={setAdults}
+                    setChildren={setChildren}
+                  />
                 </div>
               </div>
+
               {/* Select Room Button */}
               <Button
                 onClick={() => {
+                  if (available === false) {
+                    toast.error(
+                      "This room is sold out. Please choose other dates."
+                    );
+                    return;
+                  }
                   if (!user) {
                     openSignIn();
                   } else {
                     handleRoomSelect(room.id);
                   }
                 }}
-                className={`w-full h-10 rounded-2xl mb-6 `}
+                disabled={available === false}
+                className={`w-full h-10 rounded-3xl mb-6 hover:bg-primary/80 ${
+                  available === false
+                    ? "bg-muted cursor-not-allowed hover:bg-muted"
+                    : ""
+                }`}
               >
-                Select room
+                {available === false ? "Sold Out" : "Select room"}
               </Button>
 
               {/* Check-in/out */}
@@ -602,37 +430,29 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
                     <p className="text-xs text-muted-foreground mb-1">
                       Check-in
                     </p>
-                    <p className="text-lg elegant-sanserif">14:00</p>
+                    <p className="text-lg elegant-sans">14:00</p>
                   </div>
                   <div className="flex flex-col items-center justify-center">
                     <p className="text-xs text-muted-foreground mb-1">
                       Check-out
                     </p>
-                    <p className="text-lg elegant-sanserif">12:00</p>
+                    <p className="text-lg elegant-sans">12:00</p>
                   </div>
                 </div>
               </div>
 
               {/* Map */}
-              {/* <div className="mb-4">
-                <div className="w-full h-48 bg-gray-200 rounded-lg relative overflow-hidden">
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="bg-primary text-white p-2 rounded-full">
-                      <MapPin className="h-6 w-6" />
-                    </div>
-                  </div>
-                </div>
-              </div> */}
+              <MapRooms rooms={[room]} height="h-[30vh]" />
 
               {/* Policy */}
               <div className="p-4">
-                <div className="flex items-center gap-2 font-semibold">
+                <div className="flex items-center gap-2 ">
                   {/* <Info className="w-4 h-4" /> */}
-                  <h2 className="text-2xl elegant-heading mb-4">
+                  <h2 className="text-xl elegant-sans mb-2">
                     Cancellation Policy
                   </h2>
                 </div>
-                <ul className="list-disc pl-5 space-y-1 text-gray-700">
+                <ul className="list-disc pl-5 space-y-1 elegant-subheading text-sm text-muted-foreground">
                   <li>Cancel 7+ days before check-in → Full refund (100%).</li>
                   <li>Cancel 3–6 days before check-in → 50% refund.</li>
                   <li>Cancel within 2 days → No refund.</li>

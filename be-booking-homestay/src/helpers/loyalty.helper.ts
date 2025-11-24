@@ -1,30 +1,35 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
-import { loyalty_program } from '@prisma/client';
+import { BadRequestException, Injectable } from '@nestjs/common';
+import { loyalty_program, Prisma } from '@prisma/client';
 import { PrismaService } from 'src/modules/prisma/prisma.service';
 
 @Injectable()
-export class LoyaltyService {
+export class LoyaltyProgram {
   constructor(private readonly prisma: PrismaService) {}
 
   async createLoyaltyProgram(
     userId: number,
-    options?: { customLevelId?: number; forceReset?: boolean },
+    options?: {
+      customLevelId?: number;
+      forceReset?: boolean;
+      tx?: Prisma.TransactionClient;
+    },
   ): Promise<loyalty_program> {
-    const { customLevelId, forceReset = false } = options || {};
-    const user = await this.prisma.users.findUnique({ where: { id: userId } });
+    const { customLevelId, forceReset = false, tx } = options || {};
+    const prisma = tx || this.prisma;
 
+    const user = await prisma.users.findUnique({ where: { id: userId } });
     if (!user) throw new BadRequestException('Không tìm thấy người dùng!');
-    const existing = await this.prisma.loyalty_program.findUnique({
+
+    const existing = await prisma.loyalty_program.findUnique({
       where: { userId },
     });
-
     if (existing && !forceReset) return existing;
     if (existing && forceReset)
-      await this.prisma.loyalty_program.delete({ where: { userId } });
+      await prisma.loyalty_program.delete({ where: { userId } });
 
     let levelId = customLevelId;
     if (!levelId) {
-      const defaultLevel = await this.prisma.levels.findFirst({
+      const defaultLevel = await prisma.levels.findFirst({
         where: { minPoints: 0 },
         orderBy: { id: 'asc' },
       });
@@ -34,7 +39,7 @@ export class LoyaltyService {
       levelId = defaultLevel.id;
     }
 
-    const loyalty = await this.prisma.loyalty_program.create({
+    return prisma.loyalty_program.create({
       data: {
         userId,
         totalBookings: 0,
@@ -43,8 +48,6 @@ export class LoyaltyService {
         levelId,
       },
     });
-
-    return loyalty;
   }
 
   async recalculateLoyaltyLevel(userId: number): Promise<boolean> {

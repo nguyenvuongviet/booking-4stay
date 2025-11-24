@@ -41,11 +41,11 @@ export function BookingCard({ booking }: BookingCardProps) {
             alt={booking.room.name}
             width={400}
             height={600}
-            className="w-80 h-60 object-cover rounded-l-2xl"
+            className="w-80 h-62 object-cover rounded-l-2xl"
           />
           <div className="absolute top-2 left-2 bg-border px-2 py-1 rounded-full flex items-center gap-1">
-            <Star className="text-chart-4 fill-current" size={16} />
-            <span className="text-sm font-medium">{booking.room.rating}</span>
+            <Star className="text-yellow-400 fill-current" size={16} />
+            <span className="text-sm elegant-sans">{booking.room.rating}</span>
           </div>
         </div>
         <div className="relative w-full">
@@ -85,7 +85,7 @@ export function BookingCard({ booking }: BookingCardProps) {
                 </span>
               </div>
               <div className="text-right pt-2">
-                <span className="text-2xl elegant-heading text-foreground">
+                <span className="text-2xl elegant-sans text-secondary-foreground">
                   {formatPrice(booking.room.price * nights)}
                 </span>
               </div>

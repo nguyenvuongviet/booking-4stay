@@ -18,5 +18,5 @@ export function buildImageUrl(images: string | null): string | null {
     return `${CLOUDINARY_BASE_URL}/${images}.jpg`;
   }
 
-  return `${BASE_URL}${AVATAR_PATH}/${images}`;
+  return images;
 }

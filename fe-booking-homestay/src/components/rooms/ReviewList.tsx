@@ -72,7 +72,7 @@ export const ReviewList: React.FC<Props> = ({ roomId, pageSize = 3 }) => {
 
   return (
     <div className="rounded-xl border p-4 bg-white shadow-sm">
-      <h3 className="text-lg elegant-sanserif">Reviews ({total})</h3>
+      <h3 className="text-lg elegant-sans">Reviews ({total})</h3>
 
       <div className="space-y-4">
         {reviews.map((r) => (
@@ -92,7 +92,7 @@ export const ReviewList: React.FC<Props> = ({ roomId, pageSize = 3 }) => {
                 : "text-gray-700 border-gray-300 hover:bg-gray-100"
             }`}
           >
-            <ChevronLeft />
+            <ChevronLeft size={20} className="text-muted-foreground"/>
           </button>
 
           {/* Số trang */}
@@ -126,7 +126,7 @@ export const ReviewList: React.FC<Props> = ({ roomId, pageSize = 3 }) => {
                 : "text-gray-700 border-gray-300 hover:bg-gray-100"
             }`}
           >
-            <ChevronRight />
+            <ChevronRight size={20} className="text-muted-foreground"/>
           </button>
         </div>
       )}

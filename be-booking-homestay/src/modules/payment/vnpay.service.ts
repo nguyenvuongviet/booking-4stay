@@ -1,5 +1,14 @@
 import { Injectable } from '@nestjs/common';
-import { VNPay, ignoreLogger, ProductCode, VnpLocale, dateFormat, HashAlgorithm, ReturnQueryFromVNPay  } from 'vnpay';
+import { VNPAY_RETURN_URL } from 'src/common/constant/app.constant';
+import {
+  VNPay,
+  ignoreLogger,
+  ProductCode,
+  VnpLocale,
+  dateFormat,
+  HashAlgorithm,
+  ReturnQueryFromVNPay,
+} from 'vnpay';
 // import { format } from 'date-fns';
 
 @Injectable()
@@ -23,12 +32,12 @@ export class VNPayService {
     tomorrow.setDate(now.getDate() + 1);
 
     const vnpayResponse = await this.vnpay.buildPaymentUrl({
-      vnp_Amount: (totalPrice/100) * 100, // VNPay yêu cầu đơn vị = VNĐ * 100
+      vnp_Amount: (totalPrice / 100) * 100, // VNPay yêu cầu đơn vị = VNĐ * 100
       vnp_IpAddr: '127.0.0.1',
       vnp_TxnRef: `${Date.now()}`,
       vnp_OrderInfo: orderId,
       vnp_OrderType: ProductCode.Other,
-      vnp_ReturnUrl: process.env.VNPAY_RETURN_URL || '',
+      vnp_ReturnUrl: VNPAY_RETURN_URL || '',
       vnp_Locale: VnpLocale.VN,
       vnp_CreateDate: dateFormat(now, 'yyyyMMddHHmmss'),
       vnp_ExpireDate: dateFormat(tomorrow, 'yyyyMMddHHmmss'),

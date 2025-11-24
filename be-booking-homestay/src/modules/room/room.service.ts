@@ -27,7 +27,6 @@ export class RoomService {
 
   async findAll(query: RoomFilterDto) {
     let {
-      search,
       province,
       minPrice,
       maxPrice,
@@ -42,7 +41,6 @@ export class RoomService {
       pageSize = 12,
     } = query;
 
-    search = search?.trim();
     province = province?.trim();
     sortBy = SORT_BY.has(sortBy ?? '') ? sortBy! : 'createdAt';
     sortOrder = SORT_ORDER.has(sortOrder ?? '') ? sortOrder! : 'desc';
@@ -64,30 +62,23 @@ export class RoomService {
       outDate = r.outDate;
     }
 
+    let provinceId: number | undefined;
     if (province) {
-      const exists = await this.prisma.locations.findFirst({
-        where: { province, isDeleted: false },
+      const exists = await this.prisma.location_provinces.findFirst({
+        where: {
+          name: { contains: province },
+          isDeleted: false,
+        },
         select: { id: true },
       });
       if (!exists) {
-        throw new NotFoundException(
-          `Không tìm thấy province = "${province}" trong dữ liệu locations`,
-        );
+        throw new NotFoundException(`Không tìm thấy province = "${province}"`);
       }
+      provinceId = exists.id;
     }
 
     const where: any = { isDeleted: false };
-
-    if (province) {
-      where.locations = { province, isDeleted: false };
-    } else if (search) {
-      where.locations = {
-        isDeleted: false,
-        province: { contains: search },
-      };
-    }
-
-    if (province) where.locations = { province, isDeleted: false };
+    if (provinceId) where.provinceId = provinceId;
 
     if (minPrice || maxPrice) {
       where.price = {};
@@ -102,7 +93,7 @@ export class RoomService {
     if (inDate && outDate) {
       where.bookings = {
         none: {
-          status: { in: OVERLAP_STATUSES as any },
+          status: { in: ['PENDING', 'CONFIRMED', 'CHECKED_IN'] },
           AND: [{ checkOut: { gt: inDate } }, { checkIn: { lt: outDate } }],
         },
       };
@@ -110,7 +101,6 @@ export class RoomService {
         none: {
           date: { gte: inDate, lt: outDate },
           isAvailable: false,
-          isDeleted: false,
         },
       };
     }
@@ -128,16 +118,18 @@ export class RoomService {
           room_images: true,
           room_amenities: { include: { amenities: true } },
           room_beds: true,
-          locations: true,
+          location_countries: true,
+          location_provinces: true,
+          location_districts: true,
+          location_wards: true,
           users: true,
         },
       }),
       this.prisma.rooms.count({ where }),
     ]);
 
-    if (total === 0) {
+    if (total === 0)
       throw new NotFoundException('Không tìm thấy phòng nào phù hợp');
-    }
 
     return {
       message: 'Lấy danh sách phòng thành công',
@@ -159,7 +151,10 @@ export class RoomService {
         },
       },
       include: {
-        locations: true,
+        location_countries: true,
+        location_provinces: true,
+        location_districts: true,
+        location_wards: true,
         room_images: true,
         room_amenities: {
           include: { amenities: true },
@@ -182,11 +177,11 @@ export class RoomService {
     });
   }
 
-  async update(id: number, updateRoomDto: UpdateRoomDto) {
+  async update(id: number, dto: UpdateRoomDto) {
     await this.findOne(id);
     return this.prisma.rooms.update({
       where: { id },
-      data: updateRoomDto,
+      data: dto,
     });
   }
 

@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Transform, TransformFnParams } from 'class-transformer';
 import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
 
 export class VerifyOtpDto {
@@ -8,6 +9,7 @@ export class VerifyOtpDto {
   })
   @IsEmail()
   @IsNotEmpty()
+  @Transform(({ value }: TransformFnParams) => value?.trim())
   email: string;
 
   @ApiProperty({
@@ -16,5 +18,6 @@ export class VerifyOtpDto {
   })
   @IsString()
   @IsNotEmpty()
+  @Transform(({ value }: TransformFnParams) => value?.trim())
   otp: string;
 }

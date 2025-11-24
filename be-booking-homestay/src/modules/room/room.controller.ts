@@ -54,8 +54,8 @@ export class RoomController {
   @Patch('admin/:id')
   @Roles('ADMIN')
   @ApiBearerAuth('AccessToken')
-  async update(@Param('id') id: string, @Body() updateRoomDto: UpdateRoomDto) {
-    return await this.roomService.update(+id, updateRoomDto);
+  async update(@Param('id') id: string, @Body() dto: UpdateRoomDto) {
+    return await this.roomService.update(+id, dto);
   }
 
   @Delete('admin/:id')

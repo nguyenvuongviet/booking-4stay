@@ -147,7 +147,7 @@ export class LoyaltyService {
         points: dto.points ?? undefined,
         totalBookings: dto.totalBookings ?? undefined,
         totalNights: dto.totalNights ?? undefined,
-        updatedAt: new Date(),
+        lastUpgradeDate: new Date(),
       },
       include: { levels: true },
     });

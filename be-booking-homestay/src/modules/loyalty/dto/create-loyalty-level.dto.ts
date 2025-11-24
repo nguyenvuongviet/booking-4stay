@@ -1,10 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Transform, TransformFnParams } from 'class-transformer';
 import { IsInt, IsNotEmpty, IsOptional, IsString, Min } from 'class-validator';
 
 export class CreateLoyaltyLevelDto {
   @ApiProperty({ example: 'GOLD', description: 'Tên cấp độ' })
   @IsString()
   @IsNotEmpty()
+  @Transform(({ value }: TransformFnParams) => value?.trim().toUpperCase())
   name: string;
 
   @ApiProperty({
@@ -22,5 +24,6 @@ export class CreateLoyaltyLevelDto {
   })
   @IsOptional()
   @IsString()
+  @Transform(({ value }: TransformFnParams) => value?.trim())
   description?: string;
 }

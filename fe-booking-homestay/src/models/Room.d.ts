@@ -15,6 +15,8 @@ export interface Room {
     id: string;
     fullAddress?: string;
     province?: string;
+    latitude?: string;
+    longitude?: string;
   };
   rating?: number;
   reviewCount: number;

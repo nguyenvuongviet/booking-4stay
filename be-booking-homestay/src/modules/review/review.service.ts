@@ -15,8 +15,15 @@ export class ReviewService {
   async create(userId: number, dto: CreateReviewDto) {
     const b = await this.prisma.bookings.findUnique({
       where: { id: dto.bookingId },
-      select: { id: true, userId: true, status: true, isDeleted: true },
+      select: {
+        id: true,
+        userId: true,
+        status: true,
+        isDeleted: true,
+        isReview: true,
+      },
     });
+
     if (!b || b.isDeleted) throw new NotFoundException('Booking không tồn tại');
     if (b.userId !== userId)
       throw new ForbiddenException(
@@ -25,20 +32,22 @@ export class ReviewService {
     if (b.status !== 'CHECKED_OUT')
       throw new BadRequestException('Chỉ review được sau khi CHECKED_OUT');
 
-    const existed = await this.prisma.reviews.findFirst({
-      where: { bookingId: dto.bookingId, isDeleted: false },
-      select: { id: true },
-    });
-    if (existed) throw new BadRequestException('Booking này đã được review');
+    if (b.isReview) throw new BadRequestException('Booking này đã được review');
 
-    await this.prisma.reviews.create({
-      data: {
-        bookingId: dto.bookingId,
-        userId,
-        rating: dto.rating,
-        comment: dto.comment ?? null,
-      },
-    });
+    await this.prisma.$transaction([
+      this.prisma.reviews.create({
+        data: {
+          bookingId: dto.bookingId,
+          userId,
+          rating: dto.rating,
+          comment: dto.comment ?? null,
+        },
+      }),
+      this.prisma.bookings.update({
+        where: { id: dto.bookingId },
+        data: { isReview: true },
+      }),
+    ]);
 
     return { message: 'Tạo review thành công' };
   }
@@ -78,14 +87,14 @@ export class ReviewService {
     return { page, pageSize, total, items: sanitizeReviewList(items) };
   }
 
-  async remove(id: number, actorId: number, role: string) {
+  async remove(id: number, role: string) {
     const r = await this.prisma.reviews.findUnique({
       where: { id },
       select: { id: true, userId: true, isDeleted: true },
     });
     if (!r || r.isDeleted) throw new NotFoundException('Review không tồn tại');
 
-    if (role !== 'ADMIN' && r.userId !== actorId) {
+    if (role !== 'ADMIN') {
       throw new ForbiddenException('Bạn không thể xoá review của người khác');
     }
 
@@ -94,7 +103,6 @@ export class ReviewService {
       data: {
         isDeleted: true,
         deletedAt: new Date(),
-        deletedBy: actorId,
         updatedAt: new Date(),
       },
     });

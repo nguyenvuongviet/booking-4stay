@@ -137,7 +137,7 @@ export default function CheckoutPage() {
             className="px-4 flex items-center gap-2 text-gray-900 hover:text-primary hover:cursor-pointer"
           >
             <ArrowLeft className="h-5 w-5" />
-            <span className="elegant-sanserif text-lg">Back</span>
+            <span className="elegant-sans text-lg">Back</span>
           </button>
         </div>
       </header>
@@ -467,7 +467,7 @@ export default function CheckoutPage() {
               </div>
               {/* Hotel Details */}
               <div>
-                <h3 className="elegant-sanserif text-xl text-gray-900 mb-1">
+                <h3 className="elegant-sans text-xl mb-1">
                   {bookingData.hotelName}
                 </h3>
                 <p className="text-sm text-gray-600 mb-3">
@@ -476,32 +476,32 @@ export default function CheckoutPage() {
 
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Check-in:</span>
-                    <span className="font-medium text-gray-900">
+                    <span className="text-muted-foreground">Check-in:</span>
+                    <span className="elegant-sans text-foreground">
                       {bookingData.checkIn}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Check-out:</span>
-                    <span className="font-medium text-gray-900">
+                    <span className="text-muted-foreground">Check-out:</span>
+                    <span className="elegant-sans text-foreground">
                       {bookingData.checkOut}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Nights:</span>
-                    <span className="font-medium text-gray-900">
+                    <span className="text-muted-foreground">Nights:</span>
+                    <span className="elegant-sans text-foreground">
                       {bookingData.nights}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Adults: </span>
-                    <span className="font-medium text-gray-900">
+                    <span className="text-muted-foreground">Adults: </span>
+                    <span className="elegant-sans text-foreground">
                       {bookingData.adults}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Children:</span>
-                    <span className="font-medium text-gray-900">
+                    <span className="text-muted-foreground">Children:</span>
+                    <span className="elegant-sans text-foreground">
                       {bookingData.children}
                     </span>
                   </div>
@@ -511,11 +511,11 @@ export default function CheckoutPage() {
               {/* Price Breakdown */}
               <div className="border-t pt-4 space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">
+                  <span className="text-muted-foreground">
                     đ {bookingData?.pricePerNight?.toLocaleString()} x{" "}
                     {bookingData.nights} nights
                   </span>
-                  <span className="text-gray-900">
+                  <span className="text-foreground">
                     đ{" "}
                     {(
                       bookingData.pricePerNight * bookingData.nights
@@ -523,18 +523,18 @@ export default function CheckoutPage() {
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Taxes & fees</span>
-                  <span className="text-gray-900">Included</span>
+                  <span className="text-muted-foreground">Taxes & fees</span>
+                  <span className="text-foreground">Included</span>
                 </div>
               </div>
 
               {/* Total */}
               <div className="border-t pt-4">
                 <div className="flex justify-between items-baseline">
-                  <span className="text-lg font-semibold text-gray-900">
+                  <span className="text-lg font-semibold text-foreground">
                     Total
                   </span>
-                  <span className="text-2xl font-bold text-gray-900">
+                  <span className="text-xl font-bold text-foreground">
                     đ{" "}
                     {(
                       bookingData.pricePerNight * bookingData.nights
@@ -546,7 +546,7 @@ export default function CheckoutPage() {
               {/* Confirm Button */}
               <Button
                 onClick={() => handleConfirmBooking()}
-                className="rounded-2xl w-full bg-primary hover:bg-primary/90 text-primary-foreground h-10 elegant-subheading text-md"
+                className="rounded-2xl w-full bg-primary h-10 elegant-subheading text-md"
               >
                 Confirm booking
               </Button>

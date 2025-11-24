@@ -3,6 +3,11 @@ import { buildImageUrl, sanitizeCollection } from 'src/utils/object.util';
 function sanitize(room: any) {
   if (!room) return null;
 
+  const country = room.location_countries;
+  const province = room.location_provinces;
+  const district = room.location_districts;
+  const ward = room.location_wards;
+
   return {
     id: room.id,
     host: room.users
@@ -22,17 +27,18 @@ function sanitize(room: any) {
     status: room.status,
     rating: Number(room.rating),
     reviewCount: room.reviewCount,
-    location: room.locations
-      ? {
-          province: room.locations.province,
-          district: room.locations.district,
-          ward: room.locations.ward,
-          street: room.locations.street,
-          fullAddress: `${room.locations.street}, ${room.locations.ward}, ${room.locations.district}, ${room.locations.province}`,
-          latitude: room.locations.latitude,
-          longitude: room.locations.longitude,
-        }
-      : null,
+    location:
+      country || province || district || ward || room.fullAddress || room.street
+        ? {
+            country: country?.name || null,
+            province: province?.name || null,
+            district: district?.name || null,
+            ward: ward?.name || null,
+            street: room.street || null,
+
+            fullAddress: room.fullAddress || '',
+          }
+        : null,
     images: {
       main: room.room_images?.length
         ? buildImageUrl(

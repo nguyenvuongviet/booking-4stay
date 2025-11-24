@@ -1,6 +1,5 @@
 "use client";
 
-import { StatCard } from "@/components/admin/stat-card";
 import { Card } from "@/components/ui/card";
 import { Calendar, DollarSign, DoorOpen, Home, Users } from "lucide-react";
 import {
@@ -16,6 +15,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { StatCard } from "./_components/stat-card";
 
 const bookingData = [
   { month: "Jan", bookings: 40, revenue: 2400 },

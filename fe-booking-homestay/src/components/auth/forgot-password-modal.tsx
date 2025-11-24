@@ -76,7 +76,7 @@ export default function ForgotPasswordModal({
             <div className="flex justify-end">
               <button
                 onClick={() => setShow(false)}
-                className="text-primary hover:text-primary/80"
+                className="cursor-pointer hover:text-primary"
               >
                 <X size={24} />
               </button>
@@ -119,7 +119,7 @@ export default function ForgotPasswordModal({
                 <p className="text-destructive text-sm mb-4">{apiError}</p>
               )}
               <Button
-                className="mt-4 mb-6 rounded-2xl w-full bg-primary hover:bg-primary/90 text-primary-foreground h-10 elegant-subheading text-md"
+                className="mt-4 mb-6 rounded-2xl w-full bg-primary hover:bg-primary/80 h-10 elegant-subheading text-md"
                 onClick={handleContinue}
               >
                 Send OTP

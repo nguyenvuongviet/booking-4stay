@@ -22,6 +22,10 @@ export const CLOUDINARY_NAME = process.env.CLOUDINARY_NAME;
 export const CLOUDINARY_API_KEY = process.env.CLOUDINARY_API_KEY;
 export const CLOUDINARY_API_SECRET = process.env.CLOUDINARY_API_SECRET;
 
+export const VNPAY_TMN_CODE = process.env.VNPAY_TMN_CODE;
+export const VNPAY_SECRET_KEY = process.env.VNPAY_SECRET_KEY;
+export const VNPAY_RETURN_URL = process.env.VNPAY_RETURN_URL;
+
 console.log({
   PORT,
   DATABASE_URL,
@@ -37,4 +41,7 @@ console.log({
   CLOUDINARY_NAME,
   CLOUDINARY_API_KEY,
   CLOUDINARY_API_SECRET,
+  VNPAY_TMN_CODE,
+  VNPAY_SECRET_KEY,
+  VNPAY_RETURN_URL,
 });

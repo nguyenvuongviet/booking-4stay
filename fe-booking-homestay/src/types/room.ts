@@ -29,6 +29,7 @@ export interface RoomImages {
 }
 
 export interface RoomLocation {
+  country: string;
   province: string;
   district: string;
   ward: string;
@@ -108,7 +109,10 @@ export interface CreateRoomDto {
   price: number;
   adultCapacity: number;
   childCapacity?: number;
-  locationId: number;
+  provinceId: number;
+  districtId: number;
+  wardId: number;
+  street: string;
 }
 
 export interface UpdateRoomDto extends Partial<CreateRoomDto> {}
