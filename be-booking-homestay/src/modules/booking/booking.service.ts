@@ -97,6 +97,7 @@ export class BookingService {
             },
           },
           users: true,
+          reviews: true,
         },
       }),
       this.prisma.bookings.count({ where: { userId } }),

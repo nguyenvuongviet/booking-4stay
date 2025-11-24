@@ -18,7 +18,15 @@ function sanitize(booking: any) {
     createdAt: booking.createdAt,
     updatedAt: booking.updatedAt,
     cancelReason: booking.cancelReason ?? null,
-
+    isReview: booking.isReview,
+    review: booking.reviews
+      ? {
+          id: booking.reviews.id,
+          rating: Number(booking.reviews.rating),
+          comment: booking.reviews.comment,
+          createdAt: booking.reviews.createdAt,
+        }
+      : null,
     user: user
       ? {
           id: user.id,
@@ -28,7 +36,6 @@ function sanitize(booking: any) {
           avatar: buildImageUrl(user.avatar),
         }
       : undefined,
-
     room: sanitizeRoom(room),
   };
 }
