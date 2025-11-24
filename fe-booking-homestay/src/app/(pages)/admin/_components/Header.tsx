@@ -65,7 +65,7 @@ export function AdminHeader() {
               fullName={displayName}
               size="md"
             />
-            <span className="text-sm font-medium max-w-[160px] truncate">
+            <span className="text-sm font-medium max-w-40 truncate">
               {displayName}
             </span>
           </button>

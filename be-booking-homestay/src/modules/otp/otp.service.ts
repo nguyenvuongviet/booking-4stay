@@ -36,11 +36,11 @@ export class OtpService {
         }),
       ]);
 
-      this.mailService
-        .sendOtpMail(email, otp, type)
-        .catch((error) =>
-          console.log(`Lỗi gửi email OTP cho ${email}: ${error.message}`),
-        );
+      // this.mailService
+      //   .sendOtpMail(email, otp, type)
+      //   .catch((error) =>
+      //     console.log(`Lỗi gửi email OTP cho ${email}: ${error.message}`),
+      //   );
 
       console.log(`OTP cho ${email}: ${otp}`);
     } catch (error) {

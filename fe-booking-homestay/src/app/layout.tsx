@@ -1,20 +1,29 @@
 import { Toaster as ShadcnToaster } from "@/components/ui/toaster";
+import { GOOGLE_CLIENT_ID } from "@/constants/app.constant";
 import { AuthProvider } from "@/context/auth-context";
+import PageTransition from "@/styles/animations/PageTransition";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Fira_Mono, Lora, Outfit } from "next/font/google";
 import { Toaster as HotToaster } from "react-hot-toast";
 import "./globals.css";
-import { GOOGLE_CLIENT_ID } from "@/constants/app.constant";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const outfit = Outfit({
   subsets: ["latin"],
+  variable: "--font-sans",
+  weight: ["400", "500", "600", "700"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const firaMono = Fira_Mono({
   subsets: ["latin"],
+  variable: "--font-mono",
+  weight: ["400"],
+});
+
+const lora = Lora({
+  subsets: ["latin"],
+  variable: "--font-serif",
+  weight: ["400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
@@ -30,10 +39,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${outfit.variable} ${firaMono.variable} ${lora.variable} antialiased`}
       >
-        <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID!}>
-          <AuthProvider>{children}</AuthProvider>
+        <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID ?? ""}>
+          <PageTransition>
+            <AuthProvider>{children}</AuthProvider>
+          </PageTransition>
         </GoogleOAuthProvider>
         <ShadcnToaster />
         <HotToaster

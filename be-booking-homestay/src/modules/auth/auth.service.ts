@@ -228,9 +228,7 @@ export class AuthService {
     }
   }
 
-  async forgotPassword(
-    dto: ForgotPasswordDto,
-  ): Promise<{ message: string }> {
+  async forgotPassword(dto: ForgotPasswordDto): Promise<{ message: string }> {
     const { email } = dto;
     if (Validator.isValidEmail(email) === false) {
       throw new BadRequestException('Email không hợp lệ!');
@@ -260,9 +258,7 @@ export class AuthService {
     }
   }
 
-  async resetPassword(
-    dto: ResetPasswordDto,
-  ): Promise<{ message: string }> {
+  async resetPassword(dto: ResetPasswordDto): Promise<{ message: string }> {
     const { email, newPassword } = dto;
     if (Validator.isValidEmail(email) === false) {
       throw new BadRequestException('Email không hợp lệ!');

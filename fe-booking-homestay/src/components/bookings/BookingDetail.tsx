@@ -69,7 +69,7 @@ export const BookingDetail = ({
   };
 
   return (
-    <div className="bg-white shadow-md rounded-2xl p-8 space-y-8">
+    <div className="bg-white shadow-md rounded-2xl p-8 space-y-6">
       {/* Ảnh phòng */}
       <div className="relative">
         <div className="grid grid-cols-4 gap-2 h-[400px]">
@@ -101,16 +101,17 @@ export const BookingDetail = ({
         {/* Thông tin phòng */}
         <div>
           <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold">{booking.room?.name}</h2>
+            <h2 className="text-2xl elegant-sans">{booking.room?.name}</h2>
             <BookingStatusBadge status={booking.status} />
           </div>
-          <div className="flex items-center gap-2 text-md text-gray-600 mt-1">
+          <div className="flex items-center gap-2 text-md text-muted-foreground mt-1">
             <span>⭐ {booking.room?.rating}</span>
             {/* <span>({booking.room.reviewCount} đánh giá)</span> */}
           </div>
-          <p className="text-lg font-semibold text-primary mt-2">
-            {formatPrice(booking.room?.price)}/night
+          <p className="text-lg elegant-sans text-foreground mt-2">
+            {formatPrice(booking.room?.price)}<span className="text-muted-foreground elegant-subheading text-sm">/night</span>
           </p>
+          
         </div>
 
         {/* Thông tin đặt phòng */}
@@ -123,14 +124,14 @@ export const BookingDetail = ({
 
           <div className="grid grid-cols-2 gap-3 text-sm">
             <div>
-              <p className="text-gray-500">Guest name</p>
-              <p className="font-medium">{booking.user?.name}</p>
+              <p className="text-muted-foreground">Guest name</p>
+              <p className="elegant-sans text-foreground">{booking.user?.name}</p>
             </div>
           </div>
         </div> */}
         <div className="border-t pt-4 space-y-4">
           <div className="flex items-center justify-between">
-            <span className="elegant-sanserif text-lg text-gray-700">
+            <span className="elegant-sans text-lg">
               Booking Information:
             </span>
           </div>
@@ -138,47 +139,47 @@ export const BookingDetail = ({
           <div className="grid grid-cols-2 gap-3 text-sm">
             <div>
               <div className="flex items-center gap-2">
-                <CalendarDays className="w-4 h-4 text-gray-500" />
-                <p className="text-gray-500 elegant-subheading">Check-in</p>
+                <CalendarDays className="w-4 h-4 text-muted-foreground" />
+                <p className="text-muted-foreground elegant-subheading">Check-in</p>
               </div>
               {booking?.checkIn ? (
-                <p className="font-medium ml-6">
+                <p className="elegant-sans text-foreground ml-6">
                   {format(new Date(booking.checkIn), "dd/MM/yyyy", {
                     locale: vi,
                   })}
                 </p>
               ) : (
-                <p className="text-gray-400 italic">Chưa có</p>
+                <p className="text-muted italic">None</p>
               )}
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <CalendarDays className="w-4 h-4 text-gray-500" />
-                <p className="text-gray-500 elegant-subheading">Check-out</p>
+                <CalendarDays className="w-4 h-4 text-muted-foreground" />
+                <p className="text-muted-foreground elegant-subheading">Check-out</p>
               </div>
               {booking?.checkOut ? (
-                <p className="font-medium ml-6">
+                <p className="elegant-sans text-foreground ml-6">
                   {format(new Date(booking.checkOut), "dd/MM/yyyy", {
                     locale: vi,
                   })}
                 </p>
               ) : (
-                <p className="text-gray-400 italic">Chưa có</p>
+                <p className="text-muted italic">None</p>
               )}
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <Clock className="w-4 h-4 text-gray-500" />
-                <p className="text-gray-500 elegant-subheading">Total nights</p>
+                <Clock className="w-4 h-4 text-muted-foreground" />
+                <p className="text-muted-foreground elegant-subheading">Total nights</p>
               </div>
-              <p className="font-medium ml-6">{totalNights} nights</p>
+              <p className="elegant-sans text-foreground ml-6">{totalNights} nights</p>
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <Users className="w-4 h-4 text-gray-500" />
-                <p className="text-gray-500 elegant-subheading">Guests</p>
+                <Users className="w-4 h-4 text-muted-foreground" />
+                <p className="text-muted-foreground elegant-subheading">Guests</p>
               </div>
-              <p className="font-medium ml-6 ">
+              <p className="elegant-sans text-foreground ml-6 ">
                 {booking.adults} adults
                 {booking.children ? `, ${booking.children} children` : ""}
               </p>
@@ -188,21 +189,21 @@ export const BookingDetail = ({
           {booking.status === "CANCELLED" && (
             <div className="border-t space-y-4">
               <div className="mt-4 p-4 bg-red-50 rounded-xl text-sm">
-                <p className="elegant-sanserif text-lg text-red-600">
+                <p className="elegant-sans text-lg text-red-700">
                   Booking canceled
                 </p>
-                <p className="mt-1 text-gray-700 elegant-subheading">
+                <p className="mt-1 text-muted-foreground elegant-subheading">
                   Reason: {booking.cancelReason}
                 </p>
                 {cancelInfo && (
                   <p className="mt-1">
                     Refund:{" "}
                     {cancelInfo?.refundAmount && cancelInfo.refundAmount > 0 ? (
-                      <span className="text-green-600 font-medium">
+                      <span className="text-green-600 elegant-sans ">
                         {cancelInfo.refundAmount.toLocaleString()} VND
                       </span>
                     ) : (
-                      <span className="text-red-500 font-medium"></span>
+                      <span className="text-red-500 elegant-sans"></span>
                     )}
                   </p>
                 )}
@@ -213,18 +214,18 @@ export const BookingDetail = ({
           {/* Tổng tiền */}
           <div className="pt-4 border-t">
             {/* <div className="flex items-center gap-2 mb-4">
-              <CheckCircle className="w-4 h-4 text-gray-500" />
+              <CheckCircle className="w-4 h-4 text-muted-foreground" />
               <span className="text-gray-600">Payment Method:</span>
-              <span className="font-medium text-gray-900">
+              <span className="elegant-sans text-foreground text-gray-900">
                 {booking.paymentMethod}
               </span>
             </div> */}
             <div className="flex items-center gap-2">
-              <DollarSign className="w-4 h-4 text-gray-500" />
-              <p className="text-gray-500 elegant-subheading">Total Amount:</p>
+              <DollarSign className="w-4 h-4 text-muted-foreground" />
+              <p className="text-muted-foreground elegant-subheading">Total Amount:</p>
             </div>
-            <p className="text-green-600 text-lg font-semibold ml-6">
-              {formatPrice(booking.room.price * totalNights) || "Chưa có"}
+            <p className="text-primary text-lg font-semibold ml-6">
+              {formatPrice(booking.room.price * totalNights) || "None"}
             </p>
           </div>
         </div>
@@ -237,7 +238,6 @@ export const BookingDetail = ({
         {/* Review  */}
         {booking.status === "CHECKED_OUT" && (
           <div className="flex items-center justify-end">
-
               <ReviewSection booking={booking} onReview={handleReview} />
           </div>
         )}

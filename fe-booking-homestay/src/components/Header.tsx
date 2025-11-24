@@ -4,7 +4,7 @@ import { useAuth } from "@/context/auth-context";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "./ui/button";
 
 export default function Header() {
@@ -12,12 +12,25 @@ export default function Header() {
   const [openMenu, setOpenMenu] = useState(false);
   const [openMobile, setOpenMobile] = useState(false);
   const pathname = usePathname();
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setOpenMenu(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   return (
-    <header className="fixed top-0 left-0 right-0 bg-background/90 backdrop-blur-sm border-b z-50">
+    <header className="fixed top-0 left-0 right-0 bg-background/80 backdrop-blur-sm border-b z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          <div className="flex items-center">
+          <div className="flex items-center justify-between">
             <a href="/">
               <Image
                 src="/4stay-logo.png"
@@ -37,8 +50,8 @@ export default function Header() {
               href="/"
               className={`elegant-subheading text-lg transition-colors ${
                 pathname === "/"
-                  ? "text-foreground"
-                  : "text-muted-foreground hover:text-foreground "
+                  ? "text-primary elegant-sans"
+                  : "text-muted-foreground hover:text-primary"
               }
               }`}
             >
@@ -48,8 +61,8 @@ export default function Header() {
               href="/room-list"
               className={`elegant-subheading text-lg transition-colors ${
                 pathname === "/room-list"
-                  ? "text-foreground"
-                  : "text-muted-foreground hover:text-foreground "
+                  ? "text-primary elegant-sans"
+                  : "text-muted-foreground hover:text-primary"
               }
               }`}
             >
@@ -68,18 +81,23 @@ export default function Header() {
               About
             </a> */}
             <a
-              href="#"
-              className="elegant-subheading text-lg text-muted-foreground hover:text-foreground transition-colors"
+              href="/contact"
+              className={`elegant-subheading text-lg transition-colors ${
+                pathname === "/contact"
+                  ? "text-primary elegant-sans"
+                  : "text-muted-foreground hover:text-primary"
+              }
+              }`}
             >
               Contact
             </a>
           </nav>
 
           {user ? (
-            <div className="relative">
+            <div className="relative" ref={menuRef}>
               <button
                 onClick={() => setOpenMenu((prev) => !prev)}
-                className="flex items-center gap-2  hover:cursor-pointer"
+                className="flex items-center gap-2 hover:cursor-pointer"
               >
                 <img
                   src={user?.avatar || "/default-avatar.png"}
@@ -87,32 +105,42 @@ export default function Header() {
                   alt="avatar"
                   className="w-8 h-8 rounded-full object-cover"
                 />
-                <span>{user.firstName + " " + user.lastName}</span>
+                <span className="text-secondary-foreground elegant-subheading">
+                  {user.firstName + " " + user.lastName}
+                </span>
                 {/* <span>Thảo Ly</span> */}
               </button>
               {openMenu && (
-                <div className="absolute right-0 mt-2 bg-white shadow-lg rounded-md w-48  border border-gray-100">
+                <div className="absolute right-0 mt-2 bg-card shadow-lg rounded-md w-48  border border-gray-100">
                   <Link
                     href="/profile"
-                    className="block px-4 py-2 hover:bg-gray-100 rounded-md"
+                    onClick={() => setOpenMenu(false)}
+                    className="block px-4 py-2 hover:bg-secondary/50 rounded-md"
                   >
                     My Profile
                   </Link>
                   <Link
                     href="/booking"
-                    className="block px-4 py-2 hover:bg-gray-100 rounded-md"
+                    onClick={() => setOpenMenu(false)}
+                    className="block px-4 py-2 hover:bg-secondary/50  rounded-md"
                   >
                     My Bookings
                   </Link>
                   <button
-                    className="block w-full text-left px-4 py-2 hover:bg-gray-100 rounded-md"
-                    onClick={openNewPassword}
+                    className="block w-full text-left px-4 py-2 hover:bg-secondary/50 rounded-md"
+                    onClick={() => {
+                      openNewPassword();
+                      setOpenMenu(false);
+                    }}
                   >
                     Change password
                   </button>
                   <button
-                    className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-red-500 rounded-md"
-                    onClick={logout}
+                    className="block w-full text-left px-4 py-2 hover:bg-secondary/50 text-red-500 rounded-md"
+                    onClick={() => {
+                      logout();
+                      setOpenMenu(false);
+                    }}
                   >
                     Logout
                   </button>
@@ -121,7 +149,7 @@ export default function Header() {
             </div>
           ) : (
             <Button
-              className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-2 elegant-subheading rounded-2xl"
+              className="bg-primary hover:bg-primary/80 px-8 py-2 rounded-2xl"
               onClick={openSignIn}
             >
               Sign in
@@ -159,12 +187,14 @@ export default function Header() {
           <nav className="flex flex-col space-y-2 px-4 py-3">
             <a
               href="/"
+              onClick={() => setOpenMobile(false)}
               className="elegant-subheading text-muted-foreground hover:text-foreground transition-colors"
             >
               Home
             </a>
             <a
               href="/room-list"
+              onClick={() => setOpenMobile(false)}
               className="elegant-subheading text-muted-foreground hover:text-foreground transition-colors"
             >
               Hotels
@@ -172,6 +202,7 @@ export default function Header() {
 
             <a
               href="#"
+              onClick={() => setOpenMobile(false)}
               className="elegant-subheading text-muted-foreground hover:text-foreground transition-colors"
             >
               Contact

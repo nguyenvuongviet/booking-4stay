@@ -1,14 +1,17 @@
 "use client";
 
+import type React from "react";
+
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { ArrowUpDown, Check, ChevronDown } from "lucide-react";
+import { ArrowUpDown, Check, ChevronDown, Star, Filter } from "lucide-react";
 import { useState } from "react";
 
 function CheckboxPopup({
@@ -82,6 +85,133 @@ function CheckboxPopup({
     </Popover>
   );
 }
+
+function CombinedFilterPopup({
+  selectedPriceRanges,
+  onTogglePrice,
+  selectedStars,
+  onToggleStar,
+  onApplyFilters,
+  open,
+  onOpenChange,
+  children,
+  priceRanges,
+  starOptions,
+}: {
+  selectedPriceRanges: string[];
+  onTogglePrice: (value: string) => void;
+  selectedStars: number[];
+  onToggleStar: (value: number) => void;
+  onApplyFilters: () => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  children?: React.ReactNode;
+  priceRanges: { label: string; value: string }[];
+  starOptions: { label: string; value: number }[];
+}) {
+  return (
+    <Popover open={open} onOpenChange={onOpenChange}>
+      <PopoverTrigger asChild>{children}</PopoverTrigger>
+      <PopoverContent
+        className="w-80 p-0 shadow-lg rounded-xl"
+        align="start"
+        sideOffset={4}
+      >
+        <div className="absolute inset-0 -z-10 bg-black/20 backdrop-blur-sm rounded-xl" />
+        <div className="bg-card rounded-xl p-6 space-y-4">
+          {/* Star Rating Section */}
+          <div>
+            <div className="flex items-center gap-2 mb-4">
+              {/* <Star className="h-5 w-5 fill-amber-400 text-amber-400" /> */}
+              <h3 className="text-lg elegant-sans">Rating</h3>
+            </div>
+            <RadioGroup
+              value={selectedStars[0]?.toString() || ""}
+              onValueChange={(value) => onToggleStar(Number(value))}
+            >
+              <div className="space-y-2">
+                {starOptions.map((option) => (
+                  <div
+                    key={option.value}
+                    className="flex items-center space-x-2"
+                    onClick={() => onToggleStar(option.value)}
+                  >
+                    <RadioGroupItem
+                      id={`star-${option.value}`}
+                      value={option.value.toString()}
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                    <div className="flex items-center gap-1 flex-1 cursor-pointer">
+                      {[...Array(option.value)].map((_, i) => (
+                        <Star
+                          key={i}
+                          className="h-4 w-4 fill-amber-400 text-amber-400"
+                        />
+                      ))}
+                    </div>
+                    <Label
+                      htmlFor={`star-${option.value}`}
+                      className="text-sm elegant-subheading cursor-pointer"
+                    >
+                      {option.label}
+                    </Label>
+                  </div>
+                ))}
+              </div>
+            </RadioGroup>
+          </div>
+
+          {/* Divider */}
+          <div className="h-px bg-border" />
+
+          {/* Price Section */}
+          <div>
+            <h3 className="text-lg elegant-sans mb-4">Price</h3>
+            <div className="space-y-2">
+              {priceRanges.map((option) => (
+                <div key={option.value} className="flex items-center space-x-3">
+                  <Checkbox
+                    id={`price-${option.value}`}
+                    checked={selectedPriceRanges.includes(option.value)}
+                    onCheckedChange={() => onTogglePrice(option.value)}
+                    className="w-5 h-5"
+                  />
+                  <Label
+                    htmlFor={`price-${option.value}`}
+                    className="text-sm elegant-subheading cursor-pointer"
+                  >
+                    {option.label}
+                  </Label>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex gap-3 pt-2">
+            <Button
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              className="flex-1 rounded-full h-10 text-sm elegant-sans"
+            >
+              Close
+            </Button>
+            <Button
+              onClick={() => {
+                onApplyFilters();
+                onOpenChange(false);
+              }}
+              className="flex-1 rounded-full h-10 text-sm elegant-sans bg-primary hover:bg-primary/80"
+            >
+              Apply
+            </Button>
+          </div>
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 function OptionsPopup({
   options,
   selectedValue,
@@ -101,13 +231,11 @@ function OptionsPopup({
     <Popover open={open} onOpenChange={onOpenChange}>
       <PopoverTrigger asChild>{children}</PopoverTrigger>
       <PopoverContent
-        className="w-72 rounded-xl shadow-xl p-0 m-0"
+        className="w-58 rounded-xl shadow-xl p-0 m-0"
         align="end"
         sideOffset={8}
       >
-        <div className="absolute inset-0 pl-2 -z-10 bg-black/20 backdrop-blur-sm rounded-xl" />
-
-        <div className="bg-white rounded-xl pl-2">
+        <div className="bg-background rounded-xl">
           <div className="space-y-1">
             {options.map((option) => (
               <button
@@ -116,9 +244,9 @@ function OptionsPopup({
                   onSelect(option.value);
                   onOpenChange(false);
                 }}
-                className="w-full flex items-center justify-between px-3 py-3 text-left hover:bg-gray-50 rounded-md transition-colors"
+                className="w-full flex items-center justify-center px-2 py-3 hover:bg-accent/50 rounded-md transition-colors"
               >
-                <span className="text-base font-normal text-gray-900">
+                <span className="elegant-subheading text-muted-foreground">
                   {option.label}
                 </span>
                 {selectedValue === option.value && (
@@ -134,23 +262,75 @@ function OptionsPopup({
 }
 
 export function FilterBar({
-  onSort,
+  onFilterChange,
 }: {
-  onSort: (order: "asc" | "desc") => void;
+  onFilterChange: (filters: {
+    minPrice?: number;
+    maxPrice?: number;
+    minRating?: number;
+    sortOrder?: "asc" | "desc";
+  }) => void;
 }) {
-  const [starOpen, setStarOpen] = useState(false);
-  const [selectedStars, setSelectedStars] = useState<number[]>([]);
-  const [priceOpen, setPriceOpen] = useState(false);
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [selectedStars, setSelectedStars] = useState<number | null>(null);
   const [selectedPriceRanges, setSelectedPriceRanges] = useState<string[]>([]);
   const [sortOpen, setSortOpen] = useState(false);
   const [selectedSort, setSelectedSort] = useState<string>("");
 
+  const handleApplyFilters = (overrideSort?: string) => {
+    let minPrice: number | undefined;
+    let maxPrice: number | undefined;
+    let minRating: number | undefined;
+
+    if (selectedPriceRanges.length > 0) {
+      // Mảng chứa tất cả min và max tạm thời
+      const minList: number[] = [];
+      const maxList: number[] = [];
+
+      selectedPriceRanges.forEach((range) => {
+        if (range.includes("+")) {
+          const min = Number.parseInt(range.replace("+", ""));
+          minList.push(min);
+        } else {
+          const [min, max] = range.split("-").map(Number);
+          minList.push(min);
+          maxList.push(max);
+        }
+      });
+
+      // Lấy min nhỏ nhất và max lớn nhất
+      minPrice = Math.min(...minList);
+      if (maxList.length > 0) {
+        maxPrice = Math.max(...maxList);
+      }
+
+      // Nếu có dấu "+" là không có giới hạn trên
+      if (selectedPriceRanges.some((r) => r.includes("+"))) {
+        maxPrice = undefined;
+      }
+    }
+
+    if (selectedStars) {
+      minRating = selectedStars;
+    }
+
+    onFilterChange({
+      minPrice,
+      maxPrice,
+      minRating,
+      sortOrder:
+        overrideSort === "asc" || overrideSort === "desc"
+          ? (overrideSort as "asc" | "desc")
+          : selectedSort === "asc" || selectedSort === "desc"
+          ? (selectedSort as "asc" | "desc")
+          : undefined,
+    });
+  };
+
   const handleSelectSort = (value: string) => {
     setSelectedSort(value);
-    if (value === "asc" || value === "desc") {
-      onSort(value);
-    }
     setSortOpen(false);
+    handleApplyFilters(value);
   };
 
   const sortOptions = [
@@ -162,6 +342,7 @@ export function FilterBar({
     const option = sortOptions.find((opt) => opt.value === selectedSort);
     return option?.label || "Sort";
   };
+
   const handleToggle = <T,>(
     value: T,
     selectedValues: T[],
@@ -175,11 +356,10 @@ export function FilterBar({
   };
 
   const starOptions = [
-    { label: "5 stars", value: 5 },
-    { label: "4 stars", value: 4 },
-    { label: "3 stars", value: 3 },
-    { label: "2 stars", value: 2 },
-    { label: "1 stars", value: 1 },
+    { label: "4+ stars", value: 4 },
+    { label: "3+ stars", value: 3 },
+    { label: "2+ stars", value: 2 },
+    { label: "1+ stars", value: 1 },
   ];
 
   const priceRanges = [
@@ -187,68 +367,37 @@ export function FilterBar({
     { label: "500,000 VND - 1,000,000 VND", value: "500000-1000000" },
     { label: "1,000,000 VND - 2,000,000 VND", value: "1000000-2000000" },
     { label: "2,000,000 VND - 3,000,000 VND", value: "2000000-3000000" },
-    { label: "Over 3,000,000VND", value: "3000000+" },
+    { label: "Over 3,000,000 VND", value: "3000000+" },
   ];
 
   return (
     <>
       <div className="flex items-center gap-4 mb-6">
-        {/* <Button
-          variant="outline"
-          size="default"
-          className="rounded-2xl elegant-subheading gap-2 bg-transparent hover:bg-secondary/50 hover:cursor-pointer"
-        >
-          <Filter className="h-4 w-4" />
-          All filters
-        </Button> */}
-
-        <CheckboxPopup
-          title="Price"
-          options={priceRanges}
-          selectedValues={selectedPriceRanges}
-          onToggle={(value) =>
-            handleToggle(
-              value as string,
-              selectedPriceRanges,
-              setSelectedPriceRanges
-            )
+        <CombinedFilterPopup
+          selectedPriceRanges={selectedPriceRanges}
+          onTogglePrice={(value) =>
+            handleToggle(value, selectedPriceRanges, setSelectedPriceRanges)
           }
-          onSeeResult={() =>
-            console.log("[v0] Selected price ranges:", selectedPriceRanges)
+          selectedStars={selectedStars ? [selectedStars] : []}
+          onToggleStar={(value) =>
+            setSelectedStars(selectedStars === value ? null : value)
           }
-          open={priceOpen}
-          onOpenChange={setPriceOpen}
+          onApplyFilters={handleApplyFilters}
+          open={filterOpen}
+          onOpenChange={setFilterOpen}
+          priceRanges={priceRanges}
+          starOptions={starOptions}
         >
           <Button
             variant="outline"
-            size="default"
-            className="w-24 rounded-2xl elegant-subheading gap-3 bg-transparent hover:bg-secondary/50 hover:cursor-pointer"
+            size="lg"
+            className="shadow-sm text-foreground elegant-subheading"
           >
-            Price
-            <ChevronDown className="h-4 w-4" />
+            <Filter className="h-4 w-4 text-muted-foreground" />
+            <span>Filters</span>
+            <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
           </Button>
-        </CheckboxPopup>
-
-        <CheckboxPopup
-          title="Star"
-          options={starOptions}
-          selectedValues={selectedStars}
-          onToggle={(value) =>
-            handleToggle(value as number, selectedStars, setSelectedStars)
-          }
-          onSeeResult={() => console.log("[v0] Selected stars:", selectedStars)}
-          open={starOpen}
-          onOpenChange={setStarOpen}
-        >
-          <Button
-            variant="outline"
-            size="default"
-            className="w-24 rounded-2xl elegant-subheading gap-3 bg-transparent hover:bg-secondary/50 hover:cursor-pointer"
-          >
-            Star
-            <ChevronDown className="h-4 w-4" />
-          </Button>
-        </CheckboxPopup>
+        </CombinedFilterPopup>
 
         <div className="ml-auto">
           <OptionsPopup
@@ -260,12 +409,12 @@ export function FilterBar({
           >
             <Button
               variant="outline"
-              size="default"
-              className="rounded-2xl elegant-subheading gap-3 bg-transparent hover:bg-secondary/50 hover:cursor-pointer"
+              size="lg"
+              className="shadow-sm text-foreground elegant-subheading"
             >
-              <ArrowUpDown className="h-4 w-4" />
+              <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
               {getSortLabel()}
-              <ChevronDown className="h-4 w-4" />
+              <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
             </Button>
           </OptionsPopup>
         </div>

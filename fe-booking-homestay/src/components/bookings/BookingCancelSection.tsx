@@ -80,7 +80,7 @@ export const BookingCancelSection = ({
     <>
       <Button
         variant="destructive"
-        className="rounded-xl flex items-center gap-2"
+        className="rounded-xl flex items-center gap-2 bg-red-500"
         onClick={handleCancelClick}
         disabled={loading}
       >

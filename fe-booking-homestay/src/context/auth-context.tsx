@@ -6,6 +6,9 @@ import OTPModal from "@/components/auth/otp-modal";
 import SignInModal from "@/components/auth/signin-modal";
 import SignUpModal from "@/components/auth/signup-modal";
 import { STORAGE_KEYS } from "@/constants";
+import { IUser } from "@/models/User";
+import api from "@/services/api";
+import { login } from "@/services/authApi";
 import { useRouter } from "next/navigation";
 import {
   createContext,
@@ -14,22 +17,26 @@ import {
   useEffect,
   useState,
 } from "react";
-import { IUser } from "../models/User";
 
 interface AuthContextType {
   user: IUser | null;
   setUser: (user: IUser | null) => void;
   updateUser: (user: IUser) => void;
   logout: () => void;
+
   openSignIn: () => void;
   openSignUp: () => void;
   openForgotPassword: () => void;
   openOTP: () => void;
   closeAll: () => void;
+
   email: string;
   setEmail: (email: string) => void;
   otp: string;
   setOtp: (otp: string) => void;
+  password: string;
+  setPassword: (password: string) => void;
+
   openNewPassword: () => void;
 }
 
@@ -43,48 +50,45 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
+  const [password, setPassword] = useState("");
   const [otpContext, setOtpContext] = useState<"signup" | "forgotPassword">(
     "signup"
   );
   const [user, setUser] = useState<IUser | null>(null);
   const router = useRouter();
+
   useEffect(() => {
-    // Load khi mount
-    const saved = localStorage.getItem(STORAGE_KEYS.CURRENT_USER);
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      if (parsed?.user) {
-        setUser(parsed.user); // chỉ set user, giữ accessToken & refreshToken nguyên vẹn
-      }
+    try {
+      const raw = localStorage.getItem(STORAGE_KEYS.CURRENT_USER);
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      if (parsed?.user) setUser(parsed.user);
+    } catch (err) {
+      console.warn("Invalid user in storage → removed");
+      localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
     }
   }, []);
 
   const updateUser = (newUser: IUser) => {
-    setUser(newUser);
-
-    const currentData = JSON.parse(
-      localStorage.getItem(STORAGE_KEYS.CURRENT_USER) || "{}"
-    );
-    const updatedData = {
-      ...currentData,
+    const raw = localStorage.getItem(STORAGE_KEYS.CURRENT_USER);
+    let parsed: any = {};
+    try {
+      parsed = raw ? JSON.parse(raw) : {};
+    } catch {}
+    const updated = {
+      ...parsed,
       user: newUser,
     };
-    localStorage.setItem(
-      STORAGE_KEYS.CURRENT_USER,
-      JSON.stringify(updatedData)
-    );
+    localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(updated));
+    setUser(newUser);
   };
 
   const logout = () => {
     localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
-    const role = user?.role;
     setUser(null);
-
-    if (role === 1) {
-      router.push("/admin/login");
-    } else {
-      router.push("/");
-    }
+    api.defaults.headers.Authorization = "";
+    router.push("/");
+    router.refresh();
   };
 
   const closeAll = () => {
@@ -136,12 +140,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         openOTP,
         otp,
         setOtp,
+        password,
+        setPassword,
         openNewPassword,
       }}
     >
       {children}
 
-      {/* Modals */}
       <SignInModal
         show={showSignIn}
         setShow={setShowSignIn}
@@ -173,12 +178,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       <OTPModal
         show={showOTP}
         setShow={setShowOTP}
-        context={otpContext}
-        onSuccess={() => {
-          if (otpContext === "forgotPassword") {
-            closeAll();
-            setShowNewPassword(true);
-          }
+        context="signup"
+        onSuccess={async () => {
+          const { data } = await login({ email, password });
+
+          localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(data));
+
+          updateUser(data.user);
+          router.push("/");
         }}
       />
 
@@ -188,7 +195,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 };
 
 export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) throw new Error("useAuth must be used within AuthProvider");
-  return context;
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error("useAuth must be used within AuthProvider");
+  return ctx;
 };

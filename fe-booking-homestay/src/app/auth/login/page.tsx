@@ -59,6 +59,8 @@ export default function LoginPage() {
     try {
       setIsLoading(true);
       const { data } = await login({ email: emailTrim, password: pwdTrim });
+      console.log(data);
+
       const { accessToken, refreshToken, user } = data || {};
 
       if (!accessToken || !user) throw new Error("Đăng nhập thất bại");

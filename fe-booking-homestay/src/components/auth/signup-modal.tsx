@@ -23,7 +23,7 @@ export default function SignUpModal({
   switchToOTP,
 }: SignUpModalProps) {
   const [showPassword, setShowPassword] = useState(false);
-  const [password, setPassword] = useState("");
+  const [passwordInput, setPasswordInput] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
@@ -41,13 +41,14 @@ export default function SignUpModal({
   const [phone, setPhone] = useState("");
 
   const { setEmail } = useAuth(); // lấy từ context
+  const { setPassword } = useAuth();
 
   useEffect(() => {
     setFirstName("");
     setLastName("");
     setEmailInput("");
     setPhone("");
-    setPassword("");
+    setPasswordInput("");
     setConfirmPassword("");
     setEmailError("");
     setPasswordError("");
@@ -83,17 +84,17 @@ export default function SignUpModal({
       setPhoneError("Please enter your phone number!");
       hasError = true;
     } else setPhoneError("");
-    if (!password) {
+    if (!passwordInput) {
       setPasswordError("Please enter your password!");
       hasError = true;
-    } else if (password.length < 6) {
+    } else if (passwordInput.length < 6) {
       setPasswordError("Password must be at least 6 characters!");
       hasError = true;
     } else setPasswordError("");
     if (!confirmPassword) {
       setConfirmPasswordError("Please confirm your password!");
       hasError = true;
-    } else if (password !== confirmPassword) {
+    } else if (passwordInput !== confirmPassword) {
       setConfirmPasswordError("Passwords do not match!");
       hasError = true;
     } else setConfirmPasswordError("");
@@ -110,15 +111,17 @@ export default function SignUpModal({
     setLoading(true);
 
     try {
-      const { data } = await register({
+      await register({
         firstName: firstName.trim(),
         lastName: lastName.trim(),
         email: emailInput.trim(),
-        password: password,
+        password: passwordInput,
         phoneNumber: phone.trim(),
       });
+
       // lưu email vào context để OTPModal có thể dùng
       setEmail(emailInput);
+      setPassword(passwordInput);
       setShow(false);
       switchToOTP(true);
     } catch (error: any) {
@@ -141,7 +144,7 @@ export default function SignUpModal({
             <div className="flex justify-end">
               <button
                 onClick={() => setShow(false)}
-                className="text-primary hover:text-primary/80"
+                className="hover:text-primary cursor-pointer"
               >
                 <X size={24} />
               </button>
@@ -245,9 +248,9 @@ export default function SignUpModal({
                       id="signupPassword"
                       type={showPassword ? "text" : "password"}
                       className="bg-input rounded-2xl mt-1 mb-2"
-                      value={password}
+                      value={passwordInput}
                       onChange={(e) => {
-                        setPassword(e.target.value);
+                        setPasswordInput(e.target.value);
                         if (passwordError) setPasswordError("");
                       }}
                     />
@@ -295,7 +298,7 @@ export default function SignUpModal({
               </div>
 
               <Button
-                className="rounded-2xl w-full bg-primary hover:bg-primary/90 text-primary-foreground h-10 elegant-subheading text-md"
+                className="rounded-2xl w-full bg-primary hover:bg-primary/80 h-10 elegant-subheading text-md"
                 type="submit"
                 disabled={loading}
               >
@@ -304,7 +307,7 @@ export default function SignUpModal({
             </form>
 
             <div className="mt-2 text-center">
-              <span className="text-muted-foreground elegant-subheading text-sm">
+              <span className="text-muted-foreground elegant-subheading text-xs">
                 Already have an account?{" "}
               </span>
               <button
@@ -312,18 +315,18 @@ export default function SignUpModal({
                   setShow(false);
                   switchToSignIn(true);
                 }}
-                className="text-primary elegant-heading text-base hover:underline"
+                className="text-primary elegant-subheading text-sm hover:underline"
               >
                 Sign in
               </button>
             </div>
 
             <div className="flex items-center my-4">
-              <div className="flex-grow border-t border-border"></div>
+              <div className="grow border-t border-border"></div>
               <span className="mx-4 elegant-subheading text-muted-foreground text-sm">
                 OR
               </span>
-              <div className="flex-grow border-t border-border"></div>
+              <div className="grow border-t border-border"></div>
             </div>
 
             <div className="mt-2">

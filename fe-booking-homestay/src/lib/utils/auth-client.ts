@@ -3,6 +3,8 @@ import { STORAGE_KEYS } from "@/constants";
 export function getCurrentUser() {
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.CURRENT_USER);
+    console.log(raw);
+
     if (!raw) return null;
     const parsed = JSON.parse(raw);
     return parsed?.user ?? null;
