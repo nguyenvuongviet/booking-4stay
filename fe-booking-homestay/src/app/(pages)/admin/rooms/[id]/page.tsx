@@ -3,7 +3,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ArrowLeft, Pencil, Trash2 } from "lucide-react";
+import { ArrowLeft, Pencil, RefreshCcw, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { use, useState } from "react";
@@ -16,7 +16,7 @@ import RoomBookingsTab from "./room-tabs/RoomBookingsTab";
 import RoomImagesTab from "./room-tabs/RoomImagesTab";
 import RoomInfoTab from "./room-tabs/RoomInfoTab";
 import RoomReviewsTab from "./room-tabs/RoomReviewsTab";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@radix-ui/react-tabs";
 
 export default function RoomDetailPage({
   params,
@@ -57,7 +57,7 @@ export default function RoomDetailPage({
 
   if (!room)
     return (
-      <Card className="p-10 text-center bg-red-50 border border-red-300">
+      <Card className="backdrop-blur-lg bg-white/30 border border-white/20 shadow-md rounded-2xl p-6">
         <p className="text-lg text-red-600 font-semibold">
           Không tìm thấy phòng.
         </p>
@@ -71,7 +71,7 @@ export default function RoomDetailPage({
 
   return (
     <div className="space-y-6 pb-10">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between backdrop-blur-xl bg-white/20 border border-white/10 shadow-lg p-4 rounded-2xl">
         <div className="flex items-center gap-4">
           <Button asChild variant="ghost" size="icon">
             <Link href="/admin/rooms">
@@ -96,12 +96,17 @@ export default function RoomDetailPage({
         </div>
 
         <div className="flex gap-2">
+          <Button variant="outline" onClick={reload}>
+            <RefreshCcw className="w-4 h-4 mr-1" />
+            Làm mới
+          </Button>
+
           <Button variant="outline" onClick={() => setOpenEditRoom(true)}>
             <Pencil className="w-4 h-4 mr-1" /> Chỉnh sửa
           </Button>
 
           <Button
-            className="bg-red-500 hover:bg-red-600"
+            className="bg-red-500/70 backdrop-blur-md hover:bg-red-600/70 text-white"
             onClick={handleDelete}
           >
             <Trash2 className="w-4 h-4 mr-1" /> Xoá
@@ -109,15 +114,32 @@ export default function RoomDetailPage({
         </div>
       </div>
 
-      {/* TABS */}
       <Tabs defaultValue="info">
-        <TabsList className="grid grid-cols-4 w-full h-12">
-          <TabsTrigger value="info">Thông tin</TabsTrigger>
-          <TabsTrigger value="bookings">
+        <TabsList className="grid grid-cols-4 w-full h-12 backdrop-blur-md bg-white/30 border border-white/20 shadow-sm rounded-2xl p-1 mb-5">
+          <TabsTrigger
+            className="data-[state=active]:bg-white/80 data-[state=active]:shadow-lg data-[state=active]:backdrop-blur-xl data-[state=active]:text-black bg-white/10 text-gray-700 rounded-xl font-medium transition-all hover:bg-white/20 cursor-pointer"
+            value="info"
+          >
+            Thông tin
+          </TabsTrigger>
+          <TabsTrigger
+            className="data-[state=active]:bg-white/80 data-[state=active]:shadow-lg data-[state=active]:backdrop-blur-xl data-[state=active]:text-black bg-white/10 text-gray-700 rounded-xl font-medium transition-all hover:bg-white/20 cursor-pointer"
+            value="bookings"
+          >
             Đặt phòng ({bookings.length})
           </TabsTrigger>
-          <TabsTrigger value="reviews">Đánh giá ({reviews.length})</TabsTrigger>
-          <TabsTrigger value="images">Hình ảnh</TabsTrigger>
+          <TabsTrigger
+            className="data-[state=active]:bg-white/80 data-[state=active]:shadow-lg data-[state=active]:backdrop-blur-xl data-[state=active]:text-black bg-white/10 text-gray-700 rounded-xl font-medium transition-all hover:bg-white/20 cursor-pointer"
+            value="reviews"
+          >
+            Đánh giá ({reviews.length})
+          </TabsTrigger>
+          <TabsTrigger
+            className="data-[state=active]:bg-white/80 data-[state=active]:shadow-lg data-[state=active]:backdrop-blur-xl data-[state=active]:text-black bg-white/10 text-gray-700 rounded-xl font-medium transition-all hover:bg-white/20 cursor-pointer"
+            value="images"
+          >
+            Hình ảnh
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="info">

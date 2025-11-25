@@ -96,6 +96,7 @@ export interface Review {
     name: string;
     avatar?: string | null;
   };
+  bookingId: number;
 }
 
 export interface PaginatedRooms {

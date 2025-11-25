@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { BedItemDto, BedType } from "@/types/room";
+import { Plus, Trash, Trash2 } from "lucide-react";
 
 interface Props {
   open: boolean;
@@ -77,17 +78,16 @@ export function UpdateBedsModal({
               />
 
               <Button
-                variant="destructive"
                 onClick={() => handleRemove(index)}
-                className="w-full"
+                className="w-full bg-red-400 hover:bg-red-500 text-white"
               >
-                Xoá
+                <Trash2 className="w-4 h-4 mr-1" /> Xoá
               </Button>
             </div>
           ))}
 
           <Button onClick={handleAdd} variant="outline">
-            Thêm giường
+            <Plus className="w-4 h-4 mr-1" /> Thêm giường
           </Button>
         </div>
 

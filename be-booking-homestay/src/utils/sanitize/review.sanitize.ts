@@ -13,6 +13,7 @@ function sanitizeReview(review: any) {
           avatar: buildImageUrl(review.users.avatar),
         }
       : null,
+    bookingId: review.bookings.id,
   };
 }
 
