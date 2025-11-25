@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -112,6 +113,9 @@ export function UserCreateModal({
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>Thêm người dùng mới</DialogTitle>
+          <DialogDescription>
+            Vui lòng nhập thông tin người dùng.
+          </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">

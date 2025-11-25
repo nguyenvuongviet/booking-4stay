@@ -11,6 +11,11 @@ export default function RoomsPage() {
   const rooms = useRooms();
   const [openModal, setOpenModal] = useState(false);
 
+  const handleCreateSuccess = () => {
+    rooms.fetchRooms();
+    setOpenModal(false);
+  };
+
   return (
     <div className="space-y-6">
       <RoomHeader
@@ -30,10 +35,7 @@ export default function RoomsPage() {
       <RoomFormModal
         open={openModal}
         onClose={() => setOpenModal(false)}
-        onSuccess={() => {
-          setOpenModal(false);
-          rooms.fetchRooms();
-        }}
+        onSuccess={handleCreateSuccess}
       />
     </div>
   );

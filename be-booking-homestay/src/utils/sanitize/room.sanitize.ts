@@ -31,9 +31,13 @@ function sanitize(room: any) {
       country || province || district || ward || room.fullAddress || room.street
         ? {
             country: country?.name || null,
+            countryId: country?.id || null,
             province: province?.name || null,
+            provinceId: province?.id || null,
             district: district?.name || null,
+            districtId: district?.id || null,
             ward: ward?.name || null,
+            wardId: ward?.id || null,
             street: room.street || null,
 
             fullAddress: room.fullAddress || '',

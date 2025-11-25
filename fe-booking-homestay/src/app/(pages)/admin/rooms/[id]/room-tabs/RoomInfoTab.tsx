@@ -1,138 +1,194 @@
+"use client";
+
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { getAmenityIcon } from "@/constants/amenity-icons";
-import type { Amenity, Room } from "@/types/room";
-import { Bed, Mail, MapPin, Phone, User } from "lucide-react";
-import React from "react";
+import type { Room } from "@/types/room";
+import {
+  Baby,
+  Bed,
+  Mail,
+  MapPin,
+  Pencil,
+  Phone,
+  Star,
+  User,
+  UserRound,
+} from "lucide-react";
 
-interface RoomInfoTabProps {
-  room: Room;
-  groupedAmenities: Record<string, Amenity[]>;
-}
-
-const RoomInfoTab: React.FC<RoomInfoTabProps> = ({
+export default function RoomInfoTab({
   room,
-  groupedAmenities,
-}) => {
+  onEditAmenities,
+  onEditBeds,
+}: {
+  room: Room;
+  onEditAmenities: () => void;
+  onEditBeds: () => void;
+}) {
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <div className="lg:col-span-2 space-y-6">
-        <Card className="p-6">
-          <h3 className="text-xl font-bold text-warm-900 mb-4 border-b pb-2">
-            Mô tả & Vị trí
-          </h3>
-          <div className="space-y-5">
-            <div>
-              <h4 className="text-lg font-semibold text-warm-800 mb-1">
-                Mô tả chi tiết
-              </h4>
-              <p className="text-sm text-muted-foreground whitespace-pre-line">
-                {room.description || "Chưa có mô tả"}
-              </p>
-            </div>
-            <div>
-              <h4 className="text-lg font-semibold text-warm-800 mb-1">
-                Địa chỉ
-              </h4>
-              <p className="text-sm text-warm-700 flex items-start gap-2">
-                <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0 text-primary" />
-                {room.location?.fullAddress || "Không rõ địa chỉ"}
-              </p>
-            </div>
+    <div className="space-y-6 mt-2">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <Card className="p-4 relative">
+          <p className="text-xs text-muted-foreground">Giá / đêm</p>
+          <p className="text-2xl font-bold text-primary mt-1">
+            {room.price.toLocaleString()}₫
+          </p>
+        </Card>
+
+        <Card className="p-4 relative">
+          <p className="text-xs text-muted-foreground">Sức chứa</p>
+          <div className="flex items-center gap-3 mt-1 text-lg font-semibold">
+            <UserRound className="w-5 h-5 text-primary" />
+            {room.adultCapacity}
+            <Baby className="w-5 h-5 text-primary ml-3" />
+            {room.childCapacity}
           </div>
         </Card>
 
-        <Card className="p-6">
-          <h3 className="text-xl font-bold text-warm-900 mb-4 border-b pb-2">
-            Tiện nghi
-          </h3>
-          {Object.keys(groupedAmenities).length ? (
-            Object.entries(groupedAmenities).map(([category, list]) => (
-              <div key={category} className="mb-4">
-                <h4 className="text-sm font-bold uppercase text-primary mb-2">
-                  {category}
-                </h4>
-                <div className="flex flex-wrap gap-2">
-                  {list.map((a) => (
-                    <Badge
-                      key={a.id}
-                      variant="secondary"
-                      className="flex items-center gap-1.5 p-2 font-normal text-warm-800 bg-muted/50 hover:bg-muted"
-                    >
-                      {getAmenityIcon(a.name)}
-                      <span className="text-sm">{a.name}</span>
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            ))
-          ) : (
-            <p className="text-muted-foreground text-sm">
-              Chưa có tiện nghi nào.
-            </p>
-          )}
+        <Card className="p-4 relative">
+          <p className="text-xs text-muted-foreground">Đánh giá</p>
+          <div className="flex items-center gap-2 mt-1 text-xl font-semibold">
+            <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
+            {room.rating ?? 0}
+            <span className="text-sm text-muted-foreground">
+              ({room.reviewCount ?? 0})
+            </span>
+          </div>
         </Card>
       </div>
 
-      <div className="lg:col-span-1 space-y-6">
-        <Card className="p-6">
-          <h3 className="text-xl font-bold text-warm-900 mb-4 border-b pb-2">
-            Chủ sở hữu
-          </h3>
-          <div className="flex items-start gap-4 text-sm">
-            {room.host.avatar ? (
-              <img
-                src={room.host.avatar}
-                alt={room.host.name}
-                className="w-12 h-12 rounded-full object-cover flex-shrink-0"
-              />
-            ) : (
-              <User className="w-12 h-12 text-warm-400 p-2 border rounded-full flex-shrink-0" />
-            )}
-            <div className="space-y-1">
-              <p className="font-bold text-lg text-warm-900">
-                {room.host.name}
-              </p>
-              <p className="flex items-center gap-1 text-muted-foreground">
-                <Mail className="w-3.5 h-3.5" /> {room.host.email}
-              </p>
-              <p className="flex items-center gap-1">
-                <Phone className="w-3.5 h-3.5" /> {room.host.phoneNumber}
-              </p>
-            </div>
-          </div>
-        </Card>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-6">
+          <Card className="p-6 relative">
+            <h3 className="section-title">Mô tả & Vị trí</h3>
 
-        <Card className="p-6">
-          <h3 className="text-xl font-bold text-warm-900 mb-4 border-b pb-2">
-            Thông tin Giường
-          </h3>
-          {room.beds?.length ? (
-            <div className="space-y-3">
-              {room.beds.map((b, i) => (
-                <div
-                  key={i}
-                  className="p-3 flex items-center justify-between border-b border-dashed last:border-b-0"
-                >
-                  <div className="flex items-center gap-3">
-                    <Bed className="w-5 h-5 text-primary" />
-                    <p className="font-semibold text-warm-900">{b.type}</p>
-                  </div>
-                  <Badge className="bg-primary/10 text-primary font-bold hover:bg-primary/20">
-                    {b.quantity} chiếc
-                  </Badge>
+            <div className="space-y-4 text-sm">
+              <div>
+                <h4 className="label">Mô tả</h4>
+                <p className="text-muted-foreground whitespace-pre-line">
+                  {room.description || "Không có mô tả"}
+                </p>
+              </div>
+
+              <div>
+                <h4 className="label">Địa chỉ</h4>
+                <div className="flex items-start gap-2">
+                  <MapPin className="w-4 h-4 text-primary shrink-0 mt-1" />
+                  <p>{room.location?.fullAddress || "Không rõ vị trí"}</p>
                 </div>
-              ))}
+              </div>
             </div>
-          ) : (
-            <p className="text-muted-foreground text-sm">
-              Chưa có thông tin giường.
-            </p>
-          )}
-        </Card>
+          </Card>
+
+          <Card className="p-6 relative">
+            <Button
+              variant="outline"
+              size="sm"
+              className="absolute top-4 right-4 flex items-center gap-1"
+              onClick={onEditAmenities}
+            >
+              <Pencil className="w-4 h-4" />
+            </Button>
+
+            <h3 className="section-title">Tiện nghi</h3>
+
+            {room.amenities?.length ? (
+              <div className="space-y-4">
+                {Object.entries(
+                  Object.groupBy(room.amenities, (a) => a.category)
+                ).map(([cat, list]) => (
+                  <div key={cat}>
+                    <h4 className="text-sm font-semibold text-primary uppercase mb-2">
+                      {cat}
+                    </h4>
+
+                    <div className="flex flex-wrap gap-2">
+                      {list?.map((a) => (
+                        <Badge
+                          key={a.id}
+                          variant="secondary"
+                          className="flex items-center gap-2 py-1 px-2"
+                        >
+                          {getAmenityIcon(a.name)}
+                          <span>{a.name}</span>
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-muted-foreground text-sm">
+                Chưa có tiện nghi nào.
+              </p>
+            )}
+          </Card>
+        </div>
+
+        <div className="space-y-6">
+          <Card className="p-6">
+            <h3 className="section-title">Chủ sở hữu</h3>
+
+            <div className="flex items-start gap-4">
+              {room.host?.avatar ? (
+                <img
+                  src={room.host.avatar}
+                  className="w-14 h-14 rounded-full object-cover"
+                />
+              ) : (
+                <User className="w-14 h-14 p-3 border rounded-full text-muted-foreground" />
+              )}
+
+              <div className="space-y-1">
+                <p className="font-bold text-lg">{room.host.name}</p>
+
+                <p className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Mail className="w-4 h-4" /> {room.host.email}
+                </p>
+                <p className="flex items-center gap-2 text-sm">
+                  <Phone className="w-4 h-4" /> {room.host.phoneNumber}
+                </p>
+              </div>
+            </div>
+          </Card>
+
+          <Card className="p-6 relative">
+            <Button
+              variant="outline"
+              size="sm"
+              className="absolute top-4 right-4 flex items-center gap-1"
+              onClick={onEditBeds}
+            >
+              <Pencil className="w-4 h-4" />
+            </Button>
+
+            <h3 className="section-title">Thông tin giường</h3>
+
+            {room.beds?.length ? (
+              <div className="space-y-3">
+                {room.beds.map((bed, i) => (
+                  <div
+                    key={i}
+                    className="flex justify-between items-center border-b pb-2 last:border-none"
+                  >
+                    <div className="flex items-center gap-3">
+                      <Bed className="w-5 h-5 text-primary" />
+                      <span className="font-medium">{bed.type}</span>
+                    </div>
+
+                    <Badge>{bed.quantity} chiếc</Badge>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                Không có thông tin giường.
+              </p>
+            )}
+          </Card>
+        </div>
       </div>
     </div>
   );
-};
-
-export default RoomInfoTab;
+}

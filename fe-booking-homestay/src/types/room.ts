@@ -30,9 +30,13 @@ export interface RoomImages {
 
 export interface RoomLocation {
   country: string;
+  countryId: number;
   province: string;
+  provinceId: number;
   district: string;
+  districtId: number;
   ward: string;
+  wardId: number;
   street: string;
   fullAddress: string;
 }
@@ -55,7 +59,6 @@ export interface Room {
   rating?: number;
   reviewCount?: number;
   status: "AVAILABLE" | "BOOKED" | "MAINTENANCE" | string;
-
   location: RoomLocation;
   host: User;
   images: RoomImages;
@@ -116,6 +119,13 @@ export interface CreateRoomDto {
 }
 
 export interface UpdateRoomDto extends Partial<CreateRoomDto> {}
+
+export interface Amenity {
+  id: number;
+  name: string;
+  description: string;
+  category: string;
+}
 
 export interface SetRoomAmenitiesDto {
   amenityIds: number[];

@@ -48,8 +48,8 @@ export function LocationCard({
                 className="w-full h-full object-cover"
               />
             ) : (
-              <div className="w-full h-full bg-muted flex items-center justify-center">
-                <MapPin className="w-7 h-7 text-primary opacity-70" />
+              <div className="w-full h-full bg-muted/25 flex items-center justify-center">
+                <MapPin className="w-7 h-7 text-cyan-500 opacity-70" />
               </div>
             )}
 
@@ -97,7 +97,7 @@ export function LocationCard({
             onClick={() => onDelete(type, item.id)}
             className="p-2 hover:bg-muted rounded-md cursor-pointer"
           >
-            <Trash2 className="w-4 h-4 text-destructive" />
+            <Trash2 className="w-4 h-4 text-red-500" />
           </button>
         </div>
       </div>

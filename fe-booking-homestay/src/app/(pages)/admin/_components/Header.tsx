@@ -50,7 +50,7 @@ export function AdminHeader() {
           aria-label="Thông báo"
         >
           <Bell className="w-5 h-5 text-foreground" />
-          <span className="absolute top-1 right-1 w-2 h-2 bg-destructive rounded-full" />
+          <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full " />
         </button>
 
         <div className="relative" ref={menuRef}>
@@ -109,7 +109,7 @@ export function AdminHeader() {
               <div className="p-1.5 border-t border-border">
                 <button
                   onClick={handleLogout}
-                  className="w-full flex items-center gap-3 px-2 py-2 text-sm text-destructive hover:bg-muted rounded-lg transition-colors cursor-pointer"
+                  className="w-full flex items-center gap-3 px-2 py-2 text-sm text-red-500 hover:bg-muted rounded-lg transition-colors cursor-pointer"
                 >
                   <LogOut className="w-4 h-4" />
                   <span>Đăng xuất</span>
