@@ -28,6 +28,7 @@ export default function CheckoutPage() {
   const [lastNameError, setLastNameError] = useState("");
   const router = useRouter();
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cash");
+  const [specialRequests, setSpecialRequests] = useState("");
 
   useEffect(() => {
     if (user) {
@@ -56,6 +57,10 @@ export default function CheckoutPage() {
         checkOut: co!,
         adults: Number(ad),
         children: Number(ch),
+        guestFullName: `${firstName} ${lastName}`,
+        guestEmail: emailInput,
+        guestPhoneNumber: phone,
+        specialRequest: specialRequests,
       });
 
       //thanh toán qua VNPAY
@@ -450,7 +455,10 @@ export default function CheckoutPage() {
               <textarea
                 className="p-4 border border-border rounded-lg text-sm px-4 py-3 resize-none h-24"
                 placeholder="Please write your request..."
-              ></textarea>
+                value={specialRequests}
+                onChange={(e) => setSpecialRequests(e.target.value)}
+              >
+              </textarea>
             </Card>
           </div>
           {/* Right  */}
@@ -535,7 +543,7 @@ export default function CheckoutPage() {
                     Total
                   </span>
                   <span className="text-xl font-bold text-foreground">
-                    đ{" "}
+                    đ
                     {(
                       bookingData.pricePerNight * bookingData.nights
                     ).toLocaleString()}

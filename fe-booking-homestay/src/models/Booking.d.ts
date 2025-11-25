@@ -18,6 +18,10 @@ export interface Booking {
   createdAt: string;
   updatedAt: string;
   cancelReason: string | null;
+  guestFullName: string;
+  guestEmail: string;
+  guestPhoneNumber: string;
+  specialRequest: string | null;
   user: User;
   room: Room;
 }
