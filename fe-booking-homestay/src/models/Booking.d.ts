@@ -1,3 +1,4 @@
+import { is } from 'date-fns/locale';
 import { Room } from "./Room";
 
 interface User {
@@ -22,6 +23,13 @@ export interface Booking {
   guestEmail: string;
   guestPhoneNumber: string;
   specialRequest: string | null;
+  review: {
+    id: number | string;
+    rating: number;
+    comment: string;
+    createdAt: string;
+  } | null;
+  isReview: boolean;
   user: User;
   room: Room;
 }

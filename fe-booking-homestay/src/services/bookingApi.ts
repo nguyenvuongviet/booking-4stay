@@ -103,3 +103,15 @@ export const post_review = async (
     throw error;
   }
 };
+
+export const get_review_bookingId = async (
+  roomId: number | string,
+) => {
+  try {
+    const resp = await api.get(`/review/room/${roomId}`); 
+    return resp.data || {};
+  } catch (error) {
+    console.error("Get reviews by room error:", error);
+    throw error;
+  } 
+};

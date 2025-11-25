@@ -27,9 +27,11 @@ export const ReviewSection = ({
 }) => {
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
-  const [comment, setComment] = useState("");
-  const [rate, setRate] = useState<number | null>(null);
-  const [isReviewed, setIsReviewed] = useState(false); // ✅ Trạng thái đã review
+  const [comment, setComment] = useState(booking.review?.comment || "");
+  const [rate, setRate] = useState<number | null>(
+    booking.review?.rating || null
+  );
+  const isReviewed = !!booking.isReview;
 
   const handleSubmit = async () => {
     if (!rate || rate <= 0 || rate > 5) {
@@ -45,7 +47,6 @@ export const ReviewSection = ({
       setLoading(true);
       await onReview?.(booking.id, rate, comment);
       toast.success("Thank you for your review!");
-      setIsReviewed(true);
       setOpen(false);
     } catch (err) {
       toast.error("Failed to submit review!");
@@ -78,7 +79,9 @@ export const ReviewSection = ({
           <div className="space-y-4 py-2">
             {/* Rating */}
             <div>
-              <p className="text-sm text-muted-foreground mb-2">Enter your rating (0–5):</p>
+              <p className="text-sm text-muted-foreground mb-2">
+                Enter your rating (0–5):
+              </p>
               <div className="flex items-center gap-2">
                 <input
                   type="number"
@@ -93,7 +96,14 @@ export const ReviewSection = ({
                 <div className="flex gap-1">
                   {Array.from({ length: 5 }).map((_, i) => {
                     if (i < fullStars)
-                      return <Star key={i} size={20} fill="#facc15" stroke="#facc15" />;
+                      return (
+                        <Star
+                          key={i}
+                          size={20}
+                          fill="#facc15"
+                          stroke="#facc15"
+                        />
+                      );
                     if (i === fullStars && hasHalfStar)
                       return (
                         <Star
@@ -103,7 +113,9 @@ export const ReviewSection = ({
                           stroke="#facc15"
                         />
                       );
-                    return <Star key={i} size={20} fill="none" stroke="#d1d5db" />;
+                    return (
+                      <Star key={i} size={20} fill="none" stroke="#d1d5db" />
+                    );
                   })}
                   <svg width="0" height="0">
                     <defs>
@@ -119,7 +131,9 @@ export const ReviewSection = ({
 
             {/* Comment */}
             <div>
-              <p className="text-sm text-muted-foreground mb-2">Share your experience:</p>
+              <p className="text-sm text-muted-foreground mb-2">
+                Share your experience:
+              </p>
               <Textarea
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
@@ -132,9 +146,11 @@ export const ReviewSection = ({
           </div>
 
           <DialogFooter className="flex justify-end gap-2">
-            <Button 
-            className="rounded-xl hover:bg-muted"
-            variant="outline" onClick={() => setOpen(false)}>
+            <Button
+              className="rounded-xl hover:bg-muted"
+              variant="outline"
+              onClick={() => setOpen(false)}
+            >
               Close
             </Button>
             {!isReviewed && (
