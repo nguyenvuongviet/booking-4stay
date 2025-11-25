@@ -172,7 +172,11 @@ export class BookingService {
   async detail(id: number, requesterId?: number | null, role?: string | null) {
     const booking = await this.prisma.bookings.findUnique({
       where: { id },
-      include: { rooms: { include: { room_images: true } }, users: true },
+      include: {
+        rooms: { include: { room_images: true } },
+        users: true,
+        reviews: true,
+      },
     });
     if (!booking) throw new NotFoundException('Không tìm thấy booking');
 
