@@ -1,4 +1,4 @@
-import { buildImageUrl, sanitizeCollection } from 'src/utils/object.util';
+import { sanitizeCollection } from 'src/utils/object.util';
 
 function sanitize(loyalty: any) {
   if (!loyalty) return null;
