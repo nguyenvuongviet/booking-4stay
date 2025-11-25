@@ -26,7 +26,18 @@ export class BookingService {
   ) {}
 
   async create(userId: number, dto: CreateBookingDto) {
-    const { roomId, checkIn, checkOut, adults = 1, children = 0 } = dto;
+    const {
+      roomId,
+      checkIn,
+      checkOut,
+      adults = 1,
+      children = 0,
+      guestFullName,
+      guestEmail,
+      guestPhoneNumber,
+      specialRequest,
+    } = dto;
+
     const { inDate, outDate } = ensureDateRange(checkIn, checkOut);
 
     const room = await this.prisma.rooms.findFirst({
@@ -42,7 +53,12 @@ export class BookingService {
     if (adults > room.adultCapacity || children > room.childCapacity)
       throw new BadRequestException('Vượt quá sức chứa phòng');
 
-    if (await this.availability.hasOverlap(roomId, inDate, outDate))
+    const hasOverlap = await this.availability.hasOverlap(
+      roomId,
+      inDate,
+      outDate,
+    );
+    if (hasOverlap)
       throw new BadRequestException('Khoảng ngày đã có người giữ hoặc bị khóa');
 
     const totalPrice = await this.pricing.priceForRange(
@@ -56,6 +72,10 @@ export class BookingService {
       data: {
         userId,
         roomId,
+        guestFullName,
+        guestEmail,
+        guestPhoneNumber,
+        specialRequest: specialRequest ?? null,
         checkIn: inDate,
         checkOut: outDate,
         adults,
@@ -63,7 +83,9 @@ export class BookingService {
         totalPrice,
         status: 'PENDING',
       },
-      include: { rooms: { include: { room_images: true } } },
+      include: {
+        rooms: { include: { room_images: true } },
+      },
     });
 
     return {

@@ -19,6 +19,13 @@ function sanitize(booking: any) {
     updatedAt: booking.updatedAt,
     cancelReason: booking.cancelReason ?? null,
     isReview: booking.isReview,
+
+    guestInfo: {
+      fullName: booking.guestFullName,
+      email: booking.guestEmail,
+      phoneNumber: booking.guestPhoneNumber,
+      specialRequest: booking.specialRequest ?? null,
+    },
     review: booking.reviews
       ? {
           id: booking.reviews.id,
@@ -30,7 +37,7 @@ function sanitize(booking: any) {
     user: user
       ? {
           id: user.id,
-          name: `${user.firstName} ${user.lastName}`,
+          name: `${user.firstName} ${user.lastName}`.trim(),
           email: user.email,
           phoneNumber: user.phoneNumber,
           avatar: buildImageUrl(user.avatar),

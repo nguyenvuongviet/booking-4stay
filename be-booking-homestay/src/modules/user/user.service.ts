@@ -127,38 +127,36 @@ export class UserService {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const user = await this.prismaService.$transaction(
-      async (tx) => {
-        const newUser = await tx.users.create({
-          data: {
-            email,
-            password: hashedPassword,
-            firstName,
-            lastName,
-            phoneNumber,
-            country,
-            isVerified: true,
-            isActive: true,
-            user_roles: {
-              create: { roleId: role.id },
-            },
+    const user = await this.prismaService.$transaction(async (tx) => {
+      const newUser = await tx.users.create({
+        data: {
+          email,
+          password: hashedPassword,
+          firstName,
+          lastName,
+          phoneNumber,
+          country,
+          isVerified: true,
+          isActive: true,
+          user_roles: {
+            create: { roleId: role.id },
           },
-          include: {
-            user_roles: { include: { roles: true } },
-          },
-        });
+        },
+        include: {
+          user_roles: { include: { roles: true } },
+        },
+      });
 
-        await this.loyaltyProgram.createLoyaltyProgram(newUser.id, { tx });
+      await this.loyaltyProgram.createLoyaltyProgram(newUser.id, { tx });
 
-        return tx.users.findUnique({
-          where: { id: newUser.id },
-          include: {
-            user_roles: { include: { roles: true } },
-            loyalty_program: { include: { levels: true } },
-          },
-        });
-      },
-    );
+      return tx.users.findUnique({
+        where: { id: newUser.id },
+        include: {
+          user_roles: { include: { roles: true } },
+          loyalty_program: { include: { levels: true } },
+        },
+      });
+    });
 
     return sanitizeUserData(user);
   }

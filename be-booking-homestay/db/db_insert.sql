@@ -42,7 +42,7 @@ INSERT INTO `roles` (`id`, `name`, `description`, `isActive`, `createdAt`, `upda
 
 INSERT INTO `users` (`id`, `email`, `password`, `firstName`, `lastName`, `phoneNumber`, `dateOfBirth`, `gender`, `avatar`, `country`, `isVerified`, `isActive`, `googleId`, `provider`, `lastLogin`, `deletedAt`, `createdAt`, `updatedAt`) VALUES
 (1, 'admin@gmail.com', '$2b$10$ch/gepo7MiSD7MCZ9PpW0uSI.upAxnfdSvrbMLmrtzhY7.tZ0fKj6', 'admin', 'vieet', '0901234567', NULL, NULL, '4stay/avatars/p04n8u1c9xhmwoy0mdmm', 'Vietnam', 1, 1, NULL, 'LOCAL', NULL, NULL, '2025-10-26 07:33:42', '2025-10-26 07:37:22'),
-(2, 'nguyenvana123@gmail.com', '$2b$10$fOrINX9SjqHDaW.tf3NhW.vmK4N5wG5DPM0DOk.Em96EvT2Pciumm', 'Nguyễn Văn', 'An', '0123456789', NULL, NULL, '4stay/avatars/aprl4uxrmxojqir7dwda', NULL, 1, 1, NULL, 'LOCAL', NULL, NULL, '2025-10-26 07:34:29', '2025-10-26 07:34:51');
+(2, 'a@gmail.com', '$2b$10$fOrINX9SjqHDaW.tf3NhW.vmK4N5wG5DPM0DOk.Em96EvT2Pciumm', 'Nguyễn Văn', 'A', '0123456789', NULL, NULL, '4stay/avatars/aprl4uxrmxojqir7dwda', NULL, 1, 1, NULL, 'LOCAL', NULL, NULL, '2025-10-26 07:34:29', '2025-10-26 07:34:51');
 
 INSERT INTO `user_roles` (`id`, `userId`, `roleId`) VALUES
 (1, 1, 3),

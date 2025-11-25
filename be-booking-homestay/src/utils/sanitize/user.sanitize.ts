@@ -16,7 +16,13 @@ function sanitizeUser(user: any) {
     roles: Array.isArray(user.user_roles)
       ? user.user_roles.map((ur: any) => ur.roles?.name).filter(Boolean)
       : [],
-    loyaltyLevel: user.loyalty_program?.levels?.name || null,
+    loyalty_program: {
+      levels: user.loyalty_program?.levels,
+      totalBooking: user.loyalty_program?.totalBookings,
+      totalNight: user.loyalty_program?.totalNights,
+      totalPoint: user.loyalty_program?.points,
+      lastUpgradeDate: user.loyalty_program?.lastUpgradeDate,
+    },
     isActive: user.isActive,
     isVerified: user.isVerified,
     provider: user.provider,
