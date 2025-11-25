@@ -18,6 +18,7 @@ import { useAuth } from "@/context/auth-context";
 import { Booking } from "@/models/Booking";
 import { IUser } from "@/models/User";
 import { update_profile, upload_file } from "@/services/authApi";
+import { get_booking } from "@/services/bookingApi";
 import {
   BookOpen,
   Calendar,
@@ -28,12 +29,12 @@ import {
   Upload,
   User,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import DatePicker from "react-datepicker";
 import toast from "react-hot-toast";
 
 export default function ProfilePage() {
-  const { user, setUser, updateUser } = useAuth();
+  const { user, updateUser } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [avatarUrl, setAvatarUrl] = useState("/default-avatar.png");
   const [firstName, setFirstName] = useState("");
@@ -43,10 +44,13 @@ export default function ProfilePage() {
   const [country, setCountry] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [activeTab, setActiveTab] = useState("profile");
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const [activeTab, setActiveTab] = useState("profile");
   const [loading, setLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     if (user) {
@@ -118,6 +122,48 @@ export default function ProfilePage() {
 
   const handleEditClick = () => setIsEditing(true);
 
+  const fetchBookings = async (pageNumber: number) => {
+    if (pageNumber === 1) {
+      setLoading(true);
+    } else {
+      setLoadingMore(true);
+    }
+
+    try {
+      const res = await get_booking({ page: pageNumber, pageSize: 3 });
+      const items = res.bookings || [];
+      const totalPages = Math.ceil(res.total / 3);
+
+      setBookings((prev) => (pageNumber === 1 ? items : [...prev, ...items]));
+
+      setHasMore(pageNumber < totalPages);
+    } catch (err) {
+      console.error("Fetch booking history error:", err);
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
+    }
+  };
+  useEffect(() => {
+    fetchBookings(page);
+  }, [page]);
+  useEffect(() => {
+    const handleScroll = () => {
+      if (loading || loadingMore || !hasMore) return;
+
+      const scrollTop = window.scrollY;
+      const scrollHeight = document.documentElement.scrollHeight;
+      const clientHeight = window.innerHeight;
+
+      if (scrollTop + clientHeight >= scrollHeight - 200) {
+        setPage((prev) => prev + 1);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [loading, loadingMore, hasMore]);
+
   return (
     <div className="min-h-screen bg-background">
       <Headers />
@@ -127,7 +173,7 @@ export default function ProfilePage() {
             <div className="flex flex-col items-start gap-6 md:flex-row md:items-center md:justify-between">
               <div className="flex items-center gap-6">
                 <img
-                  className="h-28 w-28 object-cover"
+                  className="h-28 w-28 object-cover rounded-full"
                   src={avatarUrl}
                   alt="avatar"
                 />
@@ -147,16 +193,27 @@ export default function ProfilePage() {
                 </div>
               </div>
 
-              <div className="mt-8 grid gap-4 grid-row-1">
-                <div className="grid grid-cols-2 gap-4 w-full md:w-auto">
-                  <div className="bg-white/20 p-4 rounded-xl backdrop-blur-md">
-                    <p className="text-sm ">Total Bookings</p>
-                    <p className="text-2xl elegant-sans">—</p>
+              <div className="grid gap-4 grid-row-1">
+                <div className="grid grid-cols-3 gap-4 w-full md:w-auto">
+                  <div className="bg-white/20 p-4 rounded-xl backdrop-blur-md flex flex-col items-center justify-center text-center">
+                    <p className="text-sm pb-2">Total Bookings</p>
+                    <p className="text-lg elegant-sans">
+                      {user?.loyalty_program.totalBooking || "_"}
+                    </p>
                   </div>
 
-                  <div className="bg-white/20 p-4 rounded-xl backdrop-blur-md">
-                    <p className="text-sm">Loyalty Points</p>
-                    <p className="text-2xl elegant-sans">—</p>
+                  <div className="bg-white/20 p-4 rounded-xl backdrop-blur-md flex flex-col items-center justify-center text-center">
+                    <p className="text-sm pb-2">Loyalty Points</p>
+                    <p className="text-lg elegant-sans">
+                      {user?.loyalty_program.totalPoint || "_"}
+                    </p>
+                  </div>
+
+                  <div className="bg-white/20 p-4 rounded-xl backdrop-blur-md flex flex-col items-center justify-center text-center">
+                    <p className="text-sm pb-2 ">Loyalty Level</p>
+                    <p className="text-lg elegant-sans">
+                      {user?.loyalty_program.levels.name || "_"}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -378,7 +435,7 @@ export default function ProfilePage() {
                     <span className="text-sm">Loading your bookings...</span>
                   </div>
                 </div>
-              ) : bookings.length === 0 ? (
+              ) : user?.loyalty_program.totalBooking === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16 text-center text-muted-foreground ">
                   <CalendarX className="h-12 w-12 mb-4 text-gray-400" />
                   <p className="text-lg font-medium">No bookings yet</p>
@@ -394,6 +451,27 @@ export default function ProfilePage() {
                       booking={booking}
                     />
                   ))}
+                  {loadingMore && (
+                    <div className="flex items-center justify-center py-6">
+                      <div className="flex items-center gap-3 text-muted">
+                        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                        <span className="text-sm">Loading more hotels...</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {!hasMore && !loadingMore && bookings.length > 0 && (
+                    <div className="flex items-center justify-center py-2">
+                      <div className="text-center text-muted">
+                        <p className="text-sm ">
+                          You{"'"}ve reached the end of the results
+                        </p>
+                        <p className="text-xs mt-1">
+                          Total: {bookings.length} hotels found
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </TabsContent>
