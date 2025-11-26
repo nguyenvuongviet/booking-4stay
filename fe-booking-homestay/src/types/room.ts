@@ -66,9 +66,17 @@ export interface Room {
   amenities: Amenity[];
 }
 
+export interface GuestInfo {
+  fullName: string;
+  email: string;
+  phoneNumber: string;
+  specialRequest: string;
+}
+
 export interface Booking {
   id: number;
   user: User;
+  guestInfo: GuestInfo;
   adults: number;
   children: number;
   checkIn: string;
@@ -80,7 +88,7 @@ export interface Booking {
     | "CHECKED_OUT"
     | "CANCELLED"
     | "REFUNDED";
-  totalAmount?: number | null;
+  totalAmount?: number;
   cancelReason?: string | null;
   createdAt: string;
   updatedAt: string;

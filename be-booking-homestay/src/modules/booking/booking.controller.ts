@@ -52,10 +52,15 @@ export class BookingController {
   @ApiBearerAuth('AccessToken')
   async detail(@Param('id', ParseIntPipe) id: number, @Req() req: Request) {
     const user = req['user'] ?? null;
+    const isAdmin =
+      user &&
+      Array.isArray(user.user_roles) &&
+      user.user_roles.some((ur) => ur.roles && ur.roles.name === 'ADMIN');
+    const roleForService = isAdmin ? 'ADMIN' : null;
     return this.bookingService.detail(
       id,
       user ? +user.id : null,
-      user ? user.role : null,
+      roleForService,
     );
   }
 
