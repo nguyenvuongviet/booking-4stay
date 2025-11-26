@@ -147,7 +147,7 @@ export const ReviewSection = ({
 
           <DialogFooter className="flex justify-end gap-2">
             <Button
-              className="rounded-xl hover:bg-muted"
+              className="rounded-xl"
               variant="outline"
               onClick={() => setOpen(false)}
             >
