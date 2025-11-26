@@ -1,5 +1,21 @@
 export type Role = "USER" | "ADMIN" | "HOST" | string;
 
+export interface Level {
+  id: number;
+  name: string;
+  minPoints: number;
+  description: string;
+  isActive: boolean;
+}
+
+export interface LoyaltyProgram {
+  levels: Level;
+  totalBooking: number;
+  totalNight: number;
+  totalPoints: number;
+  lastUpgradeDate: Date;
+}
+
 export interface User {
   id: number;
   email: string;
@@ -11,7 +27,7 @@ export interface User {
   dateOfBirth: string | null;
   gender: string | null;
   roles: Role[];
-  loyaltyLevel: string | null;
+  loyalty_program: LoyaltyProgram;
   provider: "LOCAL" | string;
   isActive: boolean;
   isVerified: boolean;

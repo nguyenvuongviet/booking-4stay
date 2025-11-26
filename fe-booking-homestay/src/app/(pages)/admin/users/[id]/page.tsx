@@ -387,10 +387,13 @@ export default function UserDetailPage() {
             label="Tên"
             value={user.lastName ?? "–"}
           />
-          <LabelValue label="Giới tính" value={user.gender ?? "–"} />
+          <LabelValue label="Giới tính" value={user.gender ?? "-"} />
           <LabelValue label="Ngày sinh" value={formatDate(user.dateOfBirth)} />
-          <LabelValue label="Quốc gia" value={user.country ?? "–"} />
-          <LabelValue label="Cấp độ Loyalty" value={user.loyaltyLevel ?? "–"} />
+          <LabelValue label="Quốc gia" value={user.country ?? "-"} />
+          <LabelValue
+            label="Cấp độ Loyalty"
+            value={user.loyalty_program.levels.name ?? "-"}
+          />
         </div>
       </Card>
 
