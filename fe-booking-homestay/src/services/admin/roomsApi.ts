@@ -124,12 +124,44 @@ export async function uploadRoomImage(id: number, data: FormData) {
   }
 }
 
-export async function deleteRoomImage(roomId: number) {
+export async function deleteRoomImages(id: number, imageIds: number[]) {
   try {
-    const res = await api.delete(`/room/${roomId}/images`);
+    const res = await api.delete(`/room/${id}/images`, {
+      data: { imageIds },
+    });
     return res.data.data;
   } catch (error) {
     console.error("Delete room image error:", error);
+    throw error;
+  }
+}
+
+// export async function getRoomImages(id: number) {
+//   try {
+//     const res = await api.get(`/room/${id}/images`);
+//     return res.data.data;
+//   } catch (error) {
+//     console.error("Get room images error:", error);
+//     throw error;
+//   }
+// }
+
+export async function setMainImage(id: number, imageId: number) {
+  try {
+    const res = await api.patch(`/room/${id}/images/main`, { imageId });
+    return res.data.data;
+  } catch (error) {
+    console.error("Set main image error:", error);
+    throw error;
+  }
+}
+
+export async function updateOrder(id: number, order: number[]) {
+  try {
+    const res = await api.patch(`/room/${id}/images/order`, { order });
+    return res.data.data;
+  } catch (error) {
+    console.error("Set main image error:", error);
     throw error;
   }
 }

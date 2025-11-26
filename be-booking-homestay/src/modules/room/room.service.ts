@@ -349,4 +349,36 @@ export class RoomService {
       image: images.map((x) => x.imageUrl),
     };
   }
+
+  async setMainImage(roomId: number, imageId: number) {
+    await this.roomHelper.ensureRoomExists(roomId);
+    const exists = await this.prisma.room_images.findFirst({
+      where: { id: imageId, roomId },
+    });
+    if (!exists) throw new BadRequestException('Ảnh không tồn tại.');
+
+    await this.prisma.room_images.updateMany({
+      where: { roomId, isMain: true },
+      data: { isMain: false },
+    });
+    await this.prisma.room_images.update({
+      where: { id: imageId },
+      data: { isMain: true },
+    });
+
+    return { message: 'Đặt ảnh chính thành công', imageId };
+  }
+
+  async updateImageOrder(roomId: number, order: number[]) {
+    await this.roomHelper.ensureRoomExists(roomId);
+    let pos = 1;
+    for (const id of order) {
+      await this.prisma.room_images.update({
+        where: { id },
+        data: { position: pos++ },
+      });
+    }
+
+    return { message: 'Cập nhật thứ tự ảnh thành công', order };
+  }
 }

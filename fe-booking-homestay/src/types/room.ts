@@ -21,6 +21,8 @@ export interface Bed {
 export interface RoomImage {
   id: number;
   url: string;
+  isMain: boolean;
+  position: number;
 }
 
 export interface RoomImages {
