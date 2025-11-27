@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Booking } from "@/types/room";
+import { Booking } from "@/types/booking";
 import { formatDate } from "@/lib/utils/date";
 
 import {

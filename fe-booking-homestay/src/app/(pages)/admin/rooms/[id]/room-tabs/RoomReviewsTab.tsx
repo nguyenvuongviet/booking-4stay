@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/tooltip";
 import { UserAvatar } from "@/components/UserAvatar";
 import { formatDate } from "@/lib/utils/date";
-import { Review } from "@/types/room";
+import { Review } from "@/types/review";
 import { ExternalLink, Star } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";

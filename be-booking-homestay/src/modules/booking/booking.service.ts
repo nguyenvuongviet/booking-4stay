@@ -173,19 +173,16 @@ export class BookingService {
     const booking = await this.prisma.bookings.findUnique({
       where: { id },
       include: {
-        rooms: { include: { room_images: true } },
+        rooms: { include: { room_images: true, users: true } },
         users: true,
         reviews: true,
       },
     });
     if (!booking) throw new NotFoundException('Không tìm thấy booking');
-
     if (role !== 'ADMIN' && requesterId && booking.userId !== requesterId) {
       throw new ForbiddenException('Bạn không có quyền xem booking này');
     }
-    return {
-      booking: sanitizeBooking([booking]),
-    };
+    return sanitizeBooking(booking);
   }
 
   async listAll(q: ListBookingQuery) {
@@ -198,7 +195,10 @@ export class BookingService {
         orderBy: { createdAt: sortOrder },
         skip,
         take: pageSize,
-        include: { rooms: { include: { room_images: true } } },
+        include: {
+          rooms: { include: { room_images: true, users: true } },
+          users: true,
+        },
       }),
       this.prisma.bookings.count(),
     ]);

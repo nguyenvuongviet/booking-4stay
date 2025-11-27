@@ -14,40 +14,39 @@ import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
 
 export class RoomFilterDto extends PaginationQueryDto {
   @ApiPropertyOptional({
-    example: 'Hà Nội',
     description: 'Lọc theo province (tỉnh/thành)',
   })
   @IsOptional()
   @IsString()
   province?: string;
 
-  @ApiPropertyOptional({ example: 100000, description: 'Giá tối thiểu' })
+  @ApiPropertyOptional({ description: 'Giá tối thiểu' })
   @IsOptional()
   @Type(() => Number)
   @IsInt()
   minPrice?: number;
 
-  @ApiPropertyOptional({ example: 10000000, description: 'Giá tối đa' })
+  @ApiPropertyOptional({ description: 'Giá tối đa' })
   @IsOptional()
   @Type(() => Number)
   @IsInt()
   maxPrice?: number;
 
-  @ApiPropertyOptional({ example: 2, description: 'Số người lớn' })
+  @ApiPropertyOptional({ description: 'Số người lớn' })
   @IsOptional()
   @Type(() => Number)
   @IsInt()
   @Min(1)
   adults?: number;
 
-  @ApiPropertyOptional({ example: 1, description: 'Số trẻ em' })
+  @ApiPropertyOptional({ description: 'Số trẻ em' })
   @IsOptional()
   @Type(() => Number)
   @IsInt()
   @Min(0)
   children?: number;
 
-  @ApiPropertyOptional({ example: 4.5, description: 'Điểm đánh giá tối thiểu' })
+  @ApiPropertyOptional({ description: 'Điểm đánh giá tối thiểu' })
   @IsOptional()
   @Type(() => Number)
   @IsNumber({ maxDecimalPlaces: 1 })
@@ -56,7 +55,6 @@ export class RoomFilterDto extends PaginationQueryDto {
   minRating?: number;
 
   @ApiPropertyOptional({
-    example: '2025-11-20',
     description: 'Ngày check-in (YYYY-MM-DD)',
   })
   @IsOptional()
@@ -64,7 +62,6 @@ export class RoomFilterDto extends PaginationQueryDto {
   checkIn?: string;
 
   @ApiPropertyOptional({
-    example: '2025-11-22',
     description: 'Ngày check-out (YYYY-MM-DD)',
   })
   @IsOptional()

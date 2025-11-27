@@ -43,7 +43,7 @@ export interface RoomLocation {
   fullAddress: string;
 }
 
-export interface User {
+export interface UserRoom {
   id: number;
   name: string;
   email: string;
@@ -62,51 +62,10 @@ export interface Room {
   reviewCount?: number;
   status: "AVAILABLE" | "BOOKED" | "MAINTENANCE" | string;
   location: RoomLocation;
-  host: User;
+  host: UserRoom;
   images: RoomImages;
   beds: Bed[];
   amenities: Amenity[];
-}
-
-export interface GuestInfo {
-  fullName: string;
-  email: string;
-  phoneNumber: string;
-  specialRequest: string;
-}
-
-export interface Booking {
-  id: number;
-  user: User;
-  guestInfo: GuestInfo;
-  adults: number;
-  children: number;
-  checkIn: string;
-  checkOut: string;
-  status:
-    | "PENDING"
-    | "CONFIRMED"
-    | "CHECKED_IN"
-    | "CHECKED_OUT"
-    | "CANCELLED"
-    | "REFUNDED";
-  totalAmount?: number;
-  cancelReason?: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface Review {
-  id: number;
-  rating: number;
-  comment: string;
-  createdAt: string;
-  user: {
-    id: number;
-    name: string;
-    avatar?: string | null;
-  };
-  bookingId: number;
 }
 
 export interface PaginatedRooms {
@@ -150,11 +109,3 @@ export interface BedItemDto {
 export interface SetRoomBedsDto {
   beds: BedItemDto[];
 }
-
-// export interface ImageItemDto {
-//   isMain?: boolean;
-// }
-
-// export interface DeleteRoomImagesDto {
-//   imageIds: number[];
-// }

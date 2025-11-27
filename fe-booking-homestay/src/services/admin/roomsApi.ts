@@ -1,4 +1,7 @@
 import api from "../api";
+
+import { Booking } from "@/types/booking";
+import { Review } from "@/types/review";
 import {
   Amenity,
   CreateRoomDto,
@@ -13,7 +16,6 @@ export async function getAllRooms(): Promise<PaginatedRooms> {
   try {
     const res = await api.get("/room/all");
     const data = res.data?.data;
-
     return data as PaginatedRooms;
   } catch (error) {
     console.error("Get list rooms error:", error);
@@ -94,7 +96,7 @@ export async function setRoomBeds(roomId: number, dto: SetRoomBedsDto) {
   }
 }
 
-export async function getBookingsByRoomId(id: number): Promise<any> {
+export async function getBookingsByRoomId(id: number): Promise<Booking[]> {
   try {
     const res = await api.get(`/bookings/rooms/${id}`);
     return res.data.data.items;
@@ -104,7 +106,7 @@ export async function getBookingsByRoomId(id: number): Promise<any> {
   }
 }
 
-export async function getReviewsByRoomId(id: number): Promise<any> {
+export async function getReviewsByRoomId(id: number): Promise<Review[]> {
   try {
     const res = await api.get(`/review/rooms/${id}`);
     return res.data.data.items;

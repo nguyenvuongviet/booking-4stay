@@ -122,7 +122,7 @@ BEGIN
     SET 
       `totalBookings` = `totalBookings` + 1,
       `totalNights` = `totalNights` + DATEDIFF(NEW.`checkOut`, NEW.`checkIn`),
-      `points` = `points` + ROUND(NEW.`totalPrice`, 0),
+      `points` = `points` + ROUND(NEW.`totalPrice` / 1000, 0),
       `lastUpgradeDate` = NOW()
     WHERE `userId` = NEW.`userId`;
   END IF;
