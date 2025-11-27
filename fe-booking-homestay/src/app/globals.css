@@ -370,3 +370,12 @@ body {
     transform: translateY(0);
   }
 }
+
+.sold-out-day {
+  color: gray; 
+  pointer-events: none; 
+  text-decoration: line-through; 
+  text-decoration-color: black; 
+  text-decoration-thickness: 1px; 
+  text-decoration-skip-ink: none;
+}

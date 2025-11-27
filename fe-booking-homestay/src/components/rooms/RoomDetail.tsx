@@ -44,6 +44,12 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
   const checkInRef = useRef<HTMLInputElement>(null);
   const checkOutRef = useRef<HTMLInputElement>(null);
 
+const soldOutDates: Date[] = [
+    new Date(2025, 10, 28),
+    new Date(2025, 10, 29),
+    new Date(2025, 11, 2),
+  ];
+  
   // fetch data
   useEffect(() => {
     (async () => {
@@ -73,9 +79,6 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
     if (ch) setChildren(Number(ch));
     setAvailable(status ? status === "Available" : true);
   }, [searchParams]);
-
-  // Utils
-  const getGuestDisplayText = () => `${adults + children} Guests`;
 
   const updateURL = (params: Record<string, string>) => {
     router.replace(
@@ -378,6 +381,7 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
                         ? { from: checkIn, to: checkOut }
                         : undefined
                     }
+                    soldOutDates={soldOutDates}
                     onChange={(range) => {
                       setCheckIn(range?.from ?? null);
                       setCheckOut(range?.to ?? null);
