@@ -126,7 +126,7 @@ export default function BookingDetailPage() {
                 {room?.images?.main ? (
                   <Image
                     src={room.images.main}
-                    layout="fill"
+                    fill
                     alt={room.name || "Room Image"}
                     className="rounded-lg border object-cover"
                   />

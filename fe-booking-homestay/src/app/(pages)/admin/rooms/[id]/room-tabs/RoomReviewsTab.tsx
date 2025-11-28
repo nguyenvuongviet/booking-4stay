@@ -11,24 +11,10 @@ import {
 import { UserAvatar } from "@/components/UserAvatar";
 import { formatDate } from "@/lib/utils/date";
 import { Review } from "@/types/review";
-import { ExternalLink, Star } from "lucide-react";
+import { ChevronLeft, ChevronRight, ExternalLink, Star } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
-
-function Stars({ value }: { value: number }) {
-  return (
-    <div className="flex items-center gap-1">
-      {Array.from({ length: 5 }).map((_, i) => (
-        <Star
-          key={i}
-          className={`w-5 h-5 ${
-            value >= i + 1 ? "text-yellow-500 fill-yellow-500" : "text-gray-300"
-          }`}
-        />
-      ))}
-    </div>
-  );
-}
+import { StarRating } from "../../../_components/StarRating";
 
 function RatingBar({
   star,
@@ -74,10 +60,14 @@ export default function RoomReviewsTab({ reviews }: { reviews: Review[] }) {
   const [ratingFilter, setRatingFilter] = useState<number | null>(null);
   const [sortType, setSortType] = useState<"newest" | "oldest">("newest");
 
+  const pageSize = 5;
+  const [page, setPage] = useState(1);
+
   const stats = calculateRatingStats(reviews);
 
   const filtered = useMemo(() => {
     let data = [...reviews];
+
     if (ratingFilter)
       data = data.filter((r) => Math.floor(r.rating) === ratingFilter);
 
@@ -90,6 +80,9 @@ export default function RoomReviewsTab({ reviews }: { reviews: Review[] }) {
     return data;
   }, [reviews, ratingFilter, sortType]);
 
+  const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const paged = filtered.slice((page - 1) * pageSize, page * pageSize);
+
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -97,12 +90,13 @@ export default function RoomReviewsTab({ reviews }: { reviews: Review[] }) {
           <p className="font-semibold text-lg">Đánh giá tổng thể</p>
           <p className="text-4xl font-bold mt-3">{stats.avg}</p>
           <div className="mt-2">
-            <Stars value={Math.round(Number(stats.avg))} />
+            <StarRating value={Math.round(Number(stats.avg))} />
           </div>
           <p className="text-sm text-muted-foreground mt-1">
             Dựa trên {stats.total} đánh giá
           </p>
         </Card>
+
         <Card className="p-6 rounded-xl shadow-sm">
           <p className="font-semibold text-lg">Phân phối xếp hạng</p>
           <div className="mt-4 space-y-3">
@@ -117,7 +111,10 @@ export default function RoomReviewsTab({ reviews }: { reviews: Review[] }) {
 
       <div className="flex flex-wrap justify-center gap-3">
         <Button
-          onClick={() => setRatingFilter(null)}
+          onClick={() => {
+            setRatingFilter(null);
+            setPage(1);
+          }}
           variant={ratingFilter === null ? "default" : "outline"}
           className="px-5 rounded-full"
         >
@@ -127,7 +124,10 @@ export default function RoomReviewsTab({ reviews }: { reviews: Review[] }) {
         {[5, 4, 3, 2, 1].map((s) => (
           <Button
             key={s}
-            onClick={() => setRatingFilter(s)}
+            onClick={() => {
+              setRatingFilter(s);
+              setPage(1);
+            }}
             variant={ratingFilter === s ? "default" : "outline"}
             className="px-4 rounded-full gap-1"
           >
@@ -137,9 +137,10 @@ export default function RoomReviewsTab({ reviews }: { reviews: Review[] }) {
 
         <Button
           variant="outline"
-          onClick={() =>
-            setSortType(sortType === "newest" ? "oldest" : "newest")
-          }
+          onClick={() => {
+            setSortType(sortType === "newest" ? "oldest" : "newest");
+            setPage(1);
+          }}
           className="px-5 rounded-full"
         >
           ↕ {sortType === "newest" ? "Mới nhất" : "Cũ nhất"}
@@ -147,7 +148,7 @@ export default function RoomReviewsTab({ reviews }: { reviews: Review[] }) {
       </div>
 
       <div className="space-y-4">
-        {filtered.map((review) => (
+        {paged.map((review) => (
           <Card
             key={review.id}
             className="p-5 flex flex-col justify-between md:flex-row gap-4 rounded-xl border shadow-sm hover:shadow-md transition-all duration-200"
@@ -174,9 +175,7 @@ export default function RoomReviewsTab({ reviews }: { reviews: Review[] }) {
             </div>
 
             <div className="flex flex-col items-end justify-between gap-2 md:w-20 shrink-0">
-              <div className="flex items-center gap-1">
-                <Stars value={Math.round(Number(review.rating))} />
-              </div>
+              <StarRating value={Math.round(Number(review.rating))} />
 
               {review.bookingId && (
                 <TooltipProvider>
@@ -198,7 +197,42 @@ export default function RoomReviewsTab({ reviews }: { reviews: Review[] }) {
             </div>
           </Card>
         ))}
+
+        {filtered.length === 0 && (
+          <p className="text-center text-gray-500 py-6">
+            Không có đánh giá nào.
+          </p>
+        )}
       </div>
+
+      {/* PAGINATION */}
+      {filtered.length > 0 && (
+        <div className="flex justify-between items-center mt-6">
+          <p className="text-sm text-gray-500">
+            Trang {page} / {pageCount}
+          </p>
+
+          <div className="flex gap-3">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page === 1}
+              onClick={() => setPage((p) => p - 1)}
+            >
+              <ChevronLeft className="w-4 h-4" /> Prev
+            </Button>
+
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page === pageCount}
+              onClick={() => setPage((p) => p + 1)}
+            >
+              Next <ChevronRight className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

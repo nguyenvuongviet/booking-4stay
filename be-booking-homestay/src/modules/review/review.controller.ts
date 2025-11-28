@@ -20,6 +20,12 @@ import { ReviewService } from './review.service';
 export class ReviewController {
   constructor(private readonly reviewService: ReviewService) {}
 
+  @Get('/admin/all')
+  @Public()
+  async findAll(@Query() q: ListReviewQuery) {
+    return this.reviewService.findAll(q);
+  }
+
   @Post()
   @ApiBearerAuth('AccessToken')
   async create(@Req() req: Request, @Body() dto: CreateReviewDto) {
@@ -36,10 +42,14 @@ export class ReviewController {
     return this.reviewService.listByRoom(roomId, q);
   }
 
-  @Delete('/:id')
+  @Delete('/admin/:id')
   @ApiBearerAuth('AccessToken')
   async remove(@Param('id', ParseIntPipe) id: number, @Req() req: Request) {
     const user = req['user'];
-    return this.reviewService.remove(id, user.role);
+    const userRoleName = user.user_roles?.[0]?.roles?.name;
+    if (!userRoleName) {
+      throw new Error('User role not found.');
+    }
+    return this.reviewService.remove(id, userRoleName);
   }
 }
