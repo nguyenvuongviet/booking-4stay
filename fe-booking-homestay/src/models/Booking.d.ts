@@ -8,9 +8,17 @@ interface User {
   avatar: string;
 }
 
+export type BookingStatus =
+  | "PENDING"
+  | "CONFIRMED"
+  | "CANCELLED"
+  | "COMPLETED"
+  | "CHECKED_OUT"
+  | "REDEEMED";
+
 export interface Booking {
   id: number | string;
-  status: "PENDING" | "CONFIRMED" | "CANCELLED" | "CHECKED_OUT" ;
+  status: BookingStatus;
   checkIn: string;
   checkOut: string;
   adults: number;

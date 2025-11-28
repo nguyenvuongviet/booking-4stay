@@ -1,8 +1,10 @@
 "use client";
 
 import { BookingCard } from "@/components/bookings/BookingCard";
+import { BookingStatusBadge } from "@/components/bookings/BookingStatusBadge";
 import Headers from "@/components/Header";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -15,17 +17,22 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { COUNTRIES } from "@/constants/countries";
 import { useAuth } from "@/context/auth-context";
-import { Booking } from "@/models/Booking";
+import { Booking, BookingStatus } from "@/models/Booking";
 import { IUser } from "@/models/User";
 import { update_profile, upload_file } from "@/services/authApi";
 import { get_booking } from "@/services/bookingApi";
+import { format } from "date-fns";
+import { get } from "http";
 import {
   BookOpen,
   Calendar,
   CalendarX,
+  DollarSign,
   Edit2,
+  Gift,
   Loader2,
   Save,
+  TrendingUp,
   Upload,
   User,
 } from "lucide-react";
@@ -51,6 +58,12 @@ export default function ProfilePage() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(1);
+
+  const getTierPoints = (total: number) => {
+    if (total < 1000) return 1000 - total;
+    if (total < 2000) return 2000 - total;
+    return 0;
+  };
 
   useEffect(() => {
     if (user) {
@@ -198,14 +211,14 @@ export default function ProfilePage() {
                   <div className="bg-white/20 p-4 rounded-xl backdrop-blur-md flex flex-col items-center justify-center text-center">
                     <p className="text-sm pb-2">Total Bookings</p>
                     <p className="text-lg elegant-sans">
-                      {user?.loyalty_program.totalBooking || "_"}
+                      {user?.loyalty_program.totalBooking || 0}
                     </p>
                   </div>
 
                   <div className="bg-white/20 p-4 rounded-xl backdrop-blur-md flex flex-col items-center justify-center text-center">
                     <p className="text-sm pb-2">Loyalty Points</p>
                     <p className="text-lg elegant-sans">
-                      {user?.loyalty_program.totalPoint || "_"}
+                      {user?.loyalty_program.totalPoint || 0}
                     </p>
                   </div>
 
@@ -224,7 +237,7 @@ export default function ProfilePage() {
             onValueChange={setActiveTab}
             className="w-full"
           >
-            <TabsList className="grid w-full grid-cols-2 gap-2 bg-transparent p-0 md:gap-4">
+            <TabsList className="grid w-full grid-cols-3 gap-2 bg-transparent p-0 md:gap-4">
               <TabsTrigger
                 value="profile"
                 className="rounded-lg shadow-sm transition-all gap-2 py-3"
@@ -238,6 +251,13 @@ export default function ProfilePage() {
               >
                 <BookOpen className="h-4 w-4" />
                 <span className="hidden sm:inline">My Bookings</span>
+              </TabsTrigger>
+              <TabsTrigger
+                value="rewards"
+                className="rounded-lg shadow-sm transition-all gap-2 py-3"
+              >
+                <Gift className="h-5 w-5" />
+                <span className="hidden sm:inline">Rewards</span>
               </TabsTrigger>
             </TabsList>
             <TabsContent
@@ -424,7 +444,7 @@ export default function ProfilePage() {
             </TabsContent>
             <TabsContent
               value="bookings"
-              className="mt-2 px-16 py-8 rounded-xl space-y-4"
+              className="mt-2 px-16 py-8 rounded-xl space-y-4 bg-card "
             >
               <h2 className="elegant-heading text-4xl my-6">History booking</h2>
 
@@ -444,7 +464,7 @@ export default function ProfilePage() {
                   </p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 gap-8 mt-2 p-8 rounded-xl space-y-4 bg-card">
+                <div className="grid grid-cols-1 gap-8 mt-2 p-8 rounded-xl space-y-4">
                   {bookings.map((booking, index) => (
                     <BookingCard
                       key={`${booking.id}-${index}`}
@@ -474,6 +494,159 @@ export default function ProfilePage() {
                   )}
                 </div>
               )}
+            </TabsContent>
+
+            <TabsContent
+              value="rewards"
+              className="mt-2 px-16 py-8 rounded-xl space-y-4 bg-card "
+            >
+              <h2 className="text-3xl elegant-sans">My Rewards</h2>
+
+              {/* Rewards Stats Cards */}
+              <div className="grid gap-6 md:grid-cols-3">
+                <Card className="border-0 p-8 shadow-md hover:shadow-xl transition-all bg-accent/50 group cursor-pointer">
+                  <div className="flex items-start gap-4">
+                    <div className="p-3 bg-gradient-to-br from-accent to-primary/90 rounded-xl group-hover:scale-110 transition-transform">
+                      <Gift className="h-6 w-6 text-secondary-foreground" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="elegant-sans text-muted-foreground text-sm">
+                        Total Points
+                      </h3>
+                      <p className="mt-3 text-4xl elegant-sans text-secondary-foreground">
+                        {user?.loyalty_program.totalPoint || 0}
+                      </p>
+                      <p className="mt-2 text-xs text-muted">Points earned</p>
+                    </div>
+                  </div>
+                </Card>
+
+                <Card className="border-0 p-8 shadow-md hover:shadow-xl transition-all bg-gradient-to-br from-orange-50 to-red-50 group cursor-pointer">
+                  <div className="flex items-start gap-4">
+                    <div className="p-3 bg-gradient-to-br from-secondary to-secondary/50 rounded-xl group-hover:scale-110 transition-transform">
+                      <TrendingUp className="h-6 w-6 text-orange-700" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="elegant-sans text-muted-foreground text-sm">
+                        Tier Points
+                      </h3>
+                      <p className="mt-3 text-4xl elegant-sans text-orange-700">
+                        {getTierPoints(user?.loyalty_program.totalPoint || 0)}
+                      </p>
+                      <p className="mt-2 text-xs text-muted">
+                        Towards next tier
+                      </p>
+                    </div>
+                  </div>
+                </Card>
+
+                <Card className="border-0 p-8 shadow-md hover:shadow-xl transition-all bg-gradient-to-br from-green-50 to-emerald-50 group cursor-pointer">
+                  <div className="flex items-start gap-4">
+                    <div className="p-3 bg-gradient-to-br from-green-100 to-emerald-200 rounded-xl group-hover:scale-110 transition-transform">
+                      <DollarSign className="h-6 w-6 text-green-700" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="elegant-sans text-muted-foreground text-sm">
+                        Cashback
+                      </h3>
+                      <p className="mt-3 text-4xl elegant-sans text-green-700">
+                        0 đ
+                      </p>
+                      <p className="mt-2 text-xs text-muted">
+                        Available to redeem
+                      </p>
+                    </div>
+                  </div>
+                </Card>
+              </div>
+
+              {/* Rewards History Table */}
+              <div className="mt-10">
+                <h3 className="text-2xl elegant-sans mb-6">Points History</h3>
+                <div className="rounded-2xl border border-slate-200 overflow-hidden shadow-md">
+                  <div className="overflow-x-auto">
+                    {user?.loyalty_program.totalBooking === 0 ? (
+                      <div className="flex flex-col items-center justify-center py-16 text-center text-muted-foreground ">
+                        <CalendarX className="h-12 w-12 mb-4 text-gray-400" />
+                        <p className="text-lg font-medium">No bookings yet</p>
+                      </div>
+                    ) : (
+                      <table className="w-full">
+                        <thead className="bg-gradient-to-r from-slate-100 to-slate-50">
+                          <tr>
+                            <th className="px-6 py-4 text-left text-sm elegant-sans">
+                              Date
+                            </th>
+                            <th className="px-6 py-4 text-left text-sm elegant-sans">
+                              Description
+                            </th>
+                            <th className="px-6 py-4 text-left text-sm font-semibold">
+                              Points
+                            </th>
+                            <th className="px-6 py-4 text-left text-sm elegant-sans">
+                              Status
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-200">
+                          {bookings.map((record) => (
+                            <tr
+                              key={record.id}
+                              className="hover:bg-slate-50 transition-colors"
+                            >
+                              <td className="px-6 py-4 text-sm text-muted-foreground">
+                                {format(record.createdAt, "dd/MM/yyyy")}
+                                {/* {format(record.checkIn, "dd/MM/yyyy")} - {format(record.checkOut, "dd/MM/yyyy")} */}
+                              </td>
+                              <td className="px-6 py-4 text-sm text-muted-foreground elegant-sans">
+                                {record.room?.name}
+                              </td>
+                              <td className="px-6 py-4 text-sm elegant-sans">
+                                <span
+                                  className={`${
+                                    record.totalAmount / 1000 > 0
+                                      ? "text-blue-600"
+                                      : "text-red-600"
+                                  }`}
+                                >
+                                  {record.totalAmount / 1000 > 0 ? "+" : ""}
+                                  {record.totalAmount / 1000}
+                                </span>
+                              </td>
+                              <td className="px-6 py-4 text-sm">
+                                <BookingStatusBadge
+                                  status={record.status as BookingStatus}
+                                />
+                                {/* <span
+                                className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold ${
+                                  record.status === "completed"
+                                    ? "bg-green-100 text-green-700"
+                                    : record.status === "pending"
+                                    ? "bg-yellow-100 text-yellow-700"
+                                    : "bg-red-100 text-red-700"
+                                }`}
+                              >
+                                <span
+                                  className={`h-2 w-2 rounded-full ${
+                                    record.status === "completed"
+                                      ? "bg-green-600"
+                                      : record.status === "pending"
+                                      ? "bg-yellow-600"
+                                      : "bg-red-600"
+                                  }`}
+                                ></span>
+                                {record.status.charAt(0).toUpperCase() +
+                                  record.status.slice(1)}
+                              </span> */}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    )}
+                  </div>
+                </div>
+              </div>
             </TabsContent>
           </Tabs>
         </div>

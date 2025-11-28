@@ -132,7 +132,7 @@ export function SearchBar({ compact = false }: SearchBarProps) {
         className={`${
           compact
             ? "flex items-center gap-2"
-            : "grid grid-cols-5 gap-4"
+            : "grid grid-cols-7 gap-4"
         }`}
       >
         <div className={`relative ${compact ? "flex-1" : "col-span-2"}`}>
@@ -158,7 +158,7 @@ export function SearchBar({ compact = false }: SearchBarProps) {
           />
         </div>
 
-        <div className={`relative ${compact ? "flex-1 " : "col-span-1"}`}>
+        <div className={`relative ${compact ? "flex-1 " : "col-span-2"}`}>
           <DateRangePicker
             value={
               checkIn && checkOut ? { from: checkIn, to: checkOut } : undefined
@@ -170,7 +170,7 @@ export function SearchBar({ compact = false }: SearchBarProps) {
           />
         </div>
 
-        <div className={`relative ${compact ? "flex-1 " : "col-span-1"}`}>
+        <div className={`relative ${compact ? "flex-1 " : "col-span-2"}`}>
           <Users
             className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground"
             size={20}
@@ -190,7 +190,7 @@ export function SearchBar({ compact = false }: SearchBarProps) {
               : "elegant-subheading text-md"
           }`}
         >
-          <Search className="mr-1" size={20} />
+          <Search size={20} />
           {!compact && <span className="ml-1">Search</span>}{" "}
         </Button>
       </div>
