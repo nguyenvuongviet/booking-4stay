@@ -20,8 +20,6 @@ export class ProtectStrategy extends PassportStrategy(Strategy, `protect`) {
   }
 
   async validate(decode: any) {
-    // console.log(`ProtectStrategy :: validate`);
-
     const user = await this.prismaService.users.findUnique({
       where: {
         id: decode.userId,

@@ -21,7 +21,6 @@ export class LocationService {
     private readonly cloudinary: CloudinaryService,
   ) {}
 
-  // SEARCH PROVINCE
   async searchProvinces(keyword?: string) {
     const where: any = { isDeleted: false };
 
@@ -54,7 +53,6 @@ export class LocationService {
     };
   }
 
-  //  COUNTRY
   async getCountries() {
     const items = await this.prisma.location_countries.findMany({
       orderBy: { name: 'asc' },
@@ -75,7 +73,6 @@ export class LocationService {
     return { message: 'Tạo quốc gia thành công', data: created };
   }
 
-  //  PROVINCE
   async getProvinces(countryId?: number) {
     const where: any = { isDeleted: false };
     if (countryId) where.countryId = countryId;
@@ -177,7 +174,6 @@ export class LocationService {
     };
   }
 
-  //  DISTRICT
   async getDistricts(provinceId?: number) {
     const items = await this.prisma.location_districts.findMany({
       where: { provinceId, isDeleted: false },
@@ -201,7 +197,6 @@ export class LocationService {
     return { message: 'Tạo quận/huyện thành công', data: created };
   }
 
-  //  WARD
   async getWards(districtId?: number) {
     const items = await this.prisma.location_wards.findMany({
       where: { districtId, isDeleted: false },
@@ -224,7 +219,6 @@ export class LocationService {
     return { message: 'Tạo phường/xã thành công', data: created };
   }
 
-  // UPDATE + DELETE
   async updateLocation(type: string, id: number, dto: UpdateLocationDto) {
     switch (type) {
       case 'country': {
@@ -360,14 +354,12 @@ export class LocationService {
     return { message: `Xóa ${type} thành công`, data: deleted };
   }
 
-  // IMPORT CSV
   async importFromFile(file: Express.Multer.File) {
     if (!file) throw new BadRequestException('Không có file upload');
     if (!file.buffer) throw new BadRequestException('File rỗng');
 
     const rows: any[] = [];
 
-    // Đọc file CSV
     const stream = Readable.from(file.buffer);
     await new Promise<void>((resolve, reject) => {
       stream
@@ -380,7 +372,6 @@ export class LocationService {
     if (!rows.length)
       throw new BadRequestException('File CSV không có dữ liệu');
 
-    // Counters để thống kê
     const count = {
       countries: 0,
       provinces: 0,
@@ -388,7 +379,6 @@ export class LocationService {
       wards: 0,
     };
 
-    // Duyệt từng dòng CSV
     for (const row of rows) {
       const countryCode = row.countryCode?.trim();
       const countryName = row.countryName?.trim();
@@ -398,7 +388,6 @@ export class LocationService {
 
       if (!countryCode || !countryName) continue;
 
-      // --- COUNTRY ---
       let country = await this.prisma.location_countries.findUnique({
         where: { code: countryCode },
       });
@@ -413,7 +402,6 @@ export class LocationService {
         count.countries++;
       }
 
-      // --- PROVINCE ---
       let province: any = null;
       if (provinceName) {
         province = await this.prisma.location_provinces.findFirst({
@@ -432,7 +420,6 @@ export class LocationService {
         }
       }
 
-      // --- DISTRICT ---
       let district: any = null;
       if (province && districtName) {
         district = await this.prisma.location_districts.findFirst({
@@ -451,7 +438,6 @@ export class LocationService {
         }
       }
 
-      // --- WARD ---
       if (district && wardName) {
         const existingWard = await this.prisma.location_wards.findFirst({
           where: { name: wardName, districtId: district.id },

@@ -50,7 +50,6 @@ export class AuthService {
       ]);
 
       const hashPassword = await bcrypt.hash(password, salt);
-      console.log({ salt });
 
       if (!defaultRole) {
         throw new BadRequestException('Vai trò mặc định không tìm thấy');
@@ -320,7 +319,6 @@ export class AuthService {
           loyalty_program: { include: { levels: true } },
         },
       });
-
       if (!user) {
         const defaultRole = await this.prismaService.roles.findUnique({
           where: { name: 'USER' },
@@ -330,8 +328,8 @@ export class AuthService {
         const createdUser = await this.prismaService.users.create({
           data: {
             email: googleUser.email,
-            firstName: googleUser.given_name,
-            lastName: googleUser.family_name,
+            firstName: googleUser.given_name ?? '',
+            lastName: googleUser.family_name ?? '',
             avatar: googleUser.picture,
             googleId: googleUser.sub,
             isActive: true,

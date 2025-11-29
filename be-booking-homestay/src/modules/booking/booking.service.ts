@@ -15,6 +15,7 @@ import { CancelBookingDto } from './dto/cancel-booking.dto';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { ListBookingQuery } from './dto/list-booking.query';
 import { RoomAvailabilityDto } from './dto/room-availability.dto';
+import { eachDayOfInterval, formatISO } from 'date-fns';
 
 @Injectable()
 export class BookingService {
@@ -26,7 +27,18 @@ export class BookingService {
   ) {}
 
   async create(userId: number, dto: CreateBookingDto) {
-    const { roomId, checkIn, checkOut, adults = 1, children = 0 } = dto;
+    const {
+      roomId,
+      checkIn,
+      checkOut,
+      adults = 1,
+      children = 0,
+      guestFullName,
+      guestEmail,
+      guestPhoneNumber,
+      specialRequest,
+    } = dto;
+
     const { inDate, outDate } = ensureDateRange(checkIn, checkOut);
 
     const room = await this.prisma.rooms.findFirst({
@@ -42,7 +54,12 @@ export class BookingService {
     if (adults > room.adultCapacity || children > room.childCapacity)
       throw new BadRequestException('Vượt quá sức chứa phòng');
 
-    if (await this.availability.hasOverlap(roomId, inDate, outDate))
+    const hasOverlap = await this.availability.hasOverlap(
+      roomId,
+      inDate,
+      outDate,
+    );
+    if (hasOverlap)
       throw new BadRequestException('Khoảng ngày đã có người giữ hoặc bị khóa');
 
     const totalPrice = await this.pricing.priceForRange(
@@ -56,6 +73,10 @@ export class BookingService {
       data: {
         userId,
         roomId,
+        guestFullName,
+        guestEmail,
+        guestPhoneNumber,
+        specialRequest: specialRequest ?? null,
         checkIn: inDate,
         checkOut: outDate,
         adults,
@@ -63,7 +84,9 @@ export class BookingService {
         totalPrice,
         status: 'PENDING',
       },
-      include: { rooms: { include: { room_images: true } } },
+      include: {
+        rooms: { include: { room_images: true } },
+      },
     });
 
     return {
@@ -97,6 +120,7 @@ export class BookingService {
             },
           },
           users: true,
+          reviews: true,
         },
       }),
       this.prisma.bookings.count({ where: { userId } }),
@@ -149,16 +173,17 @@ export class BookingService {
   async detail(id: number, requesterId?: number | null, role?: string | null) {
     const booking = await this.prisma.bookings.findUnique({
       where: { id },
-      include: { rooms: { include: { room_images: true } }, users: true },
+      include: {
+        rooms: { include: { room_images: true, users: true } },
+        users: true,
+        reviews: true,
+      },
     });
     if (!booking) throw new NotFoundException('Không tìm thấy booking');
-
     if (role !== 'ADMIN' && requesterId && booking.userId !== requesterId) {
       throw new ForbiddenException('Bạn không có quyền xem booking này');
     }
-    return {
-      booking: sanitizeBooking([booking]),
-    };
+    return sanitizeBooking(booking);
   }
 
   async listAll(q: ListBookingQuery) {
@@ -171,7 +196,10 @@ export class BookingService {
         orderBy: { createdAt: sortOrder },
         skip,
         take: pageSize,
-        include: { rooms: { include: { room_images: true } } },
+        include: {
+          rooms: { include: { room_images: true, users: true } },
+          users: true,
+        },
       }),
       this.prisma.bookings.count(),
     ]);
@@ -217,6 +245,63 @@ export class BookingService {
       include: { users: true },
     });
     return { items: sanitizeBooking(items) };
+  }
+
+  async getUnavailableDays(roomId: number) {
+    if (!roomId) throw new BadRequestException('Thiếu roomId');
+
+    const bookings = await this.prisma.bookings.findMany({
+      where: {
+        roomId,
+        isDeleted: false,
+        status: {
+          in: [
+            'PENDING',
+            'CONFIRMED',
+            'CHECKED_IN',
+            'CHECKED_OUT',
+          ] as bookings_status[],
+        },
+      },
+      select: { checkIn: true, checkOut: true },
+    });
+
+    const blocked = await this.prisma.room_availability.findMany({
+      where: {
+        roomId,
+        isAvailable: false,
+      },
+      select: { date: true },
+    });
+
+    console.log({ bookings, blocked });
+
+    const unavailableSet = new Set<string>();
+
+    for (const b of bookings) {
+      const range = eachDayOfInterval({
+        start: b.checkIn,
+        end: new Date(b.checkOut.getTime() - 86400000),
+      });
+      range.forEach((d) =>
+        unavailableSet.add(formatISO(d, { representation: 'date' })),
+      );
+    }
+
+    for (const b of blocked) {
+      unavailableSet.add(formatISO(b.date, { representation: 'date' }));
+    }
+
+    console.log({ unavailableSet });
+
+    const days = Array.from(unavailableSet).sort();
+
+    return {
+      message: 'Danh sách ngày không khả dụng của phòng',
+      roomId,
+      total: days.length,
+      days,
+    };
   }
 
   async updateStatus(orderId: number, status: bookings_status) {

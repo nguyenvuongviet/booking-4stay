@@ -18,7 +18,7 @@
   --muted-foreground: oklch(0.518 0.00124 14.575);
   --accent: oklch(0.8988 0.0314 248.177);
   --accent-foreground: oklch(0.2435 0 0);
-  --destructive: oklch(0.7889 0.1837 120.0068);
+  --destructive: oklch(53.282% 0.21014 28.372);
   --destructive-foreground: oklch(0.9992 0.0039 106.4705);
   --border: oklch(0.9037 0 0);
   --input: oklch(0.9731 0 0);
@@ -369,4 +369,13 @@ body {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+.sold-out-day {
+  color: gray; 
+  pointer-events: none; 
+  text-decoration: line-through; 
+  text-decoration-color: black; 
+  text-decoration-thickness: 1px; 
+  text-decoration-skip-ink: none;
 }

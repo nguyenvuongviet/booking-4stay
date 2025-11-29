@@ -100,8 +100,8 @@ export default function OTPModals({
           Chúng tôi đã gửi mã OTP đến <b>{email}</b>
         </p>
 
-        {apiError && <p className="text-red-500 text-sm mb-3">{apiError}</p>}
-        {error && <p className="text-red-500 text-sm mb-3">{error}</p>}
+        {apiError && <p className="text-destructive text-sm mb-3">{apiError}</p>}
+        {error && <p className="text-destructive text-sm mb-3">{error}</p>}
 
         <div className="flex justify-center gap-2 mb-6">
           {otpValues.map((v, i) => (

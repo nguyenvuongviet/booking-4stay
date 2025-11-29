@@ -12,16 +12,22 @@ import {
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Public } from 'src/common/decorator/public.decorator';
 import { Roles } from 'src/common/decorator/roles.decorator';
+import { BookingService } from './booking.service';
 import { CancelBookingDto } from './dto/cancel-booking.dto';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { ListBookingQuery } from './dto/list-booking.query';
 import { RoomAvailabilityDto } from './dto/room-availability.dto';
-import { BookingService } from './booking.service';
 
 @ApiTags('bookings')
 @Controller('bookings')
 export class BookingController {
   constructor(private readonly bookingService: BookingService) {}
+
+  @Get('unavailable-days')
+  @Public()
+  async getUnavailableDays(@Query('roomId', ParseIntPipe) roomId: number) {
+    return this.bookingService.getUnavailableDays(roomId);
+  }
 
   @Post('/')
   @ApiBearerAuth('AccessToken')
@@ -52,10 +58,15 @@ export class BookingController {
   @ApiBearerAuth('AccessToken')
   async detail(@Param('id', ParseIntPipe) id: number, @Req() req: Request) {
     const user = req['user'] ?? null;
+    const isAdmin =
+      user &&
+      Array.isArray(user.user_roles) &&
+      user.user_roles.some((ur) => ur.roles && ur.roles.name === 'ADMIN');
+    const roleForService = isAdmin ? 'ADMIN' : null;
     return this.bookingService.detail(
       id,
       user ? +user.id : null,
-      user ? user.role : null,
+      roleForService,
     );
   }
 

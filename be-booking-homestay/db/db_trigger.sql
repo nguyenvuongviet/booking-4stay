@@ -27,10 +27,12 @@ END $$
 
 
 /* ==========================================================
-    TRIGGER: Auto-generate fullAddress on Room INSERT
+    TRIGGER : Auto-generate fullAddress for `rooms`
    ========================================================== */
-DROP TRIGGER IF EXISTS `trg_rooms_fullAddress` $$
-CREATE TRIGGER `trg_rooms_fullAddress`
+
+-- After INSERT on `rooms`
+DROP TRIGGER IF EXISTS `trg_rooms_fullAddress_insert` $$
+CREATE TRIGGER `trg_rooms_fullAddress_insert`
 BEFORE INSERT ON `rooms`
 FOR EACH ROW
 BEGIN
@@ -41,6 +43,31 @@ BEGIN
     (SELECT name FROM `location_provinces` WHERE `id` = NEW.`provinceId`),
     (SELECT name FROM `location_countries` WHERE `id` = NEW.`countryId`)
   );
+END $$
+
+-- After UPDATE on `rooms`
+DROP TRIGGER IF EXISTS `trg_rooms_fullAddress_update` $$
+CREATE TRIGGER `trg_rooms_fullAddress_update`
+BEFORE UPDATE ON `rooms`
+FOR EACH ROW
+BEGIN
+  -- Chỉ chạy nếu có bất kỳ trường địa chỉ nào thay đổi (Tùy chọn: tối ưu hóa hiệu suất)
+  IF 
+    NEW.`street` <> OLD.`street` OR
+    NEW.`wardId` <> OLD.`wardId` OR
+    NEW.`districtId` <> OLD.`districtId` OR
+    NEW.`provinceId` <> OLD.`provinceId` OR
+    NEW.`countryId` <> OLD.`countryId` 
+  THEN
+    -- Lấy tên vị trí và ghép lại
+    SET NEW.`fullAddress` = CONCAT_WS(', ',
+      NEW.`street`,
+      (SELECT name FROM `location_wards` WHERE `id` = NEW.`wardId`),
+      (SELECT name FROM `location_districts` WHERE `id` = NEW.`districtId`),
+      (SELECT name FROM `location_provinces` WHERE `id` = NEW.`provinceId`),
+      (SELECT name FROM `location_countries` WHERE `id` = NEW.`countryId`)
+    );
+  END IF;
 END $$
 
 
@@ -95,28 +122,10 @@ BEGIN
     SET 
       `totalBookings` = `totalBookings` + 1,
       `totalNights` = `totalNights` + DATEDIFF(NEW.`checkOut`, NEW.`checkIn`),
-      `points` = `points` + ROUND(NEW.`totalPrice`, 0),
+      `points` = `points` + ROUND(NEW.`totalPrice` / 1000, 0),
       `lastUpgradeDate` = NOW()
     WHERE `userId` = NEW.`userId`;
   END IF;
 END $$
 
 DELIMITER ;
-
-DROP VIEW IF EXISTS `view_rooms`;
-CREATE OR REPLACE VIEW `view_rooms` AS
-SELECT 
-  r.`id`, r.`name`, r.`price`, r.`street`, 
-  CONCAT_WS(', ',
-    r.`street`,
-    w.`name`,
-    d.`name`,
-    p.`name`,
-    c.`name`
-  ) AS `fullAddress`,
-  r.`hostId`, r.`status`, r.`createdAt`
-FROM `rooms` r
-LEFT JOIN `location_wards` w ON w.`id` = r.`wardId`
-LEFT JOIN `location_districts` d ON d.`id` = r.`districtId`
-LEFT JOIN `location_provinces` p ON p.`id` = r.`provinceId`;
-LEFT JOIN `location_countries` AS c ON c.`id` = r.`countryId`;

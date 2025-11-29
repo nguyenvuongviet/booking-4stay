@@ -1,128 +1,304 @@
-import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
-import { Booking } from "@/types/room";
-import { Baby, CalendarDays, Mail, Phone, UserRound } from "lucide-react";
-import React from "react";
+"use client";
 
-interface RoomBookingsTabProps {
+import { useState, useMemo } from "react";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Booking } from "@/types/booking";
+import { formatDate } from "@/lib/utils/date";
+
+import {
+  Search,
+  Filter,
+  Users,
+  Baby,
+  ArrowUpDown,
+  ChevronLeft,
+  ChevronRight,
+  Eye,
+  Download,
+} from "lucide-react";
+
+import Link from "next/link";
+import { saveAs } from "file-saver";
+import * as XLSX from "xlsx";
+import { DateRange } from "react-day-picker";
+import { DateRangePicker } from "../../../_components/DateRangePicker";
+
+interface Props {
   bookings: Booking[];
-  formatDate: (date?: string | Date | null) => string;
 }
 
-const RoomBookingsTab: React.FC<RoomBookingsTabProps> = ({
-  bookings,
-  formatDate,
-}) => {
+export default function RoomBookingsTab({ bookings }: Props) {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+
+  const [sortCheckIn, setSortCheckIn] = useState<"asc" | "desc" | null>(null);
+  const [sortTotal, setSortTotal] = useState<"asc" | "desc" | null>(null);
+
+  const [dateRange, setDateRange] = useState<DateRange | undefined>();
+
+  const pageSize = 6;
+  const [page, setPage] = useState(1);
+
+  const statusColor = (status: string) =>
+    ({
+      CONFIRMED: "bg-green-100 text-green-700",
+      PENDING: "bg-yellow-100 text-yellow-700",
+      CHECKED_IN: "bg-blue-100 text-blue-700",
+      CHECKED_OUT: "bg-gray-200 text-gray-700",
+      CANCELLED: "bg-red-100 text-red-700",
+    }[status] || "bg-gray-100 text-gray-800");
+
+  const getNights = (ci: string, co: string) => {
+    const d1 = new Date(ci);
+    const d2 = new Date(co);
+    return Math.max(1, Math.round((d2.getTime() - d1.getTime()) / 86400000));
+  };
+
+  const processed = useMemo(() => {
+    let data = [...bookings];
+    data = data.filter((b) => {
+      const g = b.guestInfo;
+      return (
+        g.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        g.email.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    });
+    if (statusFilter !== "all") {
+      data = data.filter(
+        (b) => b.status.toLowerCase() === statusFilter.toLowerCase()
+      );
+    }
+    if (dateRange?.from) {
+      data = data.filter(
+        (b) => new Date(b.checkIn) >= new Date(dateRange.from!)
+      );
+    }
+    if (dateRange?.to)
+      data = data.filter((b) => new Date(b.checkIn) <= new Date(dateRange.to!));
+    if (sortCheckIn) {
+      data.sort((a, b) =>
+        sortCheckIn === "asc"
+          ? +new Date(a.checkIn) - +new Date(b.checkIn)
+          : +new Date(b.checkIn) - +new Date(a.checkIn)
+      );
+    }
+    if (sortTotal) {
+      data.sort((a, b) =>
+        sortTotal === "asc"
+          ? (a.totalAmount ?? 0) - (b.totalAmount ?? 0)
+          : (b.totalAmount ?? 0) - (a.totalAmount ?? 0)
+      );
+    }
+    return data;
+  }, [bookings, searchTerm, statusFilter, dateRange, sortCheckIn, sortTotal]);
+
+  const pageCount = Math.max(1, Math.ceil(processed.length / pageSize));
+  const paged = processed.slice((page - 1) * pageSize, page * pageSize);
+
+  const exportExcel = () => {
+    const rows = processed.map((b) => ({
+      ID: b.id,
+      Guest: b.guestInfo.fullName,
+      Email: b.guestInfo.email,
+      CheckIn: formatDate(b.checkIn),
+      CheckOut: formatDate(b.checkOut),
+      Nights: getNights(b.checkIn, b.checkOut),
+      Adults: b.adults,
+      Children: b.children,
+      Amount: b.totalAmount,
+      Status: b.status,
+    }));
+
+    const sheet = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, sheet, "Bookings");
+    const buffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+
+    saveAs(
+      new Blob([buffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      }),
+      "bookings.xlsx"
+    );
+  };
+
   return (
-    <Card className="p-6">
-      <h3 className="text-xl font-bold text-warm-900 mb-4 border-b pb-2">
-        Danh sách đặt phòng
-      </h3>
-      {bookings.length ? (
-        <div className="overflow-x-auto border rounded-lg">
-          <table className="min-w-full text-sm">
-            <thead className="bg-muted/50">
-              <tr>
-                <th className="py-3 px-4 text-left font-semibold text-warm-700">
-                  Khách hàng
+    <div className="space-y-6">
+      <Card className="p-4 rounded-xl shadow-sm">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+          <div className="flex flex-wrap items-center gap-4 w-full">
+            <div className="relative flex-1 min-w-[250px] max-w-[380px]">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 text-muted-foreground" />
+              <input
+                placeholder="Search guest name or email…"
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setPage(1);
+                }}
+                className="h-10 w-full pl-10 pr-3 border rounded-lg"
+              />
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Filter className="w-4 h-4 text-muted-foreground" />
+              <select
+                className="h-10 px-3 border rounded-lg"
+                value={statusFilter}
+                onChange={(e) => {
+                  setStatusFilter(e.target.value);
+                  setPage(1);
+                }}
+              >
+                <option value="all">All Status</option>
+                <option value="PENDING">Pending</option>
+                <option value="CONFIRMED">Confirmed</option>
+                <option value="CHECKED_IN">Checked-in</option>
+                <option value="CHECKED_OUT">Checked-out</option>
+                <option value="CANCELLED">Cancelled</option>
+              </select>
+            </div>
+
+            <div className="min-w-[260px]">
+              <DateRangePicker value={dateRange} onChange={setDateRange} />
+            </div>
+          </div>
+
+          <Button
+            onClick={exportExcel}
+            className="h-10 bg-green-600 text-white flex items-center gap-2"
+          >
+            <Download className="w-4 h-4" /> Export
+          </Button>
+        </div>
+      </Card>
+
+      <Card className="p-6 rounded-xl shadow-sm">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-muted-foreground text-sm">
+                <th className="py-3 px-4 text-left font-semibold">Khách</th>
+                <th
+                  className="py-3 px-4 text-center font-semibold cursor-pointer"
+                  onClick={() =>
+                    setSortCheckIn(sortCheckIn === "asc" ? "desc" : "asc")
+                  }
+                >
+                  <div className="flex items-center justify-center gap-1">
+                    Ngày vào <ArrowUpDown className="w-4 h-4" />
+                  </div>
                 </th>
-                <th className="py-3 px-4 text-left font-semibold text-warm-700">
-                  Sức chứa
+                <th
+                  className="py-3 px-4 text-center font-semibold cursor-pointer"
+                  onClick={() =>
+                    setSortCheckIn(sortCheckIn === "asc" ? "desc" : "asc")
+                  }
+                >
+                  <div className="flex items-center justify-center gap-1">
+                    Ngày ra <ArrowUpDown className="w-4 h-4" />
+                  </div>
                 </th>
-                <th className="py-3 px-4 text-left font-semibold text-warm-700">
-                  Check-in
+                <th className="py-3 px-4 text-center font-semibold">Số đêm</th>
+                <th className="py-3 px-4 text-center font-semibold">
+                  Số khách
                 </th>
-                <th className="py-3 px-4 text-left font-semibold text-warm-700">
-                  Check-out
+                <th
+                  className="py-3 px-4 text-center font-semibold cursor-pointer"
+                  onClick={() =>
+                    setSortTotal(sortTotal === "asc" ? "desc" : "asc")
+                  }
+                >
+                  <div className="flex items-center justify-center gap-1">
+                    Tổng tiền <ArrowUpDown className="w-4 h-4" />
+                  </div>
                 </th>
-                <th className="py-3 px-4 text-left font-semibold text-warm-700">
-                  Tổng tiền
-                </th>
-                <th className="py-3 px-4 text-left font-semibold text-warm-700">
+                <th className="py-3 px-4 text-center font-semibold">
                   Trạng thái
+                </th>
+                <th className="py-3 px-4 text-center font-semibold">
+                  Chi tiết
                 </th>
               </tr>
             </thead>
+
             <tbody>
-              {bookings.map((b) => (
-                <tr
-                  key={b.id}
-                  className="border-b last:border-b-0 hover:bg-muted/30 transition"
-                >
-                  {/* CỘT KHÁCH HÀNG */}
-                  <td className="py-3 px-4">
-                    <div className="font-bold text-warm-900">
-                      {b.user?.name || "Ẩn danh"}
-                    </div>
-                    <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
-                      <Mail className="w-3 h-3" /> {b.user?.email || "N/A"}
-                    </p>
-                    <p className="text-xs text-muted-foreground flex items-center gap-1">
-                      <Phone className="w-3 h-3" />{" "}
-                      {b.user?.phoneNumber || "N/A"}
+              {paged.map((b) => (
+                <tr key={b.id} className="border-b hover:bg-muted/20">
+                  <td className="py-4 px-4">
+                    <p className="font-medium">{b.guestInfo.fullName}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {b.guestInfo.email}
                     </p>
                   </td>
-                  {/* CỘT SỨC CHỨA */}
-                  <td className="py-3 px-4 text-muted-foreground">
-                    <div className="flex flex-col gap-1">
-                      <span className="flex items-center gap-1 text-warm-700">
-                        <UserRound className="w-3.5 h-3.5" /> {b.adults} NL
-                      </span>
-                      {b.children > 0 && (
-                        <span className="flex items-center gap-1 text-warm-700">
-                          <Baby className="w-3.5 h-3.5" /> {b.children} TE
-                        </span>
-                      )}
+                  <td className="py-4 px-4 text-center">
+                    {formatDate(b.checkIn)}
+                  </td>
+                  <td className="py-4 px-4 text-center">
+                    {formatDate(b.checkOut)}
+                  </td>
+                  <td className="py-4 px-4 text-center">
+                    {getNights(b.checkIn, b.checkOut)}
+                  </td>
+                  <td className="py-4 px-4 text-center">
+                    <div className="flex items-center justify-center gap-3">
+                      <Users className="w-4 h-4" /> {b.adults}
+                      <Baby className="w-4 h-4" /> {b.children}
                     </div>
                   </td>
-                  {/* CỘT CHECK-IN: SỬ DỤNG formatDate */}
-                  <td className="py-3 px-4 text-muted-foreground">
-                    <div className="flex items-center gap-1">
-                      <CalendarDays className="w-3.5 h-3.5 text-primary" />
-                      {formatDate(b.checkIn)}
-                    </div>
+                  <td className="py-4 px-4 text-center font-semibold">
+                    {b.totalAmount?.toLocaleString()}₫
                   </td>
-                  {/* CỘT CHECK-OUT: SỬ DỤNG formatDate */}
-                  <td className="py-3 px-4 text-muted-foreground">
-                    <div className="flex items-center gap-1">
-                      <CalendarDays className="w-3.5 h-3.5 text-primary" />
-                      {formatDate(b.checkOut)}
-                    </div>
-                  </td>
-                  {/* CỘT TỔNG TIỀN */}
-                  <td className="py-3 px-4 font-bold text-primary">
-                    {b.totalAmount
-                      ? b.totalAmount.toLocaleString() + "₫"
-                      : "N/A"}
-                  </td>
-                  {/* CỘT TRẠNG THÁI */}
-                  <td className="py-3 px-4">
-                    <Badge
-                      className={`font-semibold ${
-                        ["CONFIRMED", "CHECKED_IN", "CHECKED_OUT"].includes(
-                          b.status
-                        )
-                          ? "bg-green-100 text-green-700 border border-green-200 hover:bg-green-100"
-                          : b.status === "PENDING"
-                          ? "bg-yellow-100 text-yellow-700 border border-yellow-200 hover:bg-yellow-100"
-                          : "bg-red-100 text-red-700 border border-red-200 hover:bg-red-100"
-                      }`}
+                  <td className="py-4 px-4 text-center">
+                    <span
+                      className={`px-3 py-1 rounded-full text-xs font-semibold ${statusColor(
+                        b.status
+                      )}`}
                     >
                       {b.status}
-                    </Badge>
+                    </span>
+                  </td>
+                  <td className="py-4 px-4 text-center">
+                    <Link href={`/admin/bookings/${b.id}`}>
+                      <Button variant="ghost" size="icon">
+                        <Eye className="w-4 h-4" />
+                      </Button>
+                    </Link>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-      ) : (
-        <p className="text-muted-foreground text-center py-8">
-          Chưa có lịch đặt phòng nào.
-        </p>
-      )}
-    </Card>
-  );
-};
 
-export default RoomBookingsTab;
+        <div className="flex justify-between items-center mt-6">
+          <p className="text-sm text-muted-foreground">
+            Page {page} / {pageCount}
+          </p>
+
+          <div className="flex gap-3">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page === 1}
+              onClick={() => setPage(page - 1)}
+              className="flex gap-1"
+            >
+              <ChevronLeft className="w-4 h-4" /> Prev
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page === pageCount}
+              onClick={() => setPage(page + 1)}
+              className="flex gap-1"
+            >
+              Next <ChevronRight className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+      </Card>
+    </div>
+  );
+}

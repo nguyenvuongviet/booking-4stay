@@ -150,8 +150,13 @@ export default function SignUpModal({
               </button>
             </div>
 
-            <div className="text-center mb-4">
+            <div className="text-center mb-1">
               <h2 className="text-3xl elegant-heading text-primary">SIGN UP</h2>
+              {apiError && (
+                <p className="text-destructive text-left text-sm mt-4 elegant-subheading">
+                  {apiError}
+                </p>
+              )}
             </div>
 
             <form className="space-y-1" onSubmit={handleSignUp}>

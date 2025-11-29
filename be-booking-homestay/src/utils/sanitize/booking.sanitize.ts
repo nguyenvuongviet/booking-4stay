@@ -18,17 +18,31 @@ function sanitize(booking: any) {
     createdAt: booking.createdAt,
     updatedAt: booking.updatedAt,
     cancelReason: booking.cancelReason ?? null,
+    isReview: booking.isReview,
 
+    guestInfo: {
+      fullName: booking.guestFullName,
+      email: booking.guestEmail,
+      phoneNumber: booking.guestPhoneNumber,
+      specialRequest: booking.specialRequest ?? null,
+    },
+    review: booking.reviews
+      ? {
+          id: booking.reviews.id,
+          rating: Number(booking.reviews.rating),
+          comment: booking.reviews.comment,
+          createdAt: booking.reviews.createdAt,
+        }
+      : null,
     user: user
       ? {
           id: user.id,
-          name: `${user.firstName} ${user.lastName}`,
+          name: `${user.firstName} ${user.lastName}`.trim(),
           email: user.email,
           phoneNumber: user.phoneNumber,
           avatar: buildImageUrl(user.avatar),
         }
       : undefined,
-
     room: sanitizeRoom(room),
   };
 }

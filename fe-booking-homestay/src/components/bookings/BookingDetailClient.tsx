@@ -23,7 +23,7 @@ export default function BookingDetailClient({
         const res = await get_booking_detail(bookingId);
         console.log("Booking detail API response:", res);
 
-        const data = res.data?.booking[0];
+        const data = res.data;
         if (!data) throw new Error("Không tìm thấy thông tin đặt phòng.");
         setBooking(data);
       } catch (err: any) {
@@ -83,9 +83,7 @@ export default function BookingDetailClient({
       </header>
 
       <div className="max-w-6xl mx-auto">
-        <h1 className="text-4xl elegant-heading mb-6">
-          Booking Details
-        </h1>
+        <h1 className="text-4xl elegant-heading mb-6">Booking Details</h1>
         <BookingDetail booking={booking} />
       </div>
     </div>

@@ -17,6 +17,7 @@ import MapRooms from "./MapRoom";
 import { PhotoGalleryModal } from "./PhotoGalleryModal";
 import { ReviewList } from "./ReviewList";
 import { getAmenityIcon } from "@/constants/amenity-icons";
+import { get_unavailable_dates } from "@/services/bookingApi";
 
 interface RoomDetailClientProps {
   roomId: string;
@@ -39,6 +40,7 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
   const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
   const [showFullOverview, setShowFullOverview] = useState(false);
+  const [soldOutDates, setSoldOutDates] = useState<Date[]>([]);
 
   // Refs
   const checkInRef = useRef<HTMLInputElement>(null);
@@ -49,8 +51,10 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
     (async () => {
       try {
         setLoading(true);
-        const data = await room_detail(roomId);
-        setRoom(data);
+        const dataRoom = await room_detail(roomId);
+        const dataDate = await get_unavailable_dates(roomId);
+        setRoom(dataRoom);
+        setSoldOutDates(dataDate);
       } catch (error) {
         console.error("Fetch room failed:", error);
       } finally {
@@ -73,9 +77,6 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
     if (ch) setChildren(Number(ch));
     setAvailable(status ? status === "Available" : true);
   }, [searchParams]);
-
-  // Utils
-  const getGuestDisplayText = () => `${adults + children} Guests`;
 
   const updateURL = (params: Record<string, string>) => {
     router.replace(
@@ -370,24 +371,28 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
                 </div>
               )}
               {/* Info    */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                <div className="relative md:col-span-1">
+              <div className="grid grid-cols-1 md:grid-cols-7 gap-2">
+                <div className="relative md:col-span-4">
                   <DateRangePicker
                     value={
                       checkIn && checkOut
                         ? { from: checkIn, to: checkOut }
                         : undefined
                     }
+                    soldOutDates={(soldOutDates || []).map((d) => new Date(d))}
                     onChange={(range) => {
                       setCheckIn(range?.from ?? null);
                       setCheckOut(range?.to ?? null);
+                      if (range?.from && range?.to) {
+                        checkRoomAvailable(range.from, range.to);
+                      }
                     }}
                   />
                 </div>
-                <div className="relative md:col-span-1">
+                <div className="relative md:col-span-3">
                   <Users
                     className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground"
-                    size={20}
+                    size={16}
                   />
                   <GuestPicker
                     adults={adults}

@@ -29,7 +29,11 @@ interface Props {
   onChange: (val: any) => void;
 }
 
-export function LocationSelector({ value, onChange }: Props) {
+export function LocationSelector({
+  value,
+  onChange,
+  autoFocus,
+}: Props & { autoFocus?: boolean }) {
   const {
     value: loc,
     update,
@@ -47,6 +51,7 @@ export function LocationSelector({ value, onChange }: Props) {
   });
   const [searchValue, setSearchValue] = useState("");
   useEffect(() => {
+    if (!autoFocus) return;
     if (value) {
       if (value.countryId && !value.provinceId) {
         setOpenStates((prev) => ({ ...prev, provinceId: true }));
@@ -56,7 +61,7 @@ export function LocationSelector({ value, onChange }: Props) {
         setOpenStates((prev) => ({ ...prev, wardId: true }));
       }
     }
-  }, [value]);
+  }, [value, autoFocus]);
 
   const handleChange = (key: keyof typeof loc, v: any) => {
     update(key, v);

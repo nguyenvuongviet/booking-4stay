@@ -27,7 +27,7 @@ export class RoomService {
 
   async findAll(query: RoomFilterDto) {
     let {
-      province,
+      search,
       minPrice,
       maxPrice,
       adults,
@@ -41,7 +41,7 @@ export class RoomService {
       pageSize = 12,
     } = query;
 
-    province = province?.trim();
+    search = search?.trim();
     sortBy = SORT_BY.has(sortBy ?? '') ? sortBy! : 'createdAt';
     sortOrder = SORT_ORDER.has(sortOrder ?? '') ? sortOrder! : 'desc';
     page = Math.max(1, Number(page) || 1);
@@ -63,16 +63,16 @@ export class RoomService {
     }
 
     let provinceId: number | undefined;
-    if (province) {
+    if (search) {
       const exists = await this.prisma.location_provinces.findFirst({
         where: {
-          name: { contains: province },
+          name: { contains: search },
           isDeleted: false,
         },
         select: { id: true },
       });
       if (!exists) {
-        throw new NotFoundException(`Không tìm thấy province = "${province}"`);
+        throw new NotFoundException(`Không tìm thấy province = "${search}"`);
       }
       provinceId = exists.id;
     }
@@ -348,5 +348,37 @@ export class RoomService {
       deleted: images.length,
       image: images.map((x) => x.imageUrl),
     };
+  }
+
+  async setMainImage(roomId: number, imageId: number) {
+    await this.roomHelper.ensureRoomExists(roomId);
+    const exists = await this.prisma.room_images.findFirst({
+      where: { id: imageId, roomId },
+    });
+    if (!exists) throw new BadRequestException('Ảnh không tồn tại.');
+
+    await this.prisma.room_images.updateMany({
+      where: { roomId, isMain: true },
+      data: { isMain: false },
+    });
+    await this.prisma.room_images.update({
+      where: { id: imageId },
+      data: { isMain: true },
+    });
+
+    return { message: 'Đặt ảnh chính thành công', imageId };
+  }
+
+  async updateImageOrder(roomId: number, order: number[]) {
+    await this.roomHelper.ensureRoomExists(roomId);
+    let pos = 1;
+    for (const id of order) {
+      await this.prisma.room_images.update({
+        where: { id },
+        data: { position: pos++ },
+      });
+    }
+
+    return { message: 'Cập nhật thứ tự ảnh thành công', order };
   }
 }

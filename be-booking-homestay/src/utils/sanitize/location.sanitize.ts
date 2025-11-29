@@ -11,10 +11,12 @@ function sanitize(location: any) {
     countryId: location.countryId ?? null,
     provinceId: location.provinceId ?? null,
     districtId: location.districtId ?? null,
+    wardId: location.wardId ?? null,
 
     country: location.country ?? null,
     province: location.province ?? null,
     district: location.district ?? null,
+    ward: location.ward ?? null,
 
     imageUrl: buildImageUrl(location.imageUrl),
   };

@@ -60,7 +60,7 @@ export function RoomCard({ room, onDelete }: any) {
           </div>
           <button
             onClick={handleDeleteClick}
-            className="bottom-3 right-3 p-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition-all flex items-center gap-1 cursor-pointer"
+            className="bottom-3 right-3 p-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-200 transition-all flex items-center gap-1 cursor-pointer"
           >
             <Trash2 className="w-4 h-4" />
             <span className="text-sm font-medium">Xóa</span>

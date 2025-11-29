@@ -1,19 +1,18 @@
 import { BookingCancelSection } from "@/components/bookings/BookingCancelSection";
 import { Booking } from "@/models/Booking";
+import { post_review } from "@/services/bookingApi";
 import { differenceInDays, format } from "date-fns";
 import { vi } from "date-fns/locale";
 import {
   CalendarDays,
-  CheckCircle,
   Clock,
   DollarSign,
-  Users,
+  Users
 } from "lucide-react";
 import { useState } from "react";
+import toast from "react-hot-toast";
 import { BookingStatusBadge } from "./BookingStatusBadge";
 import { ReviewSection } from "./ReviewSection";
-import { post_review } from "@/services/bookingApi";
-import toast from "react-hot-toast";
 
 export const BookingDetail = ({
   booking: initialBooking,
@@ -45,11 +44,9 @@ export const BookingDetail = ({
   ) => {
     try {
       const resp = await post_review(bookingId, rating, comment);
-
-      // Sau khi submit thành công => đổi UI sang "Xem lại review"
       setBooking((prev) => ({
         ...prev,
-        review: resp, // nếu API trả về review
+        review: resp, 
       }));
 
       toast.success("Review submitted successfully!");
@@ -73,13 +70,11 @@ export const BookingDetail = ({
       {/* Ảnh phòng */}
       <div className="relative">
         <div className="grid grid-cols-4 gap-2 h-[400px]">
-          {" "}
-          {/* cố định height */}
           <div className="col-span-2 row-span-2 overflow-hidden rounded-l-lg">
             <img
               src={booking.room?.images?.main || "/placeholder.svg"}
               alt="Hotel main"
-              className="w-full h-full object-cover" // scale vừa container
+              className="w-full h-full object-cover" 
             />
           </div>
           {booking.room?.images?.gallery
