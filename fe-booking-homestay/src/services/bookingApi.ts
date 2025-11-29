@@ -115,3 +115,17 @@ export const get_review_bookingId = async (
     throw error;
   } 
 };
+
+export const get_unavailable_dates = async (
+  roomId: number | string,
+) => {
+  try {
+    const resp = await api.get(`/bookings/unavailable-days`, {
+      params: { roomId },
+    });
+    return resp.data?.data?.days || []; // trả về mảng ngày
+  } catch (error) {
+    console.error("Get unavailable dates error:", error);
+    throw error;
+  }
+ }

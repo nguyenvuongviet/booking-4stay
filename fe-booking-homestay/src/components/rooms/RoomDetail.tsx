@@ -17,6 +17,7 @@ import MapRooms from "./MapRoom";
 import { PhotoGalleryModal } from "./PhotoGalleryModal";
 import { ReviewList } from "./ReviewList";
 import { getAmenityIcon } from "@/constants/amenity-icons";
+import { get_unavailable_dates } from "@/services/bookingApi";
 
 interface RoomDetailClientProps {
   roomId: string;
@@ -39,24 +40,21 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
   const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
   const [showFullOverview, setShowFullOverview] = useState(false);
+  const [soldOutDates, setSoldOutDates] = useState<Date[]>([]);
 
   // Refs
   const checkInRef = useRef<HTMLInputElement>(null);
   const checkOutRef = useRef<HTMLInputElement>(null);
 
-const soldOutDates: Date[] = [
-    new Date(2025, 10, 28),
-    new Date(2025, 10, 29),
-    new Date(2025, 11, 2),
-  ];
-  
   // fetch data
   useEffect(() => {
     (async () => {
       try {
         setLoading(true);
-        const data = await room_detail(roomId);
-        setRoom(data);
+        const dataRoom = await room_detail(roomId);
+        const dataDate = await get_unavailable_dates(roomId);
+        setRoom(dataRoom);
+        setSoldOutDates(dataDate);
       } catch (error) {
         console.error("Fetch room failed:", error);
       } finally {
@@ -381,7 +379,7 @@ const soldOutDates: Date[] = [
                         ? { from: checkIn, to: checkOut }
                         : undefined
                     }
-                    soldOutDates={soldOutDates}
+                    soldOutDates={(soldOutDates || []).map((d) => new Date(d))}
                     onChange={(range) => {
                       setCheckIn(range?.from ?? null);
                       setCheckOut(range?.to ?? null);
