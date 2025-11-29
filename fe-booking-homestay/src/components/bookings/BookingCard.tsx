@@ -32,7 +32,7 @@ export function BookingCard({ booking }: BookingCardProps) {
       className="overflow-hidden hover:shadow-xl transition-all duration-500 hover:cursor-pointer"
     >
       <div className="flex">
-        <div className="relative w-56 h-56 flex-shrink-0">
+        <div className="relative w-56 h-56 shrink-0">
           <Image
             src={booking.room?.images?.main || "/placeholder.svg"}
             alt={booking.room.name}

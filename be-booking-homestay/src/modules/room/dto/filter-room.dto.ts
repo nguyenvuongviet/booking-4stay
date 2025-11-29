@@ -13,13 +13,6 @@ import {
 import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
 
 export class RoomFilterDto extends PaginationQueryDto {
-  @ApiPropertyOptional({
-    description: 'Lọc theo province (tỉnh/thành)',
-  })
-  @IsOptional()
-  @IsString()
-  province?: string;
-
   @ApiPropertyOptional({ description: 'Giá tối thiểu' })
   @IsOptional()
   @Type(() => Number)
