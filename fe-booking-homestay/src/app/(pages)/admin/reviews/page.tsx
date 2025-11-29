@@ -15,7 +15,7 @@ import {
   Trash2,
 } from "lucide-react";
 import Link from "next/link";
-import { StarRating } from "../_components/StarRating";
+import { StarRating } from "../_components/star-rating";
 import { useReviewList } from "./_hooks/useReviewList";
 
 export default function ReviewsPage() {

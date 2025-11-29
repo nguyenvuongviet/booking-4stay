@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import type { Room } from "@/types/room";
 import { useEffect } from "react";
-import { LocationSelector } from "../../_components/LocationSelector";
+import { LocationSelector } from "../../_components/location-selector";
 import { useRoomForm } from "../_hooks/useRoomForm";
 
 interface Props {
