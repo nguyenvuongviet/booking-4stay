@@ -31,7 +31,7 @@ export interface User {
   provider: "LOCAL" | string;
   isActive: boolean;
   isVerified: boolean;
-  createdAt: Date;
+  createdAt: string;
 }
 
 export interface CreateUserDto {
@@ -54,3 +54,10 @@ export interface UpdateUserDto {
   gender?: "MALE" | "FEMALE" | "OTHER" | string;
   isActive?: boolean;
 }
+
+export type UserLoyaltyFormData = {
+  name: string;
+  email: string;
+  points: number;
+  level: string;
+};

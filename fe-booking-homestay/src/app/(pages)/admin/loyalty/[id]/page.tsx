@@ -1,114 +1,68 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, Edit2, Gift } from "lucide-react";
 import Link from "next/link";
+import { getUserById } from "@/services/admin/usersApi";
+import { useToast } from "@/components/ui/use-toast";
+import { User } from "@/types/user";
+import { get_booking } from "@/services/bookingApi";
+import { Booking } from "@/models/Booking";
+import { format } from "date-fns";
 
 export default function LoyaltyMemberDetailsPage({
   params,
 }: {
-  params: { id: string };
+  params: { id: number };
 }) {
-  const [member] = useState({
-    id: params.id,
-    name: "Nguyễn Văn A",
-    email: "nguyenvana@email.com",
-    phone: "0901234567",
-    tier: "Gold",
-    points: 5000,
-    bookings: 15,
-    totalSpent: 45000000,
-    joinDate: "2024-01-15",
-    lastBooking: "2024-12-20",
-    avatar: "/placeholder.svg",
-    address: "123 Đường ABC, Hà Nội",
-    pointsHistory: [
-      {
-        id: 1,
-        type: "booking",
-        description: "Đặt phòng tại Hà Nội",
-        points: 500,
-        date: "2024-12-20",
-      },
-      {
-        id: 2,
-        type: "review",
-        description: "Viết đánh giá",
-        points: 50,
-        date: "2024-12-18",
-      },
-      {
-        id: 3,
-        type: "referral",
-        description: "Giới thiệu bạn bè",
-        points: 200,
-        date: "2024-12-15",
-      },
-      {
-        id: 4,
-        type: "booking",
-        description: "Đặt phòng tại Đà Nẵng",
-        points: 600,
-        date: "2024-12-10",
-      },
-    ],
-    bookingHistory: [
-      {
-        id: 1,
-        property: "Homestay Hà Nội",
-        checkIn: "2024-12-20",
-        checkOut: "2024-12-22",
-        nights: 2,
-        totalPrice: 1000000,
-        pointsEarned: 500,
-      },
-      {
-        id: 2,
-        property: "Homestay Đà Nẵng",
-        checkIn: "2024-12-10",
-        checkOut: "2024-12-12",
-        nights: 2,
-        totalPrice: 1200000,
-        pointsEarned: 600,
-      },
-      {
-        id: 3,
-        property: "Homestay Hạ Long",
-        checkIn: "2024-11-25",
-        checkOut: "2024-11-27",
-        nights: 2,
-        totalPrice: 900000,
-        pointsEarned: 450,
-      },
-    ],
-    rewards: [
-      {
-        id: 1,
-        name: "Giảm giá 10%",
-        pointsRequired: 1000,
-        redeemed: true,
-        redeemedDate: "2024-12-15",
-      },
-      {
-        id: 2,
-        name: "1 đêm miễn phí",
-        pointsRequired: 2000,
-        redeemed: false,
-        redeemedDate: null,
-      },
-      {
-        id: 3,
-        name: "Upgrade phòng",
-        pointsRequired: 1500,
-        redeemed: false,
-        redeemedDate: null,
-      },
-    ],
-  });
+  const { toast } = useToast();
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [bookings, setBookings] = useState<Booking[]>([]);
+
+  async function fetchUsers() {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await getUserById(params.id as unknown as number);
+      setUser(data);
+    } catch (err: any) {
+      const msg =
+        err?.response?.data?.message ||
+        err?.message ||
+        "Không thể tải danh sách người dùng";
+      setError(msg);
+      toast({
+        variant: "destructive",
+        title: "Lỗi tải dữ liệu",
+        description: msg,
+      });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const fetchBookings = async () => {
+    try {
+      const res = await get_booking({ page: 1, pageSize: 999 });
+      const items = res.bookings || [];
+      setBookings((prev) => ( 1 ? items : [...prev, ...items]));
+    } catch (err) {
+      console.error("Fetch booking history error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchUsers();
+    fetchBookings();
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -120,8 +74,10 @@ export default function LoyaltyMemberDetailsPage({
           </Button>
         </Link>
         <div className="flex-1">
-          <h1 className="text-3xl font-bold text-warm-900">{member.name}</h1>
-          <p className="text-warm-600">{member.email}</p>
+          <h1 className="text-3xl font-bold text-warm-900">
+            {user?.firstName} {user?.lastName}
+          </h1>
+          <p className="text-warm-600">{user?.email}</p>
         </div>
         <Button variant="outline" size="sm">
           <Edit2 className="w-4 h-4 mr-2" />
@@ -134,23 +90,26 @@ export default function LoyaltyMemberDetailsPage({
         <Card className="p-4 border-warm-200">
           <p className="text-sm text-warm-600 mb-1">Cấp độ</p>
           <Badge className="bg-yellow-100 text-yellow-800 text-base py-1 px-2">
-            {member.tier}
+            {user?.loyalty_program.levels.name}
           </Badge>
         </Card>
         <Card className="p-4 border-warm-200">
           <p className="text-sm text-warm-600 mb-1">Điểm hiện tại</p>
           <p className="text-2xl font-bold text-warm-900">
-            {member.points.toLocaleString()}
+            {user?.loyalty_program.totalPoint.toLocaleString()}
           </p>
         </Card>
         <Card className="p-4 border-warm-200">
           <p className="text-sm text-warm-600 mb-1">Lượt đặt</p>
-          <p className="text-2xl font-bold text-warm-900">{member.bookings}</p>
+          <p className="text-2xl font-bold text-warm-900">
+            {user?.loyalty_program.totalBooking}
+          </p>
         </Card>
         <Card className="p-4 border-warm-200">
           <p className="text-sm text-warm-600 mb-1">Tổng chi tiêu</p>
           <p className="text-2xl font-bold text-warm-900">
-            {(member.totalSpent / 1000000).toFixed(1)}M VND
+            {((user?.loyalty_program.totalPoint || 0) / 1000000).toFixed(1)}M
+            VND
           </p>
         </Card>
       </div>
@@ -186,26 +145,26 @@ export default function LoyaltyMemberDetailsPage({
                   </tr>
                 </thead>
                 <tbody>
-                  {member.pointsHistory.map((history) => (
+                  {bookings.map((history) => (
                     <tr
                       key={history.id}
                       className="border-b border-warm-100 hover:bg-warm-50"
                     >
                       <td className="py-3 px-4">
                         <Badge className="bg-warm-100 text-warm-800">
-                          {history.type === "booking" && "Đặt phòng"}
+                          {/* {history.type === "booking" && "Đặt phòng"}
                           {history.type === "review" && "Đánh giá"}
-                          {history.type === "referral" && "Giới thiệu"}
+                          {history.type === "referral" && "Giới thiệu"} */}
                         </Badge>
                       </td>
                       <td className="py-3 px-4 text-warm-700">
-                        {history.description}
+                        {history.room.name}
                       </td>
                       <td className="py-3 px-4 font-semibold text-warm-900">
-                        +{history.points}
+                        +{history.totalAmount / 1000}
                       </td>
                       <td className="py-3 px-4 text-warm-700">
-                        {history.date}
+                        {format(history.createdAt, "dd/MM/yyyy")}
                       </td>
                     </tr>
                   ))}
@@ -243,13 +202,13 @@ export default function LoyaltyMemberDetailsPage({
                   </tr>
                 </thead>
                 <tbody>
-                  {member.bookingHistory.map((booking) => (
+                  {bookings.map((booking) => (
                     <tr
                       key={booking.id}
                       className="border-b border-warm-100 hover:bg-warm-50"
                     >
                       <td className="py-3 px-4 font-medium text-warm-900">
-                        {booking.property}
+                        {booking.room.name}
                       </td>
                       <td className="py-3 px-4 text-warm-700">
                         {booking.checkIn}
@@ -258,13 +217,13 @@ export default function LoyaltyMemberDetailsPage({
                         {booking.checkOut}
                       </td>
                       <td className="py-3 px-4 text-warm-700">
-                        {booking.nights}
+                        {/* {booking.checkOut - booking.checkIn} đêm */}
                       </td>
                       <td className="py-3 px-4 font-semibold text-warm-900">
-                        {booking.totalPrice.toLocaleString()} VND
+                        {booking.totalAmount.toLocaleString()} VND
                       </td>
                       <td className="py-3 px-4 font-semibold text-warm-900">
-                        +{booking.pointsEarned}
+                        +{booking.totalAmount / 1000}
                       </td>
                     </tr>
                   ))}
@@ -277,37 +236,40 @@ export default function LoyaltyMemberDetailsPage({
         {/* Rewards Tab */}
         <TabsContent value="rewards" className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {member.rewards.map((reward) => (
-              <Card key={reward.id} className="p-6 border-warm-200">
-                <div className="flex items-start justify-between mb-3">
-                  <Gift className="w-6 h-6 text-warm-600" />
-                  {reward.redeemed && (
-                    <Badge className="bg-green-100 text-green-800">
-                      Đã dùng
-                    </Badge>
-                  )}
-                </div>
-                <h3 className="font-semibold text-warm-900 mb-2">
-                  {reward.name}
-                </h3>
-                <p className="text-sm text-warm-600 mb-4">
-                  Yêu cầu: {reward.pointsRequired.toLocaleString()} điểm
-                </p>
-                {reward.redeemed ? (
-                  <p className="text-xs text-warm-600">
-                    Dùng vào: {reward.redeemedDate}
-                  </p>
-                ) : (
-                  <Button
-                    size="sm"
-                    className="w-full bg-warm-700 hover:bg-warm-800"
-                    disabled={member.points < reward.pointsRequired}
-                  >
-                    Đổi thưởng
-                  </Button>
-                )}
-              </Card>
-            ))}
+            {/* {member.rewards.map((reward) =>  */}(
+            <Card
+              // key={reward.id}
+              className="p-6 border-warm-200"
+            >
+              <div className="flex items-start justify-between mb-3">
+                <Gift className="w-6 h-6 text-warm-600" />
+                {/* {reward.redeemed && ( */}
+                <Badge className="bg-green-100 text-green-800">Đã dùng</Badge>
+                {/* )} */}
+              </div>
+              <h3 className="font-semibold text-warm-900 mb-2">
+                {/* {reward.name} */}
+              </h3>
+              <p className="text-sm text-warm-600 mb-4">
+                Yêu cầu:
+                {/* {reward.pointsRequired.toLocaleString()} điểm */}
+              </p>
+              {/* {reward.redeemed ? ( */}
+              <p className="text-xs text-warm-600">
+                Dùng vào:
+                {/* {reward.redeemedDate} */}
+              </p>
+              ) : (
+              <Button
+                size="sm"
+                className="w-full bg-warm-700 hover:bg-warm-800"
+                // disabled={member.points < reward.pointsRequired}
+              >
+                Đổi thưởng
+              </Button>
+              {/* )} */}
+            </Card>
+            ){/* )} */}
           </div>
         </TabsContent>
 
@@ -317,25 +279,28 @@ export default function LoyaltyMemberDetailsPage({
             <div className="space-y-4">
               <div>
                 <p className="text-sm text-warm-600 mb-1">Email</p>
-                <p className="text-warm-900">{member.email}</p>
+                <p className="text-warm-900">{user?.email}</p>
               </div>
               <div>
                 <p className="text-sm text-warm-600 mb-1">Số điện thoại</p>
-                <p className="text-warm-900">{member.phone}</p>
+                <p className="text-warm-900">{user?.phoneNumber}</p>
               </div>
               <div>
                 <p className="text-sm text-warm-600 mb-1">Địa chỉ</p>
-                <p className="text-warm-900">{member.address}</p>
+                <p className="text-warm-900">{user?.provider}</p>
               </div>
               <div>
                 <p className="text-sm text-warm-600 mb-1">Ngày tham gia</p>
-                <p className="text-warm-900">{member.joinDate}</p>
+                <p className="text-warm-900">{user?.createdAt}</p>
               </div>
               <div>
                 <p className="text-sm text-warm-600 mb-1">
                   Lần đặt phòng gần nhất
                 </p>
-                <p className="text-warm-900">{member.lastBooking}</p>
+                <p className="text-warm-900">
+                  29/11/2025
+                  {/* {user?.} */}
+                </p>
               </div>
             </div>
           </Card>

@@ -28,6 +28,7 @@ export default function CheckoutPage() {
   const [lastNameError, setLastNameError] = useState("");
   const router = useRouter();
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cash");
+  const [specialRequests, setSpecialRequests] = useState("");
 
   useEffect(() => {
     if (user) {
@@ -56,6 +57,10 @@ export default function CheckoutPage() {
         checkOut: co!,
         adults: Number(ad),
         children: Number(ch),
+        guestFullName: `${firstName} ${lastName}`,
+        guestEmail: emailInput,
+        guestPhoneNumber: phone,
+        specialRequest: specialRequests,
       });
 
       //thanh toán qua VNPAY
@@ -122,6 +127,7 @@ export default function CheckoutPage() {
     pricePerNight: room?.price,
     hotelImage: room?.images?.main,
   };
+  const totalAmount = bookingData.pricePerNight * bookingData.nights;
 
   return (
     <div className="min-h-screen bg-background">
@@ -450,6 +456,8 @@ export default function CheckoutPage() {
               <textarea
                 className="p-4 border border-border rounded-lg text-sm px-4 py-3 resize-none h-24"
                 placeholder="Please write your request..."
+                value={specialRequests}
+                onChange={(e) => setSpecialRequests(e.target.value)}
               ></textarea>
             </Card>
           </div>
@@ -529,16 +537,21 @@ export default function CheckoutPage() {
               </div>
 
               {/* Total */}
-              <div className="border-t pt-4">
+              <div className="border-t pt-4 space-y-2">
                 <div className="flex justify-between items-baseline">
-                  <span className="text-lg font-semibold text-foreground">
+                  <span className="text-lg elegant-sans text-foreground">
                     Total
                   </span>
-                  <span className="text-xl font-bold text-foreground">
-                    đ{" "}
-                    {(
-                      bookingData.pricePerNight * bookingData.nights
-                    ).toLocaleString()}
+                  <span className="text-lg elegant-sans text-foreground">
+                    đ{totalAmount.toLocaleString()}
+                  </span>
+                </div>
+                <div className="flex justify-between items-baseline">
+                  <span className="text-sm text-foreground">
+                    Points earned
+                  </span>
+                  <span className="text-sm text-green-600">
+                    +{(totalAmount / 1000).toLocaleString()}
                   </span>
                 </div>
               </div>

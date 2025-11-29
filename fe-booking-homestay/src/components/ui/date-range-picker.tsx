@@ -15,24 +15,52 @@ import { format, addMonths } from "date-fns";
 interface DateRangePickerProps {
   value?: DateRange;
   onChange?: (range: DateRange | undefined) => void;
+  soldOutDates?: Date[];
+  autoClose?: boolean;
 }
 
 export default function DateRangePicker({
   value,
   onChange,
+  soldOutDates,
+  autoClose = true,
 }: DateRangePickerProps) {
   const [open, setOpen] = React.useState(false);
   const [selectedRange, setSelectedRange] = React.useState<
     DateRange | undefined
   >(value);
-
-  const handleSelect = (range: DateRange | undefined) => {
-    setSelectedRange(range);
-    onChange?.(range);
-  };
+  const [currentMonth, setCurrentMonth] = React.useState<Date>(new Date());
 
   const formatLabel = (date?: Date) =>
     date ? format(date, "MMM dd, yyyy") : "";
+
+  const handlePick = React.useCallback(
+    (day?: Date, range?: DateRange) => {
+      // Nếu gọi từ onDayClick
+      if (day) {
+        // Nếu chưa chọn gì hoặc đã chọn xong 1 range → bắt đầu range mới
+        if (!selectedRange || (selectedRange.from && selectedRange.to)) {
+          const newRange: DateRange = { from: day, to: undefined };
+          setSelectedRange(newRange);
+          onChange?.(newRange);
+          return;
+        }
+
+        // Nếu đang chọn dở (from đã có, to chưa có)
+        const isSameDay = selectedRange.from!.getTime() === day.getTime();
+        const newRange: DateRange = isSameDay
+          ? { from: selectedRange.from, to: undefined }
+          : { from: selectedRange.from, to: day };
+
+        setSelectedRange(newRange);
+        onChange?.(newRange);
+
+        if (autoClose && newRange.from && newRange.to) setOpen(false);
+        return;
+      }
+    },
+    [selectedRange, onChange, autoClose]
+  );
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -45,10 +73,19 @@ export default function DateRangePicker({
             className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground"
             size={20}
           />
-          <div className="ml-6 elegant-subheading truncate">{selectedRange?.from
-            ? formatLabel(selectedRange.from)
-            : <span className="text-muted">Check-in</span>}<span className="text-muted"> - </span>{" "} 
-          {selectedRange?.to ? formatLabel(selectedRange.to) : <span className="text-muted">Check-out</span>}</div>
+          <div className="ml-6 elegant-subheading truncate">
+            {selectedRange?.from ? (
+              formatLabel(selectedRange.from)
+            ) : (
+              <span className="text-muted">Check-in</span>
+            )}
+            <span className="text-muted"> - </span>{" "}
+            {selectedRange?.to ? (
+              formatLabel(selectedRange.to)
+            ) : (
+              <span className="text-muted">Check-out</span>
+            )}
+          </div>
         </Button>
       </PopoverTrigger>
 
@@ -59,13 +96,25 @@ export default function DateRangePicker({
               key={i}
               mode="range"
               selected={selectedRange}
-              onSelect={handleSelect}
-              month={
-                selectedRange?.from
-                  ? addMonths(selectedRange.from, i)
-                  : addMonths(new Date(), i)
+              onDayClick={(day) => handlePick(day)}
+              onSelect={(range) => handlePick(undefined, range)}
+              month={i === 0 ? currentMonth : addMonths(currentMonth, 1)}
+              onMonthChange={
+                (date) =>
+                  i === 0
+                    ? setCurrentMonth(date) // prev bên trái
+                    : setCurrentMonth(addMonths(date, -1)) // next bên phải
               }
-              disabled={{ before: new Date() }}
+              disabled={[...(soldOutDates || []), { before: new Date() }]}
+              modifiers={{
+                soldOut: (date) =>
+                  (soldOutDates || []).some(
+                    (d) => d.toDateString() === date.toDateString()
+                  ),
+              }}
+              modifiersClassNames={{
+                soldOut: "sold-out-day",
+              }}
               showOutsideDays={false}
               className={`
                 [&_.rdp-day_selected]:bg-primary 

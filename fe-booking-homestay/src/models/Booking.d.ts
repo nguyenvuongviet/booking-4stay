@@ -1,3 +1,4 @@
+import { is } from 'date-fns/locale';
 import { Room } from "./Room";
 
 interface User {
@@ -7,9 +8,17 @@ interface User {
   avatar: string;
 }
 
+export type BookingStatus =
+  | "PENDING"
+  | "CONFIRMED"
+  | "CANCELLED"
+  | "COMPLETED"
+  | "CHECKED_OUT"
+  | "REDEEMED";
+
 export interface Booking {
   id: number | string;
-  status: "PENDING" | "CONFIRMED" | "CANCELLED" | "CHECKED_OUT" ;
+  status: BookingStatus;
   checkIn: string;
   checkOut: string;
   adults: number;
@@ -18,6 +27,17 @@ export interface Booking {
   createdAt: string;
   updatedAt: string;
   cancelReason: string | null;
+  guestFullName: string;
+  guestEmail: string;
+  guestPhoneNumber: string;
+  specialRequest: string | null;
+  review: {
+    id: number | string;
+    rating: number;
+    comment: string;
+    createdAt: string;
+  } | null;
+  isReview: boolean;
   user: User;
   room: Room;
 }

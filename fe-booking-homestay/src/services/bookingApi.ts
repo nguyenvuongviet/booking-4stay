@@ -6,6 +6,10 @@ export const create_booking = async (data: {
   checkOut: string;
   adults: number;
   children: number;
+  guestFullName: string;
+  guestEmail: string;
+  guestPhoneNumber: string;
+  specialRequest?: string;
 }) => {
   try {
     const resp = await api.post("/bookings", data);
@@ -19,7 +23,14 @@ export const create_booking = async (data: {
 export const get_booking = async (params?: any) => {
   try {
     const resp = await api.get(`/bookings/me`, { params });
-    return resp.data || {};
+    const mainData = resp.data?.data || {};
+
+    return {
+      bookings: Array.isArray(mainData.items) ? mainData.items : [],
+      total: mainData.total ?? 0,
+      page: mainData.page ?? 1,
+      pageSize: mainData.pageSize ?? 6,
+    };
   } catch (error) {
     console.error("Get booking detail error:", error);
     throw error;
@@ -75,13 +86,13 @@ export const verify_vnpay_return = async (query: any) => {
   }
 };
 
-export const post_review = async(
+export const post_review = async (
   bookingId: number | string,
   rating: number,
-  comment: string,
+  comment: string
 ) => {
   try {
-    const resp = await api.post("/review", { 
+    const resp = await api.post("/review", {
       bookingId,
       rating,
       comment,
@@ -91,4 +102,16 @@ export const post_review = async(
     console.error("Post review error:", error);
     throw error;
   }
-}
+};
+
+export const get_review_bookingId = async (
+  roomId: number | string,
+) => {
+  try {
+    const resp = await api.get(`/review/room/${roomId}`); 
+    return resp.data || {};
+  } catch (error) {
+    console.error("Get reviews by room error:", error);
+    throw error;
+  } 
+};
