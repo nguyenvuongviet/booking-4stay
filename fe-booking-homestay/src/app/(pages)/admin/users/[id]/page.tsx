@@ -254,7 +254,6 @@ export default function UserDetailPage() {
 
   return (
     <div className="space-y-6 relative pb-20">
-      {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-4">
           <Link href="/admin/users">
@@ -280,10 +279,9 @@ export default function UserDetailPage() {
             Chỉnh sửa
           </Button>
           <Button
-            variant="destructive"
             onClick={handleDelete}
             disabled={deleting}
-            className="gap-2"
+            className="gap-2 text-white bg-red-500 hover:bg-red-600"
           >
             <Trash2 className="w-4 h-4" />
             {deleting ? "Đang xóa..." : "Xóa"}
@@ -291,7 +289,6 @@ export default function UserDetailPage() {
         </div>
       </div>
 
-      {/* Main Card */}
       <Card className="p-6 border-warm-200">
         <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
           <div className="relative group w-fit">
@@ -322,7 +319,6 @@ export default function UserDetailPage() {
             />
           </div>
 
-          {/* Thông tin người dùng */}
           <div className="flex-1">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div>
@@ -380,7 +376,6 @@ export default function UserDetailPage() {
           </div>
         </div>
 
-        {/* Thông tin chi tiết */}
         <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <LabelValue
             icon={UserIcon}
@@ -392,14 +387,16 @@ export default function UserDetailPage() {
             label="Tên"
             value={user.lastName ?? "–"}
           />
-          <LabelValue label="Giới tính" value={user.gender ?? "–"} />
+          <LabelValue label="Giới tính" value={user.gender ?? "-"} />
           <LabelValue label="Ngày sinh" value={formatDate(user.dateOfBirth)} />
-          <LabelValue label="Quốc gia" value={user.country ?? "–"} />
-          <LabelValue label="Cấp độ Loyalty" value={user.loyaltyLevel ?? "–"} />
+          <LabelValue label="Quốc gia" value={user.country ?? "-"} />
+          <LabelValue
+            label="Cấp độ Loyalty"
+            value={user.loyalty_program.levels.name ?? "-"}
+          />
         </div>
       </Card>
 
-      {/* Modal edit user */}
       <UserEditModal
         open={openEdit}
         onOpenChange={setOpenEdit}

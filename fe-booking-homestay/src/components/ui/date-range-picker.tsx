@@ -29,37 +29,34 @@ export default function DateRangePicker({
   const [selectedRange, setSelectedRange] = React.useState<
     DateRange | undefined
   >(value);
-
-  const [currentMonth, setCurrentMonth] = React.useState(new Date());
+  const [currentMonth, setCurrentMonth] = React.useState<Date>(new Date());
 
   const formatLabel = (date?: Date) =>
     date ? format(date, "MMM dd, yyyy") : "";
 
-  const handleDayClick = React.useCallback(
-    (day: Date) => {
-      if (!day) return;
+  const handlePick = React.useCallback(
+    (day?: Date, range?: DateRange) => {
+      // Nếu gọi từ onDayClick
+      if (day) {
+        // Nếu chưa chọn gì hoặc đã chọn xong 1 range → bắt đầu range mới
+        if (!selectedRange || (selectedRange.from && selectedRange.to)) {
+          const newRange: DateRange = { from: day, to: undefined };
+          setSelectedRange(newRange);
+          onChange?.(newRange);
+          return;
+        }
 
-      if (selectedRange?.from && selectedRange?.to) {
-        const newRange: DateRange = { from: day, to: undefined };
+        // Nếu đang chọn dở (from đã có, to chưa có)
+        const isSameDay = selectedRange.from!.getTime() === day.getTime();
+        const newRange: DateRange = isSameDay
+          ? { from: selectedRange.from, to: undefined }
+          : { from: selectedRange.from, to: day };
+
         setSelectedRange(newRange);
         onChange?.(newRange);
-      }
-    },
-    [selectedRange, onChange]
-  );
 
-  const handleSelect = React.useCallback(
-    (range: DateRange | undefined) => {
-      if (!range) return;
-
-      // Nếu from đã có, to chưa có => không autoClose
-      if (selectedRange?.from && selectedRange?.to) return;
-
-      setSelectedRange(range);
-      onChange?.(range);
-
-      if (autoClose && range.from && range.to) {
-        setOpen(false);
+        if (autoClose && newRange.from && newRange.to) setOpen(false);
+        return;
       }
     },
     [selectedRange, onChange, autoClose]
@@ -99,8 +96,8 @@ export default function DateRangePicker({
               key={i}
               mode="range"
               selected={selectedRange}
-              onSelect={handleSelect}
-              onDayClick={handleDayClick}
+              onDayClick={(day) => handlePick(day)}
+              onSelect={(range) => handlePick(undefined, range)}
               month={i === 0 ? currentMonth : addMonths(currentMonth, 1)}
               onMonthChange={
                 (date) =>
@@ -108,10 +105,7 @@ export default function DateRangePicker({
                     ? setCurrentMonth(date) // prev bên trái
                     : setCurrentMonth(addMonths(date, -1)) // next bên phải
               }
-              disabled={[
-                ...(soldOutDates || []), 
-                { before: new Date() }, 
-              ]}
+              disabled={[...(soldOutDates || []), { before: new Date() }]}
               modifiers={{
                 soldOut: (date) =>
                   (soldOutDates || []).some(

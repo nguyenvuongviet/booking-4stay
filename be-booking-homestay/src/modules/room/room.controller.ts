@@ -112,4 +112,24 @@ export class RoomController {
   ) {
     return this.roomService.deleteRoomImagesByIds(id, dto.imageIds);
   }
+
+  @Patch(':id/images/main')
+  @Roles('ADMIN')
+  @ApiBearerAuth('AccessToken')
+  async setMainImage(
+    @Param('id', ParseIntPipe) roomId: number,
+    @Body('imageId', ParseIntPipe) imageId: number,
+  ) {
+    return this.roomService.setMainImage(roomId, imageId);
+  }
+
+  @Patch(':id/images/order')
+  @Roles('ADMIN')
+  @ApiBearerAuth('AccessToken')
+  async updateOrder(
+    @Param('id', ParseIntPipe) roomId: number,
+    @Body('order') order: number[],
+  ) {
+    return this.roomService.updateImageOrder(roomId, order);
+  }
 }

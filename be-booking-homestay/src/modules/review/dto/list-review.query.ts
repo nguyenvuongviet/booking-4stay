@@ -5,7 +5,6 @@ import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
 
 export class ListReviewQuery extends PaginationQueryDto {
   @ApiPropertyOptional({
-    example: 4.0,
     description: 'Điểm đánh giá tối thiểu (1–5)',
   })
   @IsOptional()
@@ -16,7 +15,6 @@ export class ListReviewQuery extends PaginationQueryDto {
   minRating?: number;
 
   @ApiPropertyOptional({
-    example: 5.0,
     description: 'Điểm đánh giá tối đa (1–5)',
   })
   @IsOptional()

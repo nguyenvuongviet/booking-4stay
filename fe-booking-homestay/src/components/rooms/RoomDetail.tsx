@@ -373,8 +373,8 @@ const soldOutDates: Date[] = [
                 </div>
               )}
               {/* Info    */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                <div className="relative md:col-span-1">
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-2">
+                <div className="relative md:col-span-3">
                   <DateRangePicker
                     value={
                       checkIn && checkOut
@@ -388,10 +388,10 @@ const soldOutDates: Date[] = [
                     }}
                   />
                 </div>
-                <div className="relative md:col-span-1">
+                <div className="relative md:col-span-2">
                   <Users
                     className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground"
-                    size={20}
+                    size={16}
                   />
                   <GuestPicker
                     adults={adults}

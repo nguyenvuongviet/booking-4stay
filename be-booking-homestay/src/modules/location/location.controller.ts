@@ -43,18 +43,17 @@ export class LocationController {
     return this.locationService.searchProvinces(keyword);
   }
 
-  // PUBLIC — Dropdown chọn vị trí
   @Get('countries')
   @Public()
   async getCountries() {
-    return this.locationService.getCountries();
+    return await this.locationService.getCountries();
   }
 
   @Get('provinces')
   @Public()
   @ApiQuery({ name: 'countryId', required: false })
   async getProvinces(@Query('countryId') countryId?: string) {
-    return this.locationService.getProvinces(
+    return await this.locationService.getProvinces(
       countryId ? +countryId : undefined,
     );
   }
@@ -63,7 +62,7 @@ export class LocationController {
   @Public()
   @ApiQuery({ name: 'provinceId', required: false })
   async getDistricts(@Query('provinceId') provinceId?: string) {
-    return this.locationService.getDistricts(
+    return await this.locationService.getDistricts(
       provinceId ? +provinceId : undefined,
     );
   }
@@ -72,40 +71,39 @@ export class LocationController {
   @Public()
   @ApiQuery({ name: 'districtId', required: false })
   async getWards(@Query('districtId') districtId?: string) {
-    return this.locationService.getWards(districtId ? +districtId : undefined);
+    return await this.locationService.getWards(
+      districtId ? +districtId : undefined,
+    );
   }
 
-  // ADMIN — CRUD + Upload + Import
-  // --- CREATE ---
   @Post('admin/countries')
   @Roles('ADMIN')
   @ApiBearerAuth('AccessToken')
   async createCountry(@Body() dto: CreateCountryDto) {
-    return this.locationService.createCountry(dto);
+    return await this.locationService.createCountry(dto);
   }
 
   @Post('admin/provinces')
   @Roles('ADMIN')
   @ApiBearerAuth('AccessToken')
   async createProvince(@Body() dto: CreateProvinceDto) {
-    return this.locationService.createProvince(dto);
+    return await this.locationService.createProvince(dto);
   }
 
   @Post('admin/districts')
   @Roles('ADMIN')
   @ApiBearerAuth('AccessToken')
   async createDistrict(@Body() dto: CreateDistrictDto) {
-    return this.locationService.createDistrict(dto);
+    return await this.locationService.createDistrict(dto);
   }
 
   @Post('admin/wards')
   @Roles('ADMIN')
   @ApiBearerAuth('AccessToken')
   async createWard(@Body() dto: CreateWardDto) {
-    return this.locationService.createWard(dto);
+    return await this.locationService.createWard(dto);
   }
 
-  // --- UPDATE ---
   @Patch('admin/:type/:id')
   @Roles('ADMIN')
   @ApiBearerAuth('AccessToken')
@@ -120,10 +118,9 @@ export class LocationController {
     @Param('id') id: string,
     @Body() dto: UpdateLocationDto,
   ) {
-    return this.locationService.updateLocation(type, +id, dto);
+    return await this.locationService.updateLocation(type, +id, dto);
   }
 
-  // --- DELETE ---
   @Delete('admin/:type/:id')
   @Roles('ADMIN')
   @ApiBearerAuth('AccessToken')
@@ -134,10 +131,9 @@ export class LocationController {
     description: 'Loại location cần cập nhật hoặc xóa',
   })
   async deleteLocation(@Param('type') type: string, @Param('id') id: string) {
-    return this.locationService.deleteLocation(type, +id);
+    return await this.locationService.deleteLocation(type, +id);
   }
 
-  // --- UPLOAD ẢNH TỈNH/THÀNH ---
   @Put('admin/provinces/:id/image')
   @Roles('ADMIN')
   @ApiBearerAuth('AccessToken')
@@ -149,7 +145,7 @@ export class LocationController {
     @UploadedFile() file: Express.Multer.File,
     @Param('id') id: string,
   ) {
-    return this.locationService.setProvinceImage(+id, file);
+    return await this.locationService.setProvinceImage(+id, file);
   }
 
   // @Delete('admin/provinces/:id/image')
@@ -160,7 +156,6 @@ export class LocationController {
   //   return this.locationService.deleteProvinceImage(+id);
   // }
 
-  // --- IMPORT FILE CSV/EXCEL ---
   @Post('admin/import')
   @Roles('ADMIN')
   @ApiBearerAuth('AccessToken')
@@ -168,6 +163,6 @@ export class LocationController {
   @UseInterceptors(FileInterceptor('file'))
   @ApiBody({ type: UploadFileDto })
   async importLocation(@UploadedFile() file: Express.Multer.File) {
-    return this.locationService.importFromFile(file);
+    return await this.locationService.importFromFile(file);
   }
 }

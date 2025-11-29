@@ -12,6 +12,42 @@ import { ListReviewQuery } from './dto/list-review.query';
 @Injectable()
 export class ReviewService {
   constructor(private readonly prisma: PrismaService) {}
+
+  async findAll(q: ListReviewQuery) {
+    const page = Math.max(1, Number(q.page) || 1);
+    const pageSize = Math.max(1, Number(q.pageSize) || 10);
+    const skip = (page - 1) * pageSize;
+
+    const where: any = {
+      isDeleted: false,
+      bookings: { isDeleted: false },
+    };
+
+    if (q.minRating) where.rating = { gte: q.minRating };
+    if (q.maxRating) {
+      where.rating = where.rating || {};
+      where.rating.lte = q.maxRating;
+    }
+
+    const [items, total] = await this.prisma.$transaction([
+      this.prisma.reviews.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: pageSize,
+        include: {
+          users: {
+            select: { id: true, firstName: true, lastName: true, avatar: true },
+          },
+          bookings: { select: { id: true } },
+        },
+      }),
+      this.prisma.reviews.count({ where }),
+    ]);
+
+    return { page, pageSize, total, items: sanitizeReviewList(items) };
+  }
+
   async create(userId: number, dto: CreateReviewDto) {
     const b = await this.prisma.bookings.findUnique({
       where: { id: dto.bookingId },

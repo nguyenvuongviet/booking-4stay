@@ -81,9 +81,7 @@ export default function UsersPage() {
       const phone = u.phoneNumber?.toLowerCase() ?? "";
 
       const matchesSearch =
-        !q ||
-        u.email.toLowerCase().includes(q) ||
-        phone.includes(q);
+        !q || u.email.toLowerCase().includes(q) || phone.includes(q);
 
       const matchesRole = roleFilter === "all" || uRole === roleFilter;
       const matchesStatus = statusFilter === "all" || status === statusFilter;
@@ -163,7 +161,7 @@ export default function UsersPage() {
             <select
               value={roleFilter}
               onChange={(e) => setRoleFilter(e.target.value as any)}
-              className="px-3 py-2 border border-warm-200 rounded-lg bg-white text-sm text-warm-900"
+              className="px-3 py-2 border border-warm-200 rounded-lg bg-white text-sm text-warm-900 cursor-pointer"
             >
               <option value="all">Tất cả vai trò</option>
               <option value="USER">Khách hàng</option>
@@ -173,7 +171,7 @@ export default function UsersPage() {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value as any)}
-              className="px-3 py-2 border border-warm-200 rounded-lg bg-white text-sm text-warm-900"
+              className="px-3 py-2 border border-warm-200 rounded-lg bg-white text-sm text-warm-900 cursor-pointer"
             >
               <option value="all">Tất cả trạng thái</option>
               <option value="active">Hoạt động</option>
