@@ -111,7 +111,7 @@ export default function Header() {
                 {/* <span>Thảo Ly</span> */}
               </button>
               {openMenu && (
-                <div className="absolute right-0 mt-2 bg-card shadow-lg rounded-md w-48  border border-gray-100">
+                <div className="absolute right-0 mt-2 bg-card shadow-lg rounded-md w-48  border border-gray-100 z-50">
                   <Link
                     href="/profile"
                     onClick={() => setOpenMenu(false)}

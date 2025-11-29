@@ -5,10 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Location } from "@/models/Location";
 import { location, search_location } from "@/services/roomApi";
 import { format } from "date-fns";
-import {
-  useTransform,
-  useViewportScroll
-} from "framer-motion";
+import { useTransform, useViewportScroll } from "framer-motion";
 import { MapPin, Search, Users } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -21,8 +18,6 @@ interface SearchBarProps {
   compact?: boolean; // nếu true: mini bar
 }
 export function SearchBar({ compact = false }: SearchBarProps) {
-  const [checkIn, setCheckIn] = useState<Date | null>(null);
-  const [checkOut, setCheckOut] = useState<Date | null>(null);
   const [adults, setAdults] = useState(1);
   const [children, setChildren] = useState(0);
   const [locations, setLocations] = useState<Location[]>([]);
@@ -33,7 +28,15 @@ export function SearchBar({ compact = false }: SearchBarProps) {
   const searchParams = useSearchParams();
   const locationInputRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState("");
+  const ci = searchParams.get("checkIn");
+  const co = searchParams.get("checkOut");
 
+  const [checkIn, setCheckIn] = useState<Date | null>(
+    ci ? new Date(ci + "T00:00") : null
+  );
+  const [checkOut, setCheckOut] = useState<Date | null>(
+    co ? new Date(co + "T00:00") : null
+  );
   // scroll smooth animation
   const { scrollY } = useViewportScroll();
 
@@ -43,10 +46,11 @@ export function SearchBar({ compact = false }: SearchBarProps) {
     const ch = searchParams.get("children");
     const ci = searchParams.get("checkIn");
     const co = searchParams.get("checkOut");
+    console.log("URL checkIn, checkOut:", ci, co);
 
     if (loc) setLocationInput(decodeURIComponent(loc));
-    if (ci) setCheckIn(new Date(ci));
-    if (co) setCheckOut(new Date(co));
+    setCheckIn(ci ? new Date(ci) : null);
+    setCheckOut(co ? new Date(co) : null);
     if (ad) setAdults(Number(ad));
     if (ch) setChildren(Number(ch));
   }, [searchParams]);
@@ -125,14 +129,14 @@ export function SearchBar({ compact = false }: SearchBarProps) {
   return (
     <div
       className={`mx-auto w-full bg-card rounded-4xl shadow-lg transition-all duration-300 ${
-        compact ? "max-w-2xl p-2 sm:scale-[80%] md:scale-[100%]" : "max-w-5xl p-2 sm:scale-[80%] md:scale-[90%] md:p-3"
+        compact
+          ? "max-w-2xl p-2 sm:scale-[80%] md:scale-[100%]"
+          : "max-w-5xl p-2 sm:scale-[80%] md:scale-[90%] md:p-3"
       }`}
     >
       <div
         className={`${
-          compact
-            ? "flex items-center gap-2"
-            : "grid grid-cols-7 gap-4"
+          compact ? "flex items-center gap-2" : "grid grid-cols-7 gap-4"
         }`}
       >
         <div className={`relative ${compact ? "flex-1" : "col-span-2"}`}>
@@ -160,6 +164,7 @@ export function SearchBar({ compact = false }: SearchBarProps) {
 
         <div className={`relative ${compact ? "flex-1 " : "col-span-2"}`}>
           <DateRangePicker
+          key={`${checkIn}-${checkOut}`} 
             value={
               checkIn && checkOut ? { from: checkIn, to: checkOut } : undefined
             }
