@@ -71,6 +71,10 @@ export default function CheckoutPage() {
             resp.data?.booking?.id
           );
           window.location.href = payment.url; // redirect sang VNPAY
+          console.log("Booking created successfully:", resp);
+          setTimeout(() => {
+            router.push("/booking");
+          }, 5000);
         } catch (error) {
           console.error("Error creating booking:", error);
           return;
@@ -80,19 +84,15 @@ export default function CheckoutPage() {
       //trả tiền mặt
       if (paymentMethod === "cash") {
         router.push("/booking");
+        toast.success("Booking confirmed! Thank you for your reservation.");
       }
-
-      toast.success("Booking confirmed! Thank you for your reservation.");
-      console.log("Booking created successfully:", resp);
-      setTimeout(() => {
-        router.push("/booking");
-      }, 5000);
     } catch (error) {
       console.error("Error creating booking:", error);
     }
 
     console.log("Confirming booking with payment method:", paymentMethod);
   };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -291,7 +291,7 @@ export default function CheckoutPage() {
                       </div>
                       <div>
                         <p className="font-medium text-gray-900">
-                          VNPay (Bank transfer / QR code)
+                          VNPay (Bank transfer/ Card/ QR code)
                         </p>
                         <p className="text-sm text-gray-600">
                           Secure and fast online payment via VNPay. Supports
@@ -547,9 +547,7 @@ export default function CheckoutPage() {
                   </span>
                 </div>
                 <div className="flex justify-between items-baseline">
-                  <span className="text-sm text-foreground">
-                    Points earned
-                  </span>
+                  <span className="text-sm text-foreground">Points earned</span>
                   <span className="text-sm text-green-600">
                     +{(totalAmount / 1000).toLocaleString()}
                   </span>

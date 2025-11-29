@@ -27,7 +27,7 @@ export default function HistoryBooking() {
     }
 
     try {
-      const res = await get_booking({ page: pageNumber, pageSize: 3 });
+      const res = await get_booking({ page: pageNumber, pageSize: 3, sortOrder: "desc" });
       const items = res.bookings || [];
       const totalPages = Math.ceil(res.total / 3);
 
@@ -64,11 +64,11 @@ export default function HistoryBooking() {
   useEffect(() => {
     if (status === "success") {
       toast.success(
-        `Payment successful! Your booking #${orderId} is confirmed.`
+        `Payment successful! Your booking is confirmed.`
       );
     } else if (status === "failed") {
       toast.error(
-        `Payment failed or canceled. Your booking #${orderId} is pending.`
+        `Payment failed or canceled. Your booking is pending.`
       );
     }
   }, [status, orderId]);

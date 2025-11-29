@@ -72,7 +72,7 @@ export const search_room = async (
 ) => {
   try {
     const resp = await api.get("/room/all", {
-      params: { search: keyword, adults, children, page, pageSize },
+      params: { province: keyword, adults, children, page, pageSize },
     });
 
     const mainData = resp.data?.data || {};

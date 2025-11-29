@@ -371,8 +371,8 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
                 </div>
               )}
               {/* Info    */}
-              <div className="grid grid-cols-1 md:grid-cols-5 gap-2">
-                <div className="relative md:col-span-3">
+              <div className="grid grid-cols-1 md:grid-cols-7 gap-2">
+                <div className="relative md:col-span-4">
                   <DateRangePicker
                     value={
                       checkIn && checkOut
@@ -383,10 +383,13 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
                     onChange={(range) => {
                       setCheckIn(range?.from ?? null);
                       setCheckOut(range?.to ?? null);
+                      if (range?.from && range?.to) {
+                        checkRoomAvailable(range.from, range.to);
+                      }
                     }}
                   />
                 </div>
-                <div className="relative md:col-span-2">
+                <div className="relative md:col-span-3">
                   <Users
                     className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground"
                     size={16}

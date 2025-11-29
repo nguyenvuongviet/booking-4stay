@@ -41,6 +41,7 @@ export default function HomePage() {
           search: search.trim(),
           adults,
           children,
+          sortBy: "rating",
         });
 
         const roomsData = result.rooms || [];
