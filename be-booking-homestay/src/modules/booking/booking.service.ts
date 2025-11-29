@@ -15,6 +15,7 @@ import { CancelBookingDto } from './dto/cancel-booking.dto';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { ListBookingQuery } from './dto/list-booking.query';
 import { RoomAvailabilityDto } from './dto/room-availability.dto';
+import { eachDayOfInterval, formatISO } from 'date-fns';
 
 @Injectable()
 export class BookingService {
@@ -244,6 +245,63 @@ export class BookingService {
       include: { users: true },
     });
     return { items: sanitizeBooking(items) };
+  }
+
+  async getUnavailableDays(roomId: number) {
+    if (!roomId) throw new BadRequestException('Thiếu roomId');
+
+    const bookings = await this.prisma.bookings.findMany({
+      where: {
+        roomId,
+        isDeleted: false,
+        status: {
+          in: [
+            'PENDING',
+            'CONFIRMED',
+            'CHECKED_IN',
+            'CHECKED_OUT',
+          ] as bookings_status[],
+        },
+      },
+      select: { checkIn: true, checkOut: true },
+    });
+
+    const blocked = await this.prisma.room_availability.findMany({
+      where: {
+        roomId,
+        isAvailable: false,
+      },
+      select: { date: true },
+    });
+
+    console.log({ bookings, blocked });
+
+    const unavailableSet = new Set<string>();
+
+    for (const b of bookings) {
+      const range = eachDayOfInterval({
+        start: b.checkIn,
+        end: new Date(b.checkOut.getTime() - 86400000),
+      });
+      range.forEach((d) =>
+        unavailableSet.add(formatISO(d, { representation: 'date' })),
+      );
+    }
+
+    for (const b of blocked) {
+      unavailableSet.add(formatISO(b.date, { representation: 'date' }));
+    }
+
+    console.log({ unavailableSet });
+
+    const days = Array.from(unavailableSet).sort();
+
+    return {
+      message: 'Danh sách ngày không khả dụng của phòng',
+      roomId,
+      total: days.length,
+      days,
+    };
   }
 
   async updateStatus(orderId: number, status: bookings_status) {
