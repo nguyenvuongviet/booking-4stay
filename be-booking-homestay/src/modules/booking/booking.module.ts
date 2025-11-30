@@ -5,6 +5,7 @@ import { PricingHelper } from 'src/helpers/pricing.helper';
 import { PrismaService } from '../prisma/prisma.service';
 import { BookingController } from './booking.controller';
 import { BookingService } from './booking.service';
+import { MailService } from '../mail/mail.service';
 
 @Module({
   controllers: [BookingController],
@@ -14,6 +15,7 @@ import { BookingService } from './booking.service';
     PricingHelper,
     AvailabilityHelper,
     LoyaltyProgram,
+    MailService,
   ],
   exports: [BookingService],
 })
