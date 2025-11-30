@@ -18,6 +18,7 @@ import { PhotoGalleryModal } from "./PhotoGalleryModal";
 import { ReviewList } from "./ReviewList";
 import { getAmenityIcon } from "@/constants/amenity-icons";
 import { get_unavailable_dates } from "@/services/bookingApi";
+import { mockRooms } from "@/constants/la-lo";
 
 interface RoomDetailClientProps {
   roomId: string;
@@ -447,7 +448,7 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
               </div>
 
               {/* Map */}
-              <MapRooms rooms={[room]} height="h-[30vh]" />
+              <MapRooms rooms={mockRooms[Number(roomId)]} height="h-[30vh]" />
 
               {/* Policy */}
               <div className="p-4">

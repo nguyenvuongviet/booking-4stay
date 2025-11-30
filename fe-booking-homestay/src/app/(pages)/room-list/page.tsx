@@ -19,6 +19,7 @@ import { Loader2 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
+import { mockRooms } from "@/constants/la-lo";
 
 export default function HotelsListPage() {
   const [rooms, setRooms] = useState<Room[]>([]);
@@ -239,7 +240,7 @@ export default function HotelsListPage() {
             sticky lg:top-24 
             rounded-lg overflow-hidden shadow-md"
           >
-            <MapRooms rooms={rooms} height="h-120" />
+            <MapRooms rooms={mockRooms} height="h-120" />
           </div>
           <div className="w-full lg:w-3/4 mt-4 lg:mt-0">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 lg:gap-6 mb-6">
