@@ -13,6 +13,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { format, addMonths } from "date-fns";
 
 interface DateRangePickerProps {
+  id?:number|string;
   value?: DateRange;
   soldOutDates?: Date[];
   onChange?: (range: DateRange | undefined) => void;
@@ -20,6 +21,7 @@ interface DateRangePickerProps {
 }
 
 export default function DateRangePicker({
+  id,
   value,
   soldOutDates,
   onChange,

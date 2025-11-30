@@ -92,11 +92,17 @@ export function SearchBar({ compact = false }: SearchBarProps) {
     setShowSuggestions(false);
   };
 
-  useEffect(() => {
-    const handleClickOutside = () => setShowSuggestions(false);
-    window.addEventListener("click", handleClickOutside);
-    return () => window.removeEventListener("click", handleClickOutside);
-  }, []);
+  // useEffect(() => {
+  //   const handleClickOutside = (e: MouseEvent) => {
+  //     const target = e.target as Node;
+  //     // Chỉ ẩn suggestions nếu click ngoài input location
+  //     if (!locationInputRef.current?.contains(target)) {
+  //       setShowSuggestions(false);
+  //     }
+  //   };
+  //   window.addEventListener("click", handleClickOutside);
+  //   return () => window.removeEventListener("click", handleClickOutside);
+  // }, []);
 
   const handleSearch = async () => {
     setLoading(true);
@@ -164,7 +170,7 @@ export function SearchBar({ compact = false }: SearchBarProps) {
 
         <div className={`relative ${compact ? "flex-1 " : "col-span-2"}`}>
           <DateRangePicker
-          key={`${checkIn}-${checkOut}`} 
+            key={`${checkIn}-${checkOut}`}
             value={
               checkIn && checkOut ? { from: checkIn, to: checkOut } : undefined
             }

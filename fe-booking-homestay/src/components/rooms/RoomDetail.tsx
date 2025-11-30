@@ -42,6 +42,7 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
   const [showFullOverview, setShowFullOverview] = useState(false);
   const [soldOutDates, setSoldOutDates] = useState<Date[]>([]);
+const [highlightDatePicker, setHighlightDatePicker] = useState(false);
 
   // Refs
   const checkInRef = useRef<HTMLInputElement>(null);
@@ -127,16 +128,13 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
 
   const handleRoomSelect = async (roomId: number | string) => {
     if (!checkIn || !checkOut) {
-      if (!checkIn) {
-        setTimeout(() => checkInRef.current?.focus(), 0);
-        return;
-      }
-      if (!checkOut) {
-        setTimeout(() => checkOutRef.current?.focus(), 0);
-        return;
-      }
+      toast.error("Please select check-in and check-out dates");
+      // bật highlight
+      setHighlightDatePicker(true);
+      // tự tắt sau 2s
+      setTimeout(() => setHighlightDatePicker(false), 2000);
+      return;
     }
-
     if (!room) return;
     if (adults > (room.adultCapacity ?? 0)) {
       toast.error(
