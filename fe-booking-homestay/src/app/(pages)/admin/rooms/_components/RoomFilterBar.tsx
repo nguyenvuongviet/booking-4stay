@@ -25,7 +25,7 @@ export function RoomFilterBar(props: any) {
   return (
     <Card className="p-3 border-warm-200">
       <div className="flex flex-wrap items-center gap-3">
-        <div className="relative flex-1 min-w-[240px] max-w-[300px]">
+        <div className="relative flex-1 min-w-60 max-w-[300px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
             placeholder="Tìm kiếm tên hoặc địa chỉ..."

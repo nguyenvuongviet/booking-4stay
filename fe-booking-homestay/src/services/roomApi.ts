@@ -45,7 +45,7 @@ export const search_location = async (keyword: string) => {
 
     const resp = await api.get("/location/provinces/search", {
       params: {
-        keyword: keyword.trim(), 
+        keyword: keyword.trim(),
       },
     });
 
@@ -61,7 +61,6 @@ export const search_location = async (keyword: string) => {
     return { data: { data: [] } };
   }
 };
-  
 
 export const search_room = async (
   keyword: string,
@@ -72,7 +71,7 @@ export const search_room = async (
 ) => {
   try {
     const resp = await api.get("/room/all", {
-      params: { province: keyword, adults, children, page, pageSize },
+      params: { search: keyword, adults, children, page, pageSize },
     });
 
     const mainData = resp.data?.data || {};

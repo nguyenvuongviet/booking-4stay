@@ -27,7 +27,7 @@ export class RoomService {
 
   async findAll(query: RoomFilterDto) {
     let {
-      province,
+      search,
       minPrice,
       maxPrice,
       adults,
@@ -41,7 +41,7 @@ export class RoomService {
       pageSize = 12,
     } = query;
 
-    province = province?.trim();
+    search = search?.trim();
     sortBy = SORT_BY.has(sortBy ?? '') ? sortBy! : 'createdAt';
     sortOrder = SORT_ORDER.has(sortOrder ?? '') ? sortOrder! : 'desc';
     page = Math.max(1, Number(page) || 1);
@@ -63,16 +63,16 @@ export class RoomService {
     }
 
     let provinceId: number | undefined;
-    if (province) {
+    if (search) {
       const exists = await this.prisma.location_provinces.findFirst({
         where: {
-          name: { contains: province },
+          name: { contains: search },
           isDeleted: false,
         },
         select: { id: true },
       });
       if (!exists) {
-        throw new NotFoundException(`Không tìm thấy province = "${province}"`);
+        throw new NotFoundException(`Không tìm thấy province = "${search}"`);
       }
       provinceId = exists.id;
     }
