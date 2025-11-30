@@ -33,4 +33,52 @@ export class MailService {
       html,
     });
   }
+
+  async sendBookingMail(
+    to: string,
+    type: 'BOOKING_PENDING' | 'BOOKING_CONFIRMED' | 'BOOKING_CANCELLED',
+    booking: any,
+  ) {
+    let subject = '';
+    let html = '';
+
+    switch (type) {
+      case 'BOOKING_PENDING':
+        subject = '4Stay - Booking mới đang chờ xác nhận';
+        html = `
+        <p>Mã booking: <b>#${booking.id}</b></p>
+        <p>Khách: <b>${booking.guestFullName}</b></p>
+        <p>Ngày nhận phòng: <b>${booking.checkIn}</b></p>
+        <p>Ngày trả phòng: <b>${booking.checkOut}</b></p>
+        <p>Trạng thái: <b>PENDING</b></p>
+      `;
+        break;
+
+      case 'BOOKING_CONFIRMED':
+        subject = '4Stay - Booking của bạn đã được xác nhận';
+        html = `
+        <p>Mã booking: <b>#${booking.id}</b></p>
+        <p>Check-in: ${booking.checkIn}</p>
+        <p>Check-out: ${booking.checkOut}</p>
+        <p>Booking đã được xác nhận thành công.</p>
+      `;
+        break;
+
+      case 'BOOKING_CANCELLED':
+        subject = '4Stay - Booking đã bị hủy';
+        html = `
+        <p>Mã booking: <b>#${booking.id}</b></p>
+        <p>Trạng thái: <b>CANCELLED</b></p>
+        <p>Nếu bạn không thực hiện hành động này, vui lòng liên hệ hỗ trợ.</p>
+      `;
+        break;
+    }
+
+    await transporter.sendMail({
+      from: `"4Stay Support" <${SENDER_EMAIL}>`,
+      to,
+      subject,
+      html,
+    });
+  }
 }
