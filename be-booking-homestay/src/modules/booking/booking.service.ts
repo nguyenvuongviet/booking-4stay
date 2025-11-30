@@ -16,6 +16,7 @@ import { CreateBookingDto } from './dto/create-booking.dto';
 import { ListBookingQuery } from './dto/list-booking.query';
 import { RoomAvailabilityDto } from './dto/room-availability.dto';
 import { eachDayOfInterval, formatISO } from 'date-fns';
+import { MailService } from '../mail/mail.service';
 
 @Injectable()
 export class BookingService {
@@ -24,6 +25,7 @@ export class BookingService {
     private readonly pricing: PricingHelper,
     private readonly availability: AvailabilityHelper,
     private readonly loyaltyProgram: LoyaltyProgram,
+    private readonly mailService: MailService,
   ) {}
 
   async create(userId: number, dto: CreateBookingDto) {
@@ -88,6 +90,18 @@ export class BookingService {
         rooms: { include: { room_images: true } },
       },
     });
+
+    await this.mailService.sendBookingMail(
+      booking.guestEmail,
+      'BOOKING_PENDING',
+      booking,
+    );
+
+    await this.mailService.sendBookingMail(
+      'nguyenvuongviet2k4@gmail.com',
+      'BOOKING_PENDING',
+      booking,
+    );
 
     return {
       message: 'Tạo đơn đặt thành công',
@@ -163,6 +177,18 @@ export class BookingService {
       },
       include: { rooms: { include: { room_images: true } } },
     });
+
+    await this.mailService.sendBookingMail(
+      updated.guestEmail,
+      'BOOKING_CANCELLED',
+      updated,
+    );
+
+    await this.mailService.sendBookingMail(
+      'nguyenvuongviet2k4@gmail.com',
+      'BOOKING_CANCELLED',
+      updated,
+    );
 
     return {
       message: 'Hủy booking thành công',
@@ -312,6 +338,14 @@ export class BookingService {
 
     if (status === 'CHECKED_OUT') {
       await this.loyaltyProgram.recalculateLoyaltyLevel(updated.userId);
+    }
+
+    if (status === 'CONFIRMED') {
+      await this.mailService.sendBookingMail(
+        updated.guestEmail,
+        'BOOKING_CONFIRMED',
+        updated,
+      );
     }
 
     return {
