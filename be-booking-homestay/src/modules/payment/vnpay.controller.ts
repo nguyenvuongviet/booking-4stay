@@ -1,9 +1,9 @@
-import { BookingService } from 'src/modules/booking/booking.service';
-import { Controller, Post, Body, Res, Get, Query, Redirect } from '@nestjs/common';
-import { VNPayService } from './vnpay.service';
+import { Body, Controller, Get, Post, Query, Res } from '@nestjs/common';
+import { bookings_paymentMethod, bookings_status } from '@prisma/client';
 import { Response } from 'express';
 import { Public } from 'src/common/decorator/public.decorator';
-import { bookings_status } from '@prisma/client';
+import { BookingService } from 'src/modules/booking/booking.service';
+import { VNPayService } from './vnpay.service';
 
 @Controller('api')
 export class VNPayController {
@@ -12,10 +12,15 @@ export class VNPayController {
     private readonly bookingService: BookingService,
   ) {}
 
-  @Public() 
+  @Public()
   @Post('create-qr')
   async createPayment(
-    @Body() body: { totalPrice: number; orderId: string },
+    @Body()
+    body: {
+      totalPrice: number;
+      orderId: string;
+      paymentMethod: bookings_paymentMethod;
+    },
     @Res() res: Response,
   ) {
     try {
@@ -36,25 +41,33 @@ export class VNPayController {
   ) {
     const verified = this.vnpayService.verifyReturnUrl(query);
 
-    const orderId = Number(query.vnp_OrderInfo); 
+    const orderId = Number(query.vnp_OrderInfo);
     const responseCode = query.vnp_ResponseCode; // '00' = thành công
+    const paidAmount = Number(query.vnp_Amount) / 100;
 
     try {
       if (verified.isVerified && responseCode === '00') {
         // Thanh toán thành công
         await this.bookingService.updateStatus(
           orderId,
+          paidAmount,
           bookings_status.CONFIRMED,
         );
-        return res.redirect(`http://localhost:3000/booking?orderId=${orderId}&status=success`);
+        return res.redirect(
+          `http://localhost:3000/booking?orderId=${orderId}&status=success`,
+        );
       } else {
         // Thanh toán thất bại
-        await this.bookingService.updateStatus(orderId, 'PENDING');
-        return res.redirect(`http://localhost:3000/booking?orderId=${orderId}&status=failed`);
+        await this.bookingService.updateStatus(orderId, 0, 'PENDING');
+        return res.redirect(
+          `http://localhost:3000/booking?orderId=${orderId}&status=failed`,
+        );
       }
     } catch (err) {
       console.error('Payment return error:', err);
-      return res.redirect(`http://localhost:3000/booking?orderId=${orderId}&status=failed`);
+      return res.redirect(
+        `http://localhost:3000/booking?orderId=${orderId}&status=failed`,
+      );
     }
   }
 }

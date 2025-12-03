@@ -1,8 +1,10 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { bookings_paymentMethod } from '@prisma/client';
 import { Type } from 'class-transformer';
 import {
   IsDateString,
   IsEmail,
+  IsEnum,
   IsInt,
   IsNotEmpty,
   IsOptional,
@@ -72,4 +74,12 @@ export class CreateBookingDto {
   @IsOptional()
   @IsString()
   specialRequest?: string;
+
+  @ApiPropertyOptional({
+    example: 'CASH',
+    description: 'Phương thức thanh toán',
+  })
+  @IsOptional()
+  @IsEnum(bookings_paymentMethod)
+  paymentMethod: bookings_paymentMethod;
 }

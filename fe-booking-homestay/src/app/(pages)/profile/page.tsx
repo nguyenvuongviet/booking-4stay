@@ -506,7 +506,7 @@ export default function ProfilePage() {
               <div className="grid gap-6 md:grid-cols-3">
                 <Card className="border-0 p-8 shadow-md hover:shadow-xl transition-all bg-accent/50 group cursor-pointer">
                   <div className="flex items-start gap-4">
-                    <div className="p-3 bg-gradient-to-br from-accent to-primary/90 rounded-xl group-hover:scale-110 transition-transform">
+                    <div className="p-3 bg-linear-to-br from-accent to-primary/90 rounded-xl group-hover:scale-110 transition-transform">
                       <Gift className="h-6 w-6 text-secondary-foreground" />
                     </div>
                     <div className="flex-1">
@@ -521,9 +521,9 @@ export default function ProfilePage() {
                   </div>
                 </Card>
 
-                <Card className="border-0 p-8 shadow-md hover:shadow-xl transition-all bg-gradient-to-br from-orange-50 to-red-50 group cursor-pointer">
+                <Card className="border-0 p-8 shadow-md hover:shadow-xl transition-all bg-linear-to-br from-orange-50 to-red-50 group cursor-pointer">
                   <div className="flex items-start gap-4">
-                    <div className="p-3 bg-gradient-to-br from-secondary to-secondary/50 rounded-xl group-hover:scale-110 transition-transform">
+                    <div className="p-3 bg-linear-to-br from-secondary to-secondary/50 rounded-xl group-hover:scale-110 transition-transform">
                       <TrendingUp className="h-6 w-6 text-orange-700" />
                     </div>
                     <div className="flex-1">
@@ -540,9 +540,9 @@ export default function ProfilePage() {
                   </div>
                 </Card>
 
-                <Card className="border-0 p-8 shadow-md hover:shadow-xl transition-all bg-gradient-to-br from-green-50 to-emerald-50 group cursor-pointer">
+                <Card className="border-0 p-8 shadow-md hover:shadow-xl transition-all bg-linear-to-br from-green-50 to-emerald-50 group cursor-pointer">
                   <div className="flex items-start gap-4">
-                    <div className="p-3 bg-gradient-to-br from-green-100 to-emerald-200 rounded-xl group-hover:scale-110 transition-transform">
+                    <div className="p-3 bg-linear-to-br from-green-100 to-emerald-200 rounded-xl group-hover:scale-110 transition-transform">
                       <DollarSign className="h-6 w-6 text-green-700" />
                     </div>
                     <div className="flex-1">
@@ -572,7 +572,7 @@ export default function ProfilePage() {
                       </div>
                     ) : (
                       <table className="w-full">
-                        <thead className="bg-gradient-to-r from-slate-100 to-slate-50">
+                        <thead className="bg-linear-to-r from-slate-100 to-slate-50">
                           <tr>
                             <th className="px-6 py-4 text-left text-sm elegant-sans">
                               Date

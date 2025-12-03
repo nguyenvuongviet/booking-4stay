@@ -17,9 +17,11 @@ import { ReviewModule } from './modules/review/review.module';
 import { VNPayModule } from './modules/payment/vnpay.module';
 import { AmenityModule } from './modules/amenity/amenity.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
+    ScheduleModule.forRoot(),
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'public'),
       serveRoot: '/public',

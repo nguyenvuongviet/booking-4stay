@@ -11,7 +11,6 @@ import {
   Calendar,
   Clock,
   CreditCard,
-  DollarSign,
   Image as ImageIcon,
   MapPin,
   Moon,
@@ -161,35 +160,30 @@ export default function BookingDetailPage() {
                 label="Check-in"
                 value={formatDate(booking.checkIn)}
                 icon={<Calendar className="w-5 h-5" />}
-                // className="bg-green-50/70 border-green-200"
               />
               <InfoItem
                 label="Check-out"
                 value={formatDate(booking.checkOut)}
                 icon={<Calendar className="w-5 h-5" />}
-                // className="bg-red-50/70 border-red-200"
               />
               <InfoItem
                 label="Số đêm lưu trú"
                 value={`${nights} đêm`}
                 icon={<Moon className="w-5 h-5" />}
-                // className="bg-purple-50/70 border-purple-200"
               />
             </div>
 
             <div className="grid sm:grid-cols-2 gap-4 pt-4 border-t mt-4">
               <div className="sm:col-span-1 grid grid-cols-2 sm:grid-cols-1 gap-4">
                 <InfoItem
-                  label="Người lớn (NL)"
+                  label="Người lớn"
                   value={booking.adults}
                   icon={<Users className="w-5 h-5" />}
-                  // className="bg-blue-50/70 border-blue-200"
                 />
                 <InfoItem
-                  label="Trẻ em (TE)"
+                  label="Trẻ em"
                   value={booking.children}
                   icon={<Baby className="w-5 h-5" />}
-                  // className="bg-teal-50/70 border-teal-200"
                 />
               </div>
 
@@ -226,12 +220,16 @@ export default function BookingDetailPage() {
               <InfoItem
                 label="Tổng chi phí"
                 value={booking.totalAmount?.toLocaleString() + " ₫"}
-                icon={<DollarSign className="w-5 h-5" />}
-                // className="bg-primary/5 border-primary/20"
+                icon={<CreditCard className="w-5 h-5" />}
+              />
+              <InfoItem
+                label="Đã thanh toán"
+                value={booking.paidAmount?.toLocaleString() + " ₫"}
+                icon={<CreditCard className="w-5 h-5" />}
               />
               <InfoItem
                 label="Phương thức"
-                value={"Đang cập nhật..."}
+                value={booking.paymentMethod}
                 icon={<CreditCard className="w-5 h-5" />}
               />
             </div>

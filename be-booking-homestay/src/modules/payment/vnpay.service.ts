@@ -1,15 +1,19 @@
 import { Injectable } from '@nestjs/common';
-import { VNPAY_RETURN_URL } from 'src/common/constant/app.constant';
 import {
-  VNPay,
-  ignoreLogger,
-  ProductCode,
-  VnpLocale,
+  VNPAY_HOST,
+  VNPAY_RETURN_URL,
+  VNPAY_SECRET_KEY,
+  VNPAY_TMN_CODE,
+} from 'src/common/constant/app.constant';
+import {
   dateFormat,
   HashAlgorithm,
+  ignoreLogger,
+  ProductCode,
   ReturnQueryFromVNPay,
+  VNPay,
+  VnpLocale,
 } from 'vnpay';
-// import { format } from 'date-fns';
 
 @Injectable()
 export class VNPayService {
@@ -17,9 +21,9 @@ export class VNPayService {
 
   constructor() {
     this.vnpay = new VNPay({
-      tmnCode: process.env.VNPAY_TMN_CODE || '',
-      secureSecret: process.env.VNPAY_SECRET_KEY || '',
-      vnpayHost: 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html',
+      tmnCode: VNPAY_TMN_CODE || '',
+      secureSecret: VNPAY_SECRET_KEY || '',
+      vnpayHost: VNPAY_HOST || '',
       testMode: true,
       hashAlgorithm: HashAlgorithm.SHA512,
       loggerFn: ignoreLogger,

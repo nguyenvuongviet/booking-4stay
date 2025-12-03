@@ -15,7 +15,7 @@ export class PaginationQueryDto {
   @Type(() => Number)
   @IsInt()
   @Min(1)
-  pageSize: number = 10;
+  pageSize: number = 100;
 
   @ApiPropertyOptional({ example: '', description: 'Từ khoá tìm kiếm' })
   @IsOptional()

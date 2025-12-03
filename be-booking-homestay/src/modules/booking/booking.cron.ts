@@ -1,50 +1,70 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { PrismaService } from '../prisma/prisma.service';
+import { BookingService } from './booking.service';
 
 function getVNDayRange() {
-  const nowVN = new Date(
+  const now = new Date(
     new Date().toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' }),
   );
-  const y = nowVN.getFullYear();
-  const m = nowVN.getMonth();
-  const d = nowVN.getDate();
 
-  const startTodayVN = new Date(Date.UTC(y, m, d, 0, 0, 0));
-  const startTomorrowVN = new Date(Date.UTC(y, m, d + 1, 0, 0, 0));
-  return { startTodayVN, startTomorrowVN };
+  const y = now.getFullYear();
+  const m = now.getMonth();
+  const d = now.getDate();
+
+  const start = new Date(Date.UTC(y, m, d, 0, 0, 0));
+  const end = new Date(Date.UTC(y, m, d + 1, 0, 0, 0));
+  return { start, end };
 }
 
 @Injectable()
 export class BookingCron {
   private readonly logger = new Logger(BookingCron.name);
-  constructor(private readonly prisma: PrismaService) {}
 
-  @Cron('5 0 * * *')
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly bookingService: BookingService,
+  ) {}
+
+  @Cron('5 0 * * *', { timeZone: 'Asia/Ho_Chi_Minh' })
   async dailyStatusRoll() {
-    const { startTodayVN, startTomorrowVN } = getVNDayRange();
+    const { start, end } = getVNDayRange();
 
-    const rCheckIn = await this.prisma.bookings.updateMany({
+    const checkins = await this.prisma.bookings.findMany({
       where: {
         isDeleted: false,
         status: { in: ['PENDING', 'CONFIRMED'] },
-        checkIn: { gte: startTodayVN, lt: startTomorrowVN },
+        checkIn: { gte: start, lt: end },
       },
-      data: { status: 'CHECKED_IN', updatedAt: new Date() },
     });
 
-    const rCheckOut = await this.prisma.bookings.updateMany({
+    for (const b of checkins) {
+      await this.bookingService['changeBookingStatus'](b.id, 'CHECKED_IN', {
+        allowOverride: true,
+        notifyAdmin: false,
+        notifyUser: true,
+      });
+    }
+
+    const checkouts = await this.prisma.bookings.findMany({
       where: {
         isDeleted: false,
         status: 'CHECKED_IN',
-        checkOut: { gte: startTodayVN, lt: startTomorrowVN },
+        checkOut: { gte: start, lt: end },
       },
-      data: { status: 'CHECKED_OUT', updatedAt: new Date() },
     });
 
-    if (rCheckIn.count || rCheckOut.count) {
+    for (const b of checkouts) {
+      await this.bookingService['changeBookingStatus'](b.id, 'CHECKED_OUT', {
+        allowOverride: true,
+        notifyAdmin: false,
+        notifyUser: true,
+      });
+    }
+
+    if (checkins.length || checkouts.length) {
       this.logger.log(
-        `Daily roll: →CHECKED_IN=${rCheckIn.count}, →CHECKED_OUT=${rCheckOut.count}`,
+        `Cron: CHECKED_IN=${checkins.length}, CHECKED_OUT=${checkouts.length}`,
       );
     }
   }

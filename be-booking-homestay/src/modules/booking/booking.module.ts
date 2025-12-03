@@ -6,6 +6,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { BookingController } from './booking.controller';
 import { BookingService } from './booking.service';
 import { MailService } from '../mail/mail.service';
+import { BookingCron } from './booking.cron';
 
 @Module({
   controllers: [BookingController],
@@ -16,6 +17,7 @@ import { MailService } from '../mail/mail.service';
     AvailabilityHelper,
     LoyaltyProgram,
     MailService,
+    BookingCron,
   ],
   exports: [BookingService],
 })

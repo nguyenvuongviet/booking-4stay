@@ -43,11 +43,11 @@ export default function BookingListPage() {
     getNights,
     processed,
     refresh,
+    accept,
+    reject,
   } = useBookingList();
 
-  if (loading || !raw) {
-    return <div className="p-6">Đang tải dữ liệu…</div>;
-  }
+  if (loading || !raw) return <div className="p-6">Đang tải dữ liệu…</div>;
 
   const exportExcel = () => {
     const rows = processed.map((b) => ({
@@ -63,9 +63,11 @@ export default function BookingListPage() {
       Amount: b.totalAmount,
       Status: b.status,
     }));
+
     const sheet = XLSX.utils.json_to_sheet(rows);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, sheet, "Bookings");
+
     const buffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
     saveAs(new Blob([buffer]), "bookings.xlsx");
   };
@@ -74,11 +76,9 @@ export default function BookingListPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-warm-900">
-            Quản lý đặt phòng
-          </h1>
-          <p className="text-warm-600 mt-1">
-            Quản lý tất cả các đặt phòng của khách hàng.
+          <h1 className="text-3xl font-bold">Quản lý đặt phòng</h1>
+          <p className="text-gray-600">
+            Quản lý tất cả các đặt phòng của khách.
           </p>
         </div>
 
@@ -91,7 +91,7 @@ export default function BookingListPage() {
       <Card className="p-4 rounded-xl shadow-sm">
         <div className="flex flex-col lg:flex-row lg:justify-between gap-4">
           <div className="flex flex-wrap items-center gap-4 w-full">
-            <div className="relative min-w-[260px] max-w-[400px] flex-1">
+            <div className="relative min-w-[260px] flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 text-gray-400" />
               <input
                 value={searchTerm}
@@ -114,14 +114,15 @@ export default function BookingListPage() {
                 <option value="CHECKED_IN">Checked-in</option>
                 <option value="CHECKED_OUT">Checked-out</option>
                 <option value="CANCELLED">Cancelled</option>
+                <option value="REFUNDED">Refunded</option>
               </select>
             </div>
             <DateRangePicker value={dateRange} onChange={setDateRange} />
           </div>
 
           <Button
-            onClick={exportExcel}
             className="h-10 bg-green-600 text-white flex items-center gap-2"
+            onClick={exportExcel}
           >
             <Download className="w-4 h-4" /> Export
           </Button>
@@ -163,6 +164,9 @@ export default function BookingListPage() {
                 </th>
                 <th className="py-3 px-4 text-center font-semibold">
                   Trạng thái
+                </th>
+                <th className="py-3 px-4 text-center font-semibold">
+                  Hành động
                 </th>
                 <th className="py-3 px-4 text-center font-semibold">
                   Chi tiết
@@ -207,6 +211,30 @@ export default function BookingListPage() {
                     >
                       {b.status}
                     </span>
+                  </td>
+
+                  <td className="py-4 px-4 text-center">
+                    {b.status === "PENDING" ? (
+                      <div className="flex items-center justify-center gap-2">
+                        <Button
+                          size="sm"
+                          className="bg-green-600 text-white"
+                          onClick={() => accept(b.id)}
+                        >
+                          Duyệt
+                        </Button>
+
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => reject(b.id)}
+                        >
+                          Từ chối
+                        </Button>
+                      </div>
+                    ) : (
+                      <span className="text-xs text-gray-400 italic">–</span>
+                    )}
                   </td>
 
                   <td className="py-4 px-4 text-center">
