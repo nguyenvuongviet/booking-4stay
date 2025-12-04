@@ -28,17 +28,20 @@ export class DashboardService {
   }
 
   async getRevenueByMonth(year: number) {
+    const start = new Date(`${year}-01-01`);
+    const end = new Date(`${year + 1}-01-01`);
+
     const bookings = await this.prisma.bookings.findMany({
       where: {
         status: { in: ['CONFIRMED', 'CHECKED_IN', 'CHECKED_OUT'] },
         isDeleted: false,
-        updatedAt: {
-          gte: new Date(`${year}-01-01`),
-          lt: new Date(`${year + 1}-01-01`),
+        checkOut: {
+          gte: start,
+          lt: end,
         },
       },
       select: {
-        updatedAt: true,
+        checkOut: true,
         totalPrice: true,
       },
     });
@@ -50,7 +53,7 @@ export class DashboardService {
     }));
 
     for (const b of bookings) {
-      const m = new Date(b.updatedAt).getMonth();
+      const m = new Date(b.checkOut).getMonth();
       months[m].revenue += Number(b.totalPrice);
       months[m].bookings++;
     }
