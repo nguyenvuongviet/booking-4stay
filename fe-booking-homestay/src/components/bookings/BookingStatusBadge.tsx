@@ -1,3 +1,4 @@
+import { useLang } from "@/context/lang-context";
 import { CheckCheck, CheckCircle, Clock, XCircle } from "lucide-react";
 import React from "react";
 
@@ -16,43 +17,44 @@ export const BookingStatusBadge: React.FC<BookingStatusBadgeProps> = ({
   status,
   className = "",
 }) => {
+  const {t} = useLang();
   const getStatusStyles = () => {
     switch (status) {
       case "CONFIRMED":
         return {
           icon: <CheckCircle className="w-4 h-4" />,
           color: "bg-green-100 text-green-700",
-          label: "Confirmed",
+          label: t("Confirmed"),
         };
       case "PENDING":
         return {
           icon: <Clock className="w-4 h-4" />,
           color: "bg-yellow-100 text-yellow-700",
-          label: "Pending",
+          label: t("Pending"),
         };
       case "CANCELLED":
         return {
           icon: <XCircle className="w-4 h-4" />,
           color: "bg-red-100 text-red-700",
-          label: "Cancelled",
+          label: t("Cancelled"),
         };
       case "COMPLETED":
         return {
           icon: <CheckCheck className="w-4 h-4" />,
           color: "bg-blue-100 text-blue-700",
-          label: "Completed",
+          label: t("Completed"),
         };
       case "CHECKED_OUT":
         return {
           icon: <CheckCheck className="w-4 h-4" />,
           color: "bg-blue-100 text-blue-700",
-          label: "Completed",
+          label: t("Completed"),
         };
       case "REDEEMED":
         return {
           icon: <CheckCircle className="w-4 h-4" />,
           color: "bg-red-100 text-red-700",
-          label: "Redeemed",
+          label: t("Redeemed"),
         };
       default:
         return {

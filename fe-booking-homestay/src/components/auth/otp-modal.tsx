@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/auth-context";
+import { useLang } from "@/context/lang-context";
 import { active_account, verify_otp } from "@/services/authApi";
 import { X } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -20,6 +21,7 @@ export default function OTPModals({
   context,
   onSuccess,
 }: OTPModalsProps) {
+  const { t } = useLang();
   const [otpValues, setOtpValues] = useState(Array(6).fill(""));
   const [error, setError] = useState("");
   const [apiError, setApiError] = useState("");
@@ -90,17 +92,19 @@ export default function OTPModals({
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
       <div className="bg-white rounded-xl p-8 shadow-xl w-[380px]">
         <div className="flex justify-between mb-4">
-          <h2 className="text-xl font-semibold">Enter OTP</h2>
+          <h2 className="text-xl font-semibold">{t("Enter")} OTP</h2>
           <button onClick={() => setShow(false)}>
             <X size={24} />
           </button>
         </div>
 
         <p className="text-sm text-gray-600 mb-4">
-          Chúng tôi đã gửi mã OTP đến <b>{email}</b>
+          {t("We have sent an OTP to")} <b>{email}</b>
         </p>
 
-        {apiError && <p className="text-destructive text-sm mb-3">{apiError}</p>}
+        {apiError && (
+          <p className="text-destructive text-sm mb-3">{apiError}</p>
+        )}
         {error && <p className="text-destructive text-sm mb-3">{error}</p>}
 
         <div className="flex justify-center gap-2 mb-6">
@@ -119,12 +123,21 @@ export default function OTPModals({
         </div>
 
         <Button className="w-full mb-4" onClick={handleVerify}>
-          Verify OTP
+          {t("Verify")} OTP
         </Button>
 
-        <button className="text-sm text-primary mx-auto block">
-          Resend OTP
-        </button>
+        <div className="text-center">
+          <span className="text-muted-foreground text-sm">
+            {t("no_code")}
+          </span>
+          <button
+            type="button"
+            className="text-primary font-medium hover:underline"
+            // onClick={handleSendOtp}
+          >
+            {t("Resend")} OTP
+          </button>
+        </div>
       </div>
     </div>
   );

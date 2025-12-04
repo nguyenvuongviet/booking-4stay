@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/popover";
 import { ArrowUpDown, Check, ChevronDown, Star, Filter } from "lucide-react";
 import { useState } from "react";
+import { useLang } from "@/context/lang-context";
 
 function CheckboxPopup({
   title,
@@ -33,6 +34,7 @@ function CheckboxPopup({
   onOpenChange: (open: boolean) => void;
   children?: React.ReactNode;
 }) {
+  const {t} = useLang();
   return (
     <Popover open={open} onOpenChange={onOpenChange}>
       <PopoverTrigger asChild>{children}</PopoverTrigger>
@@ -68,7 +70,7 @@ function CheckboxPopup({
               onClick={() => onOpenChange(false)}
               className="flex-1 rounded-full h-10 w-24 text-sm font-medium hover:bg-secondary/50"
             >
-              Close
+              {t("close")}
             </Button>
             <Button
               onClick={() => {
@@ -77,7 +79,7 @@ function CheckboxPopup({
               }}
               className="flex-1 rounded-full h-10 w-24 text-sm font-medium bg-primary hover:bg-primary/80 text-white"
             >
-              Apply
+              {t("apply")}
             </Button>
           </div>
         </div>
@@ -109,6 +111,8 @@ function CombinedFilterPopup({
   priceRanges: { label: string; value: string }[];
   starOptions: { label: string; value: number }[];
 }) {
+  const {t} = useLang();
+
   return (
     <Popover open={open} onOpenChange={onOpenChange}>
       <PopoverTrigger asChild>{children}</PopoverTrigger>
@@ -123,7 +127,7 @@ function CombinedFilterPopup({
           <div>
             <div className="flex items-center gap-2 mb-4">
               {/* <Star className="h-5 w-5 fill-amber-400 text-amber-400" /> */}
-              <h3 className="text-lg elegant-sans">Rating</h3>
+              <h3 className="text-lg elegant-sans">{t("rating")}</h3>
             </div>
             <RadioGroup
               value={selectedStars[0]?.toString() || ""}
@@ -166,7 +170,7 @@ function CombinedFilterPopup({
 
           {/* Price Section */}
           <div>
-            <h3 className="text-lg elegant-sans mb-4">Price</h3>
+            <h3 className="text-lg elegant-sans mb-4">{t("price")}</h3>
             <div className="space-y-2">
               {priceRanges.map((option) => (
                 <div key={option.value} className="flex items-center space-x-3">
@@ -194,7 +198,7 @@ function CombinedFilterPopup({
               onClick={() => onOpenChange(false)}
               className="flex-1 rounded-full h-10 text-sm elegant-sans"
             >
-              Close
+              {t("close")}
             </Button>
             <Button
               onClick={() => {
@@ -203,7 +207,7 @@ function CombinedFilterPopup({
               }}
               className="flex-1 rounded-full h-10 text-sm elegant-sans bg-primary hover:bg-primary/80"
             >
-              Apply
+              {t("apply")}
             </Button>
           </div>
         </div>
@@ -227,6 +231,7 @@ function OptionsPopup({
   onOpenChange: (open: boolean) => void;
   children: React.ReactNode;
 }) {
+  
   return (
     <Popover open={open} onOpenChange={onOpenChange}>
       <PopoverTrigger asChild>{children}</PopoverTrigger>
@@ -276,6 +281,7 @@ export function FilterBar({
   const [selectedPriceRanges, setSelectedPriceRanges] = useState<string[]>([]);
   const [sortOpen, setSortOpen] = useState(false);
   const [selectedSort, setSelectedSort] = useState<string>("");
+  const {t} = useLang();
 
   const handleApplyFilters = (overrideSort?: string) => {
     let minPrice: number | undefined;
@@ -334,13 +340,13 @@ export function FilterBar({
   };
 
   const sortOptions = [
-    { label: "Price lowest to highest", value: "asc" },
-    { label: "Price highest to lowest", value: "desc" },
+    { label: t("price lowest to highest"), value: "asc" },
+    { label: t("price highest to lowest"), value: "desc" },
   ];
 
   const getSortLabel = () => {
     const option = sortOptions.find((opt) => opt.value === selectedSort);
-    return option?.label || "Sort";
+    return option?.label || t("sort by price");
   };
 
   const handleToggle = <T,>(
@@ -356,18 +362,18 @@ export function FilterBar({
   };
 
   const starOptions = [
-    { label: "4+ stars", value: 4 },
-    { label: "3+ stars", value: 3 },
-    { label: "2+ stars", value: 2 },
-    { label: "1+ stars", value: 1 },
+    { label: `4+ ${t("stars")}`, value: 4 },
+    { label: `3+ ${t("stars")}`, value: 3 },
+    { label: `2+ ${t("stars")}`, value: 2 },
+    { label: `1+ ${t("stars")}`, value: 1 },
   ];
 
   const priceRanges = [
-    { label: "Under 500,000 VND", value: "0-500000" },
+    { label: `${t("under")} 500,000 VND`, value: "0-500000" },
     { label: "500,000 VND - 1,000,000 VND", value: "500000-1000000" },
     { label: "1,000,000 VND - 2,000,000 VND", value: "1000000-2000000" },
     { label: "2,000,000 VND - 3,000,000 VND", value: "2000000-3000000" },
-    { label: "Over 3,000,000 VND", value: "3000000+" },
+    { label: `${t("over")} 3,000,000 VND`, value: "3000000+" },
   ];
 
   return (
@@ -394,7 +400,7 @@ export function FilterBar({
             className="shadow-sm text-foreground elegant-subheading"
           >
             <Filter className="h-4 w-4 text-muted-foreground" />
-            <span>Filters</span>
+            <span>{t("filter")}</span>
             <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
           </Button>
         </CombinedFilterPopup>

@@ -6,6 +6,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "./ui/button";
+import { useLang } from "@/context/lang-context";
 
 export default function Header() {
   const { openSignIn, openNewPassword, user, logout } = useAuth();
@@ -13,6 +14,7 @@ export default function Header() {
   const [openMobile, setOpenMobile] = useState(false);
   const pathname = usePathname();
   const menuRef = useRef<HTMLDivElement>(null);
+  const { lang, setLang, t } = useLang();
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -55,7 +57,7 @@ export default function Header() {
               }
               }`}
             >
-              Home
+              {t("home")}
             </a>
             <a
               href="/room-list"
@@ -66,7 +68,7 @@ export default function Header() {
               }
               }`}
             >
-              Rooms
+              {t("Rooms")}
             </a>
             {/* <a
               href="#"
@@ -89,72 +91,86 @@ export default function Header() {
               }
               }`}
             >
-              Contact
+              {t("contact")}
             </a>
           </nav>
-
-          {user ? (
-            <div className="relative" ref={menuRef}>
+          <div className="flex items-center gap-4">
+            {/* Nút chuyển ngôn ngữ */}
+            <div className="">
               <button
-                onClick={() => setOpenMenu((prev) => !prev)}
-                className="flex items-center gap-2 hover:cursor-pointer"
+                onClick={() => setLang(lang === "en" ? "vi" : "en")}
+                className="flex items-center gap-1 px-3 py-1 border rounded-full hover:bg-gray-100 transition"
               >
-                <img
-                  src={user?.avatar || "/default-avatar.png"}
-                  // src={"images/default-avatar.jpg"}
-                  alt="avatar"
-                  className="w-8 h-8 rounded-full object-cover"
-                />
-                <span className="text-secondary-foreground elegant-subheading">
-                  {user.firstName + " " + user.lastName}
+                <span className="text-sm font-medium">
+                  {lang === "en" ? "EN" : "VI"}
                 </span>
-                {/* <span>Thảo Ly</span> */}
+                <span className="text-sm">{lang === "en" ? "🇺🇸" : "🇻🇳"}</span>
               </button>
-              {openMenu && (
-                <div className="absolute right-0 mt-2 bg-card shadow-lg rounded-md w-48  border border-gray-100 z-50">
-                  <Link
-                    href="/profile"
-                    onClick={() => setOpenMenu(false)}
-                    className="block px-4 py-2 hover:bg-secondary/50 rounded-md"
-                  >
-                    My Profile
-                  </Link>
-                  <Link
-                    href="/booking"
-                    onClick={() => setOpenMenu(false)}
-                    className="block px-4 py-2 hover:bg-secondary/50  rounded-md"
-                  >
-                    My Bookings
-                  </Link>
-                  <button
-                    className="block w-full text-left px-4 py-2 hover:bg-secondary/50 rounded-md"
-                    onClick={() => {
-                      openNewPassword();
-                      setOpenMenu(false);
-                    }}
-                  >
-                    Change password
-                  </button>
-                  <button
-                    className="block w-full text-left px-4 py-2 hover:bg-secondary/50 text-red-500 rounded-md"
-                    onClick={() => {
-                      logout();
-                      setOpenMenu(false);
-                    }}
-                  >
-                    Logout
-                  </button>
-                </div>
-              )}
             </div>
-          ) : (
-            <Button
-              className="bg-primary hover:bg-primary/80 px-8 py-2 rounded-2xl"
-              onClick={openSignIn}
-            >
-              Sign in
-            </Button>
-          )}
+
+            {user ? (
+              <div className="relative" ref={menuRef}>
+                <button
+                  onClick={() => setOpenMenu((prev) => !prev)}
+                  className="flex items-center gap-2 hover:cursor-pointer"
+                >
+                  <img
+                    src={user?.avatar || "/default-avatar.png"}
+                    // src={"images/default-avatar.jpg"}
+                    alt="avatar"
+                    className="w-8 h-8 rounded-full object-cover"
+                  />
+                  <span className="text-secondary-foreground elegant-subheading">
+                    {user.firstName + " " + user.lastName}
+                  </span>
+                  {/* <span>Thảo Ly</span> */}
+                </button>
+                {openMenu && (
+                  <div className="absolute right-0 mt-2 bg-card shadow-lg rounded-md w-48  border border-gray-100 z-50">
+                    <Link
+                      href="/profile"
+                      onClick={() => setOpenMenu(false)}
+                      className="block px-4 py-2 hover:bg-secondary/50 rounded-md"
+                    >
+                      {t("myProfile")}
+                    </Link>
+                    <Link
+                      href="/booking"
+                      onClick={() => setOpenMenu(false)}
+                      className="block px-4 py-2 hover:bg-secondary/50  rounded-md"
+                    >
+                      {t("myBookings")}
+                    </Link>
+                    <button
+                      className="block w-full text-left px-4 py-2 hover:bg-secondary/50 rounded-md"
+                      onClick={() => {
+                        openNewPassword();
+                        setOpenMenu(false);
+                      }}
+                    >
+                      {t("changePassword")}
+                    </button>
+                    <button
+                      className="block w-full text-left px-4 py-2 hover:bg-secondary/50 text-red-500 rounded-md"
+                      onClick={() => {
+                        logout();
+                        setOpenMenu(false);
+                      }}
+                    >
+                      {t("logout")}
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <Button
+                className="bg-primary hover:bg-primary/80 px-8 py-2 rounded-2xl"
+                onClick={openSignIn}
+              >
+                {t("signIn")}
+              </Button>
+            )}
+          </div>
 
           {/* Mobile hamburger */}
           <div className="md:hidden">
@@ -190,22 +206,22 @@ export default function Header() {
               onClick={() => setOpenMobile(false)}
               className="elegant-subheading text-muted-foreground hover:text-foreground transition-colors"
             >
-              Home
+              {t("home")}
             </a>
             <a
               href="/room-list"
               onClick={() => setOpenMobile(false)}
               className="elegant-subheading text-muted-foreground hover:text-foreground transition-colors"
             >
-              Hotels
+              {t("Rooms")}
             </a>
 
             <a
-              href="#"
+              href="/contact"
               onClick={() => setOpenMobile(false)}
               className="elegant-subheading text-muted-foreground hover:text-foreground transition-colors"
             >
-              Contact
+              {t("contact")}
             </a>
           </nav>
         </div>

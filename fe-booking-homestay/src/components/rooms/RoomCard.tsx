@@ -1,6 +1,7 @@
 "use client";
 
 import { Card, CardContent } from "@/components/ui/card";
+import { useLang } from "@/context/lang-context";
 import { Room } from "@/models/Room";
 import HoverScale from "@/styles/animations/HoverScale";
 import { MapPin, Star } from "lucide-react";
@@ -10,6 +11,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 type RoomCardProps = { room: Room };
 
 export function RoomCard({ room }: RoomCardProps) {
+  const {t} = useLang();
   const searchParams = useSearchParams();
   const router = useRouter();
   const loc = searchParams.get("location");
@@ -17,6 +19,7 @@ export function RoomCard({ room }: RoomCardProps) {
   const ch = searchParams.get("children");
   const ci = searchParams.get("checkIn");
   const co = searchParams.get("checkOut");
+
   const formatPrice = (price: number) => {
     return `${price.toLocaleString()} VND`;
   };
@@ -54,7 +57,7 @@ export function RoomCard({ room }: RoomCardProps) {
           {/* sold out  */}
           {room.status === "Sold out" && (
             <div className="absolute top-4 left-4 bg-linear-to-r from-red-600 to-red-700 text-white text-sm font-semibold px-2 py-2 rounded-full shadow-md tracking-wider animate-pulse">
-              Sold out
+              {t("sold out")}
             </div>
           )}
           <div className="absolute top-4 right-4 bg-border px-2 py-1 rounded-full flex items-center gap-1">
@@ -89,7 +92,7 @@ export function RoomCard({ room }: RoomCardProps) {
                 {formatPrice(room.price)}
               </span>
               <span className="elegant-subheading text-xs text-muted-foreground">
-                /night
+                /{t("night")}
               </span>
             </div>
           </div>

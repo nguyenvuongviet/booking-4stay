@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/context/auth-context";
+import { useLang } from "@/context/lang-context";
 import { forgot_password } from "@/services/authApi";
 import { X } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -19,6 +20,7 @@ export default function ForgotPasswordModal({
   setShow,
   switchToOTP,
 }: ForgotPasswordModalProps) {
+  const {t} = useLang();
   const [error, setError] = useState("");
   const [emailInput, setEmailInput] = useState("");
   const [apiError, setApiError] = useState("");
@@ -84,7 +86,7 @@ export default function ForgotPasswordModal({
 
             <div className="text-center mb-4">
               <h2 className="text-3xl elegant-heading text-primary">
-                Forgot password
+                {t("Forgot password")}
               </h2>
             </div>
 
@@ -100,7 +102,7 @@ export default function ForgotPasswordModal({
                   htmlFor="signupEmail"
                   className="text-foreground elegant-subheading"
                 >
-                  Your email
+                  Email
                 </Label>
                 <Input
                   id="signupEmail"
@@ -122,7 +124,7 @@ export default function ForgotPasswordModal({
                 className="mt-4 mb-6 rounded-2xl w-full bg-primary hover:bg-primary/80 h-10 elegant-subheading text-md"
                 onClick={handleContinue}
               >
-                Send OTP
+                {t("Send")} OTP
               </Button>
             </form>
           </div>

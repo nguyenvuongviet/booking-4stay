@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useLang } from "@/context/lang-context";
 import { forgot_password, reset_password, verify_otp } from "@/services/authApi";
 import { Eye, EyeOff, X } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -14,6 +15,7 @@ interface NewPasswordModalProps {
 }
 
 export default function NewPasswordModal({ show, setShow }: NewPasswordModalProps) {
+  const {t} = useLang();
   const [step, setStep] = useState(1); // 1: email, 2: otp, 3: password
   const [showPassword, setShowPassword] = useState(false);
   const [password, setPassword] = useState("");
@@ -133,7 +135,7 @@ export default function NewPasswordModal({ show, setShow }: NewPasswordModalProp
 
         <div className="text-center mb-6">
           <h2 className="text-3xl elegant-heading text-primary">
-            {step === 1 && "Confirm your email"}
+            {step === 1 && t("Confirm your email")}
             {step === 2 && "Enter OTP"}
             {step === 3 && "Create new password"}
           </h2>
@@ -145,7 +147,7 @@ export default function NewPasswordModal({ show, setShow }: NewPasswordModalProp
         {step === 1 && (
           <form className="space-y-4" onSubmit={handleSendOtp}>
             <div>
-              <Label htmlFor="email">Your email</Label>
+              <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
                 type="email"
@@ -156,7 +158,7 @@ export default function NewPasswordModal({ show, setShow }: NewPasswordModalProp
               />
             </div>
             <Button className="w-full rounded-2xl mb-10" type="submit">
-              Next
+              {t("Next")}
             </Button>
           </form>
         )}
@@ -165,7 +167,7 @@ export default function NewPasswordModal({ show, setShow }: NewPasswordModalProp
         {step === 2 && (
           <form className="space-y-4" onSubmit={handleVerify}>
             <p className="text-foreground elegant-subheading mb-4 text-center">
-              We have sent an OTP to{" "}
+              {t("We have sent an OTP to")}{" "}
               <span className="font-semibold text-secondary-foreground">{email}</span>
             </p>
             <div className="flex justify-center gap-2 mb-6">
@@ -192,26 +194,26 @@ export default function NewPasswordModal({ show, setShow }: NewPasswordModalProp
             {error && <p className="text-destructive text-sm mb-4">{error}</p>}
 
             <Button className="w-full rounded-2xl" type="submit">
-              Verify OTP
+              {t("Verify")} OTP
             </Button>
 
             <div className="text-center">
               <span className="text-muted-foreground text-sm">
-                Didn’t receive code?{" "}
+                {t("no_code")}
               </span>
               <button
                 type="button"
                 className="text-primary font-medium hover:underline"
                 onClick={handleSendOtp}
               >
-                Resend OTP
+                {t("Resend")} OTP
               </button>
             </div>
             <p
               onClick={() => setStep(1)}
               className="text-sm text-primary hover:underline text-center cursor-pointer"
             >
-              Back to email
+              {t("back")}
             </p>
           </form>
         )}
@@ -220,7 +222,7 @@ export default function NewPasswordModal({ show, setShow }: NewPasswordModalProp
         {step === 3 && (
           <form className="space-y-4" onSubmit={handleCreatePassword}>
             <div>
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">{t("Your password")}</Label>
               <div className="relative">
                 <Input
                   id="password"
@@ -244,7 +246,7 @@ export default function NewPasswordModal({ show, setShow }: NewPasswordModalProp
             </div>
 
             <div>
-              <Label htmlFor="confirmPassword">Confirm your password</Label>
+              <Label htmlFor="confirmPassword">{t("Confirm your password")}</Label>
               <Input
                 id="confirmPassword"
                 type="password"
@@ -261,11 +263,11 @@ export default function NewPasswordModal({ show, setShow }: NewPasswordModalProp
             </div>
 
             <p className="text-muted-foreground text-xs mb-4">
-              Use 6 or more characters!
+             {t("Use 6 or more characters")}!
             </p>
 
-            <Button className="rounded-2xl w-full bg-primary hover:bg-primary/90 text-primary-foreground h-10 mb-2">
-              Reset Password
+            <Button className="rounded-2xl w-full h-10 mb-2">
+              {t("Submit")}
             </Button>
           </form>
         )}

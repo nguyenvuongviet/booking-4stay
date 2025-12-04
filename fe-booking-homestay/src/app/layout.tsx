@@ -7,6 +7,7 @@ import type { Metadata } from "next";
 import { Fira_Mono, Lora, Outfit } from "next/font/google";
 import { Toaster as HotToaster } from "react-hot-toast";
 import "./globals.css";
+import { LangProvider } from "@/context/lang-context";
 
 const outfit = Outfit({
   subsets: ["latin"],
@@ -41,17 +42,19 @@ export default function RootLayout({
       <body
         className={`${outfit.variable} ${firaMono.variable} ${lora.variable} antialiased`}
       >
-        <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID ?? ""}>
-          <PageTransition>
-            <AuthProvider>{children}</AuthProvider>
-          </PageTransition>
-        </GoogleOAuthProvider>
-        <ShadcnToaster />
-        <HotToaster
-          toastOptions={{ duration: 4000 }}
-          position="top-right"
-          reverseOrder={false}
-        />
+        <LangProvider>
+          <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID ?? ""}>
+            <PageTransition>
+              <AuthProvider>{children}</AuthProvider>
+            </PageTransition>
+          </GoogleOAuthProvider>
+          <ShadcnToaster />
+          <HotToaster
+            toastOptions={{ duration: 4000 }}
+            position="top-right"
+            reverseOrder={false}
+          />
+        </LangProvider>
       </body>
     </html>
   );

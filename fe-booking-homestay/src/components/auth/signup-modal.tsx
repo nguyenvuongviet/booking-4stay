@@ -8,6 +8,7 @@ import { register } from "@/services/authApi";
 import { Eye, EyeOff, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import GoogleLoginButton from "./GoogleLoginButton";
+import { useLang } from "@/context/lang-context";
 
 interface SignUpModalProps {
   show: boolean;
@@ -22,6 +23,7 @@ export default function SignUpModal({
   switchToSignIn,
   switchToOTP,
 }: SignUpModalProps) {
+  const {t} = useLang();
   const [showPassword, setShowPassword] = useState(false);
   const [passwordInput, setPasswordInput] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -151,7 +153,7 @@ export default function SignUpModal({
             </div>
 
             <div className="text-center mb-1">
-              <h2 className="text-3xl elegant-heading text-primary">SIGN UP</h2>
+              <h2 className="text-3xl elegant-heading text-primary">{t("SIGN UP")}</h2>
               {apiError && (
                 <p className="text-destructive text-left text-sm mt-4 elegant-subheading">
                   {apiError}
@@ -166,7 +168,7 @@ export default function SignUpModal({
                     htmlFor="firstName"
                     className="text-foreground elegant-subheading"
                   >
-                    First name
+                    {t("firstName")}
                   </Label>
                   <Input
                     id="firstName"
@@ -186,7 +188,7 @@ export default function SignUpModal({
                     htmlFor="lastName"
                     className="text-foreground elegant-subheading"
                   >
-                    Last name
+                    {t("lastName")}
                   </Label>
                   <Input
                     id="lastName"
@@ -207,7 +209,7 @@ export default function SignUpModal({
                   htmlFor="signupEmail"
                   className="text-foreground elegant-subheading"
                 >
-                  Your email
+                  Email
                 </Label>
                 <Input
                   id="signupEmail"
@@ -226,7 +228,7 @@ export default function SignUpModal({
                   htmlFor="phone"
                   className="text-foreground elegant-subheading"
                 >
-                  Your mobile phone number
+                  {t("phone")}
                 </Label>
                 <Input
                   id="phone"
@@ -246,7 +248,7 @@ export default function SignUpModal({
                     htmlFor="signupPassword"
                     className="text-foreground elegant-subheading"
                   >
-                    Password
+                    {t("Your password")}
                   </Label>
                   <div className="relative">
                     <Input
@@ -279,7 +281,7 @@ export default function SignUpModal({
                     htmlFor="confirmPassword"
                     className="text-foreground elegant-subheading"
                   >
-                    Confirm your password
+                    {t("Confirm your password")}
                   </Label>
                   <Input
                     id="confirmSignupPassword"
@@ -298,7 +300,7 @@ export default function SignUpModal({
                   )}
                 </div>
                 <p className="text-muted-foreground elegant-subheading text-xs mb-4">
-                  Use 6 or more characters!
+                  {t("Use 6 or more characters")}!
                 </p>
               </div>
 
@@ -307,13 +309,13 @@ export default function SignUpModal({
                 type="submit"
                 disabled={loading}
               >
-                {loading ? "Signing up..." : "Sign up"}
+                {loading ? "Signing up..." : t("signUp")}
               </Button>
             </form>
 
             <div className="mt-2 text-center">
               <span className="text-muted-foreground elegant-subheading text-xs">
-                Already have an account?{" "}
+                {t("Already have an account")}
               </span>
               <button
                 onClick={() => {
@@ -322,7 +324,7 @@ export default function SignUpModal({
                 }}
                 className="text-primary elegant-subheading text-sm hover:underline"
               >
-                Sign in
+                {t("signUp")}
               </button>
             </div>
 

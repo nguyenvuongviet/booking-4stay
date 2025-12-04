@@ -9,6 +9,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { useLang } from "@/context/lang-context";
 import { Booking } from "@/models/Booking";
 import { Loader2, Star } from "lucide-react";
 import { useState } from "react";
@@ -25,6 +26,7 @@ export const ReviewSection = ({
     comment: string
   ) => Promise<void>;
 }) => {
+  const {t} = useLang();
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const [comment, setComment] = useState(booking.review?.comment || "");
@@ -65,14 +67,14 @@ export const ReviewSection = ({
         className="rounded-xl flex items-center gap-2"
         onClick={() => setOpen(true)}
       >
-        {isReviewed ? "View Review" : "Write Review"}
+        {isReviewed ? t("View Review") : t("Write Review")}
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="text-lg elegant-sanserif text-primary">
-              {isReviewed ? "Your Review" : "Write a Review"}
+              {isReviewed ? t("Your Review") : t("Write Review")}
             </DialogTitle>
           </DialogHeader>
 
@@ -80,7 +82,7 @@ export const ReviewSection = ({
             {/* Rating */}
             <div>
               <p className="text-sm text-muted-foreground mb-2">
-                Enter your rating (0–5):
+                {t("Enter your rating")} (0–5):
               </p>
               <div className="flex items-center gap-2">
                 <input
@@ -132,13 +134,13 @@ export const ReviewSection = ({
             {/* Comment */}
             <div>
               <p className="text-sm text-muted-foreground mb-2">
-                Share your experience:
+                {t("Share your experience")}:
               </p>
               <Textarea
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
                 disabled={isReviewed}
-                placeholder="Write your comment here..."
+                placeholder={t("Write your comment here...")}
                 className="w-full min-h-[100px] resize-none wrap-break-word whitespace-pre-wrap overflow-y-auto rounded-lg border border-border p-2 focus:ring-2 focus:ring-primary transition-all"
                 rows={4}
               />
@@ -151,7 +153,7 @@ export const ReviewSection = ({
               variant="outline"
               onClick={() => setOpen(false)}
             >
-              Close
+              {t("close")}
             </Button>
             {!isReviewed && (
               <Button
@@ -160,7 +162,7 @@ export const ReviewSection = ({
                 className="bg-primary text-white hover:bg-primary/80 rounded-xl"
               >
                 {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                Submit Review
+                {t("Submit")}
               </Button>
             )}
           </DialogFooter>

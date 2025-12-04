@@ -13,12 +13,14 @@ import { useState } from "react";
 import toast from "react-hot-toast";
 import { BookingStatusBadge } from "./BookingStatusBadge";
 import { ReviewSection } from "./ReviewSection";
+import { useLang } from "@/context/lang-context";
 
 export const BookingDetail = ({
   booking: initialBooking,
 }: {
   booking: Booking;
 }) => {
+  const {t} = useLang();
   const [booking, setBooking] = useState(initialBooking);
   const [cancelInfo, setCancelInfo] = useState<{
     reason: string;
@@ -104,7 +106,7 @@ export const BookingDetail = ({
             {/* <span>({booking.room.reviewCount} đánh giá)</span> */}
           </div>
           <p className="text-lg elegant-sans text-foreground mt-2">
-            {formatPrice(booking.room?.price)}<span className="text-muted-foreground elegant-subheading text-sm">/night</span>
+            {formatPrice(booking.room?.price)}<span className="text-muted-foreground elegant-subheading text-sm">/{t("night")}</span>
           </p>
           
         </div>
@@ -135,7 +137,7 @@ export const BookingDetail = ({
             <div>
               <div className="flex items-center gap-2">
                 <CalendarDays className="w-4 h-4 text-muted-foreground" />
-                <p className="text-muted-foreground elegant-subheading">Check-in</p>
+                <p className="text-muted-foreground elegant-subheading">{t("checkIn")}</p>
               </div>
               {booking?.checkIn ? (
                 <p className="elegant-sans text-foreground ml-6">
@@ -150,7 +152,7 @@ export const BookingDetail = ({
             <div>
               <div className="flex items-center gap-2">
                 <CalendarDays className="w-4 h-4 text-muted-foreground" />
-                <p className="text-muted-foreground elegant-subheading">Check-out</p>
+                <p className="text-muted-foreground elegant-subheading">{t("checkOut")}</p>
               </div>
               {booking?.checkOut ? (
                 <p className="elegant-sans text-foreground ml-6">
@@ -165,18 +167,18 @@ export const BookingDetail = ({
             <div>
               <div className="flex items-center gap-2">
                 <Clock className="w-4 h-4 text-muted-foreground" />
-                <p className="text-muted-foreground elegant-subheading">Total nights</p>
+                <p className="text-muted-foreground elegant-subheading">{t("total")} {t("nights")}</p>
               </div>
-              <p className="elegant-sans text-foreground ml-6">{totalNights} nights</p>
+              <p className="elegant-sans text-foreground ml-6">{totalNights} {t("nights")}</p>
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <Users className="w-4 h-4 text-muted-foreground" />
-                <p className="text-muted-foreground elegant-subheading">Guests</p>
+                <p className="text-muted-foreground elegant-subheading">{t("guests")}</p>
               </div>
               <p className="elegant-sans text-foreground ml-6 ">
-                {booking.adults} adults
-                {booking.children ? `, ${booking.children} children` : ""}
+                {booking.adults} {t("adults")}
+                {booking.children ? `, ${booking.children} ${t("children")}` : ""}
               </p>
             </div>
           </div>
@@ -185,14 +187,14 @@ export const BookingDetail = ({
             <div className="border-t space-y-4">
               <div className="mt-4 p-4 bg-red-50 rounded-xl text-sm">
                 <p className="elegant-sans text-lg text-red-700">
-                  Booking canceled
+                  {t("Booking cancelled")}
                 </p>
                 <p className="mt-1 text-muted-foreground elegant-subheading">
-                  Reason: {booking.cancelReason}
+                  {t("Reason")}: {booking.cancelReason}
                 </p>
                 {cancelInfo && (
                   <p className="mt-1">
-                    Refund:{" "}
+                    {t("Refund")}:{" "}
                     {cancelInfo?.refundAmount && cancelInfo.refundAmount > 0 ? (
                       <span className="text-green-600 elegant-sans ">
                         {cancelInfo.refundAmount.toLocaleString()} VND
@@ -217,7 +219,7 @@ export const BookingDetail = ({
             </div> */}
             <div className="flex items-center gap-2">
               <DollarSign className="w-4 h-4 text-muted-foreground" />
-              <p className="text-muted-foreground elegant-subheading">Total Amount:</p>
+              <p className="text-muted-foreground elegant-subheading"> {t("total")} {t("amount")}:</p>
             </div>
             <p className="text-primary text-lg font-semibold ml-6">
               {formatPrice(booking.room.price * totalNights) || "None"}

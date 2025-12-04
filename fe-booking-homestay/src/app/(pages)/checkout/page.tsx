@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/context/auth-context";
+import { useLang } from "@/context/lang-context";
 import { create_booking, pay_with_vnpay } from "@/services/bookingApi";
 import { room_detail } from "@/services/roomApi";
 import { RadioGroup, RadioGroupItem } from "@radix-ui/react-radio-group";
@@ -18,7 +19,7 @@ type PaymentMethod = "vnpay" | "cash";
 
 export default function CheckoutPage() {
   const { user } = useAuth();
-
+  const { t } = useLang();
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [emailInput, setEmailInput] = useState("");
@@ -143,20 +144,20 @@ export default function CheckoutPage() {
             className="px-4 flex items-center gap-2 text-gray-900 hover:text-primary hover:cursor-pointer"
           >
             <ArrowLeft className="h-5 w-5" />
-            <span className="elegant-sans text-lg">Back</span>
+            <span className="elegant-sans text-lg">{t("Back")}</span>
           </button>
         </div>
       </header>
 
       <main className="container max-w-7xl mx-auto px-4 py-8 space-y-12 sm:px-6 lg:px-8">
-        <h1 className="text-3xl elegant-heading">Confirm and Payment</h1>
+        <h1 className="text-3xl elegant-heading">{t("Confirm and Payment")}</h1>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left  */}
           <div className="lg:col-span-2 space-y-6">
             {/* Guest Information  */}
             <Card className="p-6">
               <h2 className="text-2xl elegant-heading mb-4">
-                Guest Information
+                {t("Guest information")}
               </h2>
               <div className="grid grid-cols-2  gap-4">
                 {/* First Name */}
@@ -165,7 +166,7 @@ export default function CheckoutPage() {
                     htmlFor="firstName"
                     className="text-foreground elegant-subheading"
                   >
-                    First name
+                    {t("firstName")}
                   </Label>
                   <Input
                     id="firstName"
@@ -185,7 +186,7 @@ export default function CheckoutPage() {
                     htmlFor="lastName"
                     className="text-foreground elegant-subheading"
                   >
-                    Last name
+                    {t("lastName")}
                   </Label>
                   <Input
                     id="lastName"
@@ -221,7 +222,7 @@ export default function CheckoutPage() {
                     htmlFor="phone"
                     className="text-foreground elegant-subheading"
                   >
-                    Your mobile phone number
+                    {t("phone")}
                   </Label>
                   <Input
                     id="phone"
@@ -261,11 +262,12 @@ export default function CheckoutPage() {
                       </div>
                       <div>
                         <p className="font-medium text-gray-900">
-                          Cash Payment
+                          {t("Cash Payment")}
                         </p>
                         <p className="text-sm text-gray-600">
-                          Pay directly in cash when you arrive. No online
-                          payment required.
+                          {t(
+                            "Pay directly in cash when you arrive. No online payment required."
+                          )}
                           {/* Thanh toán trực tiếp bằng tiền mặt khi đến nơi. Không cần thanh toán trực tuyến. */}
                         </p>
                       </div>
@@ -291,11 +293,12 @@ export default function CheckoutPage() {
                       </div>
                       <div>
                         <p className="font-medium text-gray-900">
-                          VNPay (Bank transfer/ Card/ QR code)
+                          {t("VNPay (Bank transfer/ Card/ QR code)")}
                         </p>
                         <p className="text-sm text-gray-600">
-                          Secure and fast online payment via VNPay. Supports
-                          major banks and e-wallets.
+                          {t(
+                            "Secure and fast online payment via VNPay. Supports major banks and e-wallets."
+                          )}
                           {/* Thanh toán trực tuyến an toàn và nhanh chóng qua VNPay. Hỗ trợ các ngân hàng lớn và ví điện tử. */}
                         </p>
                       </div>
@@ -342,15 +345,11 @@ export default function CheckoutPage() {
                   <h3 className="text-lg font-semibold text-blue-700 flex items-center gap-2">
                     <CreditCard className="w-5 h-5 text-blue-700" />
                     {/* VNPAY – Thanh toán nhanh & an toàn */}
-                    VNPAY – Fast & Secure Payment
+                    {t("vnpay_title")}
                   </h3>
                   <p className="text-sm text-gray-700 leading-relaxed">
-                    VNPAY supports online payments via <strong>QR code</strong>{" "}
-                    or{" "}
-                    <strong>
-                      domestic/international bank cards (Visa, MasterCard)
-                    </strong>
-                    . You can choose one of the following methods:
+                    {t("vnpay_intro_1")} <strong>{t("qr")}</strong> {t("or")}{" "}
+                    <strong>{t("cards")}</strong>. {t("vnpay_intro_2")}
                     {/* VNPAY hỗ trợ thanh toán trực tuyến qua{" "}
                     <strong>mã QR</strong> hoặc{" "}
                     <strong>
@@ -361,16 +360,14 @@ export default function CheckoutPage() {
 
                   <ul className="list-disc list-inside text-sm text-gray-700 space-y-1">
                     <li>
-                      <strong>Scan QR Code:</strong> Use your banking app or
-                      VNPAY Wallet to scan and confirm your payment instantly.
+                      <strong>{t("scan_qr")}:</strong> {t("scan_qr_desc")}
                       {/* <strong>Quét mã QR:</strong> Sử dụng ứng dụng ngân hàng
                       (Mobile Banking) hoặc ví VNPAY để quét mã và xác nhận
                       thanh toán nhanh chóng. */}
                     </li>
                     <li>
-                      <strong>Card Payment:</strong> Enter your bank or
-                      credit/debit/master card details to complete the online
-                      transaction.
+                      <strong>{t("card_payment")}:</strong>{" "}
+                      {t("card_payment_desc")}
                       {/* <strong>Thanh toán bằng thẻ:</strong> Nhập thông tin thẻ
                       ngân hàng hoặc thẻ tín dụng để hoàn tất giao dịch trực
                       tuyến. */}
@@ -378,10 +375,9 @@ export default function CheckoutPage() {
                   </ul>
 
                   <p className="text-sm text-gray-700">
-                    After clicking <strong>"Confirm booking"</strong>, you’ll be
-                    redirected to the VNPAY payment gateway to securely complete
-                    your transaction. Once the payment is successful, your
-                    booking will be automatically confirmed.
+                    {t("after_confirm")}{" "}
+                    <strong>"{t("Confirm and Payment")}"</strong>,
+                    {t("vnpay_redirect")}
                     {/* Sau khi nhấn <strong>"Confirm booking"</strong>, bạn sẽ được
                     chuyển đến cổng thanh toán VNPAY để hoàn tất giao dịch an
                     toàn. Sau khi thanh toán thành công, hệ thống sẽ tự động xác
@@ -389,8 +385,7 @@ export default function CheckoutPage() {
                   </p>
 
                   <p className="text-xs text-gray-500 italic">
-                    * All transactions are encrypted and secured by VNPAY
-                    standards.
+                    * {t("secure_notice")}
                     {/* * Mọi giao dịch đều được mã hóa và bảo mật theo tiêu chuẩn
                     VNPAY. */}
                   </p>
@@ -402,12 +397,11 @@ export default function CheckoutPage() {
                 <div className="mt-6 p-4 bg-green-50 rounded-lg border border-green-100 space-y-2">
                   <h3 className="text-lg font-semibold text-green-700 flex items-center gap-2">
                     <DollarSign className="w-5 h-5 text-green-700" />
-                    Cash Payment
+                    {t("cash_title")}
                   </h3>
                   <p className="text-sm text-gray-700 leading-relaxed">
-                    You can choose to pay in <strong>cash</strong> when you
-                    arrive at the accommodation. This is a convenient option if
-                    you prefer not to pay online.
+                    {t("cash_intro_1")} <strong>{t("cash")}</strong>{" "}
+                    {t("cash_intro_2")}
                     {/* Bạn có thể chọn thanh toán bằng <strong>tiền mặt</strong> khi đến nơi
                     lưu trú. Đây là lựa chọn tiện lợi nếu bạn không muốn thanh toán trực
                     tuyến. */}
@@ -415,34 +409,30 @@ export default function CheckoutPage() {
 
                   <ul className="list-disc list-inside text-sm text-gray-700 space-y-1">
                     <li>
-                      Please make sure to prepare the exact amount for your stay
-                      to speed up the check-in process.
+                      {t("cash_rule_1")}
                       {/* Vui lòng chuẩn bị số tiền chính xác để quá trình nhận phòng diễn ra nhanh chóng. */}
                     </li>
                     <li>
-                      The booking will be <strong>reserved temporarily</strong>{" "}
-                      until you complete the payment at the property.
+                      {t("cash_rule_2_1")}{" "}
+                      <strong>{t("temporary_reserved")}</strong>{" "}
+                      {t("cash_rule_2_2")}
                       {/* Đơn đặt phòng sẽ được <strong>giữ tạm thời</strong> cho đến khi bạn
                       hoàn tất thanh toán tại nơi lưu trú. */}
                     </li>
                     <li>
-                      If you fail to check in or pay on time, your booking may
-                      be canceled automatically.
+                      {t("cash_rule_3")}
                       {/* Nếu bạn không đến hoặc không thanh toán đúng hạn, đơn đặt phòng có thể bị hủy tự động. */}
                     </li>
                   </ul>
 
                   <p className="text-sm text-gray-700">
-                    Once you confirm this booking, you will receive a
-                    confirmation email with all details and instructions for
-                    paying by cash.
+                    {t("cash_after_confirm")}
                     {/* Sau khi xác nhận đặt phòng, bạn sẽ nhận được email xác nhận kèm thông
                     tin chi tiết và hướng dẫn thanh toán bằng tiền mặt. */}
                   </p>
 
                   <p className="text-xs text-gray-500 italic">
-                    * No deposit or online payment required. Payment is made
-                    directly at the property.
+                    * {t("cash_note")}
                     {/* * Không yêu cầu đặt cọc hoặc thanh toán trực tuyến. Thanh toán trực tiếp tại nơi lưu trú. */}
                   </p>
                 </div>
@@ -451,11 +441,11 @@ export default function CheckoutPage() {
             {/* Request  */}
             <Card className="p-6">
               <h2 className="text-2xl mb-2 elegant-heading">
-                Special requests
+                {t("Special requests")}
               </h2>
               <textarea
                 className="p-4 border border-border rounded-lg text-sm px-4 py-3 resize-none h-24"
-                placeholder="Please write your request..."
+                placeholder={t("Please write your request")}
                 value={specialRequests}
                 onChange={(e) => setSpecialRequests(e.target.value)}
               ></textarea>
@@ -465,7 +455,7 @@ export default function CheckoutPage() {
           <div className="lg:col-span-1 sticky top-20">
             {/* Booking Summary  */}
             <Card className="p-6 sticky top-10 space-y-2">
-              <h2 className="text-2xl elegant-heading">Booking Summary</h2>
+              <h2 className="text-2xl elegant-heading">{t("Booking Summary")}</h2>
               <div className="w-full h-50 rounded-lg overflow-hidden">
                 <img
                   src={bookingData.hotelImage || "/placeholder.svg"}
@@ -484,31 +474,31 @@ export default function CheckoutPage() {
 
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Check-in:</span>
+                    <span className="text-muted-foreground">{t("checkIn")}:</span>
                     <span className="elegant-sans text-foreground">
                       {bookingData.checkIn}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Check-out:</span>
+                    <span className="text-muted-foreground">{t("checkOut")}:</span>
                     <span className="elegant-sans text-foreground">
                       {bookingData.checkOut}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Nights:</span>
+                    <span className="text-muted-foreground">{t("Nights")}:</span>
                     <span className="elegant-sans text-foreground">
                       {bookingData.nights}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Adults: </span>
+                    <span className="text-muted-foreground">{t("adults")}: </span>
                     <span className="elegant-sans text-foreground">
                       {bookingData.adults}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Children:</span>
+                    <span className="text-muted-foreground">{t("children")}:</span>
                     <span className="elegant-sans text-foreground">
                       {bookingData.children}
                     </span>
@@ -521,7 +511,7 @@ export default function CheckoutPage() {
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">
                     đ {bookingData?.pricePerNight?.toLocaleString()} x{" "}
-                    {bookingData.nights} nights
+                    {bookingData.nights} {t("nights")}
                   </span>
                   <span className="text-foreground">
                     đ{" "}
@@ -531,8 +521,8 @@ export default function CheckoutPage() {
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Taxes & fees</span>
-                  <span className="text-foreground">Included</span>
+                  <span className="text-muted-foreground">{t("Taxes & fees")}</span>
+                  <span className="text-foreground">{t("Included")}</span>
                 </div>
               </div>
 
@@ -540,14 +530,14 @@ export default function CheckoutPage() {
               <div className="border-t pt-4 space-y-2">
                 <div className="flex justify-between items-baseline">
                   <span className="text-lg elegant-sans text-foreground">
-                    Total
+                    {t("total")}
                   </span>
                   <span className="text-lg elegant-sans text-foreground">
                     đ{totalAmount.toLocaleString()}
                   </span>
                 </div>
                 <div className="flex justify-between items-baseline">
-                  <span className="text-sm text-foreground">Points earned</span>
+                  <span className="text-sm text-foreground">{t("Points earned")}</span>
                   <span className="text-sm text-green-600">
                     +{(totalAmount / 1000).toLocaleString()}
                   </span>
@@ -559,18 +549,19 @@ export default function CheckoutPage() {
                 onClick={() => handleConfirmBooking()}
                 className="rounded-2xl w-full bg-primary h-10 elegant-subheading text-md"
               >
-                Confirm booking
+                {t("Confirm and Payment")}
               </Button>
 
               {/* Cancellation Policy */}
               <div className="text-xs text-gray-600 space-y-1">
                 <p className="font-medium text-gray-900">
-                  Cancellation policy:
+                  {t("Cancellation & Refund Policy")}
                 </p>
-                <p>
-                  Free cancellation until 7+ days before check-in. After that,
-                  cancellation fees may apply.
-                </p>
+               <ul className="list-disc pl-5 space-y-1">
+                  <li>{t("Cancel 7 or more days before check-in → Full refund (100%)")}.</li>
+                  <li>{t("Cancel 3–6 days before check-in → 50% refund")}.</li>
+                  <li>{t("Cancel within 2 days of check-in → No refund")}.</li>
+                </ul>
               </div>
             </Card>
           </div>

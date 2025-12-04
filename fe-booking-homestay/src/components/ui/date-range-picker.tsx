@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Calendar as CalendarIcon } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { format, addMonths } from "date-fns";
+import { useLang } from "@/context/lang-context";
 
 interface DateRangePickerProps {
   id?:number|string;
@@ -32,6 +33,7 @@ export default function DateRangePicker({
     DateRange | undefined
   >(value);
   const [currentMonth, setCurrentMonth] = React.useState<Date>(new Date());
+  const {t} = useLang();
 
   const formatLabel = (date?: Date) =>
     date ? format(date, "MMM dd, yyyy") : "";
@@ -79,13 +81,13 @@ export default function DateRangePicker({
             {selectedRange?.from ? (
               formatLabel(selectedRange.from)
             ) : (
-              <span className="text-muted">Check-in</span>
+              <span className="text-muted">{t("checkIn")}</span>
             )}
             <span className="text-muted"> - </span>{" "}
             {selectedRange?.to ? (
               formatLabel(selectedRange.to)
             ) : (
-              <span className="text-muted">Check-out</span>
+              <span className="text-muted">{t("checkOut")}</span>
             )}
           </div>
         </Button>
