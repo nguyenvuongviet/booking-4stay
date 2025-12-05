@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { RefreshButton } from "../_components/RefreshButton";
-import { StarRating } from "../_components/star-rating";
+import { StarRating } from "../_components/StarRating";
 import { useReviewList } from "./_hooks/useReviewList";
 
 export default function ReviewsPage() {

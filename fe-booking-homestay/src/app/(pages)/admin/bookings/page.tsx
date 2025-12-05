@@ -3,10 +3,12 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { formatDate } from "@/lib/utils/date";
+import { acceptBooking, rejectBooking } from "@/services/admin/bookingsApi";
 import { saveAs } from "file-saver";
 import {
   ArrowUpDown,
   Baby,
+  Check,
   ChevronLeft,
   ChevronRight,
   Download,
@@ -14,17 +16,25 @@ import {
   Filter,
   Search,
   Users,
+  X,
 } from "lucide-react";
 import Link from "next/link";
+import { useState } from "react";
+import toast from "react-hot-toast";
 import * as XLSX from "xlsx";
 import { DateRangePicker } from "../_components/DateRangePicker";
 import { RefreshButton } from "../_components/RefreshButton";
-import { getStatusColorClasses } from "./[id]/_utils/color-utils";
+import { InputDialog } from "./_components/InputDialog";
 import { useBookingList } from "./_hooks/useBookingList";
+import {
+  BOOKING_STATUS_MAP,
+  getStatusColorClasses,
+} from "./_utils/color-utils";
+import { Pagination } from "../_components/Pagination";
 
 export default function BookingListPage() {
   const {
-    loading,
+    initialLoading,
     raw,
     paged,
     page,
@@ -43,11 +53,40 @@ export default function BookingListPage() {
     getNights,
     processed,
     refresh,
-    accept,
-    reject,
   } = useBookingList();
 
-  if (loading || !raw) return <div className="p-6">Đang tải dữ liệu…</div>;
+  const [dialog, setDialog] = useState({
+    open: false,
+    mode: null as "accept" | "reject" | null,
+    id: null as number | null,
+  });
+
+  const openAccept = (id: number) =>
+    setDialog({ open: true, mode: "accept", id });
+
+  const openReject = (id: number) =>
+    setDialog({ open: true, mode: "reject", id });
+
+  const handleConfirm = async (value: string) => {
+    try {
+      if (dialog.mode === "accept") {
+        await acceptBooking(dialog.id!, parseInt(value, 10));
+        toast.success("Duyệt booking thành công");
+      } else {
+        await rejectBooking(dialog.id!, value);
+        toast.success("Từ chối booking thành công");
+      }
+      refresh();
+    } catch {
+      toast.error("Thao tác thất bại");
+    } finally {
+      setDialog({ open: false, mode: null, id: null });
+    }
+  };
+
+  if (initialLoading || !raw) {
+    return <div className="p-6">Đang tải dữ liệu…</div>;
+  }
 
   const exportExcel = () => {
     const rows = processed.map((b) => ({
@@ -77,51 +116,46 @@ export default function BookingListPage() {
       <div className="flex items-center justify-between pb-4 border-b">
         <div>
           <h1 className="text-3xl font-bold">Quản lý đặt phòng</h1>
-          <p className="text-gray-600">
+          <p className="text-gray-600 mt-1">
             Quản lý tất cả các đặt phòng của khách.
           </p>
         </div>
-        <RefreshButton onRefresh={refresh} />
+
+        <div className="flex gap-3">
+          <RefreshButton onRefresh={refresh} />
+          <Button onClick={exportExcel}>
+            <Download className="w-4 h-4 mr-2" /> Xuất excel
+          </Button>
+        </div>
       </div>
 
       <Card className="p-4 rounded-xl shadow-sm">
-        <div className="flex flex-col lg:flex-row lg:justify-between gap-4">
-          <div className="flex flex-wrap items-center gap-4 w-full">
-            <div className="relative min-w-[260px] flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 text-gray-400" />
-              <input
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search guest name or email…"
-                className="h-10 w-full pl-10 pr-3 border rounded-lg"
-              />
-            </div>
-
-            <div className="flex items-center gap-2">
-              <Filter className="w-4 h-4 text-gray-400" />
-              <select
-                className="h-10 px-3 border rounded-lg"
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-              >
-                <option value="all">All Status</option>
-                <option value="PENDING">Pending</option>
-                <option value="CONFIRMED">Confirmed</option>
-                <option value="CHECKED_IN">Checked-in</option>
-                <option value="CHECKED_OUT">Checked-out</option>
-                <option value="CANCELLED">Cancelled</option>
-                <option value="REFUNDED">Refunded</option>
-              </select>
-            </div>
-            <DateRangePicker value={dateRange} onChange={setDateRange} />
+        <div className="flex flex-wrap items-center gap-4 w-full">
+          <div className="relative min-w-[260px] flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 text-gray-400" />
+            <input
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Tìm kiếm tên hoặc email..."
+              className="h-10 w-full pl-10 pr-3 border rounded-lg"
+            />
           </div>
 
-          <Button
-            className="h-10 bg-green-600 text-white flex items-center gap-2"
-            onClick={exportExcel}
-          >
-            <Download className="w-4 h-4" /> Export
-          </Button>
+          <div className="flex items-center gap-2">
+            <Filter className="w-4 h-4 text-gray-400" />
+            <select
+              className="h-10 px-3 border rounded-lg"
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+            >
+              {Object.entries(BOOKING_STATUS_MAP).map(([key, value]) => (
+                <option key={key} value={key}>
+                  {value.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <DateRangePicker value={dateRange} onChange={setDateRange} />
         </div>
       </Card>
 
@@ -215,21 +249,21 @@ export default function BookingListPage() {
                         <Button
                           size="sm"
                           className="bg-green-600 text-white"
-                          onClick={() => accept(b.id)}
+                          onClick={() => openAccept(b.id)}
                         >
-                          Duyệt
+                          <Check className="w-4 h-4" /> Duyệt
                         </Button>
 
                         <Button
                           size="sm"
                           variant="destructive"
-                          onClick={() => reject(b.id)}
+                          onClick={() => openReject(b.id)}
                         >
-                          Từ chối
+                          <X className="w-4 h-4" /> Huỷ
                         </Button>
                       </div>
                     ) : (
-                      <span className="text-xs text-gray-400 italic">–</span>
+                      <span className="text-xs text-gray-400 italic">-</span>
                     )}
                   </td>
 
@@ -246,32 +280,24 @@ export default function BookingListPage() {
           </table>
         </div>
 
-        <div className="flex justify-between items-center mt-6">
-          <p className="text-sm text-gray-500">
-            Page {page} / {pageCount}
-          </p>
-
-          <div className="flex gap-3">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={page === 1}
-              onClick={() => setPage(page - 1)}
-            >
-              <ChevronLeft className="w-4 h-4" /> Prev
-            </Button>
-
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={page === pageCount}
-              onClick={() => setPage(page + 1)}
-            >
-              Next <ChevronRight className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
+        <Pagination page={page} pageCount={pageCount} onPageChange={setPage} />
       </Card>
+
+      <InputDialog
+        open={dialog.open}
+        title={
+          dialog.mode === "accept"
+            ? "Nhập số tiền khách đã trả"
+            : "Lý do từ chối"
+        }
+        placeholder={dialog.mode === "accept" ? "VD: 1500000" : "Nhập lý do..."}
+        type={dialog.mode === "accept" ? "number" : "text"}
+        confirmText={
+          dialog.mode === "accept" ? "Duyệt booking" : "Từ chối booking"
+        }
+        onCancel={() => setDialog({ open: false, mode: null, id: null })}
+        onConfirm={handleConfirm}
+      />
     </div>
   );
 }

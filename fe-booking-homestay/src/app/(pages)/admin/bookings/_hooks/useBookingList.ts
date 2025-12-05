@@ -1,21 +1,19 @@
 "use client";
 
-import {
-  acceptBooking,
-  getBookings,
-  rejectBooking,
-} from "@/services/admin/bookingsApi";
+import { getBookings } from "@/services/admin/bookingsApi";
 import type { PaginatedBookings } from "@/types/booking";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { DateRange } from "react-day-picker";
-import toast from "react-hot-toast";
 
 export function useBookingList() {
-  const [loading, setLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
+
+  const [refreshing, setRefreshing] = useState(false);
+
   const [raw, setRaw] = useState<PaginatedBookings | null>(null);
 
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("ALL");
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
 
   const [sortCheckIn, setSortCheckIn] = useState<"asc" | "desc" | null>(null);
@@ -24,49 +22,33 @@ export function useBookingList() {
   const pageSize = 6;
   const [page, setPage] = useState(1);
 
-  const load = useCallback(async () => {
-    setLoading(true);
+  const loadInitial = useCallback(async () => {
     try {
       const data = await getBookings();
       setRaw(data);
     } finally {
-      setLoading(false);
+      setInitialLoading(false);
+    }
+  }, []);
+
+  const refresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      const data = await getBookings();
+      setRaw(data);
+    } finally {
+      setRefreshing(false);
     }
   }, []);
 
   useEffect(() => {
-    load();
-  }, [load]);
+    loadInitial();
+  }, [loadInitial]);
 
   useEffect(() => {
-    const timer = setInterval(() => load(), 60000);
+    const timer = setInterval(() => refresh(), 60000);
     return () => clearInterval(timer);
-  }, [load]);
-
-  const accept = async (id: number) => {
-    const paidAmount = prompt("Số tiền khách đã trả:");
-    if (!paidAmount) return;
-    try {
-      await acceptBooking(id, parseInt(paidAmount, 10));
-      toast.success("Duyệt booking thành công");
-      await load();
-    } catch (err) {
-      toast.error("Không thể duyệt booking");
-    }
-  };
-
-  const reject = async (id: number) => {
-    const reason = prompt("Nhập lý do từ chối:");
-    if (!reason) return;
-
-    try {
-      await rejectBooking(id, reason);
-      toast.success("Từ chối booking thành công");
-      await load();
-    } catch (err) {
-      toast.error("Không thể từ chối booking");
-    }
-  };
+  }, [refresh]);
 
   const getNights = (ci: string, co: string) => {
     const ciDate = new Date(ci);
@@ -89,7 +71,7 @@ export function useBookingList() {
         g.email.toLowerCase().includes(searchTerm.toLowerCase());
 
       const filterMatch =
-        statusFilter === "all" ||
+        statusFilter === "ALL" ||
         b.status.toLowerCase() === statusFilter.toLowerCase();
 
       const dateFromMatch = dateRange?.from
@@ -123,7 +105,9 @@ export function useBookingList() {
   const paged = processed.slice((page - 1) * pageSize, page * pageSize);
 
   return {
-    loading,
+    initialLoading,
+    refreshing,
+
     raw,
     paged,
     processed,
@@ -146,9 +130,7 @@ export function useBookingList() {
     sortTotal,
     setSortTotal,
 
-    refresh: load,
+    refresh,
     getNights,
-    accept,
-    reject,
   };
 }

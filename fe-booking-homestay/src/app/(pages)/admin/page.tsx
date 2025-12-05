@@ -16,13 +16,7 @@ import {
   RecentBookingItem,
   RevenueByMonth,
 } from "@/services/admin/dashboardApi";
-import {
-  Calendar,
-  DoorOpen,
-  Download,
-  Users,
-  Wallet
-} from "lucide-react";
+import { Calendar, DoorOpen, Download, Users, Wallet } from "lucide-react";
 import toast from "react-hot-toast";
 import {
   Bar,

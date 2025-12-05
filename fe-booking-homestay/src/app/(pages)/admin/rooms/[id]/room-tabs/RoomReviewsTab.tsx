@@ -14,7 +14,7 @@ import { Review } from "@/types/review";
 import { ChevronLeft, ChevronRight, ExternalLink, Star } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { StarRating } from "../../../_components/star-rating";
+import { StarRating } from "../../../_components/StarRating";
 
 function RatingBar({
   star,
