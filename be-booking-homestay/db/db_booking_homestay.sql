@@ -52,6 +52,8 @@ CREATE TABLE `bookings` (
   `adults` int unsigned NOT NULL,
   `children` int unsigned DEFAULT '0',
   `totalPrice` decimal(12,2) NOT NULL,
+  `paymentMethod` enum('VNPAY','CASH','BANK_TRANSFER') NOT NULL DEFAULT 'CASH',
+  `paidAmount` decimal(12,2) NOT NULL DEFAULT '0',
   `status` enum('PENDING','CONFIRMED','CHECKED_IN','CHECKED_OUT','CANCELLED','REFUNDED') NOT NULL DEFAULT 'PENDING',
   `isReview` tinyint(1) NOT NULL DEFAULT '0',
   `cancelReason` varchar(255) DEFAULT NULL,

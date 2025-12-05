@@ -44,20 +44,16 @@ import {
   Cell,
 } from "recharts";
 
-// ========================================
-// COLOR MAPPING CHO 6 TRẠNG THÁI BOOKING
-// ========================================
 const BOOKING_STATUS_COLORS: Record<string, { label: string; color: string }> =
   {
-    PENDING: { label: "Chờ duyệt", color: "#facc15" }, // vàng
-    CONFIRMED: { label: "Đã xác nhận", color: "#3b82f6" }, // xanh dương
-    CHECKED_IN: { label: "Đã nhận phòng", color: "#0ea5e9" }, // cyan
-    CHECKED_OUT: { label: "Đã trả phòng", color: "#22c55e" }, // xanh lá
-    CANCELLED: { label: "Đã hủy", color: "#ef4444" }, // đỏ
-    REFUNDED: { label: "Hoàn tiền", color: "#a855f7" }, // tím
+    PENDING: { label: "Chờ thanh toán", color: "#facc15" },
+    CONFIRMED: { label: "Đã xác nhận", color: "#3b82f6" },
+    CHECKED_IN: { label: "Đã nhận phòng", color: "#0ea5e9" },
+    CHECKED_OUT: { label: "Đã trả phòng", color: "#22c55e" },
+    CANCELLED: { label: "Đã hủy", color: "#ef4444" },
+    REFUNDED: { label: "Hoàn tiền", color: "#a855f7" },
   };
 
-// Xuất báo cáo mock
 const handleExport = (data: any, filename: string) => {
   toast.success("Đang chuẩn bị file báo cáo...");
   console.log("Export →", filename, data);
@@ -71,7 +67,6 @@ export default function AdminDashboardPage() {
   const [popular, setPopular] = useState<PopularRoomItem[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Load data
   useEffect(() => {
     load();
   }, []);
@@ -106,7 +101,6 @@ export default function AdminDashboardPage() {
   const safeRecent = recent ?? [];
   const safePopular = popular ?? [];
 
-  // Dữ liệu biểu đồ revenue + bookings
   const chartData = safeRevenue.map((m) => ({
     month: m.month,
     revenue: Number(m.revenue ?? 0),
@@ -115,7 +109,6 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="space-y-10 p-6">
-      {/* HEADER */}
       <header className="flex justify-between items-center border-b pb-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
@@ -147,7 +140,6 @@ export default function AdminDashboardPage() {
         </div>
       </header>
 
-      {/* STAT CARDS */}
       <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
         <StatCard
           icon={Users}
@@ -171,7 +163,6 @@ export default function AdminDashboardPage() {
         />
       </section>
 
-      {/* BIỂU ĐỒ DOANH THU / BOOKINGS */}
       <section className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         <Card className="xl:col-span-2 p-6 shadow-sm border border-border/60 bg-card/50 backdrop-blur-sm">
           <h2 className="text-xl font-semibold mb-1">
@@ -228,7 +219,6 @@ export default function AdminDashboardPage() {
           </div>
         </Card>
 
-        {/* BIỂU ĐỒ TRẠNG THÁI BOOKING */}
         <Card className="p-6 shadow-sm border bg-card/50 backdrop-blur-sm">
           <h2 className="text-xl font-semibold mb-4">
             Tỷ lệ trạng thái booking
@@ -272,7 +262,6 @@ export default function AdminDashboardPage() {
         </Card>
       </section>
 
-      {/* ĐẶT PHÒNG GẦN ĐÂY */}
       <section>
         <Card className="p-6 shadow-sm border bg-card/50 backdrop-blur-sm">
           <h2 className="text-xl font-semibold mb-4">Đặt phòng gần đây</h2>
@@ -321,7 +310,6 @@ export default function AdminDashboardPage() {
         </Card>
       </section>
 
-      {/* PHÒNG PHỔ BIẾN */}
       <section>
         <Card className="p-6 shadow-sm border bg-card/50 backdrop-blur-sm">
           <h2 className="text-xl font-semibold mb-4">Phòng phổ biến</h2>

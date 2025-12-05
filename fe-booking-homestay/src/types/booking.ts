@@ -52,6 +52,8 @@ export interface Booking {
     | "REFUNDED";
   totalAmount?: number;
   cancelReason?: string | null;
+  paymentMethod?: string;
+  paidAmount?: number;
   createdAt: string;
   updatedAt: string;
   review: Review;

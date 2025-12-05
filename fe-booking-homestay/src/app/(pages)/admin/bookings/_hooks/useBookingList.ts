@@ -1,9 +1,14 @@
 "use client";
 
-import { useEffect, useMemo, useState, useCallback } from "react";
-import { getBookings } from "@/services/admin/bookingsApi";
+import {
+  acceptBooking,
+  getBookings,
+  rejectBooking,
+} from "@/services/admin/bookingsApi";
 import type { PaginatedBookings } from "@/types/booking";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { DateRange } from "react-day-picker";
+import toast from "react-hot-toast";
 
 export function useBookingList() {
   const [loading, setLoading] = useState(true);
@@ -33,10 +38,43 @@ export function useBookingList() {
     load();
   }, [load]);
 
+  useEffect(() => {
+    const timer = setInterval(() => load(), 60000);
+    return () => clearInterval(timer);
+  }, [load]);
+
+  const accept = async (id: number) => {
+    const paidAmount = prompt("Số tiền khách đã trả:");
+    if (!paidAmount) return;
+    try {
+      await acceptBooking(id, parseInt(paidAmount, 10));
+      toast.success("Duyệt booking thành công");
+      await load();
+    } catch (err) {
+      toast.error("Không thể duyệt booking");
+    }
+  };
+
+  const reject = async (id: number) => {
+    const reason = prompt("Nhập lý do từ chối:");
+    if (!reason) return;
+
+    try {
+      await rejectBooking(id, reason);
+      toast.success("Từ chối booking thành công");
+      await load();
+    } catch (err) {
+      toast.error("Không thể từ chối booking");
+    }
+  };
+
   const getNights = (ci: string, co: string) => {
-    const d1 = new Date(ci);
-    const d2 = new Date(co);
-    return Math.max(1, Math.round((d2.getTime() - d1.getTime()) / 86400000));
+    const ciDate = new Date(ci);
+    const coDate = new Date(co);
+    return Math.max(
+      1,
+      Math.round((coDate.getTime() - ciDate.getTime()) / 86400000)
+    );
   };
 
   const processed = useMemo(() => {
@@ -46,20 +84,22 @@ export function useBookingList() {
 
     data = data.filter((b) => {
       const g = b.guestInfo;
-      const matchSearch =
+      const searchMatch =
         g.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         g.email.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchStatus =
+
+      const filterMatch =
         statusFilter === "all" ||
         b.status.toLowerCase() === statusFilter.toLowerCase();
-      const matchDateFrom = dateRange?.from
+
+      const dateFromMatch = dateRange?.from
         ? new Date(b.checkIn) >= dateRange.from
         : true;
-      const matchDateTo = dateRange?.to
+      const dateToMatch = dateRange?.to
         ? new Date(b.checkIn) <= dateRange.to
         : true;
 
-      return matchSearch && matchStatus && matchDateFrom && matchDateTo;
+      return searchMatch && filterMatch && dateFromMatch && dateToMatch;
     });
     if (sortCheckIn) {
       data.sort((a, b) =>
@@ -85,8 +125,11 @@ export function useBookingList() {
   return {
     loading,
     raw,
-    processed,
     paged,
+    processed,
+    page,
+    pageCount,
+    setPage,
 
     searchTerm,
     setSearchTerm,
@@ -103,11 +146,9 @@ export function useBookingList() {
     sortTotal,
     setSortTotal,
 
-    page,
-    pageCount,
-    setPage,
-
-    getNights,
     refresh: load,
+    getNights,
+    accept,
+    reject,
   };
 }
