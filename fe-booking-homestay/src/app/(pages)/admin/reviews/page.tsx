@@ -9,12 +9,12 @@ import {
   ChevronLeft,
   ChevronRight,
   ExternalLink,
-  RefreshCcw,
   Search,
   Star,
   Trash2,
 } from "lucide-react";
 import Link from "next/link";
+import { RefreshButton } from "../_components/RefreshButton";
 import { StarRating } from "../_components/star-rating";
 import { useReviewList } from "./_hooks/useReviewList";
 
@@ -38,17 +38,14 @@ export default function ReviewsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between pb-4 border-b">
         <div>
           <h1 className="text-3xl font-bold">Quản lý đánh giá</h1>
           <p className="text-muted-foreground mt-1">
             Theo dõi và kiểm soát các đánh giá của khách hàng
           </p>
         </div>
-
-        <Button variant="outline" onClick={refresh}>
-          <RefreshCcw className="w-4 h-4 mr-1" /> Làm mới
-        </Button>
+        <RefreshButton onRefresh={refresh} />
       </div>
 
       <Card className="p-4 rounded-xl shadow-sm">

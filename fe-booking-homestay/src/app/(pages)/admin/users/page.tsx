@@ -14,6 +14,7 @@ import type { CreateUserDto, User } from "@/types/user";
 import { Eye, Filter, Plus, Search, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { RefreshButton } from "../_components/RefreshButton";
 
 function getStatusColor(status: "active" | "inactive") {
   return status === "active"
@@ -127,7 +128,7 @@ export default function UsersPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between pb-4 border-b">
         <div>
           <h1 className="text-3xl font-bold text-warm-900">
             Quản lý người dùng
@@ -135,9 +136,7 @@ export default function UsersPage() {
           <p className="text-warm-600 mt-1">Quản lý tài khoản khách hàng</p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={fetchUsers}>
-            Làm mới
-          </Button>
+          <RefreshButton onRefresh={fetchUsers} />
           <Button onClick={() => handleOpenUserModal()}>
             <Plus className="w-4 h-4" />
             Thêm người dùng

@@ -1,28 +1,38 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { Transform, TransformFnParams } from 'class-transformer';
-import { IsInt, IsOptional, IsString, Min } from 'class-validator';
+import { Transform } from 'class-transformer';
+import { IsInt, IsOptional, Min } from 'class-validator';
 
 export class UpdateUserLoyaltyDto {
-  @ApiPropertyOptional({ example: 'GOLD', description: 'Tên cấp độ' })
+  @ApiPropertyOptional({
+    example: 2,
+    description: 'ID của cấp độ Loyalty (levelId)',
+  })
   @IsOptional()
-  @IsString()
-  @Transform(({ value }: TransformFnParams) => value?.trim().toUpperCase())
-  level?: string;
+  @Transform(({ value }) => (value !== undefined ? Number(value) : value))
+  @IsInt()
+  @Min(1)
+  levelId?: number;
 
-  @ApiPropertyOptional({ example: 2500, description: 'Số điểm mới' })
+  @ApiPropertyOptional({ example: 2500, description: 'Số điểm của user' })
   @IsOptional()
+  @Transform(({ value }) => (value !== undefined ? Number(value) : value))
   @IsInt()
   @Min(0)
   points?: number;
 
-  @ApiPropertyOptional({ example: 10, description: 'Tổng số booking' })
+  @ApiPropertyOptional({
+    example: 10,
+    description: 'Tổng số lượt booking của user',
+  })
   @IsOptional()
+  @Transform(({ value }) => (value !== undefined ? Number(value) : value))
   @IsInt()
   @Min(0)
   totalBookings?: number;
 
   @ApiPropertyOptional({ example: 25, description: 'Tổng số đêm lưu trú' })
   @IsOptional()
+  @Transform(({ value }) => (value !== undefined ? Number(value) : value))
   @IsInt()
   @Min(0)
   totalNights?: number;

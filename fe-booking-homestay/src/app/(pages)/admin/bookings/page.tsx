@@ -12,13 +12,13 @@ import {
   Download,
   Eye,
   Filter,
-  RefreshCcw,
   Search,
   Users,
 } from "lucide-react";
 import Link from "next/link";
 import * as XLSX from "xlsx";
 import { DateRangePicker } from "../_components/DateRangePicker";
+import { RefreshButton } from "../_components/RefreshButton";
 import { getStatusColorClasses } from "./[id]/_utils/color-utils";
 import { useBookingList } from "./_hooks/useBookingList";
 
@@ -74,18 +74,14 @@ export default function BookingListPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between pb-4 border-b">
         <div>
           <h1 className="text-3xl font-bold">Quản lý đặt phòng</h1>
           <p className="text-gray-600">
             Quản lý tất cả các đặt phòng của khách.
           </p>
         </div>
-
-        <Button variant="outline" onClick={refresh}>
-          <RefreshCcw className="w-4 h-4 mr-1" />
-          Làm mới
-        </Button>
+        <RefreshButton onRefresh={refresh} />
       </div>
 
       <Card className="p-4 rounded-xl shadow-sm">

@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { sanitizeLoyalty } from 'src/utils/sanitize/loyalty.sanitize';
+import { sanitizeProgram } from 'src/utils/sanitize/loyalty.sanitize';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateLoyaltyLevelDto } from './dto/create-loyalty-level.dto';
 import { UpdateLoyaltyLevelDto } from './dto/update-loyalty-level.dto';
@@ -9,150 +9,73 @@ import { UpdateUserLoyaltyDto } from './dto/update-user-loyalty.dto';
 export class LoyaltyService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findAllLevels() {
-    const levels = await this.prisma.levels.findMany({
-      orderBy: { minPoints: 'asc' },
-    });
-
-    return sanitizeLoyalty(levels);
+  private async ensureLevelExists(id: number) {
+    const level = await this.prisma.levels.findUnique({ where: { id } });
+    if (!level) throw new BadRequestException('Cấp độ không tồn tại');
+    return level;
   }
 
-  async findOneLevel(id: number) {
-    const level = await this.prisma.levels.findUnique({
-      where: { id },
+  private async checkDuplicateLevel(
+    name: string,
+    minPoints: number,
+    ignoreId?: number,
+  ) {
+    const exists = await this.prisma.levels.findFirst({
+      where: {
+        OR: [{ name }, { minPoints }],
+        NOT: ignoreId ? { id: ignoreId } : undefined,
+      },
     });
-    if (!level) throw new BadRequestException('Cấp độ không tồn tại');
-    return sanitizeLoyalty(level);
+    if (!exists) return;
+    if (exists.name === name)
+      throw new BadRequestException('Tên cấp độ đã tồn tại');
+    if (exists.minPoints === minPoints)
+      throw new BadRequestException(
+        'Điểm tối thiểu đã được sử dụng cho cấp độ khác',
+      );
+  }
+
+  async findAllLevels() {
+    return await this.prisma.levels.findMany({
+      orderBy: { minPoints: 'asc' },
+    });
   }
 
   async createLevel(dto: CreateLoyaltyLevelDto) {
-    const existingLevel = await this.prisma.levels.findFirst({
-      where: {
-        OR: [{ name: dto.name }, { minPoints: dto.minPoints }],
-      },
-    });
-
-    if (existingLevel) {
-      if (existingLevel.name === dto.name) {
-        throw new BadRequestException('Cấp độ đã tồn tại');
-      }
-      if (existingLevel.minPoints === dto.minPoints) {
-        throw new BadRequestException('Số điểm đã được dùng cho cấp độ khác');
-      }
-    }
-
-    return this.prisma.levels.create({
+    await this.checkDuplicateLevel(dto.name, dto.minPoints);
+    return await this.prisma.levels.create({
       data: {
         name: dto.name,
         minPoints: dto.minPoints,
-        description: dto.description,
+        description: dto.description ?? '',
         isActive: true,
       },
     });
   }
 
   async updateLevel(id: number, dto: UpdateLoyaltyLevelDto) {
-    const level = await this.prisma.levels.findUnique({
-      where: { id },
-    });
-    if (!level) throw new BadRequestException('Cấp độ không tồn tại');
+    const current = await this.ensureLevelExists(id);
+    const newName = dto.name ?? current.name;
+    const newMinPoints = dto.minPoints ?? current.minPoints;
 
-    if (dto.name && dto.name !== level.name) {
-      const nameExists = await this.prisma.levels.findFirst({
-        where: {
-          name: dto.name,
-          NOT: { id },
-        },
-      });
-      if (nameExists) {
-        throw new BadRequestException('Tên cấp độ đã được sử dụng');
-      }
-    }
-
-    if (
-      dto.minPoints !== undefined &&
-      dto.minPoints !== null &&
-      dto.minPoints !== level.minPoints
-    ) {
-      const pointExists = await this.prisma.levels.findFirst({
-        where: {
-          minPoints: dto.minPoints,
-          NOT: { id },
-        },
-      });
-      if (pointExists) {
-        throw new BadRequestException('Số điểm đã được dùng cho cấp độ khác');
-      }
-    }
-
-    return this.prisma.levels.update({
+    await this.checkDuplicateLevel(newName, newMinPoints, id);
+    return await this.prisma.levels.update({
       where: { id },
       data: {
-        name: dto.name ?? level.name,
-        minPoints: dto.minPoints ?? level.minPoints,
-        description: dto.description ?? level.description,
-        isActive: dto.isActive ?? level.isActive,
+        name: newName,
+        minPoints: newMinPoints,
+        description: dto.description ?? current.description,
+        isActive: dto.isActive ?? current.isActive,
       },
     });
   }
 
   async toggleActive(id: number) {
-    const level = await this.prisma.levels.findUnique({
-      where: { id },
-    });
-    if (!level) throw new BadRequestException('Cấp độ không tồn tại');
-
+    const level = await this.ensureLevelExists(id);
     return await this.prisma.levels.update({
       where: { id },
       data: { isActive: !level.isActive },
     });
-  }
-
-  async findUserLoyalty(userId: number) {
-    const program = await this.prisma.loyalty_program.findUnique({
-      where: { userId },
-      include: {
-        levels: true,
-      },
-    });
-    if (!program)
-      throw new BadRequestException('Người dùng chưa có chương trình Loyalty');
-    return sanitizeLoyalty(program);
-  }
-
-  async updateUserLoyalty(userId: number, dto: UpdateUserLoyaltyDto) {
-    const user = await this.prisma.users.findUnique({ where: { id: userId } });
-    if (!user) throw new BadRequestException('Người dùng không tồn tại');
-
-    const level = await this.prisma.levels.findUnique({
-      where: { name: dto.level },
-    });
-    if (!level || !level.isActive) {
-      throw new BadRequestException(
-        'Cấp độ không hợp lệ hoặc đang bị vô hiệu hoá',
-      );
-    }
-
-    const program = await this.prisma.loyalty_program.upsert({
-      where: { userId },
-      create: {
-        userId,
-        levelId: level.id,
-        points: dto.points ?? 0,
-        totalBookings: dto.totalBookings ?? 0,
-        totalNights: dto.totalNights ?? 0,
-      },
-      update: {
-        levelId: level.id,
-        points: dto.points ?? undefined,
-        totalBookings: dto.totalBookings ?? undefined,
-        totalNights: dto.totalNights ?? undefined,
-        lastUpgradeDate: new Date(),
-      },
-      include: { levels: true },
-    });
-
-    return sanitizeLoyalty(program);
   }
 
   async recomputeAllUserLevels() {
@@ -160,31 +83,24 @@ export class LoyaltyService {
       where: { isActive: true },
       orderBy: { minPoints: 'asc' },
     });
-
     if (levels.length === 0)
-      throw new BadRequestException('Chưa có cấp độ nào khả dụng.');
+      throw new BadRequestException('Chưa có cấp độ nào khả dụng');
 
-    const programs = await this.prisma.loyalty_program.findMany({
-      include: { levels: true },
-    });
+    const reversedLevels = [...levels].reverse();
+    const programs = await this.prisma.loyalty_program.findMany();
 
     let updatedCount = 0;
 
     for (const program of programs) {
-      const matchedLevel = levels
-        .slice()
-        .reverse()
-        .find((lvl) => program.points >= lvl.minPoints);
+      const match = reversedLevels.find(
+        (lvl) => program.points >= lvl.minPoints,
+      );
 
-      if (
-        matchedLevel &&
-        program.levelId !== matchedLevel.id &&
-        matchedLevel.isActive
-      ) {
+      if (match && match.id !== program.levelId) {
         await this.prisma.loyalty_program.update({
           where: { id: program.id },
           data: {
-            levelId: matchedLevel.id,
+            levelId: match.id,
             lastUpgradeDate: new Date(),
           },
         });
@@ -193,7 +109,67 @@ export class LoyaltyService {
     }
 
     return {
-      message: `Cập nhật lại cấp độ cho ${updatedCount} người dùng.`,
+      message: `Đã cập nhật cấp độ cho ${updatedCount} người dùng.`,
     };
+  }
+
+  async findAllUserLoyalty() {
+    const programs = await this.prisma.loyalty_program.findMany({
+      include: {
+        levels: true,
+        users: {
+          include: { user_roles: { include: { roles: true } } },
+        },
+      },
+      orderBy: {
+        points: 'desc',
+      },
+    });
+
+    return sanitizeProgram(programs);
+  }
+
+  async findUserLoyalty(userId: number) {
+    // const program = await this.prisma.loyalty_program.findUnique({
+    //   where: { userId },
+    //   include: { levels: true },
+    // });
+    // if (!program)
+    //   throw new BadRequestException(
+    //     'Người dùng chưa tham gia chương trình Loyalty',
+    //   );
+    // return sanitizeProgram(program);
+  }
+
+  async updateUserLoyalty(userId: number, dto: UpdateUserLoyaltyDto) {
+    // const user = await this.prisma.users.findUnique({ where: { id: userId } });
+    // if (!user) throw new BadRequestException('Người dùng không tồn tại');
+    // const level = await this.prisma.levels.findUnique({
+    //   where: { name: dto.levelId },
+    // });
+    // if (!level || !level.isActive) {
+    //   throw new BadRequestException(
+    //     'Cấp độ không hợp lệ hoặc đang bị vô hiệu hoá',
+    //   );
+    // }
+    // const updated = await this.prisma.loyalty_program.upsert({
+    //   where: { userId },
+    //   create: {
+    //     userId,
+    //     levelId: activeLevel?.id ?? undefined,
+    //     points: dto.points ?? 0,
+    //     totalBookings: dto.totalBookings ?? 0,
+    //     totalNights: dto.totalNights ?? 0,
+    //   },
+    //   update: {
+    //     levelId: activeLevel?.id ?? undefined,
+    //     points: dto.points ?? undefined,
+    //     totalBookings: dto.totalBookings ?? undefined,
+    //     totalNights: dto.totalNights ?? undefined,
+    //     lastUpgradeDate: activeLevel ? new Date() : undefined,
+    //   },
+    //   include: { levels: true },
+    // });
+    // return sanitizeProgram(updated);
   }
 }

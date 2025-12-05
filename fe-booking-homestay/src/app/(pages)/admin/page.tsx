@@ -20,9 +20,8 @@ import {
   Calendar,
   DoorOpen,
   Download,
-  RefreshCw,
   Users,
-  Wallet,
+  Wallet
 } from "lucide-react";
 import toast from "react-hot-toast";
 import {
@@ -38,6 +37,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { RefreshButton } from "./_components/RefreshButton";
 import { StatCard } from "./_components/stat-card";
 import { exportCSV, exportJSON } from "./_utils/export";
 
@@ -124,31 +124,24 @@ export default function AdminDashboardPage() {
   };
 
   return (
-    <div className="space-y-10 p-6">
+    <div className="space-y-6">
       <header className="flex justify-between items-center border-b pb-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Tổng quan</h1>
           <p className="text-muted-foreground mt-1">
             Tổng quan hoạt động hệ thống 4Stay.
           </p>
         </div>
 
         <div className="flex gap-3">
+          <RefreshButton onRefresh={load} />
           <Button
-            variant="outline"
             onClick={() =>
               handleExport({ stats, revenue, status, recent, popular })
             }
           >
             <Download className="w-4 h-4 mr-2" />
             Xuất báo cáo
-          </Button>
-
-          <Button onClick={load} disabled={loading}>
-            <RefreshCw
-              className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`}
-            />
-            Làm mới
           </Button>
         </div>
       </header>
