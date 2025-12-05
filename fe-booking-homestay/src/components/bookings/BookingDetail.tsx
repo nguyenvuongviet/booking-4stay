@@ -5,6 +5,7 @@ import { differenceInDays, format } from "date-fns";
 import { vi } from "date-fns/locale";
 import {
   CalendarDays,
+  CheckCircle,
   Clock,
   DollarSign,
   Users
@@ -14,18 +15,56 @@ import toast from "react-hot-toast";
 import { BookingStatusBadge } from "./BookingStatusBadge";
 import { ReviewSection } from "./ReviewSection";
 import { useLang } from "@/context/lang-context";
+import { Button } from "../ui/button";
+import PaymentModal from "../payment/PaymentModal";
+import { usePayment } from "@/hooks/usePayment";
 
 export const BookingDetail = ({
   booking: initialBooking,
 }: {
   booking: Booking;
 }) => {
-  const {t} = useLang();
+  const { t } = useLang();
   const [booking, setBooking] = useState(initialBooking);
   const [cancelInfo, setCancelInfo] = useState<{
     reason: string;
     refundAmount: number | null;
   } | null>(null);
+
+  const totalNights = differenceInDays(
+    new Date(booking.checkOut),
+    new Date(booking.checkIn)
+  );
+
+  const formatPrice = (price: number) => {
+    return `${price.toLocaleString()} VND`;
+  };
+
+  const {
+    modalType,
+    openPopupPayment,
+    setOpenPopupPayment,
+    handleConfirmBooking,
+    handleDepositNow,
+    handleDepositLater
+  } = usePayment(booking.room, booking);
+
+  const buildPayload = () => ({
+    roomId: booking.room.id,
+    checkIn: booking.checkIn,
+    checkOut: booking.checkOut,
+    adults: Number(booking.adults),
+    children: Number(booking.children),
+    guestFullName: booking.user?.name,
+    guestEmail: booking.user?.email,
+    guestPhoneNumber: booking.user?.phoneNumber,
+    specialRequest: booking.specialRequest ?? "",
+    paymentMethod: booking.paymentMethod === "VNPAY" ? "VNPAY" as const : "CASH" as const,
+  });
+
+  const confirmNow = () => handleDepositNow(buildPayload(), booking.id);
+  const confirmLater = () => handleDepositLater(buildPayload(), booking.id);
+
 
   const handleCancel = (
     id: number | string,
@@ -48,7 +87,7 @@ export const BookingDetail = ({
       const resp = await post_review(bookingId, rating, comment);
       setBooking((prev) => ({
         ...prev,
-        review: resp, 
+        review: resp,
       }));
 
       toast.success("Review submitted successfully!");
@@ -56,15 +95,6 @@ export const BookingDetail = ({
       toast.error("Failed to submit review. Please try again.");
       console.error("Review submit error:", error);
     }
-  };
-
-  const totalNights = differenceInDays(
-    new Date(booking.checkOut),
-    new Date(booking.checkIn)
-  );
-
-  const formatPrice = (price: number) => {
-    return `${price.toLocaleString()} VND`;
   };
 
   return (
@@ -76,7 +106,7 @@ export const BookingDetail = ({
             <img
               src={booking.room?.images?.main || "/placeholder.svg"}
               alt="Hotel main"
-              className="w-full h-full object-cover" 
+              className="w-full h-full object-cover"
             />
           </div>
           {booking.room?.images?.gallery
@@ -108,11 +138,11 @@ export const BookingDetail = ({
           <p className="text-lg elegant-sans text-foreground mt-2">
             {formatPrice(booking.room?.price)}<span className="text-muted-foreground elegant-subheading text-sm">/{t("night")}</span>
           </p>
-          
+
         </div>
 
         {/* Thông tin đặt phòng */}
-        {/* <div className="border-t pt-4 space-y-4">
+        <div className="border-t pt-4 space-y-4">
           <div className="flex items-center justify-between">
             <span className="font-semibold text-gray-700">
               Guest Information:
@@ -121,11 +151,19 @@ export const BookingDetail = ({
 
           <div className="grid grid-cols-2 gap-3 text-sm">
             <div>
-              <p className="text-muted-foreground">Guest name</p>
+              <p className="text-muted-foreground">Name</p>
               <p className="elegant-sans text-foreground">{booking.user?.name}</p>
             </div>
+            <div>
+              <p className="text-muted-foreground">Email</p>
+              <p className="elegant-sans text-foreground">{booking.user?.email}</p>
+            </div>
+            <div>
+              <p className="text-muted-foreground">Phone number</p>
+              <p className="elegant-sans text-foreground">{booking.user?.phoneNumber}</p>
+            </div>
           </div>
-        </div> */}
+        </div>
         <div className="border-t pt-4 space-y-4">
           <div className="flex items-center justify-between">
             <span className="elegant-sans text-lg">
@@ -210,13 +248,13 @@ export const BookingDetail = ({
 
           {/* Tổng tiền */}
           <div className="pt-4 border-t">
-            {/* <div className="flex items-center gap-2 mb-4">
+            <div className="flex items-center gap-2 mb-4">
               <CheckCircle className="w-4 h-4 text-muted-foreground" />
               <span className="text-gray-600">Payment Method:</span>
-              <span className="elegant-sans text-foreground text-gray-900">
-                {booking.paymentMethod}
+              <span className="elegant-sans text-foreground text-sm">
+                {booking.paymentMethod === "CASH" ? "Tiền mặt" : "VNPay"}
               </span>
-            </div> */}
+            </div>
             <div className="flex items-center gap-2">
               <DollarSign className="w-4 h-4 text-muted-foreground" />
               <p className="text-muted-foreground elegant-subheading"> {t("total")} {t("amount")}:</p>
@@ -226,18 +264,41 @@ export const BookingDetail = ({
             </p>
           </div>
         </div>
-        {/* Hủy booking */}
-        {booking.status !== "CANCELLED" && booking.status !== "CHECKED_OUT" && (
-          <div className="flex items-center justify-end">
-            <BookingCancelSection booking={booking} onCancel={handleCancel} />
-          </div>
-        )}
+        <div className="flex flex-row-reverse gap-4">
+
+          {/* Hủy booking */}
+          {booking.status !== "CANCELLED" && booking.status !== "CHECKED_OUT" && (
+            <div className="flex items-center justify-end">
+              <BookingCancelSection booking={booking} onCancel={handleCancel} />
+            </div>
+          )}
+          {/* Thanh toan  */}
+          {booking.status === "PENDING" && (
+            <div className="flex items-center justify-end">
+              <Button
+                onClick={() => handleConfirmBooking(booking.paymentMethod === "VNPAY" ? "VNPAY" : "CASH")}
+                className="rounded-xl flex items-center gap-2">
+                {booking.paymentMethod === "CASH" ? t("Deposit Now") : t("Payment")}
+              </Button>
+            </div>
+          )}
+
+
+        </div>
         {/* Review  */}
         {booking.status === "CHECKED_OUT" && (
           <div className="flex items-center justify-end">
-              <ReviewSection booking={booking} onReview={handleReview} />
+            <ReviewSection booking={booking} onReview={handleReview} />
           </div>
         )}
+
+        <PaymentModal
+          open={openPopupPayment}
+          onClose={() => setOpenPopupPayment(false)}
+          type={modalType!}
+          onDepositNow={confirmNow}
+          onDepositLater={confirmLater}
+        />
       </div>
     </div>
   );

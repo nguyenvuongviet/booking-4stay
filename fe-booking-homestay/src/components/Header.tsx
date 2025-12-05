@@ -96,7 +96,7 @@ export default function Header() {
           </nav>
           <div className="flex items-center gap-4">
             {/* Nút chuyển ngôn ngữ */}
-            <div className="">
+            {/* <div className="">
               <button
                 onClick={() => setLang(lang === "en" ? "vi" : "en")}
                 className="flex items-center gap-1 px-3 py-1 border rounded-full hover:bg-gray-100 transition"
@@ -106,7 +106,7 @@ export default function Header() {
                 </span>
                 <span className="text-sm">{lang === "en" ? "🇺🇸" : "🇻🇳"}</span>
               </button>
-            </div>
+            </div> */}
 
             {user ? (
               <div className="relative" ref={menuRef}>

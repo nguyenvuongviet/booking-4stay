@@ -5,6 +5,7 @@ interface User {
   id: string | number;
   name: string;
   email: string;  
+  phoneNumber: string;
   avatar: string;
 }
 
@@ -30,7 +31,8 @@ export interface Booking {
   guestFullName: string;
   guestEmail: string;
   guestPhoneNumber: string;
-  specialRequest: string | null;
+  specialRequest?: string | null;
+  paymentMethod: string;
   review: {
     id: number | string;
     rating: number;

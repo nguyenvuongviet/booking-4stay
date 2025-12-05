@@ -10,19 +10,19 @@ import "./globals.css";
 import { LangProvider } from "@/context/lang-context";
 
 const outfit = Outfit({
-  subsets: ["latin"],
+ subsets: ["latin", "latin-ext"],
   variable: "--font-sans",
   weight: ["400", "500", "600", "700"],
 });
 
 const firaMono = Fira_Mono({
-  subsets: ["latin"],
+  subsets: ["latin", "latin-ext"],
   variable: "--font-mono",
   weight: ["400"],
 });
 
 const lora = Lora({
-  subsets: ["latin"],
+  subsets: ["latin", "latin-ext"],
   variable: "--font-serif",
   weight: ["400", "500", "600", "700"],
 });
@@ -38,7 +38,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="vi">
       <body
         className={`${outfit.variable} ${firaMono.variable} ${lora.variable} antialiased`}
       >

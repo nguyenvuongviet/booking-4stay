@@ -1,21 +1,22 @@
 "use client";
 
+import PaymentModal from "@/components/payment/PaymentModal";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { usePayment } from "@/hooks/usePayment";
 import { useAuth } from "@/context/auth-context";
 import { useLang } from "@/context/lang-context";
-import { create_booking, pay_with_vnpay } from "@/services/bookingApi";
 import { room_detail } from "@/services/roomApi";
 import { RadioGroup, RadioGroupItem } from "@radix-ui/react-radio-group";
-import { format, parseISO } from "date-fns";
+import { differenceInDays, format, parseISO } from "date-fns";
 import { ArrowLeft, Check, CreditCard, DollarSign } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
-type PaymentMethod = "vnpay" | "cash";
+type PaymentMethod = "VNPAY" | "CASH";
 
 export default function CheckoutPage() {
   const { user } = useAuth();
@@ -28,7 +29,7 @@ export default function CheckoutPage() {
   const [firstNameError, setFirstNameError] = useState("");
   const [lastNameError, setLastNameError] = useState("");
   const router = useRouter();
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cash");
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("CASH");
   const [specialRequests, setSpecialRequests] = useState("");
 
   useEffect(() => {
@@ -49,50 +50,68 @@ export default function CheckoutPage() {
   const co = searchParams.get("checkOut");
   const [room, setRoom] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const parsedCheckIn = ci ? parseISO(ci) : null;
+  const parsedCheckOut = co ? parseISO(co) : null;
 
-  const handleConfirmBooking = async () => {
-    try {
-      const resp = await create_booking({
-        roomId: roomId!,
-        checkIn: ci!,
-        checkOut: co!,
-        adults: Number(ad),
-        children: Number(ch),
-        guestFullName: `${firstName} ${lastName}`,
-        guestEmail: emailInput,
-        guestPhoneNumber: phone,
-        specialRequest: specialRequests,
-      });
-
-      //thanh toán qua VNPAY
-      if (paymentMethod === "vnpay") {
-        try {
-          const payment = await pay_with_vnpay(
-            room.price * bookingData.nights,
-            resp.data?.booking?.id
-          );
-          window.location.href = payment.url; // redirect sang VNPAY
-          console.log("Booking created successfully:", resp);
-          setTimeout(() => {
-            router.push("/booking");
-          }, 5000);
-        } catch (error) {
-          console.error("Error creating booking:", error);
-          return;
-        }
-      }
-
-      //trả tiền mặt
-      if (paymentMethod === "cash") {
-        router.push("/booking");
-        toast.success("Booking confirmed! Thank you for your reservation.");
-      }
-    } catch (error) {
-      console.error("Error creating booking:", error);
-    }
-
-    console.log("Confirming booking with payment method:", paymentMethod);
+  const bookingData = {
+    hotelName: room?.name,
+    roomType: room?.description,
+    checkIn: parsedCheckIn ? format(parsedCheckIn, "yyyy-MM-dd") : "",
+    checkOut: parsedCheckOut ? format(parsedCheckOut, "yyyy-MM-dd") : "",
+    adults: ad,
+    children: ch,
+    pricePerNight: room?.price,
+    hotelImage: room?.images?.main,
   };
+
+  const totalNights = differenceInDays(
+    new Date(bookingData.checkOut),
+    new Date(bookingData.checkIn)
+  );
+
+  const totalAmount = bookingData.pricePerNight * totalNights;
+
+  const {
+    modalType,
+    openPopupPayment,
+    setOpenPopupPayment,
+    handleConfirmBooking,
+    handleDepositNow,
+    handleDepositLater
+  } = usePayment(room, bookingData);
+
+  if (!roomId || !ci || !co) {
+    toast.error("Thiếu dữ liệu đặt phòng!");
+    return;
+  }
+
+  const confirmNow = () =>
+    handleDepositNow({
+      roomId,
+      checkIn: ci!,
+      checkOut: co!,
+      adults: Number(ad),
+      children: Number(ch),
+      guestFullName: `${firstName} ${lastName}`,
+      guestEmail: emailInput,
+      guestPhoneNumber: phone,
+      specialRequest: specialRequests,
+      paymentMethod
+    });
+
+  const confirmLater = () =>
+    handleDepositLater({
+      roomId,
+      checkIn: ci!,
+      checkOut: co!,
+      adults: Number(ad),
+      children: Number(ch),
+      guestFullName: `${firstName} ${lastName}`,
+      guestEmail: emailInput,
+      guestPhoneNumber: phone,
+      specialRequest: specialRequests,
+      paymentMethod
+    });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -112,23 +131,7 @@ export default function CheckoutPage() {
   console.log("checkIn param =", ci);
   console.log("checkOut param =", co);
 
-  const parsedCheckIn = ci ? parseISO(ci) : null;
-  const parsedCheckOut = co ? parseISO(co) : null;
 
-  const bookingData = {
-    hotelName: room?.name,
-    roomType: room?.description,
-    checkIn: parsedCheckIn ? format(parsedCheckIn, "yyyy-MM-dd") : "",
-    checkOut: parsedCheckOut ? format(parsedCheckOut, "yyyy-MM-dd") : "",
-    nights:
-      (parsedCheckOut!.getTime() - parsedCheckIn!.getTime()) /
-      (1000 * 60 * 60 * 24),
-    adults: ad,
-    children: ch,
-    pricePerNight: room?.price,
-    hotelImage: room?.images?.main,
-  };
-  const totalAmount = bookingData.pricePerNight * bookingData.nights;
 
   return (
     <div className="min-h-screen bg-background">
@@ -239,7 +242,7 @@ export default function CheckoutPage() {
             </Card>
             {/* Payment */}
             <Card className="p-6">
-              <h2 className="text-2xl mb-4 elegant-heading">Payment menthod</h2>
+              <h2 className="text-2xl mb-4 elegant-heading">{t("Payment menthod")}</h2>
               <RadioGroup
                 value={paymentMethod}
                 onValueChange={(value) =>
@@ -249,13 +252,12 @@ export default function CheckoutPage() {
                 <div className="space-y-3">
                   {/* Cash Payment */}
                   <label
-                    className={`flex items-center gap-4 p-4 border-2 rounded-lg cursor-pointer transition-colors ${
-                      paymentMethod === "cash"
-                        ? "border-primary bg-primary-100"
-                        : "border-gray-200 hover:border-gray-300"
-                    }`}
+                    className={`flex items-center gap-4 p-4 border-2 rounded-lg cursor-pointer transition-colors ${paymentMethod === "CASH"
+                      ? "border-primary bg-primary-100"
+                      : "border-gray-200 hover:border-gray-300"
+                      }`}
                   >
-                    <RadioGroupItem value="cash" id="cash" />
+                    <RadioGroupItem value="CASH" id="CASH" />
                     <div className="flex items-center gap-3 flex-1">
                       <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
                         <DollarSign className="h-5 w-5 text-green-600" />
@@ -266,13 +268,12 @@ export default function CheckoutPage() {
                         </p>
                         <p className="text-sm text-gray-600">
                           {t(
-                            "Pay directly in cash when you arrive. No online payment required."
+                            "Pay 30% deposit via transfer, the remaining in cash when checking in"
                           )}
-                          {/* Thanh toán trực tiếp bằng tiền mặt khi đến nơi. Không cần thanh toán trực tuyến. */}
                         </p>
                       </div>
                     </div>
-                    {paymentMethod === "cash" && (
+                    {paymentMethod === "CASH" && (
                       <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
                         <Check className="h-4 w-4 text-white" />
                       </div>
@@ -280,13 +281,12 @@ export default function CheckoutPage() {
                   </label>
                   {/* Vnpay */}
                   <label
-                    className={`flex items-center gap-4 p-4 border-2 rounded-lg cursor-pointer transition-colors ${
-                      paymentMethod === "vnpay"
-                        ? "border-primary bg-primary-100"
-                        : "border-gray-200 hover:border-gray-300"
-                    }`}
+                    className={`flex items-center gap-4 p-4 border-2 rounded-lg cursor-pointer transition-colors ${paymentMethod === "VNPAY"
+                      ? "border-primary bg-primary-100"
+                      : "border-gray-200 hover:border-gray-300"
+                      }`}
                   >
-                    <RadioGroupItem value="vnpay" id="vnpay" />
+                    <RadioGroupItem value="VNPAY" id="VNPAY" />
                     <div className="flex items-center gap-3 flex-1">
                       <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
                         <CreditCard className="h-5 w-5 text-blue-600" />
@@ -303,7 +303,7 @@ export default function CheckoutPage() {
                         </p>
                       </div>
                     </div>
-                    {paymentMethod === "vnpay" && (
+                    {paymentMethod === "VNPAY" && (
                       <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
                         <Check className="h-4 w-4 text-white" />
                       </div>
@@ -340,7 +340,7 @@ export default function CheckoutPage() {
               </RadioGroup>
 
               {/* Vnpay Info */}
-              {paymentMethod === "vnpay" && (
+              {paymentMethod === "VNPAY" && (
                 <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-100 space-y-2">
                   <h3 className="text-lg font-semibold text-blue-700 flex items-center gap-2">
                     <CreditCard className="w-5 h-5 text-blue-700" />
@@ -376,7 +376,7 @@ export default function CheckoutPage() {
 
                   <p className="text-sm text-gray-700">
                     {t("after_confirm")}{" "}
-                    <strong>"{t("Confirm and Payment")}"</strong>,
+                    <strong>{t("Confirm and Payment")}</strong>,
                     {t("vnpay_redirect")}
                     {/* Sau khi nhấn <strong>"Confirm booking"</strong>, bạn sẽ được
                     chuyển đến cổng thanh toán VNPAY để hoàn tất giao dịch an
@@ -393,47 +393,37 @@ export default function CheckoutPage() {
               )}
 
               {/* Money Info */}
-              {paymentMethod === "cash" && (
+              {paymentMethod === "CASH" && (
                 <div className="mt-6 p-4 bg-green-50 rounded-lg border border-green-100 space-y-2">
                   <h3 className="text-lg font-semibold text-green-700 flex items-center gap-2">
                     <DollarSign className="w-5 h-5 text-green-700" />
                     {t("cash_title")}
                   </h3>
                   <p className="text-sm text-gray-700 leading-relaxed">
-                    {t("cash_intro_1")} <strong>{t("cash")}</strong>{" "}
+                    {t("cash_intro_1")}
                     {t("cash_intro_2")}
-                    {/* Bạn có thể chọn thanh toán bằng <strong>tiền mặt</strong> khi đến nơi
-                    lưu trú. Đây là lựa chọn tiện lợi nếu bạn không muốn thanh toán trực
-                    tuyến. */}
                   </p>
 
                   <ul className="list-disc list-inside text-sm text-gray-700 space-y-1">
                     <li>
                       {t("cash_rule_1")}
-                      {/* Vui lòng chuẩn bị số tiền chính xác để quá trình nhận phòng diễn ra nhanh chóng. */}
                     </li>
                     <li>
                       {t("cash_rule_2_1")}{" "}
                       <strong>{t("temporary_reserved")}</strong>{" "}
                       {t("cash_rule_2_2")}
-                      {/* Đơn đặt phòng sẽ được <strong>giữ tạm thời</strong> cho đến khi bạn
-                      hoàn tất thanh toán tại nơi lưu trú. */}
                     </li>
                     <li>
                       {t("cash_rule_3")}
-                      {/* Nếu bạn không đến hoặc không thanh toán đúng hạn, đơn đặt phòng có thể bị hủy tự động. */}
                     </li>
                   </ul>
 
                   <p className="text-sm text-gray-700">
-                    {t("cash_after_confirm")}
-                    {/* Sau khi xác nhận đặt phòng, bạn sẽ nhận được email xác nhận kèm thông
-                    tin chi tiết và hướng dẫn thanh toán bằng tiền mặt. */}
+                    {/* {t("cash_after_confirm")} */}
                   </p>
 
                   <p className="text-xs text-gray-500 italic">
                     * {t("cash_note")}
-                    {/* * Không yêu cầu đặt cọc hoặc thanh toán trực tuyến. Thanh toán trực tiếp tại nơi lưu trú. */}
                   </p>
                 </div>
               )}
@@ -488,7 +478,7 @@ export default function CheckoutPage() {
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">{t("Nights")}:</span>
                     <span className="elegant-sans text-foreground">
-                      {bookingData.nights}
+                      {totalNights}
                     </span>
                   </div>
                   <div className="flex justify-between">
@@ -511,12 +501,12 @@ export default function CheckoutPage() {
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">
                     đ {bookingData?.pricePerNight?.toLocaleString()} x{" "}
-                    {bookingData.nights} {t("nights")}
+                    {totalNights} {t("nights")}
                   </span>
                   <span className="text-foreground">
                     đ{" "}
                     {(
-                      bookingData.pricePerNight * bookingData.nights
+                      bookingData.pricePerNight * totalNights
                     ).toLocaleString()}
                   </span>
                 </div>
@@ -546,7 +536,7 @@ export default function CheckoutPage() {
 
               {/* Confirm Button */}
               <Button
-                onClick={() => handleConfirmBooking()}
+                onClick={() => handleConfirmBooking(paymentMethod)}
                 className="rounded-2xl w-full bg-primary h-10 elegant-subheading text-md"
               >
                 {t("Confirm and Payment")}
@@ -557,13 +547,20 @@ export default function CheckoutPage() {
                 <p className="font-medium text-gray-900">
                   {t("Cancellation & Refund Policy")}
                 </p>
-               <ul className="list-disc pl-5 space-y-1">
+                <ul className="list-disc pl-5 space-y-1">
                   <li>{t("Cancel 7 or more days before check-in → Full refund (100%)")}.</li>
                   <li>{t("Cancel 3–6 days before check-in → 50% refund")}.</li>
                   <li>{t("Cancel within 2 days of check-in → No refund")}.</li>
                 </ul>
               </div>
             </Card>
+            <PaymentModal
+              open={openPopupPayment}
+              onClose={() => setOpenPopupPayment(false)}
+              type={modalType!}
+              onDepositNow={confirmNow}
+              onDepositLater={confirmLater}
+            />
           </div>
         </div>
       </main>
