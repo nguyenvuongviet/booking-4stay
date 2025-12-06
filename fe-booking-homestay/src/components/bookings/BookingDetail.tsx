@@ -1,6 +1,6 @@
 import { BookingCancelSection } from "@/components/bookings/BookingCancelSection";
 import { Booking } from "@/models/Booking";
-import { post_review } from "@/services/bookingApi";
+import { cancel_booking, post_review } from "@/services/bookingApi";
 import { differenceInDays, format } from "date-fns";
 import { vi } from "date-fns/locale";
 import {
@@ -17,7 +17,8 @@ import { ReviewSection } from "./ReviewSection";
 import { useLang } from "@/context/lang-context";
 import { Button } from "../ui/button";
 import PaymentModal from "../payment/PaymentModal";
-import { usePayment } from "@/hooks/usePayment";
+import CountdownTimer from "../CountdownTimer";
+import { usePayment } from "@/_hooks/usePayment";
 
 export const BookingDetail = ({
   booking: initialBooking,
@@ -39,6 +40,8 @@ export const BookingDetail = ({
   const formatPrice = (price: number) => {
     return `${price.toLocaleString()} VND`;
   };
+
+  const remainingAmount = booking.totalAmount - (booking.paidAmount || booking.totalAmount);
 
   const {
     modalType,
@@ -74,6 +77,7 @@ export const BookingDetail = ({
       ...prev,
       status: "CANCELLED",
       cancelReason: data.reason,
+      refundAmount: booking.paidAmount,
     }));
     setCancelInfo(data);
   };
@@ -96,6 +100,24 @@ export const BookingDetail = ({
       console.error("Review submit error:", error);
     }
   };
+
+const handleAutoCancelBooking = async () => {
+  try {
+    await cancel_booking(booking.id, "Timeout: user did not complete payment");
+
+    setBooking((prev) => ({
+      ...prev,
+      status: "CANCELLED",
+      cancelReason: "Timeout: user did not complete payment",
+      refundAmount: 0, 
+    }));
+
+    toast.error("Booking đã bị hủy do quá thời gian thanh toán!");
+  } catch (error) {
+    console.error("Auto cancel booking failed:", error);
+    toast.error("Không thể hủy booking tự động!");
+  }
+};
 
   return (
     <div className="bg-white shadow-md rounded-2xl p-8 space-y-6">
@@ -223,12 +245,12 @@ export const BookingDetail = ({
 
           {booking.status === "CANCELLED" && (
             <div className="border-t space-y-4">
-              <div className="mt-4 p-4 bg-red-50 rounded-xl text-sm">
-                <p className="elegant-sans text-lg text-red-700">
+              <div className="mt-4 p-4 gap-2 bg-red-50 rounded-xl text-sm">
+                <p className="elegant-sans text-lg">
                   {t("Booking cancelled")}
                 </p>
-                <p className="mt-1 text-muted-foreground elegant-subheading">
-                  {t("Reason")}: {booking.cancelReason}
+                <p className="mt-1 elegant-subheading">
+                  {t("Reason")}: <span className="text-muted-foreground">{booking.cancelReason}</span>
                 </p>
                 {cancelInfo && (
                   <p className="mt-1">
@@ -238,7 +260,7 @@ export const BookingDetail = ({
                         {cancelInfo.refundAmount.toLocaleString()} VND
                       </span>
                     ) : (
-                      <span className="text-red-500 elegant-sans"></span>
+                      <span className="text-muted-foreground">Không hoàn tiền</span>
                     )}
                   </p>
                 )}
@@ -263,15 +285,41 @@ export const BookingDetail = ({
               {formatPrice(booking.room.price * totalNights) || "None"}
             </p>
           </div>
+
+          {/* Banner thanh toan  */}
+          {booking.status === "PENDING" && (
+            <div className="bg-yellow-100 p-2 text-center font-medium text-yellow-700 rounded-lg">
+              <CountdownTimer createdAt={booking.createdAt}
+                onFinish={() => handleAutoCancelBooking()}
+              />
+            </div>
+          )}
+
+          {booking.status === "CONFIRMED" && (
+            booking.paymentMethod === "CASH" ? (
+              <div className="bg-green-100 p-2 text-center text-sm text-green-700 rounded-lg">
+                Bạn đã cọc để giữ phòng, bạn cần thanh toán{" "}
+                <span className="elegant-sans text-red-600">
+                  {remainingAmount.toLocaleString()}
+                </span> khi đến nhận phòng.
+              </div>
+            ) : (
+              <div className="bg-green-100 p-2 text-center text-sm text-green-700 rounded-lg">
+                Bạn đã thanh toán thành công, <span className="eleagant-sans text-primary">4Stay</span>  xin cảm ơn !!
+              </div>
+            )
+          )}
+
+
         </div>
         <div className="flex flex-row-reverse gap-4">
-
           {/* Hủy booking */}
           {booking.status !== "CANCELLED" && booking.status !== "CHECKED_OUT" && (
             <div className="flex items-center justify-end">
               <BookingCancelSection booking={booking} onCancel={handleCancel} />
             </div>
           )}
+
           {/* Thanh toan  */}
           {booking.status === "PENDING" && (
             <div className="flex items-center justify-end">
@@ -282,8 +330,6 @@ export const BookingDetail = ({
               </Button>
             </div>
           )}
-
-
         </div>
         {/* Review  */}
         {booking.status === "CHECKED_OUT" && (
