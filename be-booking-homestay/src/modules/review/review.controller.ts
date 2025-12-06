@@ -43,6 +43,12 @@ export class ReviewController {
     return this.reviewService.listByRoom(roomId, q);
   }
 
+  @Get('users/:userId/')
+  @Public()
+  async listByUser(@Param('userId', ParseIntPipe) userId: number) {
+    return this.reviewService.listByUser(userId);
+  }
+
   @Delete('/admin/:id')
   @Roles('ADMIN')
   @ApiBearerAuth('AccessToken')

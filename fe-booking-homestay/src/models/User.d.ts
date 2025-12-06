@@ -19,6 +19,6 @@ export interface IUser {
     levels: {
       description: string;
       name: string;
-    }
+    };
   };
 }

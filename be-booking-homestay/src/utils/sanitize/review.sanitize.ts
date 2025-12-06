@@ -1,4 +1,4 @@
-import { buildImageUrl } from '../object.util';
+import { buildImageUrl, sanitizeCollection } from '../object.util';
 
 function sanitizeReview(review: any) {
   return {
@@ -18,5 +18,5 @@ function sanitizeReview(review: any) {
 }
 
 export function sanitizeReviewList(data: any[]) {
-  return Array.isArray(data) ? data.map(sanitizeReview) : [];
+  return sanitizeCollection(data, sanitizeReview);
 }

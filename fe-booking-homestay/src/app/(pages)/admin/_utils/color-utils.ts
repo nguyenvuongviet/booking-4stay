@@ -7,24 +7,32 @@ export const BOOKING_STATUS_MAP = {
     label: "Chờ duyệt",
     colorClass: "bg-yellow-100 text-yellow-800 border border-yellow-300",
   },
+  PARTIALLY_PAID: {
+    label: "Thanh toán một phần",
+    colorClass: "bg-amber-100 text-amber-800 border border-amber-300",
+  },
   CONFIRMED: {
-    label: "Xác nhận",
+    label: "Đã xác nhận",
     colorClass: "bg-green-100 text-green-800 border border-green-300",
   },
   CHECKED_IN: {
-    label: "Nhận phòng",
+    label: "Đã nhận phòng",
     colorClass: "bg-blue-100 text-blue-800 border border-blue-300",
   },
   CHECKED_OUT: {
-    label: "Trả phòng",
+    label: "Đã trả phòng",
     colorClass: "bg-purple-100 text-purple-800 border border-purple-300",
   },
   CANCELLED: {
     label: "Đã hủy",
     colorClass: "bg-red-100 text-red-800 border border-red-300",
   },
+  WAITING_REFUND: {
+    label: "Chờ hoàn tiền",
+    colorClass: "bg-orange-100 text-orange-800 border border-orange-300",
+  },
   REFUNDED: {
-    label: "Hoàn tiền",
+    label: "Đã hoàn tiền",
     colorClass: "bg-pink-100 text-pink-800 border border-pink-300",
   },
 };

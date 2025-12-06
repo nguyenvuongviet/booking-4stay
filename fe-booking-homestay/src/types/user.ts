@@ -12,7 +12,7 @@ export interface LoyaltyProgram {
   levels: Level;
   totalBooking: number;
   totalNight: number;
-  totalPoints: number;
+  totalPoint: number;
   lastUpgradeDate: Date;
 }
 

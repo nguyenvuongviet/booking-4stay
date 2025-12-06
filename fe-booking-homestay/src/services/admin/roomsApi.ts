@@ -99,7 +99,7 @@ export async function setRoomBeds(roomId: number, dto: SetRoomBedsDto) {
 export async function getBookingsByRoomId(id: number): Promise<Booking[]> {
   try {
     const res = await api.get(`/bookings/rooms/${id}`);
-    return res.data.data.items;
+    return res.data.data;
   } catch (error) {
     console.error("Get room by id error:", error);
     throw error;
@@ -109,7 +109,7 @@ export async function getBookingsByRoomId(id: number): Promise<Booking[]> {
 export async function getReviewsByRoomId(id: number): Promise<Review[]> {
   try {
     const res = await api.get(`/review/rooms/${id}`);
-    return res.data.data.items;
+    return res.data.data;
   } catch (error) {
     console.error("Get room by id error:", error);
     throw error;

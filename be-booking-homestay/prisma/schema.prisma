@@ -391,17 +391,19 @@ enum users_provider {
   GOOGLE
 }
 
-enum bookings_status {
-  PENDING
-  CONFIRMED
-  CHECKED_IN
-  CHECKED_OUT
-  CANCELLED
-  REFUNDED
-}
-
 enum bookings_paymentMethod {
   VNPAY
   CASH
   BANK_TRANSFER
+}
+
+enum bookings_status {
+  PENDING
+  PARTIALLY_PAID
+  CONFIRMED
+  CHECKED_IN
+  CHECKED_OUT
+  CANCELLED
+  WAITING_REFUND
+  REFUNDED
 }

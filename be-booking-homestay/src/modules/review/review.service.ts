@@ -123,6 +123,21 @@ export class ReviewService {
     return { page, pageSize, total, items: sanitizeReviewList(items) };
   }
 
+  async listByUser(userId: number) {
+    const reviews = await this.prisma.reviews.findMany({
+      where: { userId },
+      orderBy: { updatedAt: 'desc' },
+      include: {
+        users: {
+          select: { id: true, firstName: true, lastName: true, avatar: true },
+        },
+        bookings: { select: { id: true } },
+      },
+    });
+
+    return sanitizeReviewList(reviews);
+  }
+
   async remove(id: number, role: string) {
     const r = await this.prisma.reviews.findUnique({
       where: { id },

@@ -52,12 +52,14 @@ export class BookingService {
 
     if (!allowOverride) {
       const validTransitions: Record<bookings_status, bookings_status[]> = {
-        PENDING: ['CONFIRMED', 'CANCELLED'],
-        CONFIRMED: ['CHECKED_IN', 'CANCELLED', 'REFUNDED'],
+        PENDING: ['PARTIALLY_PAID', 'CONFIRMED', 'CANCELLED'],
+        PARTIALLY_PAID: ['CONFIRMED', 'CANCELLED'],
+        CONFIRMED: ['CHECKED_IN', 'CANCELLED', 'WAITING_REFUND'],
         CHECKED_IN: ['CHECKED_OUT', 'CANCELLED'],
         CHECKED_OUT: [],
-        CANCELLED: [],
-        REFUNDED: ['CANCELLED'],
+        CANCELLED: ['WAITING_REFUND'],
+        WAITING_REFUND: ['REFUNDED'],
+        REFUNDED: [],
       };
 
       if (!validTransitions[current].includes(newStatus)) {
@@ -108,6 +110,21 @@ export class BookingService {
     }
 
     return updated;
+  }
+
+  private determineCancelFinalStatus(paidAmount: string) {
+    const isPaid = paidAmount > '0';
+
+    return isPaid
+      ? {
+          finalStatus: bookings_status.REFUNDED,
+          message:
+            'Booking đã được chuyển sang trạng thái REFUNDED để hoàn tiền.',
+        }
+      : {
+          finalStatus: bookings_status.CANCELLED,
+          message: 'Booking hủy thành công. Không cần hoàn tiền.',
+        };
   }
 
   async create(userId: number, dto: CreateBookingDto) {
@@ -299,9 +316,10 @@ export class BookingService {
     const items = await this.prisma.bookings.findMany({
       where: { roomId },
       // include: { rooms: { include: { room_images: true } }, users: true },
+      orderBy: { createdAt: 'desc' },
       include: { users: true },
     });
-    return { items: sanitizeBooking(items) };
+    return sanitizeBooking(items);
   }
 
   async getUnavailableDays(roomId: number) {
@@ -352,21 +370,6 @@ export class BookingService {
     };
   }
 
-  private determineCancelFinalStatus(paidAmount: string) {
-    const isPaid = paidAmount > '0';
-
-    return isPaid
-      ? {
-          finalStatus: bookings_status.REFUNDED,
-          message:
-            'Booking đã được chuyển sang trạng thái REFUNDED để hoàn tiền.',
-        }
-      : {
-          finalStatus: bookings_status.CANCELLED,
-          message: 'Booking hủy thành công. Không cần hoàn tiền.',
-        };
-  }
-
   async cancel(
     id: number,
     requesterId: number,
@@ -415,6 +418,15 @@ export class BookingService {
       message: 'Cập nhật trạng thái thành công',
       data: updated,
     };
+  }
+
+  async listByUser(userId: number) {
+    const items = await this.prisma.bookings.findMany({
+      where: { userId },
+      orderBy: { updatedAt: 'desc' },
+      include: { rooms: { include: { room_images: true } }, users: true },
+    });
+    return sanitizeBooking(items);
   }
 
   async adminAcceptBooking(bookingId: number, dto: { paidAmount: number }) {

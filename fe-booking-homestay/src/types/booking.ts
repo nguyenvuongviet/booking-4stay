@@ -45,10 +45,12 @@ export interface Booking {
   checkOut: string;
   status:
     | "PENDING"
+    | "PARTIALLY_PAID"
     | "CONFIRMED"
     | "CHECKED_IN"
     | "CHECKED_OUT"
     | "CANCELLED"
+    | "WAITING_REFUND"
     | "REFUNDED";
   totalAmount?: number;
   cancelReason?: string | null;

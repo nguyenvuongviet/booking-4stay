@@ -22,7 +22,10 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { StarRating } from "../../_components/StarRating";
-import { getStatusColorClasses, translateStatus } from "../_utils/color-utils";
+import {
+  getStatusColorClasses,
+  translateStatus,
+} from "../../_utils/color-utils";
 
 function InfoItem({
   label,

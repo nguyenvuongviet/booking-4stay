@@ -93,6 +93,13 @@ export class BookingController {
     return this.bookingService.listByRoom(roomId);
   }
 
+  @Get('users/:userId')
+  @Roles('ADMIN')
+  @ApiBearerAuth('AccessToken')
+  async listByUser(@Param('userId', ParseIntPipe) userId: number) {
+    return this.bookingService.listByUser(userId);
+  }
+
   @Patch('/:id/accept')
   @Roles('ADMIN')
   @ApiBearerAuth('AccessToken')
