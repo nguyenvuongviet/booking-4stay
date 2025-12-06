@@ -23,7 +23,7 @@ export default function SignUpModal({
   switchToSignIn,
   switchToOTP,
 }: SignUpModalProps) {
-  const {t} = useLang();
+  const { t } = useLang();
   const [showPassword, setShowPassword] = useState(false);
   const [passwordInput, setPasswordInput] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -75,36 +75,36 @@ export default function SignUpModal({
     let hasError = false;
 
     if (!firstName.trim()) {
-      setFirstNameError("Please enter your first name!");
+      setFirstNameError("Vui lòng nhập Họ của bạn!");
       hasError = true;
     } else setFirstNameError("");
     if (!lastName.trim()) {
-      setLastNameError("Please enter your last name!");
+      setLastNameError("Vui lòng nhập Tên của bạn!");
       hasError = true;
     } else setLastNameError("");
     if (!phone.trim()) {
-      setPhoneError("Please enter your phone number!");
+      setPhoneError("Vui lòng nhập số điện thoại!");
       hasError = true;
     } else setPhoneError("");
     if (!passwordInput) {
-      setPasswordError("Please enter your password!");
+      setPasswordError("Vui lòng nhập mật khẩu!");
       hasError = true;
     } else if (passwordInput.length < 6) {
-      setPasswordError("Password must be at least 6 characters!");
+      setPasswordError("Mật khẩu phải có ít nhất 6 kí tự!");
       hasError = true;
     } else setPasswordError("");
     if (!confirmPassword) {
-      setConfirmPasswordError("Please confirm your password!");
+      setConfirmPasswordError("Xác nhận mật khẩu!");
       hasError = true;
     } else if (passwordInput !== confirmPassword) {
-      setConfirmPasswordError("Passwords do not match!");
+      setConfirmPasswordError("Mật khẩu không trùng khớp!");
       hasError = true;
     } else setConfirmPasswordError("");
     if (!emailInput.trim()) {
-      setEmailError("Please enter your email!");
+      setEmailError("Vui lòng nhập email!");
       hasError = true;
     } else if (!validateEmail(emailInput.trim())) {
-      setEmailError("Please enter a valid email!");
+      setEmailError("Vui lòng nhập email đúng!");
       hasError = true;
     } else setEmailError("");
     if (hasError) return;
@@ -143,24 +143,22 @@ export default function SignUpModal({
       {show && (
         <div className="fixed inset-0 bg-foreground/50 flex items-center justify-center z-50">
           <div className="bg-card rounded-2xl p-8 w-full max-w-md mx-4 shadow-2xl">
-            <div className="flex justify-end">
+            <div className="flex items-center justify-center mb-4 relative">
               <button
+                className="absolute right-0"
                 onClick={() => setShow(false)}
-                className="hover:text-primary cursor-pointer"
               >
                 <X size={24} />
               </button>
+              <h2 className="text-3xl elegant-heading text-primary text-center">
+                {t("SIGN UP")}
+              </h2>
             </div>
-
-            <div className="text-center mb-1">
-              <h2 className="text-3xl elegant-heading text-primary">{t("SIGN UP")}</h2>
-              {apiError && (
-                <p className="text-destructive text-left text-sm mt-4 elegant-subheading">
-                  {apiError}
-                </p>
-              )}
-            </div>
-
+            {apiError && (
+              <p className="text-destructive text-left text-sm mt-4 elegant-subheading">
+                {apiError}
+              </p>
+            )}
             <form className="space-y-1" onSubmit={handleSignUp}>
               <div className="grid grid-cols-2 gap-2">
                 <div>
@@ -286,7 +284,7 @@ export default function SignUpModal({
                   <Input
                     id="confirmSignupPassword"
                     type="password"
-                    className="bg-input rounded-2xl mt-1 "
+                    className="bg-input rounded-2xl mt-1 mb-2"
                     value={confirmPassword}
                     onChange={(e) => {
                       setConfirmPassword(e.target.value);
@@ -324,7 +322,7 @@ export default function SignUpModal({
                 }}
                 className="text-primary elegant-subheading text-sm hover:underline"
               >
-                {t("signUp")}
+                {t("signIn")}
               </button>
             </div>
 

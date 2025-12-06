@@ -1,5 +1,6 @@
 import { RoomDetailClient } from "@/components/rooms/RoomDetail";
 
-export default function RoomDetailPage({ params }: { params: { id: string } }) {
-  return <RoomDetailClient roomId={params.id} key={params.id} />;
+export default async function RoomDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  return <RoomDetailClient roomId={id} key={id} />;
 }

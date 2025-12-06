@@ -207,8 +207,8 @@ export default function ProfilePage() {
               </div>
 
               <div className="grid gap-4 grid-row-1">
-                <div className="grid grid-cols-3 gap-4 w-full md:w-auto">
-                  <div className="bg-white/20 p-4 rounded-xl backdrop-blur-md flex flex-col items-center justify-center text-center">
+                <div className="grid grid-cols-3 gap-2 w-full md:w-auto">
+                  <div className="bg-white/20 p-3 rounded-xl backdrop-blur-md flex flex-col items-center justify-center text-center">
                     <p className="text-sm pb-2">{t("total_bookings")}</p>
                     <p className="text-lg elegant-sans">
                       {user?.loyalty_program.totalBooking || 0}

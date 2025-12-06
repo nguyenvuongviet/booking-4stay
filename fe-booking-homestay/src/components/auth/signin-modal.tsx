@@ -24,7 +24,7 @@ export default function SignInModal({
   switchToSignUp,
   switchToForgotPassword,
 }: SignInModalProps) {
-  const {t} = useLang();
+  const { t } = useLang();
   const [showPassword, setShowPassword] = useState(false);
   const [password, setPassword] = useState("");
   const [emailError, setEmailError] = useState("");
@@ -52,12 +52,12 @@ export default function SignInModal({
     let hasError = false;
 
     if (!emailInput.trim()) {
-      setEmailError("Please enter your email!");
+      setEmailError("Vui lòng nhập email!");
       hasError = true;
     } else setEmailError("");
 
     if (!password) {
-      setPasswordError("Please enter your password!");
+      setPasswordError("Vui lòng nhập mật khẩu!");
       hasError = true;
     } else setPasswordError("");
     if (hasError) return;
@@ -85,8 +85,7 @@ export default function SignInModal({
       setShow(false);
     } catch (error: any) {
       if (error.response) {
-        // const message = error.response.data?.message || "Sign in failed!";
-        const message = "Incorrect email or password!";
+        const message = error.response.data?.message || "Sign in failed!";
         setApiError(message);
         console.error("API Error:", error.response.data);
       } else {
@@ -103,19 +102,18 @@ export default function SignInModal({
       {show && (
         <div className="fixed inset-0 bg-foreground/50 flex items-center justify-center z-50">
           <div className="bg-card rounded-2xl p-8 w-full max-w-md mx-4 shadow-2xl">
-            <div className="flex justify-end">
+            <div className="flex items-center justify-center mb-4 relative">
               <button
+                className="absolute right-0"
                 onClick={() => setShow(false)}
-                className="hover:text-primary cursor-pointer"
               >
                 <X size={24} />
               </button>
-            </div>
+              <h2 className="text-3xl elegant-heading text-primary text-center">
+                {t("SIGN IN")}
 
-            <div className="text-center mb-4">
-              <h2 className="text-3xl elegant-heading text-primary">{t("SIGN IN")}</h2>
+              </h2>
             </div>
-
             {apiError && (
               <p className="text-destructive text-sm mt-2">{apiError}</p>
             )}

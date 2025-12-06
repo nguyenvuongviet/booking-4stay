@@ -4,12 +4,12 @@ import { AuthProvider } from "@/context/auth-context";
 import PageTransition from "@/styles/animations/PageTransition";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import type { Metadata } from "next";
-import { Fira_Mono, Lora, Outfit } from "next/font/google";
+import { Fira_Mono, Lora,Lexend } from "next/font/google";
 import { Toaster as HotToaster } from "react-hot-toast";
 import "./globals.css";
 import { LangProvider } from "@/context/lang-context";
 
-const outfit = Outfit({
+const lexend = Lexend({
  subsets: ["latin", "latin-ext"],
   variable: "--font-sans",
   weight: ["400", "500", "600", "700"],
@@ -40,7 +40,7 @@ export default function RootLayout({
   return (
     <html lang="vi">
       <body
-        className={`${outfit.variable} ${firaMono.variable} ${lora.variable} antialiased`}
+        className={`${lexend.variable} ${firaMono.variable} ${lora.variable} antialiased`}
       >
         <LangProvider>
           <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID ?? ""}>

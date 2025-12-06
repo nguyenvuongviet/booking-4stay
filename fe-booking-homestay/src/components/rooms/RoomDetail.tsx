@@ -20,6 +20,7 @@ import { getAmenityIcon } from "@/constants/amenity-icons";
 import { get_unavailable_dates } from "@/services/bookingApi";
 import { mockRooms } from "@/constants/la-lo";
 import { useLang } from "@/context/lang-context";
+import { format } from "date-fns";
 
 interface RoomDetailClientProps {
   roomId: string;
@@ -110,8 +111,8 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
       }
 
       updateURL({
-        checkIn: checkInDate.toISOString(),
-        checkOut: checkOutDate.toISOString(),
+        checkIn: format(checkInDate, "yyyy-MM-dd"),
+        checkOut: format(checkOutDate, "yyyy-MM-dd"),
         adults: adults.toString(),
         children: children.toString(),
         status,
@@ -135,8 +136,7 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
     if (!room) return;
     if (adults > (room.adultCapacity ?? 0)) {
       toast.error(
-        `This room only allows up to ${room!.adultCapacity} adult${
-          room!.adultCapacity > 1 ? "s" : ""
+        `This room only allows up to ${room!.adultCapacity} adult${room!.adultCapacity > 1 ? "s" : ""
         }.`
       );
       return;
@@ -174,8 +174,8 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
       router.push(
         `/checkout?${new URLSearchParams({
           roomId: String(roomId),
-          checkIn: checkIn?.toISOString() ?? "",
-          checkOut: checkOut?.toISOString() ?? "",
+          ...(checkIn ? { checkIn: format(checkIn, "yyyy-MM-dd") } : {}),
+          ...(checkOut ? { checkOut: format(checkOut, "yyyy-MM-dd") } : {}),
           adults: String(adults),
           children: String(children),
         })}`
@@ -415,11 +415,10 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
                   }
                 }}
                 disabled={available === false}
-                className={`w-full h-10 rounded-3xl mb-6 hover:bg-primary/80 ${
-                  available === false
-                    ? "bg-muted cursor-not-allowed hover:bg-muted"
-                    : ""
-                }`}
+                className={`w-full h-10 rounded-3xl mb-6 hover:bg-primary/80 ${available === false
+                  ? "bg-muted cursor-not-allowed hover:bg-muted"
+                  : ""
+                  }`}
               >
                 {available === false ? t("sold out") : t("Select")}
               </Button>

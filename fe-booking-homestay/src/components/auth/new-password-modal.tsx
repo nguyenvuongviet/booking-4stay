@@ -15,7 +15,7 @@ interface NewPasswordModalProps {
 }
 
 export default function NewPasswordModal({ show, setShow }: NewPasswordModalProps) {
-  const {t} = useLang();
+  const { t } = useLang();
   const [step, setStep] = useState(1); // 1: email, 2: otp, 3: password
   const [showPassword, setShowPassword] = useState(false);
   const [password, setPassword] = useState("");
@@ -81,6 +81,46 @@ export default function NewPasswordModal({ show, setShow }: NewPasswordModalProp
     }
   };
 
+  const handleOtpChange = (index: number, value: string) => {
+    if (/^[0-9]?$/.test(value)) {
+      const newOtpValues = [...otpValues];
+      newOtpValues[index] = value;
+      setOtpValues(newOtpValues);
+      if (value && index < 5) {
+        const nextInput = document.getElementById(`otp-${index + 1}`);
+        nextInput?.focus();
+      }
+    }
+  };
+
+  const handleOtpPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const pasteData = e.clipboardData.getData("Text").trim();
+
+    if (!/^\d{1,6}$/.test(pasteData)) return; // chỉ chấp nhận số, tối đa 6 ký tự
+
+    const newOtpValues = [...otpValues];
+    for (let i = 0; i < 6; i++) {
+      newOtpValues[i] = pasteData[i] || "";
+      const input = document.getElementById(`otp-${i}`) as HTMLInputElement | null;
+      if (input) input.value = newOtpValues[i];
+    }
+
+    setOtpValues(newOtpValues);
+
+    // focus ô trống đầu tiên
+    const firstEmptyIndex = newOtpValues.findIndex(v => !v);
+    if (firstEmptyIndex !== -1) {
+      const nextInput = document.getElementById(`otp-${firstEmptyIndex}`);
+      nextInput?.focus();
+    } else {
+      // nếu đầy 6 ký tự thì focus ô cuối
+      const lastInput = document.getElementById(`otp-5`);
+      lastInput?.focus();
+    }
+  };
+
+
   // === STEP 3: RESET PASSWORD ===
   const handleCreatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -112,35 +152,22 @@ export default function NewPasswordModal({ show, setShow }: NewPasswordModalProp
     }
   };
 
-  const handleOtpChange = (index: number, value: string) => {
-    if (/^[0-9]?$/.test(value)) {
-      const newOtpValues = [...otpValues];
-      newOtpValues[index] = value;
-      setOtpValues(newOtpValues);
-      if (value && index < 5) {
-        const nextInput = document.getElementById(`otp-${index + 1}`);
-        nextInput?.focus();
-      }
-    }
-  };
-
   return (
     <div className="fixed inset-0 bg-foreground/50 flex items-center justify-center z-50">
-      <div className="bg-card rounded-lg p-8 w-full max-w-md mx-4 shadow-2xl">
-        <div className="flex justify-end">
-          <button onClick={() => setShow(false)} className="cursor-pointer hover:text-primary">
+      <div className="bg-card rounded-lg p-8 w-full max-w-md shadow-2xl">
+        <div className="flex items-center justify-center mb-6 relative">
+          <button
+            className="absolute right-0"
+            onClick={() => setShow(false)}
+          >
             <X size={24} />
           </button>
-        </div>
-
-        <div className="text-center mb-6">
-          <h2 className="text-3xl elegant-heading text-primary">
+          <h2 className="text-3xl elegant-heading text-primary text-center">
             {step === 1 && t("Confirm your email")}
             {step === 2 && "Enter OTP"}
             {step === 3 && "Create new password"}
           </h2>
         </div>
-
         {apiError && <p className="text-destructive text-sm mb-4 text-center">{apiError}</p>}
 
         {/* STEP 1: EMAIL */}
@@ -152,12 +179,12 @@ export default function NewPasswordModal({ show, setShow }: NewPasswordModalProp
                 id="email"
                 type="email"
                 placeholder="Enter your email"
-                className="mt-2 mb-6 bg-input rounded-2xl placeholder:text-muted"
+                className="mt-2 mb-6 bg-input rounded-2xl placeholder:text-muted text-sm"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
             </div>
-            <Button className="w-full rounded-2xl mb-10" type="submit">
+            <Button className="w-full rounded-2xl mb-4" type="submit">
               {t("Next")}
             </Button>
           </form>
@@ -165,10 +192,10 @@ export default function NewPasswordModal({ show, setShow }: NewPasswordModalProp
 
         {/* STEP 2: OTP */}
         {step === 2 && (
-          <form className="space-y-4" onSubmit={handleVerify}>
-            <p className="text-foreground elegant-subheading mb-4 text-center">
+          <form className="space-y-3" onSubmit={handleVerify}>
+            <p className="text-muted-foreground elegant-subheading mb-4 text-sm text-center">
               {t("We have sent an OTP to")}{" "}
-              <span className="font-semibold text-secondary-foreground">{email}</span>
+              <b className="elegant-sans text-secondary-foreground">{email}</b>
             </p>
             <div className="flex justify-center gap-2 mb-6">
               {otpValues.map((value, index) => (
@@ -178,8 +205,10 @@ export default function NewPasswordModal({ show, setShow }: NewPasswordModalProp
                   type="text"
                   maxLength={1}
                   value={value}
+                  inputMode="numeric"
                   onChange={(e) => handleOtpChange(index, e.target.value)}
-                  className="w-12 h-12 text-center text-xl font-semibold border border-border rounded-lg focus:outline-none"
+                  onPaste={handleOtpPaste}
+                  className="w-12 h-12 text-center text-xl border border-border rounded-lg focus:outline-none"
                   onKeyDown={(e) => {
                     if (e.key === "Enter") handleVerify();
                     if (e.key === "Backspace" && !otpValues[index] && index > 0) {
@@ -203,7 +232,7 @@ export default function NewPasswordModal({ show, setShow }: NewPasswordModalProp
               </span>
               <button
                 type="button"
-                className="text-primary font-medium hover:underline"
+                className="text-primary elegant-sans text-sm hover:underline"
                 onClick={handleSendOtp}
               >
                 {t("Resend")} OTP
@@ -221,7 +250,7 @@ export default function NewPasswordModal({ show, setShow }: NewPasswordModalProp
         {/* STEP 3: NEW PASSWORD */}
         {step === 3 && (
           <form className="space-y-4" onSubmit={handleCreatePassword}>
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="password">{t("Your password")}</Label>
               <div className="relative">
                 <Input
@@ -245,7 +274,7 @@ export default function NewPasswordModal({ show, setShow }: NewPasswordModalProp
               {passwordError && <p className="text-destructive text-sm">{passwordError}</p>}
             </div>
 
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="confirmPassword">{t("Confirm your password")}</Label>
               <Input
                 id="confirmPassword"
@@ -263,7 +292,7 @@ export default function NewPasswordModal({ show, setShow }: NewPasswordModalProp
             </div>
 
             <p className="text-muted-foreground text-xs mb-4">
-             {t("Use 6 or more characters")}!
+              {t("Use 6 or more characters")}!
             </p>
 
             <Button className="rounded-2xl w-full h-10 mb-2">

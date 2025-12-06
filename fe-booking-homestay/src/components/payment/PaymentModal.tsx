@@ -7,7 +7,6 @@ import { AlertTriangle, Clock, CheckCircle } from "lucide-react";
 interface PaymentModalProps {
   open: boolean;
   onClose: () => void;
-
   type: "VNPAY" | "CASH";
   onDepositNow: () => void;
   onDepositLater: () => void;
@@ -18,13 +17,12 @@ export default function PaymentModal({
   onClose,
   type,
   onDepositNow,
-  onDepositLater
+  onDepositLater,
 }: PaymentModalProps) {
-
   const title = type === "VNPAY" ? "Xác nhận thanh toán" : "Xác nhận đặt cọc";
   const message = type === "VNPAY"
-      ? "Để giữ phòng, bạn cần thanh toán 100%. Bạn muốn thanh toán ngay hay để sau?"
-      : "Để giữ phòng, bạn cần thanh toán 30% tiền cọc. Bạn muốn thanh toán ngay hay để sau?";
+    ? "Để giữ phòng, bạn cần thanh toán 100%. Bạn muốn thanh toán ngay hay để sau?"
+    : "Để giữ phòng, bạn cần thanh toán 30% tiền cọc. Bạn muốn thanh toán ngay hay để sau?";
 
   const laterLabel = "Để sau";
   const nowLabel = type === "VNPAY" ? "Thanh toán ngay" : "Đặt cọc ngay";
@@ -49,12 +47,14 @@ export default function PaymentModal({
         <DialogFooter className="flex flex-col gap-3 sm:flex-row sm:justify-end pt-3">
 
           <Button variant="outline" className="flex items-center gap-2 w-full sm:w-auto"
-            onClick={() => { onDepositLater(); onClose(); }}>
+            onClick={() => { onDepositLater(); onClose(); }}
+          >
             <Clock className="w-4 h-4" /> {laterLabel}
           </Button>
 
           <Button className="flex items-center gap-2 w-full sm:w-auto"
-            onClick={() => { onDepositNow(); onClose(); }}>
+            onClick={() => { onDepositNow(); onClose(); }}
+          >
             <CheckCircle className="w-4 h-4" /> {nowLabel}
           </Button>
 
