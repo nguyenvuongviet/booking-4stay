@@ -33,7 +33,7 @@ export default function LoyaltyUsersTab({
   const [sortBookings, setSortBookings] = useState<SortOrder>(null);
   const [sortNights, setSortNights] = useState<SortOrder>(null);
 
-  const pageSize = 8;
+  const pageSize = 6;
   const [page, setPage] = useState(1);
 
   const load = async () => {

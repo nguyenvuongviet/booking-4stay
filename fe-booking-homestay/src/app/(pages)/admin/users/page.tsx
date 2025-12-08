@@ -15,6 +15,7 @@ import { Eye, Filter, Plus, Search, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { RefreshButton } from "../_components/RefreshButton";
+import { Pagination } from "../_components/Pagination";
 
 function getStatusColor(status: "active" | "inactive") {
   return status === "active"
@@ -125,6 +126,14 @@ export default function UsersPage() {
       }
     );
   };
+
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
+  const pageCount = Math.max(1, Math.ceil(filteredUsers.length / pageSize));
+
+  const pagedUsers = useMemo(() => {
+    return filteredUsers.slice((page - 1) * pageSize, page * pageSize);
+  }, [filteredUsers, page]);
 
   return (
     <div className="space-y-6">
@@ -289,7 +298,7 @@ export default function UsersPage() {
                   );
                 })}
 
-                {filteredUsers.length === 0 && (
+                {pagedUsers.length === 0 && (
                   <tr>
                     <td colSpan={8} className="py-10 text-center text-warm-600">
                       Không có người dùng nào phù hợp.
@@ -300,6 +309,10 @@ export default function UsersPage() {
             </table>
           </div>
         </Card>
+      )}
+
+      {!loading && !error && filteredUsers.length > 0 && (
+        <Pagination page={page} pageCount={pageCount} onPageChange={setPage} />
       )}
 
       <UserCreateModal

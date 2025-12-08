@@ -28,6 +28,7 @@ export interface RecentBookingItem {
 }
 
 export interface PopularRoomItem {
+  roomId: number;
   roomName: string;
   bookings: number;
   revenue: number;

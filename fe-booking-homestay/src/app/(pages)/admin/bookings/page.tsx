@@ -3,26 +3,17 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { formatDate } from "@/lib/utils/date";
-import {
-  acceptBooking,
-  refundBooking,
-  rejectBooking,
-} from "@/services/admin/bookingsApi";
 import { saveAs } from "file-saver";
 import {
   ArrowUpDown,
   Baby,
-  Check,
   Download,
   Eye,
   Filter,
   Search,
   Users,
-  X,
 } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
-import toast from "react-hot-toast";
 import * as XLSX from "xlsx";
 import { DateRangePicker } from "../_components/DateRangePicker";
 import { Pagination } from "../_components/Pagination";
@@ -31,9 +22,10 @@ import {
   BOOKING_STATUS_MAP,
   getStatusColorClasses,
 } from "../_utils/color-utils";
-import { InputDialog } from "./_components/InputDialog";
+import { BookingActionButtons } from "./_components/BookingActionButtons";
+import { BookingActionDialog } from "./_components/BookingActionDialog";
+import { useBookingActions } from "./_hooks/useBookingActions";
 import { useBookingList } from "./_hooks/useBookingList";
-import Error from "next/error";
 
 export default function BookingListPage() {
   const {
@@ -53,70 +45,19 @@ export default function BookingListPage() {
     setSortCheckIn,
     sortTotal,
     setSortTotal,
-    getNights,
     processed,
+    getNights,
     refresh,
   } = useBookingList();
 
-  const [dialog, setDialog] = useState({
-    open: false,
-    mode: null as "accept" | "reject" | null,
-    id: null as number | null,
-  });
-
-  const [refundDialog, setRefundDialog] = useState({
-    open: false,
-    id: null as number | null,
-    maxAmount: 0,
-  });
-
-  const openRefund = (id: number, maxAmount: number) => {
-    setRefundDialog({
-      open: true,
-      id,
-      maxAmount,
-    });
-  };
-
-  const handleRefund = async (amount: string) => {
-    try {
-      await refundBooking(refundDialog.id!, Number(amount));
-
-      toast.success("Hoàn tiền thành công");
-      refresh();
-    } catch (err) {
-      const errorMessage = (err as { response: { data: { message: string } } })
-        .response?.data?.message;
-      toast.error(errorMessage || "Hoàn tiền thất bại");
-    } finally {
-      setRefundDialog({ open: false, id: null, maxAmount: 0 });
-    }
-  };
-
-  const openAccept = (id: number) =>
-    setDialog({ open: true, mode: "accept", id });
-
-  const openReject = (id: number) =>
-    setDialog({ open: true, mode: "reject", id });
-
-  const handleConfirm = async (value: string) => {
-    try {
-      if (dialog.mode === "accept") {
-        await acceptBooking(dialog.id!, parseInt(value, 10));
-        toast.success("Duyệt booking thành công");
-      } else {
-        await rejectBooking(dialog.id!, value);
-        toast.success("Từ chối booking thành công");
-      }
-      refresh();
-    } catch (err) {
-      const errorMessage = (err as { response: { data: { message: string } } })
-        .response?.data?.message;
-      toast.error(errorMessage || "Thao tác thất bại");
-    } finally {
-      setDialog({ open: false, mode: null, id: null });
-    }
-  };
+  const {
+    dialog,
+    openAccept,
+    openReject,
+    openRefund,
+    closeDialog,
+    handleConfirm,
+  } = useBookingActions(refresh);
 
   if (initialLoading || !raw) {
     return <div className="p-6">Đang tải dữ liệu…</div>;
@@ -278,35 +219,14 @@ export default function BookingListPage() {
                   </td>
 
                   <td className="py-4 px-4 text-center">
-                    {b.status === "PENDING" ? (
-                      <div className="flex items-center justify-center gap-2">
-                        <Button
-                          size="sm"
-                          className="bg-green-600 text-white"
-                          onClick={() => openAccept(b.id)}
-                        >
-                          <Check className="w-4 h-4" /> Duyệt
-                        </Button>
-
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => openReject(b.id)}
-                        >
-                          <X className="w-4 h-4" /> Huỷ
-                        </Button>
-                      </div>
-                    ) : b.status === "WAITING_REFUND" ? (
-                      <Button
-                        size="sm"
-                        className="bg-blue-600 text-white"
-                        onClick={() => openRefund(b.id, b.paidAmount!)}
-                      >
-                        Hoàn tiền
-                      </Button>
-                    ) : (
-                      <span className="text-xs text-gray-400 italic">-</span>
-                    )}
+                    <BookingActionButtons
+                      status={b.status}
+                      id={b.id}
+                      paidAmount={b.paidAmount}
+                      onAccept={openAccept}
+                      onReject={openReject}
+                      onRefund={openRefund}
+                    />
                   </td>
 
                   <td className="py-4 px-4 text-center">
@@ -325,33 +245,10 @@ export default function BookingListPage() {
         <Pagination page={page} pageCount={pageCount} onPageChange={setPage} />
       </Card>
 
-      <InputDialog
-        open={dialog.open}
-        title={
-          dialog.mode === "accept"
-            ? "Nhập số tiền khách đã trả"
-            : "Lý do từ chối"
-        }
-        placeholder={dialog.mode === "accept" ? "VD: 1500000" : "Nhập lý do..."}
-        type={dialog.mode === "accept" ? "number" : "text"}
-        confirmText={
-          dialog.mode === "accept" ? "Duyệt booking" : "Từ chối booking"
-        }
-        onCancel={() => setDialog({ open: false, mode: null, id: null })}
+      <BookingActionDialog
+        dialog={dialog}
+        onCancel={closeDialog}
         onConfirm={handleConfirm}
-      />
-
-      <InputDialog
-        open={refundDialog.open}
-        title="Hoàn tiền cho booking"
-        description={`Số tiền tối đa có thể hoàn: ${refundDialog.maxAmount?.toLocaleString()}₫`}
-        placeholder="Nhập số tiền hoàn"
-        type="number"
-        confirmText="Xác nhận hoàn tiền"
-        onCancel={() =>
-          setRefundDialog({ open: false, id: null, maxAmount: 0 })
-        }
-        onConfirm={handleRefund}
       />
     </div>
   );

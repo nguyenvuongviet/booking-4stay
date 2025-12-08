@@ -1,5 +1,6 @@
 "use client";
 
+import { Pagination } from "@/app/(pages)/admin/_components/Pagination";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -11,9 +12,9 @@ import {
 import { UserAvatar } from "@/components/UserAvatar";
 import { formatDate } from "@/lib/utils/date";
 import { Review } from "@/types/review";
-import { ChevronLeft, ChevronRight, ExternalLink, Star } from "lucide-react";
+import { ExternalLink, Star } from "lucide-react";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { StarRating } from "../../../_components/StarRating";
 
 function RatingBar({
@@ -60,7 +61,7 @@ export default function RoomReviewsTab({ reviews }: { reviews: Review[] }) {
   const [ratingFilter, setRatingFilter] = useState<number | null>(null);
   const [sortType, setSortType] = useState<"newest" | "oldest">("newest");
 
-  const pageSize = 5;
+  const pageSize = 10;
   const [page, setPage] = useState(1);
 
   const stats = calculateRatingStats(reviews);
@@ -80,8 +81,15 @@ export default function RoomReviewsTab({ reviews }: { reviews: Review[] }) {
     return data;
   }, [reviews, ratingFilter, sortType]);
 
-  const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
-  const paged = filtered.slice((page - 1) * pageSize, page * pageSize);
+  const pageCount =
+    filtered.length > 0 ? Math.ceil(filtered.length / pageSize) : 0;
+
+  const paged =
+    pageCount > 0 ? filtered.slice((page - 1) * pageSize, page * pageSize) : [];
+
+  useEffect(() => {
+    setPage(1);
+  }, [ratingFilter, sortType]);
 
   return (
     <div className="space-y-8">
@@ -121,17 +129,17 @@ export default function RoomReviewsTab({ reviews }: { reviews: Review[] }) {
           Tất cả
         </Button>
 
-        {[5, 4, 3, 2, 1].map((s) => (
+        {[5, 4, 3, 2, 1].map((star) => (
           <Button
-            key={s}
+            key={star}
             onClick={() => {
-              setRatingFilter(s);
+              setRatingFilter(star);
               setPage(1);
             }}
-            variant={ratingFilter === s ? "default" : "outline"}
+            variant={ratingFilter === star ? "default" : "outline"}
             className="px-4 rounded-full gap-1"
           >
-            {s} <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />
+            {star} <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />
           </Button>
         ))}
 
@@ -151,16 +159,16 @@ export default function RoomReviewsTab({ reviews }: { reviews: Review[] }) {
         {paged.map((review) => (
           <Card
             key={review.id}
-            className="p-5 flex flex-col justify-between md:flex-row gap-4 rounded-xl border shadow-sm hover:shadow-md transition-all duration-200"
+            className="p-5 flex flex-col md:flex-row gap-4 rounded-xl border shadow-sm hover:shadow-md transition-all"
           >
             <div className="flex items-start gap-4 w-full md:w-[25%] shrink-0">
               <UserAvatar
+                size="lg"
                 avatarUrl={review.user?.avatar}
                 fullName={review.user?.name}
-                className="w-14 h-14 border"
               />
 
-              <div className="flex flex-col">
+              <div>
                 <p className="font-semibold text-base">{review.user?.name}</p>
                 <p className="text-xs text-muted-foreground">
                   {formatDate(review.createdAt)}
@@ -169,7 +177,7 @@ export default function RoomReviewsTab({ reviews }: { reviews: Review[] }) {
             </div>
 
             <div className="flex-1 min-w-0">
-              <p className="text-left text-base leading-relaxed text-gray-900 pr-4 wrap-break-word">
+              <p className="text-base leading-relaxed text-gray-900">
                 {review.comment}
               </p>
             </div>
@@ -205,33 +213,8 @@ export default function RoomReviewsTab({ reviews }: { reviews: Review[] }) {
         )}
       </div>
 
-      {/* PAGINATION */}
-      {filtered.length > 0 && (
-        <div className="flex justify-between items-center mt-6">
-          <p className="text-sm text-gray-500">
-            Trang {page} / {pageCount}
-          </p>
-
-          <div className="flex gap-3">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={page === 1}
-              onClick={() => setPage((p) => p - 1)}
-            >
-              <ChevronLeft className="w-4 h-4" /> Prev
-            </Button>
-
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={page === pageCount}
-              onClick={() => setPage((p) => p + 1)}
-            >
-              Next <ChevronRight className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
+      {pageCount > 0 && (
+        <Pagination page={page} pageCount={pageCount} onPageChange={setPage} />
       )}
     </div>
   );

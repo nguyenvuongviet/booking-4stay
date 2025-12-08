@@ -24,7 +24,7 @@ export default function UserReviewsTab({
 }) {
   const [loading, setLoading] = useState(true);
   const [bookings, setBookings] = useState<Booking[]>([]);
-  const pageSize = 4;
+  const pageSize = 6;
   const [page, setPage] = useState(1);
 
   async function loadData() {

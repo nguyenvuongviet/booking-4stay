@@ -115,6 +115,7 @@ export class DashboardService {
           select: { name: true },
         });
         return {
+          roomId: g.roomId,
           roomName: room?.name ?? 'N/A',
           bookings: g._count.roomId,
           revenue: Number(g._sum?.totalPrice ?? 0),

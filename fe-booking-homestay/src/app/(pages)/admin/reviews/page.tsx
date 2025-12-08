@@ -5,15 +5,9 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { UserAvatar } from "@/components/UserAvatar";
 import { formatDate } from "@/lib/utils/date";
-import {
-  ChevronLeft,
-  ChevronRight,
-  ExternalLink,
-  Search,
-  Star,
-  Trash2,
-} from "lucide-react";
+import { ExternalLink, Search, Star, Trash2 } from "lucide-react";
 import Link from "next/link";
+import { Pagination } from "../_components/Pagination";
 import { RefreshButton } from "../_components/RefreshButton";
 import { StarRating } from "../_components/StarRating";
 import { useReviewList } from "./_hooks/useReviewList";
@@ -114,9 +108,9 @@ export default function ReviewsPage() {
             <div className="flex flex-col md:flex-row justify-between gap-4">
               <div className="flex gap-4 items-start md:w-[25%]">
                 <UserAvatar
+                  size="lg"
                   avatarUrl={review.user?.avatar}
                   fullName={review.user?.name}
-                  className="w-14 h-14 border"
                 />
 
                 <div>
@@ -158,31 +152,7 @@ export default function ReviewsPage() {
       </div>
 
       {!loading && filtered.length > 0 && (
-        <div className="flex justify-between items-center pt-4">
-          <p className="text-sm text-gray-500">
-            Trang {page}/{pageCount}
-          </p>
-
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={page === 1}
-              onClick={() => setPage(page - 1)}
-            >
-              <ChevronLeft className="w-4 h-4" /> Prev
-            </Button>
-
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={page === pageCount}
-              onClick={() => setPage(page + 1)}
-            >
-              Next <ChevronRight className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
+        <Pagination page={page} pageCount={pageCount} onPageChange={setPage} />
       )}
     </div>
   );

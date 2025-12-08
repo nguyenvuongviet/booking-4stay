@@ -7,6 +7,8 @@ import {
   getReviewsByRoomId,
   getRoomById,
 } from "@/services/admin/roomsApi";
+import { Booking } from "@/types/booking";
+import { Review } from "@/types/review";
 import { Room } from "@/types/room";
 import { useCallback, useEffect, useState } from "react";
 
@@ -14,8 +16,8 @@ export function useRoomDetail(id: number, onDeleted?: () => void) {
   const { toast } = useToast();
 
   const [room, setRoom] = useState<Room | null>(null);
-  const [bookings, setBookings] = useState<any[]>([]);
-  const [reviews, setReviews] = useState<any[]>([]);
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {

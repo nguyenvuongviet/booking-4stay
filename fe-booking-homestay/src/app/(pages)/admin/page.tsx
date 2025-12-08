@@ -16,7 +16,8 @@ import {
   RecentBookingItem,
   RevenueByMonth,
 } from "@/services/admin/dashboardApi";
-import { Calendar, DoorOpen, Download, Users, Wallet } from "lucide-react";
+import { Calendar, DoorOpen, Download, Eye, Users, Wallet } from "lucide-react";
+import Link from "next/link";
 import toast from "react-hot-toast";
 import {
   Bar,
@@ -37,12 +38,14 @@ import { exportCSV, exportJSON } from "./_utils/export";
 
 const BOOKING_STATUS_COLORS: Record<string, { label: string; color: string }> =
   {
-    PENDING: { label: "Chờ thanh toán", color: "#facc15" },
-    CONFIRMED: { label: "Đã xác nhận", color: "#3b82f6" },
-    CHECKED_IN: { label: "Đã nhận phòng", color: "#0ea5e9" },
-    CHECKED_OUT: { label: "Đã trả phòng", color: "#22c55e" },
+    PENDING: { label: "Chờ thanh toán", color: "#fb923c" },
+    PARTIALLY_PAID: { label: "Thanh toán một phần", color: "#facc15" },
+    CONFIRMED: { label: "Đã xác nhận", color: "#22c55e" },
+    CHECKED_IN: { label: "Đã nhận phòng", color: "#06b6d4" },
+    CHECKED_OUT: { label: "Đã trả phòng", color: "#0ea5e9" },
     CANCELLED: { label: "Đã hủy", color: "#ef4444" },
-    REFUNDED: { label: "Hoàn tiền", color: "#a855f7" },
+    WAITING_REFUND: { label: "Chờ hoàn tiền", color: "#8b5cf6" },
+    REFUNDED: { label: "Đã hoàn tiền", color: "#6b7280" },
   };
 
 export default function AdminDashboardPage() {
@@ -306,6 +309,7 @@ export default function AdminDashboardPage() {
                   <th className="py-2 px-3">Tổng</th>
                   <th className="py-2 px-3">Trạng thái</th>
                   <th className="py-2 px-3">Ngày tạo</th>
+                  <th className="py-2 px-3">Chi tiết</th>
                 </tr>
               </thead>
               <tbody>
@@ -332,6 +336,13 @@ export default function AdminDashboardPage() {
                     <td className="p-2 text-muted-foreground">
                       {new Date(b.createdAt).toLocaleDateString("vi-VN")}
                     </td>
+                    <td className="p-2">
+                      <Link href={`/admin/bookings/${b.id}`}>
+                        <Button variant="ghost" size="icon">
+                          <Eye className="w-4 h-4" />
+                        </Button>
+                      </Link>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -346,31 +357,33 @@ export default function AdminDashboardPage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {popular.map((room, i) => (
-              <div
-                key={i}
-                className="border rounded-xl p-4 bg-card shadow-sm hover:shadow-md transition-shadow"
-              >
-                <div className="flex items-center justify-between">
-                  <h3 className="font-semibold">{room.roomName}</h3>
-                  <span
-                    className={`text-xs px-2 py-1 rounded-full ${
-                      i < 3
-                        ? "bg-yellow-100 text-yellow-700"
-                        : "bg-muted text-foreground"
-                    }`}
-                  >
-                    TOP {i + 1}
-                  </span>
+              <Link key={i} href={`/admin/rooms/${room.roomId}`}>
+                <div
+                  key={i}
+                  className="border rounded-xl p-4 bg-card shadow-sm hover:shadow-md transition-shadow"
+                >
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-semibold">{room.roomName}</h3>
+                    <span
+                      className={`text-xs px-2 py-1 rounded-full ${
+                        i < 3
+                          ? "bg-yellow-100 text-yellow-700"
+                          : "bg-muted text-foreground"
+                      }`}
+                    >
+                      TOP {i + 1}
+                    </span>
+                  </div>
+
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {room.bookings} lượt đặt
+                  </p>
+
+                  <p className="font-semibold text-sm text-green-600 mt-2">
+                    Doanh thu: {room.revenue.toLocaleString()}₫
+                  </p>
                 </div>
-
-                <p className="text-xs text-muted-foreground mt-1">
-                  {room.bookings} lượt đặt
-                </p>
-
-                <p className="font-semibold text-sm text-green-600 mt-2">
-                  Doanh thu: {room.revenue.toLocaleString()}₫
-                </p>
-              </div>
+              </Link>
             ))}
           </div>
         </Card>

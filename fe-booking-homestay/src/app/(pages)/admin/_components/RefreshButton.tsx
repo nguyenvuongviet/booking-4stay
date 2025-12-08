@@ -8,11 +8,13 @@ import toast from "react-hot-toast";
 interface RefreshButtonProps {
   onRefresh: () => Promise<void> | void;
   label?: string;
+  className?: string;
 }
 
 export function RefreshButton({
   onRefresh,
   label = "Làm mới",
+  className,
 }: RefreshButtonProps) {
   const [loading, setLoading] = useState(false);
 
@@ -34,7 +36,7 @@ export function RefreshButton({
       variant="outline"
       onClick={handleClick}
       disabled={loading}
-      className="flex items-center gap-2"
+      className={`flex items-center gap-2 ${className}`}
     >
       <RefreshCcw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
       {loading ? "Đang làm mới..." : label}

@@ -82,17 +82,23 @@ export default function RoomDetailPage({
 
           <div>
             <h1 className="text-3xl font-bold">{room.name}</h1>
-            <Badge
-              className={`mt-1 ${
-                room.status === "AVAILABLE"
-                  ? "bg-green-100 text-green-700"
-                  : room.status === "BOOKED"
-                  ? "bg-yellow-100 text-yellow-700"
-                  : "bg-red-100 text-red-700"
-              }`}
-            >
-              {room.status}
-            </Badge>
+
+            <div className="flex items-center gap-3 mt-2">
+              <span className="px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-semibold tracking-wide shadow-sm">
+                ROOM ID: {room.id}
+              </span>
+              <Badge
+                className={
+                  room.status === "AVAILABLE"
+                    ? "bg-green-100 text-green-700"
+                    : room.status === "BOOKED"
+                    ? "bg-yellow-100 text-yellow-700"
+                    : "bg-red-100 text-red-700"
+                }
+              >
+                {room.status}
+              </Badge>
+            </div>
           </div>
         </div>
 

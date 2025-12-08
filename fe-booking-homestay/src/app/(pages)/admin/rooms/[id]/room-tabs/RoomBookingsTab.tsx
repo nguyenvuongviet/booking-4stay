@@ -1,28 +1,25 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Booking } from "@/types/booking";
+import { Card } from "@/components/ui/card";
 import { formatDate } from "@/lib/utils/date";
-
-import {
-  Search,
-  Filter,
-  Users,
-  Baby,
-  ArrowUpDown,
-  ChevronLeft,
-  ChevronRight,
-  Eye,
-  Download,
-} from "lucide-react";
-
-import Link from "next/link";
+import { Booking } from "@/types/booking";
 import { saveAs } from "file-saver";
-import * as XLSX from "xlsx";
+import {
+  ArrowUpDown,
+  Baby,
+  Download,
+  Eye,
+  Filter,
+  Search,
+  Users,
+} from "lucide-react";
+import Link from "next/link";
+import { useMemo, useState } from "react";
 import { DateRange } from "react-day-picker";
+import * as XLSX from "xlsx";
 import { DateRangePicker } from "../../../_components/DateRangePicker";
+import { Pagination } from "../../../_components/Pagination";
 
 interface Props {
   bookings: Booking[];
@@ -37,7 +34,7 @@ export default function RoomBookingsTab({ bookings }: Props) {
 
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
 
-  const pageSize = 6;
+  const pageSize = 10;
   const [page, setPage] = useState(1);
 
   const statusColor = (status: string) =>
@@ -178,7 +175,7 @@ export default function RoomBookingsTab({ bookings }: Props) {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-muted-foreground text-sm">
+              <tr className="border-b text-sm">
                 <th className="py-3 px-4 text-left font-semibold">Khách</th>
                 <th
                   className="py-3 px-4 text-center font-semibold cursor-pointer"
@@ -190,16 +187,7 @@ export default function RoomBookingsTab({ bookings }: Props) {
                     Ngày vào <ArrowUpDown className="w-4 h-4" />
                   </div>
                 </th>
-                <th
-                  className="py-3 px-4 text-center font-semibold cursor-pointer"
-                  onClick={() =>
-                    setSortCheckIn(sortCheckIn === "asc" ? "desc" : "asc")
-                  }
-                >
-                  <div className="flex items-center justify-center gap-1">
-                    Ngày ra <ArrowUpDown className="w-4 h-4" />
-                  </div>
-                </th>
+                <th className="py-3 px-4 text-center font-semibold">Ngày ra</th>
                 <th className="py-3 px-4 text-center font-semibold">Số đêm</th>
                 <th className="py-3 px-4 text-center font-semibold">
                   Số khách
@@ -225,7 +213,7 @@ export default function RoomBookingsTab({ bookings }: Props) {
 
             <tbody>
               {paged.map((b) => (
-                <tr key={b.id} className="border-b hover:bg-muted/20">
+                <tr key={b.id} className="border-b hover:bg-gray-50">
                   <td className="py-4 px-4">
                     <p className="font-medium">{b.guestInfo.fullName}</p>
                     <p className="text-xs text-muted-foreground">
@@ -272,32 +260,7 @@ export default function RoomBookingsTab({ bookings }: Props) {
           </table>
         </div>
 
-        <div className="flex justify-between items-center mt-6">
-          <p className="text-sm text-muted-foreground">
-            Page {page} / {pageCount}
-          </p>
-
-          <div className="flex gap-3">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={page === 1}
-              onClick={() => setPage(page - 1)}
-              className="flex gap-1"
-            >
-              <ChevronLeft className="w-4 h-4" /> Prev
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={page === pageCount}
-              onClick={() => setPage(page + 1)}
-              className="flex gap-1"
-            >
-              Next <ChevronRight className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
+        <Pagination page={page} pageCount={pageCount} onPageChange={setPage} />
       </Card>
     </div>
   );
