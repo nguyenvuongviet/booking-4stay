@@ -42,3 +42,21 @@ export async function rejectBooking(id: number, reason: string) {
     throw err;
   }
 }
+
+export async function refundBooking(
+  bookingId: number,
+  amount: number,
+  reason?: string
+) {
+  try {
+    const res = await api.post("/api/refund", {
+      bookingId,
+      amount,
+      reason: reason ?? null,
+    });
+    return res.data?.data;
+  } catch (err) {
+    console.error("Refund Booking error:", err);
+    throw err;
+  }
+}

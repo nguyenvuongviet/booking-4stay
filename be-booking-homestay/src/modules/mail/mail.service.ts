@@ -91,7 +91,15 @@ export class MailService {
 
   async sendBookingMail(
     to: string,
-    type: 'BOOKING_PENDING' | 'BOOKING_CONFIRMED' | 'BOOKING_CANCELLED',
+    type:
+      | 'BOOKING_PENDING'
+      | 'BOOKING_CONFIRMED'
+      | 'BOOKING_CANCELLED'
+      | 'BOOKING_PARTIALLY_PAID'
+      | 'BOOKING_REFUNDED'
+      | 'BOOKING_CHECKED_IN'
+      | 'BOOKING_CHECKED_OUT'
+      | 'BOOKING_WAITING_REFUND',
     booking: any,
   ) {
     let subject = '';
@@ -103,29 +111,79 @@ export class MailService {
       case 'BOOKING_PENDING':
         subject = 'Booking mới đang chờ xác nhận';
         body = `
-          ${info}
-          <p style="color:#FF6B00;"><b>Trạng thái:</b> PENDING</p>
-          <p>Booking của bạn đã được tạo thành công và đang chờ xử lý.</p>
-        `;
+        ${info}
+        <p style="color:#FF6B00;"><b>Trạng thái:</b> PENDING</p>
+        <p>Booking của bạn đã được tạo thành công và đang chờ xử lý từ hệ thống 4Stay.</p>
+      `;
+        break;
+
+      case 'BOOKING_PARTIALLY_PAID':
+        subject = 'Thanh toán một phần thành công';
+        body = `
+        ${info}
+        <p style="color:#007bff;"><b>Trạng thái:</b> PARTIALLY_PAID</p>
+        <p>Bạn đã thanh toán một phần cho booking này.</p>
+        <p>Vui lòng hoàn tất khoản còn lại để được xác nhận đặt phòng.</p>
+      `;
         break;
 
       case 'BOOKING_CONFIRMED':
         subject = 'Booking đã được xác nhận';
         body = `
-          ${info}
-          <p style="color:green;"><b>Trạng thái:</b> CONFIRMED</p>
-          <p>Booking đã được xác nhận. Chúng tôi hân hạnh được phục vụ bạn.</p>
-        `;
+        ${info}
+        <p style="color:green;"><b>Trạng thái:</b> CONFIRMED</p>
+        <p>Chúc mừng! Booking của bạn đã được xác nhận thành công.</p>
+        <p>Hãy chuẩn bị hành lý cho kỳ nghỉ tuyệt vời cùng 4Stay.</p>
+      `;
+        break;
+
+      case 'BOOKING_CHECKED_IN':
+        subject = 'Bạn đã nhận phòng';
+        body = `
+        ${info}
+        <p style="color:green;"><b>Trạng thái:</b> CHECKED_IN</p>
+        <p>Chúc bạn có một kỳ nghỉ tuyệt vời!</p>
+      `;
+        break;
+
+      case 'BOOKING_CHECKED_OUT':
+        subject = 'Bạn đã trả phòng';
+        body = `
+        ${info}
+        <p style="color:#333;"><b>Trạng thái:</b> CHECKED_OUT</p>
+        <p>Cảm ơn bạn đã tin tưởng và sử dụng dịch vụ của 4Stay.</p>
+        <p>Chúng tôi hy vọng bạn đã có một trải nghiệm thật tuyệt vời.</p>
+      `;
         break;
 
       case 'BOOKING_CANCELLED':
         subject = 'Booking đã bị hủy';
         body = `
-          ${info}
-          <p style="color:red;"><b>Trạng thái:</b> CANCELLED</p>
-          <p>Lý do hủy (nếu có):</p>
-          <p><i>${booking.cancelReason ?? 'Không có lý do'}</i></p>
-        `;
+        ${info}
+        <p style="color:red;"><b>Trạng thái:</b> CANCELLED</p>
+        <p><b>Lý do hủy:</b></p>
+        <p><i>${booking.cancelReason ?? 'Không có lý do'}</i></p>
+      `;
+        break;
+
+      case 'BOOKING_WAITING_REFUND':
+        subject = 'Yêu cầu hoàn tiền – cần xử lý';
+        body = `
+        ${info}
+        <p style="color:#c77d00;"><b>Trạng thái:</b> WAITING_REFUND</p>
+        <p>Booking đã bị hủy và khách có phát sinh thanh toán.</p>
+        <p>Vui lòng tiến hành hoàn tiền cho khách.</p>
+      `;
+        break;
+
+      case 'BOOKING_REFUNDED':
+        subject = 'Hoàn tiền thành công';
+        body = `
+        ${info}
+        <p style="color:#28a745;"><b>Trạng thái:</b> REFUNDED</p>
+        <p>Khoản thanh toán của bạn đã được hoàn trả thành công.</p>
+        <p>Vui lòng kiểm tra tài khoản ngân hàng hoặc ví thanh toán.</p>
+      `;
         break;
     }
 

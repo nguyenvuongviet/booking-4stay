@@ -33,7 +33,7 @@ export class BookingCron {
     const checkins = await this.prisma.bookings.findMany({
       where: {
         isDeleted: false,
-        status: { in: ['PENDING', 'CONFIRMED'] },
+        status: { in: ['PENDING', 'PARTIALLY_PAID', 'CONFIRMED'] },
         checkIn: { gte: start, lt: end },
       },
     });

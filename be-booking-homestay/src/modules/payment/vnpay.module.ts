@@ -1,11 +1,12 @@
 import { Module } from '@nestjs/common';
-import { VNPayService } from './vnpay.service';
-import { VNPayController } from './vnpay.controller';
 import { BookingModule } from '../booking/booking.module';
+import { PrismaService } from '../prisma/prisma.service';
+import { VNPayController } from './vnpay.controller';
+import { VNPayService } from './vnpay.service';
 
 @Module({
   imports: [BookingModule],
-  providers: [VNPayService],
+  providers: [VNPayService, PrismaService],
   controllers: [VNPayController],
   exports: [VNPayService],
 })

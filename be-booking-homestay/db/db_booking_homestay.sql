@@ -193,25 +193,55 @@ CREATE TABLE `payment_methods` (
 
 DROP TABLE IF EXISTS `payments`;
 CREATE TABLE `payments` (
-  `id` int unsigned NOT NULL AUTO_INCREMENT,
-  `bookingId` int unsigned NOT NULL,
-  `amount` decimal(12,2) NOT NULL,
-  `paymentMethodId` int unsigned NOT NULL,
-  `paymentGateway` varchar(50) DEFAULT NULL,
-  `transactionId` varchar(255) DEFAULT NULL,
-  `status` enum('PENDING','SUCCESS','FAILED') NOT NULL DEFAULT 'PENDING',
-  `transactionDate` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `isDeleted` tinyint(1) NOT NULL DEFAULT '0',
-  `deletedAt` timestamp NULL DEFAULT NULL,
-  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `bookingId` INT UNSIGNED NOT NULL,
+  `amount` DECIMAL(12,2) NOT NULL,
+  `txnRef` VARCHAR(64) NOT NULL,
+  `transactionNo` VARCHAR(64) NOT NULL,
+  `transactionDate` DATETIME NOT NULL,
+  `bankCode` VARCHAR(20) DEFAULT NULL,
+  `cardType` VARCHAR(50) DEFAULT NULL,
+  `paymentGateway` VARCHAR(50) NOT NULL DEFAULT 'VNPAY',
+  `status` ENUM('PENDING','SUCCESS','FAILED','CANCELED','REFUNDED')
+      NOT NULL DEFAULT 'PENDING',
+  `rawData` JSON NULL,
+  `createdAt` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updatedAt` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
   PRIMARY KEY (`id`),
-  KEY `idx_payments_status_date` (`status`,`transactionDate`),
-  KEY `fk_payment_booking` (`bookingId`),
-  KEY `fk_payment_method` (`paymentMethodId`),
-  CONSTRAINT `fk_payment_booking` FOREIGN KEY (`bookingId`) REFERENCES `bookings` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_payment_method` FOREIGN KEY (`paymentMethodId`) REFERENCES `payment_methods` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  UNIQUE KEY `uniq_txnRef` (`txnRef`),
+  UNIQUE KEY `uniq_transactionNo` (`transactionNo`),
+  KEY `idx_booking` (`bookingId`),
+  CONSTRAINT `fk_payment_booking`
+    FOREIGN KEY (`bookingId`)
+    REFERENCES `bookings` (`id`)
+    ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
+DROP TABLE IF EXISTS `refunds`;
+CREATE TABLE `refunds` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `paymentId` INT UNSIGNED NOT NULL,
+  `amount` DECIMAL(12,2) NOT NULL,
+  `createdBy` VARCHAR(100) NOT NULL,
+  `reason` VARCHAR(255) NULL,
+  `requestId` VARCHAR(50) NULL,
+  `transactionType` VARCHAR(10) NULL,
+  `rspCode` VARCHAR(10) NULL,
+  `rspMessage` VARCHAR(255) NULL,
+  `transactionDate` DATETIME NULL,
+  `rawData` JSON NULL,
+  `createdAt` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_paymentId` (`paymentId`),
+
+  CONSTRAINT `fk_refund_payment`
+    FOREIGN KEY (`paymentId`)
+    REFERENCES `payments` (`id`)
+    ON DELETE CASCADE
+);
+
 
 DROP TABLE IF EXISTS `reviews`;
 CREATE TABLE `reviews` (

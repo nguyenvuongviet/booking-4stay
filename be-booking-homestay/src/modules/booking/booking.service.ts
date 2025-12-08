@@ -29,7 +29,7 @@ export class BookingService {
     private readonly mailService: MailService,
   ) {}
 
-  private async changeBookingStatus(
+  async changeBookingStatus(
     bookingId: number,
     newStatus: bookings_status,
     options?: {
@@ -53,11 +53,11 @@ export class BookingService {
     if (!allowOverride) {
       const validTransitions: Record<bookings_status, bookings_status[]> = {
         PENDING: ['PARTIALLY_PAID', 'CONFIRMED', 'CANCELLED'],
-        PARTIALLY_PAID: ['CONFIRMED', 'CANCELLED'],
+        PARTIALLY_PAID: ['CONFIRMED', 'CANCELLED', 'WAITING_REFUND'],
         CONFIRMED: ['CHECKED_IN', 'CANCELLED', 'WAITING_REFUND'],
         CHECKED_IN: ['CHECKED_OUT', 'CANCELLED'],
         CHECKED_OUT: [],
-        CANCELLED: ['WAITING_REFUND'],
+        CANCELLED: [],
         WAITING_REFUND: ['REFUNDED'],
         REFUNDED: [],
       };
@@ -77,7 +77,7 @@ export class BookingService {
         paidAmount:
           newStatus === 'CHECKED_OUT'
             ? booking.totalPrice
-            : (options?.paidAmount ?? undefined),
+            : (options?.paidAmount ?? booking.paidAmount),
         updatedAt: new Date(),
       },
       include: { rooms: true },
@@ -87,43 +87,66 @@ export class BookingService {
       await this.loyaltyProgram.recalculateLoyaltyLevel(updated.userId);
     }
 
+    type BookingMailType =
+      | 'BOOKING_PENDING'
+      | 'BOOKING_CONFIRMED'
+      | 'BOOKING_CANCELLED'
+      | 'BOOKING_PARTIALLY_PAID'
+      | 'BOOKING_REFUNDED'
+      | 'BOOKING_CHECKED_IN'
+      | 'BOOKING_CHECKED_OUT'
+      | 'BOOKING_WAITING_REFUND';
+
+    const mailMap: Partial<Record<bookings_status, BookingMailType>> = {
+      PENDING: 'BOOKING_PENDING',
+      PARTIALLY_PAID: 'BOOKING_PARTIALLY_PAID',
+      CONFIRMED: 'BOOKING_CONFIRMED',
+      CANCELLED: 'BOOKING_CANCELLED',
+      WAITING_REFUND: 'BOOKING_WAITING_REFUND',
+      REFUNDED: 'BOOKING_REFUNDED',
+      CHECKED_IN: 'BOOKING_CHECKED_IN',
+      CHECKED_OUT: 'BOOKING_CHECKED_OUT',
+    };
+
+    const mailType = mailMap[newStatus];
     const notifyUser = options?.notifyUser ?? true;
     const notifyAdmin = options?.notifyAdmin ?? true;
 
-    const mailType =
-      newStatus === 'CONFIRMED'
-        ? 'BOOKING_CONFIRMED'
-        : newStatus === 'CANCELLED'
-          ? 'BOOKING_CANCELLED'
-          : 'BOOKING_PENDING';
+    const isWaitingRefund = newStatus === 'WAITING_REFUND';
 
-    if (notifyUser) {
-      this.mailService
-        .sendBookingMail(updated.guestEmail, mailType, updated)
-        .catch((err) => console.error('Email user error:', err));
+    if (mailType) {
+      if (notifyUser && !isWaitingRefund) {
+        this.mailService
+          .sendBookingMail(
+            updated.guestEmail,
+            mailType as BookingMailType,
+            updated,
+          )
+          .catch((err) => console.error('Email user error:', err));
+      }
     }
 
-    if (notifyAdmin) {
+    if (mailType && notifyAdmin) {
       this.mailService
-        .sendBookingMail(ADMIN_EMAIL, mailType, updated)
+        .sendBookingMail(ADMIN_EMAIL, mailType as BookingMailType, updated)
         .catch((err) => console.error('Email admin error:', err));
     }
 
     return updated;
   }
 
-  private determineCancelFinalStatus(paidAmount: string) {
-    const isPaid = paidAmount > '0';
+  private determineCancelFinalStatus(paidAmount: number) {
+    const isPaid = paidAmount > 0;
 
     return isPaid
       ? {
-          finalStatus: bookings_status.REFUNDED,
+          finalStatus: bookings_status.WAITING_REFUND,
           message:
-            'Booking đã được chuyển sang trạng thái REFUNDED để hoàn tiền.',
+            'Booking đã được chuyển sang WAITING_REFUND. Vui lòng hoàn tiền cho khách.',
         }
       : {
           finalStatus: bookings_status.CANCELLED,
-          message: 'Booking hủy thành công. Không cần hoàn tiền.',
+          message: 'Booking hủy thành công. Không có khoản thanh toán nào.',
         };
   }
 
@@ -382,16 +405,16 @@ export class BookingService {
     if (role !== 'ADMIN' && booking.userId !== requesterId)
       throw new ForbiddenException('Bạn không có quyền hủy booking này');
 
-    if (!['PENDING', 'CONFIRMED'].includes(booking.status))
+    if (!['PENDING', 'PARTIALLY_PAID', 'CONFIRMED'].includes(booking.status))
       throw new BadRequestException(
-        'Chỉ được hủy khi booking đang PENDING/CONFIRMED',
+        'Chỉ được hủy khi booking đang PENDING, PARTIALLY_PAID hoặc CONFIRMED',
       );
 
     if (new Date() >= booking.checkIn)
       throw new BadRequestException('Không thể hủy khi đã đến ngày check-in');
 
     const { finalStatus, message } = this.determineCancelFinalStatus(
-      booking.paidAmount.toString(),
+      booking.paidAmount.toNumber(),
     );
 
     const updated = await this.changeBookingStatus(id, finalStatus, {
@@ -404,20 +427,21 @@ export class BookingService {
     };
   }
 
-  async updateStatus(
-    orderId: number,
-    paidAmount: number,
-    status: bookings_status,
-  ) {
-    const updated = await this.changeBookingStatus(orderId, status, {
+  async updateStatus(orderId: number, paidAmount: number) {
+    const booking = await this.prisma.bookings.findUnique({
+      where: { id: orderId },
+    });
+    if (!booking) throw new NotFoundException();
+
+    const newStatus =
+      paidAmount >= Number(booking.totalPrice)
+        ? bookings_status.CONFIRMED
+        : bookings_status.PARTIALLY_PAID;
+
+    return this.changeBookingStatus(orderId, newStatus, {
       allowOverride: true,
       paidAmount,
     });
-
-    return {
-      message: 'Cập nhật trạng thái thành công',
-      data: updated,
-    };
   }
 
   async listByUser(userId: number) {
@@ -447,7 +471,7 @@ export class BookingService {
     if (!booking) throw new NotFoundException('Không tìm thấy booking');
 
     const { finalStatus, message } = this.determineCancelFinalStatus(
-      booking.paidAmount.toString(),
+      booking.paidAmount.toNumber(),
     );
 
     const updated = await this.changeBookingStatus(bookingId, finalStatus, {

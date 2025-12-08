@@ -49,7 +49,7 @@ export function InputDialog({
         <DialogHeader>
           <DialogTitle className="text-lg font-semibold">{title}</DialogTitle>
           <DialogDescription>
-            {description || "Vui lồng nhập dữ liệu"}
+            {description || "Vui lòng nhập dữ liệu"}
           </DialogDescription>
         </DialogHeader>
 

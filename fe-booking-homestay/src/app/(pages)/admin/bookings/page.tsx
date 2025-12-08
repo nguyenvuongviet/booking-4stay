@@ -3,7 +3,11 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { formatDate } from "@/lib/utils/date";
-import { acceptBooking, rejectBooking } from "@/services/admin/bookingsApi";
+import {
+  acceptBooking,
+  refundBooking,
+  rejectBooking,
+} from "@/services/admin/bookingsApi";
 import { saveAs } from "file-saver";
 import {
   ArrowUpDown,
@@ -29,6 +33,7 @@ import {
 } from "../_utils/color-utils";
 import { InputDialog } from "./_components/InputDialog";
 import { useBookingList } from "./_hooks/useBookingList";
+import Error from "next/error";
 
 export default function BookingListPage() {
   const {
@@ -59,6 +64,35 @@ export default function BookingListPage() {
     id: null as number | null,
   });
 
+  const [refundDialog, setRefundDialog] = useState({
+    open: false,
+    id: null as number | null,
+    maxAmount: 0,
+  });
+
+  const openRefund = (id: number, maxAmount: number) => {
+    setRefundDialog({
+      open: true,
+      id,
+      maxAmount,
+    });
+  };
+
+  const handleRefund = async (amount: string) => {
+    try {
+      await refundBooking(refundDialog.id!, Number(amount));
+
+      toast.success("Hoàn tiền thành công");
+      refresh();
+    } catch (err) {
+      const errorMessage = (err as { response: { data: { message: string } } })
+        .response?.data?.message;
+      toast.error(errorMessage || "Hoàn tiền thất bại");
+    } finally {
+      setRefundDialog({ open: false, id: null, maxAmount: 0 });
+    }
+  };
+
   const openAccept = (id: number) =>
     setDialog({ open: true, mode: "accept", id });
 
@@ -75,8 +109,10 @@ export default function BookingListPage() {
         toast.success("Từ chối booking thành công");
       }
       refresh();
-    } catch {
-      toast.error("Thao tác thất bại");
+    } catch (err) {
+      const errorMessage = (err as { response: { data: { message: string } } })
+        .response?.data?.message;
+      toast.error(errorMessage || "Thao tác thất bại");
     } finally {
       setDialog({ open: false, mode: null, id: null });
     }
@@ -260,6 +296,14 @@ export default function BookingListPage() {
                           <X className="w-4 h-4" /> Huỷ
                         </Button>
                       </div>
+                    ) : b.status === "WAITING_REFUND" ? (
+                      <Button
+                        size="sm"
+                        className="bg-blue-600 text-white"
+                        onClick={() => openRefund(b.id, b.paidAmount!)}
+                      >
+                        Hoàn tiền
+                      </Button>
                     ) : (
                       <span className="text-xs text-gray-400 italic">-</span>
                     )}
@@ -295,6 +339,19 @@ export default function BookingListPage() {
         }
         onCancel={() => setDialog({ open: false, mode: null, id: null })}
         onConfirm={handleConfirm}
+      />
+
+      <InputDialog
+        open={refundDialog.open}
+        title="Hoàn tiền cho booking"
+        description={`Số tiền tối đa có thể hoàn: ${refundDialog.maxAmount?.toLocaleString()}₫`}
+        placeholder="Nhập số tiền hoàn"
+        type="number"
+        confirmText="Xác nhận hoàn tiền"
+        onCancel={() =>
+          setRefundDialog({ open: false, id: null, maxAmount: 0 })
+        }
+        onConfirm={handleRefund}
       />
     </div>
   );

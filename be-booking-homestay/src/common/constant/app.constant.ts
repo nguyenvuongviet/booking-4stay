@@ -23,9 +23,9 @@ export const CLOUDINARY_API_KEY = process.env.CLOUDINARY_API_KEY;
 export const CLOUDINARY_API_SECRET = process.env.CLOUDINARY_API_SECRET;
 
 export const VNPAY_HOST = process.env.VNPAY_HOST;
-export const VNPAY_TMN_CODE = process.env.VNPAY_TMN_CODE;
-export const VNPAY_SECRET_KEY = process.env.VNPAY_SECRET_KEY;
-export const VNPAY_RETURN_URL = process.env.VNPAY_RETURN_URL;
+export const VNPAY_TMN_CODE = process.env.VNPAY_TMN_CODE || '';
+export const VNPAY_SECRET_KEY = process.env.VNPAY_SECRET_KEY || '';
+export const VNPAY_RETURN_URL = process.env.VNPAY_RETURN_URL || '';
 
 export const ADMIN_EMAIL = process.env.ADMIN_EMAIL || '';
 
