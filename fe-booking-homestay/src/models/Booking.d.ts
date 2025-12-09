@@ -5,6 +5,7 @@ interface User {
   id: string | number;
   name: string;
   email: string;  
+  phoneNumber: string;
   avatar: string;
 }
 
@@ -12,9 +13,11 @@ export type BookingStatus =
   | "PENDING"
   | "CONFIRMED"
   | "CANCELLED"
-  | "COMPLETED"
+  | "CHECKED_IN"
   | "CHECKED_OUT"
-  | "REDEEMED";
+  | "PARTIALLY_PAID"
+  | "WAITING_REFUND"
+  | "REFUNDED";
 
 export interface Booking {
   id: number | string;
@@ -24,13 +27,15 @@ export interface Booking {
   adults: number;
   children: number;
   totalAmount: number | 0;
+  paidAmount: number | 0;
   createdAt: string;
   updatedAt: string;
   cancelReason: string | null;
   guestFullName: string;
   guestEmail: string;
   guestPhoneNumber: string;
-  specialRequest: string | null;
+  specialRequest?: string | null;
+  paymentMethod: string;
   review: {
     id: number | string;
     rating: number;

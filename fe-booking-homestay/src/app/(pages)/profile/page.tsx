@@ -17,12 +17,12 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { COUNTRIES } from "@/constants/countries";
 import { useAuth } from "@/context/auth-context";
+import { useLang } from "@/context/lang-context";
 import { Booking, BookingStatus } from "@/models/Booking";
 import { IUser } from "@/models/User";
 import { update_profile, upload_file } from "@/services/authApi";
 import { get_booking } from "@/services/bookingApi";
 import { format } from "date-fns";
-import { get } from "http";
 import {
   BookOpen,
   Calendar,
@@ -36,13 +36,15 @@ import {
   Upload,
   User,
 } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import DatePicker from "react-datepicker";
 import toast from "react-hot-toast";
 
 export default function ProfilePage() {
+  const { t } = useLang();
   const { user, updateUser } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
+
   const [avatarUrl, setAvatarUrl] = useState("/default-avatar.png");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -99,17 +101,15 @@ export default function ProfilePage() {
         ...res.data,
         avatar: user.avatar,
       });
-      toast.success("Profile updated successfully!");
+      toast.success(t("profile_updated_success"));
       setIsEditing(false);
     } catch (error) {
-      toast.error("Update profile failed!");
+      toast.error(t("profile_update_failed"));
       console.error(error);
     }
   };
 
-  const handleAvatarUpload = async (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file || !user) return;
 
@@ -126,9 +126,9 @@ export default function ProfilePage() {
         updateUser({ ...user, avatar: data.imgUrl });
       }
       setIsEditing(false);
-      console.log("Upload avatar thành công!");
+      console.log(t("avatar_upload_success"));
     } catch (error) {
-      toast.error("Upload avatar failed!");
+      toast.error(t("avatar_upload_failed"));
       console.error("Upload avatar error:", error);
     }
   };
@@ -148,7 +148,6 @@ export default function ProfilePage() {
       const totalPages = Math.ceil(res.total / 3);
 
       setBookings((prev) => (pageNumber === 1 ? items : [...prev, ...items]));
-
       setHasMore(pageNumber < totalPages);
     } catch (err) {
       console.error("Fetch booking history error:", err);
@@ -157,9 +156,11 @@ export default function ProfilePage() {
       setLoadingMore(false);
     }
   };
+
   useEffect(() => {
     fetchBookings(page);
   }, [page]);
+
   useEffect(() => {
     const handleScroll = () => {
       if (loading || loadingMore || !hasMore) return;
@@ -196,9 +197,8 @@ export default function ProfilePage() {
                   </h1>
                   <p className="text-muted-foreground text-sm">{email}</p>
                   <p className="text-muted-foreground text-sm">{phone}</p>
-
                   <p className="text-muted text-sm">
-                    Member since{" "}
+                    {t("member_since")}{" "}
                     {user?.createdAt
                       ? new Date(user.createdAt).toLocaleDateString("en-GB")
                       : "-"}
@@ -207,23 +207,23 @@ export default function ProfilePage() {
               </div>
 
               <div className="grid gap-4 grid-row-1">
-                <div className="grid grid-cols-3 gap-4 w-full md:w-auto">
-                  <div className="bg-white/20 p-4 rounded-xl backdrop-blur-md flex flex-col items-center justify-center text-center">
-                    <p className="text-sm pb-2">Total Bookings</p>
+                <div className="grid grid-cols-3 gap-2 w-full md:w-auto">
+                  <div className="bg-white/20 p-3 rounded-xl backdrop-blur-md flex flex-col items-center justify-center text-center">
+                    <p className="text-sm pb-2">{t("total_bookings")}</p>
                     <p className="text-lg elegant-sans">
                       {user?.loyalty_program.totalBooking || 0}
                     </p>
                   </div>
 
                   <div className="bg-white/20 p-4 rounded-xl backdrop-blur-md flex flex-col items-center justify-center text-center">
-                    <p className="text-sm pb-2">Loyalty Points</p>
+                    <p className="text-sm pb-2">{t("loyalty_points")}</p>
                     <p className="text-lg elegant-sans">
                       {user?.loyalty_program.totalPoint || 0}
                     </p>
                   </div>
 
                   <div className="bg-white/20 p-4 rounded-xl backdrop-blur-md flex flex-col items-center justify-center text-center">
-                    <p className="text-sm pb-2 ">Loyalty Level</p>
+                    <p className="text-sm pb-2 ">{t("loyalty_level")}</p>
                     <p className="text-lg elegant-sans">
                       {user?.loyalty_program.levels.name || "_"}
                     </p>
@@ -232,70 +232,52 @@ export default function ProfilePage() {
               </div>
             </div>
           </div>
-          <Tabs
-            value={activeTab}
-            onValueChange={setActiveTab}
-            className="w-full"
-          >
+
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-3 gap-2 bg-transparent p-0 md:gap-4">
-              <TabsTrigger
-                value="profile"
-                className="rounded-lg shadow-sm transition-all gap-2 py-3"
-              >
+              <TabsTrigger value="profile" className="rounded-lg shadow-sm transition-all gap-2 py-3">
                 <User className="h-4 w-4" />
-                <span className="hidden sm:inline">My profile</span>
+                <span className="hidden sm:inline">{t("tab_profile")}</span>
               </TabsTrigger>
-              <TabsTrigger
-                value="bookings"
-                className="rounded-lg shadow-sm transition-all gap-2 py-3"
-              >
+
+              <TabsTrigger value="bookings" className="rounded-lg shadow-sm transition-all gap-2 py-3">
                 <BookOpen className="h-4 w-4" />
-                <span className="hidden sm:inline">My Bookings</span>
+                <span className="hidden sm:inline">{t("tab_bookings")}</span>
               </TabsTrigger>
-              <TabsTrigger
-                value="rewards"
-                className="rounded-lg shadow-sm transition-all gap-2 py-3"
-              >
+
+              <TabsTrigger value="rewards" className="rounded-lg shadow-sm transition-all gap-2 py-3">
                 <Gift className="h-5 w-5" />
-                <span className="hidden sm:inline">Rewards</span>
+                <span className="hidden sm:inline">{t("tab_rewards")}</span>
               </TabsTrigger>
             </TabsList>
-            <TabsContent
-              value="profile"
-              className="mt-2 px-16 py-8 rounded-xl space-y-4 bg-card "
-            >
+
+            {/* PROFILE TAB */}
+            <TabsContent value="profile" className="mt-2 px-16 py-8 rounded-xl space-y-4 bg-card ">
               <div className="flex justify-between mb-8">
-                <h1 className="text-4xl elegant-heading mb-4">My profile</h1>
+                <h1 className="text-4xl elegant-heading mb-4">{t("my_profile")}</h1>
                 <Button
                   onClick={isEditing ? handleSubmit : handleEditClick}
                   className="gap-2 rounded-lg"
                   variant={isEditing ? "default" : "secondary"}
                 >
-                  {isEditing ? (
-                    <Save className="h-4 w-4" />
-                  ) : (
-                    <Edit2 className="h-4 w-4" />
-                  )}
-                  {isEditing ? "Save" : "Edit"}
+                  {isEditing ? <Save className="h-4 w-4" /> : <Edit2 className="h-4 w-4" />}
+                  {isEditing ? t("save") : t("edit")}
                 </Button>
               </div>
-              {/* Profile Avatar */}
+
+              {/* Avatar & Form */}
               <div className="flex flex-col md:flex-row items-center gap-6 md:gap-8">
                 {/* Avatar */}
                 <div className="w-full md:w-1/3 flex justify-center items-center">
                   <div className="relative w-48 h-48 rounded-full overflow-hidden group">
-                    <img
-                      className="w-full h-full object-cover"
-                      src={avatarUrl}
-                      alt="avatar"
-                    />
+                    <img className="w-full h-full object-cover" src={avatarUrl} alt="avatar" />
                     {isEditing && (
                       <div
                         className="absolute inset-0 flex flex-col items-center justify-center bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer rounded-full"
                         onClick={() => fileInputRef.current?.click()}
                       >
                         <Upload className="text-white h-6 w-6 mb-1" />
-                        <span className="text-xs text-white">Upload</span>
+                        <span className="text-xs text-white">{t("upload")}</span>
                       </div>
                     )}
                     <Input
@@ -313,9 +295,7 @@ export default function ProfilePage() {
                   <div className="w-full md:w-2/3 grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* Name */}
                     <div className="space-y-2">
-                      <Label htmlFor="firstName" className="elegant-subheading">
-                        First Name
-                      </Label>
+                      <Label htmlFor="firstName" className="elegant-subheading">{t("firstName")}</Label>
                       <Input
                         id="firstName"
                         value={firstName}
@@ -325,9 +305,7 @@ export default function ProfilePage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="lastName" className="elegant-subheading">
-                        Last Name
-                      </Label>
+                      <Label htmlFor="lastName" className="elegant-subheading">{t("lastName")}</Label>
                       <Input
                         id="lastName"
                         value={lastName}
@@ -339,9 +317,7 @@ export default function ProfilePage() {
 
                     {/* Contact Info */}
                     <div className="space-y-2 md:col-span-2">
-                      <Label htmlFor="email" className="elegant-subheading">
-                        Email
-                      </Label>
+                      <Label htmlFor="email" className="elegant-subheading">Email</Label>
                       <Input
                         id="email"
                         type="email"
@@ -351,9 +327,7 @@ export default function ProfilePage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="phone" className="elegant-subheading">
-                        Phone Number
-                      </Label>
+                      <Label htmlFor="phone" className="elegant-subheading">{t("phone")}</Label>
                       <Input
                         id="phone"
                         type="tel"
@@ -365,9 +339,7 @@ export default function ProfilePage() {
 
                     {/* Personal Info */}
                     <div className="space-y-2">
-                      <Label htmlFor="dob" className="elegant-subheading">
-                        Date of Birth
-                      </Label>
+                      <Label htmlFor="dob" className="elegant-subheading">{t("dob")}</Label>
                       <div className="relative w-full">
                         <DatePicker
                           id="dob"
@@ -387,43 +359,31 @@ export default function ProfilePage() {
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="gender" className="elegant-subheading">
-                        Gender
-                      </Label>
-                      <Select
-                        value={gender}
-                        onValueChange={setGender}
-                        disabled={!isEditing}
-                      >
+                      <Label htmlFor="gender" className="elegant-subheading">{t("gender")}</Label>
+                      <Select value={gender} onValueChange={setGender} disabled={!isEditing}>
                         <SelectTrigger
                           className={`w-full bg-input rounded-xl placeholder:text-muted ${
                             !isEditing ? "opacity-70 cursor-not-allowed" : ""
                           }`}
                         >
-                          <SelectValue placeholder="Select gender" />
+                          <SelectValue placeholder={t("select_gender")} />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="FEMALE">Female</SelectItem>
-                          <SelectItem value="MALE">Male</SelectItem>
-                          <SelectItem value="OTHER">Other</SelectItem>
+                          <SelectItem value="FEMALE">{t("female")}</SelectItem>
+                          <SelectItem value="MALE">{t("male")}</SelectItem>
+                          <SelectItem value="OTHER">{t("other")}</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="country" className="elegant-subheading">
-                        Country
-                      </Label>
-                      <Select
-                        value={country}
-                        onValueChange={setCountry}
-                        disabled={!isEditing}
-                      >
+                      <Label htmlFor="country" className="elegant-subheading">{t("country")}</Label>
+                      <Select value={country} onValueChange={setCountry} disabled={!isEditing}>
                         <SelectTrigger
                           className={`w-full bg-input rounded-xl placeholder:text-muted ${
                             !isEditing ? "opacity-70 cursor-not-allowed" : ""
                           }`}
                         >
-                          <SelectValue placeholder="Select country" />
+                          <SelectValue placeholder={t("select_country")} />
                         </SelectTrigger>
                         <SelectContent className="max-h-60 overflow-auto">
                           {COUNTRIES.map((c) => (
@@ -436,46 +396,38 @@ export default function ProfilePage() {
                     </div>
                   </div>
                 ) : (
-                  <p className="text-center text-gray-500">
-                    No user info found.
-                  </p>
+                  <p className="text-center text-gray-500">{t("no_user")}</p>
                 )}
               </div>
             </TabsContent>
-            <TabsContent
-              value="bookings"
-              className="mt-2 px-16 py-8 rounded-xl space-y-4 bg-card "
-            >
-              <h2 className="elegant-heading text-4xl my-6">History booking</h2>
+
+            {/* BOOKINGS TAB */}
+            <TabsContent value="bookings" className="mt-2 px-16 py-8 rounded-xl space-y-4 bg-card ">
+              <h2 className="elegant-heading text-4xl my-6">{t("history_booking")}</h2>
 
               {loading ? (
                 <div className="flex items-center justify-center py-8">
                   <div className="flex items-center gap-3 text-muted-foreground">
                     <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                    <span className="text-sm">Loading your bookings...</span>
+                    <span className="text-sm">{t("loading_bookings")}</span>
                   </div>
                 </div>
               ) : user?.loyalty_program.totalBooking === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16 text-center text-muted-foreground ">
                   <CalendarX className="h-12 w-12 mb-4 text-gray-400" />
-                  <p className="text-lg font-medium">No bookings yet</p>
-                  <p className="text-sm text-gray-500 mt-1">
-                    When you make a booking, it will appear here.
-                  </p>
+                  <p className="text-lg font-medium">{t("no_booking")}</p>
+                  <p className="text-sm text-gray-500 mt-1">{t("no_booking_desc")}</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 gap-8 mt-2 p-8 rounded-xl space-y-4">
                   {bookings.map((booking, index) => (
-                    <BookingCard
-                      key={`${booking.id}-${index}`}
-                      booking={booking}
-                    />
+                    <BookingCard key={`${booking.id}-${index}`} booking={booking} />
                   ))}
                   {loadingMore && (
                     <div className="flex items-center justify-center py-6">
                       <div className="flex items-center gap-3 text-muted">
                         <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                        <span className="text-sm">Loading more hotels...</span>
+                        <span className="text-sm">{t("loading_more")}</span>
                       </div>
                     </div>
                   )}
@@ -483,11 +435,9 @@ export default function ProfilePage() {
                   {!hasMore && !loadingMore && bookings.length > 0 && (
                     <div className="flex items-center justify-center py-2">
                       <div className="text-center text-muted">
-                        <p className="text-sm ">
-                          You{"'"}ve reached the end of the results
-                        </p>
-                        <p className="text-xs mt-1">
-                          Total: {bookings.length} hotels found
+                        <p className="text-sm ">{t("end_result")}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {t("total_found")} {bookings.length} rooms {t("found")}
                         </p>
                       </div>
                     </div>
@@ -496,13 +446,10 @@ export default function ProfilePage() {
               )}
             </TabsContent>
 
-            <TabsContent
-              value="rewards"
-              className="mt-2 px-16 py-8 rounded-xl space-y-4 bg-card "
-            >
-              <h2 className="text-3xl elegant-sans">My Rewards</h2>
-
-              {/* Rewards Stats Cards */}
+            {/* REWARDS TAB */}
+            <TabsContent value="rewards" className="mt-2 px-16 py-8 rounded-xl space-y-4 bg-card ">
+              <h2 className="text-3xl elegant-sans">{t("my_rewards")}</h2>
+              {/* Render rewards content here */}
               <div className="grid gap-6 md:grid-cols-3">
                 <Card className="border-0 p-8 shadow-md hover:shadow-xl transition-all bg-accent/50 group cursor-pointer">
                   <div className="flex items-start gap-4">

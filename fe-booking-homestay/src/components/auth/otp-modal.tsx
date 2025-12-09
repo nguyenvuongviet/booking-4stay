@@ -2,7 +2,8 @@
 
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/auth-context";
-import { active_account, verify_otp } from "@/services/authApi";
+import { useLang } from "@/context/lang-context";
+import { active_account, forgot_password, verify_otp } from "@/services/authApi";
 import { X } from "lucide-react";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
@@ -20,6 +21,7 @@ export default function OTPModals({
   context,
   onSuccess,
 }: OTPModalsProps) {
+  const { t } = useLang();
   const [otpValues, setOtpValues] = useState(Array(6).fill(""));
   const [error, setError] = useState("");
   const [apiError, setApiError] = useState("");
@@ -43,11 +45,6 @@ export default function OTPModals({
     return otpCode;
   };
 
-  const verifyForgot = async () => {
-    await verify_otp({ email, otp: otpCode });
-    return otpCode;
-  };
-
   const handleVerify = async () => {
     if (otpCode.length < 6) {
       setError("Vui lòng nhập đủ 6 số");
@@ -58,21 +55,27 @@ export default function OTPModals({
     setApiError("");
 
     try {
-      let verifiedOtp = "";
-
-      if (context === "signup") verifiedOtp = await verifySignup();
-      if (context === "forgotPassword") verifiedOtp = await verifyForgot();
+      await verifySignup();
 
       toast.success("Xác thực OTP thành công!");
 
       setShow(false);
-      onSuccess(verifiedOtp);
     } catch (err: any) {
       setApiError(err?.response?.data?.message || "Mã OTP không hợp lệ!");
       setOtpValues(Array(6).fill(""));
       document.getElementById("otp-0")?.focus();
     }
   };
+
+  const handleSendOtp = async (e: React.FormEvent) => {
+      e.preventDefault();
+      setApiError("");
+      try {
+        await forgot_password({ email: email.trim() });
+      } catch (error: any) {
+        setApiError(error.response?.data?.message || "Failed to send OTP!");
+      }
+    };
 
   const handleOtpChange = (index: number, value: string) => {
     if (!/^\d?$/.test(value)) return;
@@ -86,22 +89,56 @@ export default function OTPModals({
     }
   };
 
+
+  const handleOtpPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const pasteData = e.clipboardData.getData("Text").trim();
+
+    if (!/^\d{1,6}$/.test(pasteData)) return; // chỉ chấp nhận số, tối đa 6 ký tự
+
+    const newOtpValues = [...otpValues];
+    for (let i = 0; i < 6; i++) {
+      newOtpValues[i] = pasteData[i] || "";
+      const input = document.getElementById(`otp-${i}`) as HTMLInputElement | null;
+      if (input) input.value = newOtpValues[i];
+    }
+
+    setOtpValues(newOtpValues);
+
+    // focus ô trống đầu tiên
+    const firstEmptyIndex = newOtpValues.findIndex(v => !v);
+    if (firstEmptyIndex !== -1) {
+      const nextInput = document.getElementById(`otp-${firstEmptyIndex}`);
+      nextInput?.focus();
+    } else {
+      // nếu đầy 6 ký tự thì focus ô cuối
+      const lastInput = document.getElementById(`otp-5`);
+      lastInput?.focus();
+    }
+  };
+
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl p-8 shadow-xl w-[380px]">
-        <div className="flex justify-between mb-4">
-          <h2 className="text-xl font-semibold">Enter OTP</h2>
-          <button onClick={() => setShow(false)}>
+      <div className="bg-white rounded-xl p-8 shadow-xl w-full max-w-md">
+        <div className="flex items-center justify-center mb-4 relative">
+          <button
+            className="absolute right-0"
+            onClick={() => setShow(false)}
+          >
             <X size={24} />
           </button>
+          <h2 className="text-3xl elegant-heading text-primary text-center">
+            {t("Enter")} OTP
+          </h2>
         </div>
-
-        <p className="text-sm text-gray-600 mb-4">
-          Chúng tôi đã gửi mã OTP đến <b>{email}</b>
+        <p className="text-sm mb-4 text-muted-foreground text-center">
+          {t("We have sent an OTP to")}{" "}
+          <b className="elegant-sans text-secondary-foreground">{email}</b>
         </p>
-
-        {apiError && <p className="text-destructive text-sm mb-3">{apiError}</p>}
-        {error && <p className="text-destructive text-sm mb-3">{error}</p>}
+        {apiError && (
+          <p className="text-destructive text-xs mb-3 mx-6">{apiError}</p>
+        )}
+        {error && <p className="text-destructive text-xs mb-3 mx-6">{error}</p>}
 
         <div className="flex justify-center gap-2 mb-6">
           {otpValues.map((v, i) => (
@@ -113,19 +150,36 @@ export default function OTPModals({
               inputMode="numeric"
               value={v}
               onChange={(e) => handleOtpChange(i, e.target.value)}
-              className="w-12 h-12 border text-center text-xl rounded-lg"
+              onPaste={handleOtpPaste}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleVerify();
+                if (e.key === "Backspace" && !otpValues[i] && i > 0) {
+                  const prevInput = document.getElementById(`otp-${i - 1}`);
+                  prevInput?.focus();
+                }
+              }}
+              className="w-12 h-12 border text-center text-xl rounded-lg focus:outline-none"
             />
           ))}
         </div>
 
         <Button className="w-full mb-4" onClick={handleVerify}>
-          Verify OTP
+          {t("Verify")} OTP
         </Button>
 
-        <button className="text-sm text-primary mx-auto block">
-          Resend OTP
-        </button>
+        <div className="text-center">
+          <span className="text-muted-foreground text-sm">
+            {t("no_code")}
+          </span>
+          <button
+            type="button"
+            className="text-primary text-sm elegant-sans hover:underline"
+            onClick={handleSendOtp}
+          >
+            {t("Resend")} OTP
+          </button>
+        </div>
       </div>
-    </div>
+    </div >
   );
 }

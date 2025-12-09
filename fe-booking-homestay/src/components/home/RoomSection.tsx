@@ -11,6 +11,8 @@ import { Button } from "@/components/ui/button";
 import { MapPin, Star } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { use } from "react";
+import { useLang } from "@/context/lang-context";
 
 export default function RoomSection({
   rooms,
@@ -18,6 +20,7 @@ export default function RoomSection({
   rooms: Room[];
 }) {
   const router = useRouter();
+  const {t} = useLang();
 
   const formatPrice = (price: number) =>
     `${price.toLocaleString()} VND`;
@@ -27,10 +30,10 @@ export default function RoomSection({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-20">
           <ScrollScale className="elegant-heading text-5xl text-foreground mb-6">
-            Featured Hotels
+            {t("Featured Hotels")}
           </ScrollScale>
           <ScrollFade className="elegant-subheading text-xl text-muted-foreground max-w-2xl mx-auto">
-            Discover our handpicked selection of premium accommodations
+            {t("Discover our handpicked selection of premium accommodations")}
           </ScrollFade>
         </div>
 
@@ -84,7 +87,7 @@ export default function RoomSection({
                           {formatPrice(room.price)}
                         </span>
                         <span className="elegant-subheading text-sm text-muted-foreground">
-                          /night
+                          /{t("night")}
                         </span>
                       </div>
 
@@ -92,7 +95,7 @@ export default function RoomSection({
                         onClick={() => router.push(`/room/${room.id}`)}
                         className="bg-primary hover:bg-primary/90 elegant-sans hover:cursor-pointer rounded-xl"
                       >
-                        Book Now
+                        {t("Book Now")}
                       </Button>
                     </div>
                   </CardContent>

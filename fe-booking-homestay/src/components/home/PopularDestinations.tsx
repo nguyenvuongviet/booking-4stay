@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card";
 import ScrollFade from "@/styles/animations/ScrollFade";
 import ScrollScale from "@/styles/animations/ScrollScale";
 import { useRouter } from "next/navigation";
+import { useLang } from "@/context/lang-context";
 
 export default function PopularDestinations({
   locations,
@@ -14,16 +15,17 @@ export default function PopularDestinations({
   locations: Location[];
 }) {
   const router = useRouter();
+  const {t} = useLang();
 
   return (
     <section className="py-24 bg-card">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-20">
           <ScrollScale className="elegant-heading text-5xl text-foreground mb-6">
-            Popular Destinations
+            {t("Popular Destinations")}
           </ScrollScale>
           <ScrollFade className="elegant-subheading text-xl text-muted-foreground max-w-2xl mx-auto">
-            Explore the world's most sought-after travel destinations
+            {t("Explore the most sought-after travel destinations")}
           </ScrollFade>
         </div>
 

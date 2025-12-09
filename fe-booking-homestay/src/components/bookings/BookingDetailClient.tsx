@@ -1,6 +1,7 @@
 "use client";
 
 import { BookingDetail } from "@/components/bookings/BookingDetail";
+import { useLang } from "@/context/lang-context";
 import { Booking } from "@/models/Booking";
 import { get_booking_detail } from "@/services/bookingApi";
 import { ArrowLeft } from "lucide-react";
@@ -12,6 +13,7 @@ export default function BookingDetailClient({
 }: {
   bookingId: string;
 }) {
+  const { t } = useLang();
   const [booking, setBooking] = useState<Booking | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -24,23 +26,23 @@ export default function BookingDetailClient({
         console.log("Booking detail API response:", res);
 
         const data = res.data;
-        if (!data) throw new Error("Không tìm thấy thông tin đặt phòng.");
+        if (!data) throw new Error(t("booking_not_found"));
         setBooking(data);
       } catch (err: any) {
         console.error("Fetch booking error:", err);
-        setError(err.message || "Đã xảy ra lỗi khi tải thông tin đặt phòng.");
+        setError(err.message || t("booking_fetch_error"));
       } finally {
         setLoading(false);
       }
     };
 
     fetchBooking();
-  }, [bookingId]);
+  }, [bookingId, t]);
 
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen text-gray-500">
-        Đang tải thông tin đặt phòng...
+        {t("loading_booking")}
       </div>
     );
   }
@@ -53,7 +55,7 @@ export default function BookingDetailClient({
           onClick={() => router.push("/booking")}
           className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition"
         >
-          Quay lại danh sách
+          {t("back_to_list")}
         </button>
       </div>
     );
@@ -62,7 +64,7 @@ export default function BookingDetailClient({
   if (!booking) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen text-gray-500">
-        Không có dữ liệu đặt phòng.
+        {t("no_booking_data")}
       </div>
     );
   }
@@ -77,13 +79,13 @@ export default function BookingDetailClient({
             className="px-4 flex items-center gap-2 hover:text-primary hover:cursor-pointer"
           >
             <ArrowLeft className="h-5 w-5" />
-            <span className="elegant-sans">Back</span>
+            <span className="elegant-sans">{t("back")}</span>
           </button>
         </div>
       </header>
 
-      <div className="max-w-6xl mx-auto">
-        <h1 className="text-4xl elegant-heading mb-6">Booking Details</h1>
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h1 className="text-4xl elegant-heading mb-6">{t("booking_details")}</h1>
         <BookingDetail booking={booking} />
       </div>
     </div>

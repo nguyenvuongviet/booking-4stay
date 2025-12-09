@@ -5,6 +5,8 @@ import { Card } from "@/components/ui/card";
 import { UserAvatar } from "@/components/UserAvatar";
 import { formatDate } from "@/lib/utils/date";
 import { getBookingById } from "@/services/admin/bookingsApi";
+import { format } from "date-fns";
+import { vi } from "date-fns/locale";
 import {
   ArrowLeft,
   Baby,
@@ -89,7 +91,7 @@ export default function BookingDetailPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-32 text-lg font-medium">
-        Đang tải thông tin đặt phòng{" "}
+        Đang tải thông tin đặt phòng&nbsp;
         <span className="text-primary font-extrabold ml-1">#{bookingId}</span>
       </div>
     );
@@ -120,8 +122,8 @@ export default function BookingDetailPage() {
   const isRefunded = booking.status === "REFUNDED";
 
   return (
-    <div className="max-w-7xl mx-auto space-y-8 p-4 md:p-8">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b pb-4 border-gray-200">
+    <div className="max-w-7xl mx-auto space-y-4 p-4 md:p-8">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b pb-2 border-gray-200">
         <div className="flex items-center gap-2">
           <Button
             variant="ghost"
@@ -288,7 +290,12 @@ export default function BookingDetailPage() {
                   Số tiền hoàn: {booking.paidAmount.toLocaleString()} ₫
                 </p>
                 <p className="text-blue-800 text-sm mt-1">
-                  Thời gian hoàn: {formatDate(booking.updatedAt)}
+                  Thời gian hoàn:{" "}
+                  {booking.updatedAt
+                    ? format(new Date(booking.updatedAt), "dd/MM/yyyy HH:mm", {
+                        locale: vi,
+                      })
+                    : "N/A"}
                 </p>
               </div>
             )}

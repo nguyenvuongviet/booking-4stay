@@ -10,6 +10,7 @@ export const create_booking = async (data: {
   guestEmail: string;
   guestPhoneNumber: string;
   specialRequest?: string;
+  paymentMethod: string;
 }) => {
   try {
     const resp = await api.post("/bookings", data);

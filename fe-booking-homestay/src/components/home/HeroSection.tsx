@@ -5,6 +5,7 @@ import LocationSuggestions from "@/components/LocationSuggestions";
 import { Button } from "@/components/ui/button";
 import DateRangePicker from "@/components/ui/date-range-picker";
 import { Input } from "@/components/ui/input";
+import { useLang } from "@/context/lang-context";
 import { Location } from "@/models/Location";
 import ScrollFade from "@/styles/animations/ScrollFade";
 import Typing from "@/styles/animations/Typing";
@@ -54,6 +55,8 @@ export default function HeroSection({
   onSelectLocation,
   locationInputRef,
 }: Props) {
+  const { lang, t } = useLang();
+
   return (
     <section className="relative min-h-screen flex items-center justify-center z-0">
       <video
@@ -70,19 +73,19 @@ export default function HeroSection({
       <div className="relative max-w-5xl mx-auto px-6 lg:px-8 text-center z-10">
         <div className="mb-12 max-w-2xl mx-auto">
           <Typing
-            texts={["Find Your Perfect Stay", "Enjoy Your Trip"]}
+            texts={[t("findYourPerfectStay"), t("enjoyYourTrip")]}
             speed={80}
             deleteSpeed={60}
             pause={1000}
             loop={true}
-            className="elegant-heading md:text-8xl text-gradient mb-4 min-h-54"
+            className={`elegant-heading text-gradient ${lang === "vi" ? "md:text-7xl m-4 min-h-46" : " md:text-8xl mb-4 min-h-55 "}`}
           />
 
           <ScrollFade
             delay={500}
             className="elegant-subheading text-lg text-accent mx-auto text-pretty"
           >
-            Discover amazing hotels, resorts, and accommodations worldwide
+            {t("discoverAccommodations")}
           </ScrollFade>
         </div>
 
@@ -96,7 +99,7 @@ export default function HeroSection({
             <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mb-8">
               <div>
                 <label className="elegant-subheading text-sm text-secondary-foreground mb-2 block">
-                  Location
+                  {t("location")}
                 </label>
                 <div className="relative">
                   <MapPin
@@ -109,7 +112,7 @@ export default function HeroSection({
                     onChange={(e) => setLocationInput(e.target.value)}
                     onFocus={onFocusLocation}
                     onClick={(e) => e.stopPropagation()}
-                    placeholder="Where are you going?"
+                    placeholder={t("Where are you going?")}
                     className="pl-10 h-12 bg-card border-border focus:border-accent elegant-subheading rounded-3xl placeholder:text-muted"
                   />
 
@@ -130,7 +133,7 @@ export default function HeroSection({
               {/* DATE RANGE */}
               <div className="relative ">
                 <label className="elegant-subheading text-sm text-secondary-foreground mb-2 block">
-                  Check in & Check out
+                  {t("checkIn")}&nbsp;-&nbsp;{t("checkOut")}
                 </label>
                 <div className="relative">
                   <DateRangePicker
@@ -150,7 +153,7 @@ export default function HeroSection({
               {/* GUEST PICKER */}
               <div>
                 <label className="elegant-subheading text-sm text-secondary-foreground mb-2 block">
-                  Guests
+                  {t("guests")}
                 </label>
 
                 <div className="relative">
@@ -175,7 +178,7 @@ export default function HeroSection({
               className="rounded-3xl w-full bg-primary hover:bg-primary/90 h-12 elegant-subheading text-md transition-all duration-300 hover:shadow-lg hover:scale-[1.02]"
             >
               <Search className="mr-2" size={20} />
-              Search Hotels
+              {t("search")}
             </Button>
           </div>
         </motion.div>

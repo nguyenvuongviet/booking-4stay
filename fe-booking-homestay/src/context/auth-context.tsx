@@ -1,6 +1,5 @@
 "use client";
 
-import ForgotPasswordModal from "@/components/auth/forgot-password-modal";
 import NewPasswordModal from "@/components/auth/new-password-modal";
 import OTPModal from "@/components/auth/otp-modal";
 import SignInModal from "@/components/auth/signin-modal";
@@ -23,20 +22,16 @@ interface AuthContextType {
   setUser: (user: IUser | null) => void;
   updateUser: (user: IUser) => void;
   logout: () => void;
-
   openSignIn: () => void;
   openSignUp: () => void;
-  openForgotPassword: () => void;
   openOTP: () => void;
   closeAll: () => void;
-
   email: string;
   setEmail: (email: string) => void;
   otp: string;
   setOtp: (otp: string) => void;
   password: string;
   setPassword: (password: string) => void;
-
   openNewPassword: () => void;
 }
 
@@ -45,15 +40,11 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [showSignIn, setShowSignIn] = useState(false);
   const [showSignUp, setShowSignUp] = useState(false);
-  const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [showOTP, setShowOTP] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
   const [password, setPassword] = useState("");
-  const [otpContext, setOtpContext] = useState<"signup" | "forgotPassword">(
-    "signup"
-  );
   const [user, setUser] = useState<IUser | null>(null);
   const router = useRouter();
 
@@ -74,7 +65,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     let parsed: any = {};
     try {
       parsed = raw ? JSON.parse(raw) : {};
-    } catch {}
+    } catch { }
     const updated = {
       ...parsed,
       user: newUser,
@@ -94,7 +85,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const closeAll = () => {
     setShowSignIn(false);
     setShowSignUp(false);
-    setShowForgotPassword(false);
+    setShowNewPassword(false);
     setShowOTP(false);
     setShowNewPassword(false);
   };
@@ -107,11 +98,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const openSignUp = () => {
     closeAll();
     setShowSignUp(true);
-  };
-
-  const openForgotPassword = () => {
-    closeAll();
-    setShowForgotPassword(true);
   };
 
   const openOTP = () => {
@@ -133,7 +119,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         logout,
         openSignIn,
         openSignUp,
-        openForgotPassword,
         closeAll,
         email,
         setEmail,
@@ -151,7 +136,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         show={showSignIn}
         setShow={setShowSignIn}
         switchToSignUp={openSignUp}
-        switchToForgotPassword={openForgotPassword}
+        switchToForgotPassword={openNewPassword}
       />
 
       <SignUpModal
@@ -159,17 +144,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setShow={setShowSignUp}
         switchToSignIn={openSignIn}
         switchToOTP={() => {
-          setOtpContext("signup");
-          closeAll();
-          setShowOTP(true);
-        }}
-      />
-
-      <ForgotPasswordModal
-        show={showForgotPassword}
-        setShow={setShowForgotPassword}
-        switchToOTP={() => {
-          setOtpContext("forgotPassword");
           closeAll();
           setShowOTP(true);
         }}

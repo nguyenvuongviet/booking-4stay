@@ -32,9 +32,9 @@ model bookings {
   adults           Int                    @db.UnsignedInt
   children         Int?                   @default(0) @db.UnsignedInt
   totalPrice       Decimal                @db.Decimal(12, 2)
-  status           bookings_status        @default(PENDING)
   paymentMethod    bookings_paymentMethod @default(CASH)
   paidAmount       Decimal                @default(0.00) @db.Decimal(12, 2)
+  status           bookings_status        @default(PENDING)
   isReview         Boolean                @default(false)
   cancelReason     String?                @db.VarChar(255)
   isDeleted        Boolean                @default(false)

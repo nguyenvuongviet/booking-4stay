@@ -13,6 +13,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import GuestPicker from "./GuestPicker";
 import LocationSuggestions from "./LocationSuggestions";
 import DateRangePicker from "./ui/date-range-picker";
+import { useLang } from "@/context/lang-context";
 
 interface SearchBarProps {
   compact?: boolean; // nếu true: mini bar
@@ -30,6 +31,7 @@ export function SearchBar({ compact = false }: SearchBarProps) {
   const [error, setError] = useState("");
   const ci = searchParams.get("checkIn");
   const co = searchParams.get("checkOut");
+  const {t} = useLang();
 
   const [checkIn, setCheckIn] = useState<Date | null>(
     ci ? new Date(ci + "T00:00") : null
@@ -92,11 +94,17 @@ export function SearchBar({ compact = false }: SearchBarProps) {
     setShowSuggestions(false);
   };
 
-  useEffect(() => {
-    const handleClickOutside = () => setShowSuggestions(false);
-    window.addEventListener("click", handleClickOutside);
-    return () => window.removeEventListener("click", handleClickOutside);
-  }, []);
+  // useEffect(() => {
+  //   const handleClickOutside = (e: MouseEvent) => {
+  //     const target = e.target as Node;
+  //     // Chỉ ẩn suggestions nếu click ngoài input location
+  //     if (!locationInputRef.current?.contains(target)) {
+  //       setShowSuggestions(false);
+  //     }
+  //   };
+  //   window.addEventListener("click", handleClickOutside);
+  //   return () => window.removeEventListener("click", handleClickOutside);
+  // }, []);
 
   const handleSearch = async () => {
     setLoading(true);
@@ -150,7 +158,7 @@ export function SearchBar({ compact = false }: SearchBarProps) {
             onChange={(e) => setLocationInput(e.target.value)}
             onFocus={handleFocusLocation}
             onClick={(e) => e.stopPropagation()}
-            placeholder="Where are you going?"
+            placeholder={t("Where are you going?")}
             className="pl-10 h-12 bg-card elegant-subheading rounded-4xl placeholder:text-muted border border-border text-[15px]"
           />
 
@@ -164,7 +172,7 @@ export function SearchBar({ compact = false }: SearchBarProps) {
 
         <div className={`relative ${compact ? "flex-1 " : "col-span-2"}`}>
           <DateRangePicker
-          key={`${checkIn}-${checkOut}`} 
+            key={`${checkIn}-${checkOut}`}
             value={
               checkIn && checkOut ? { from: checkIn, to: checkOut } : undefined
             }
@@ -192,11 +200,11 @@ export function SearchBar({ compact = false }: SearchBarProps) {
           className={`h-12 rounded-3xl bg-primary hover:bg-primary/80 ${
             compact
               ? "w-12 p-0 flex justify-center items-center"
-              : "elegant-subheading text-md"
+              : "elegant-subheading text-base"
           }`}
         >
           <Search size={20} />
-          {!compact && <span className="ml-1">Search</span>}{" "}
+          {!compact && <span className="ml-1">{t("search")}</span>}{" "}
         </Button>
       </div>
     </div>
