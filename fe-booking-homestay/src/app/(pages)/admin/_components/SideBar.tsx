@@ -31,14 +31,14 @@ import { usePathname, useRouter } from "next/navigation";
 const menuItems = [
   { icon: LayoutDashboard, label: "Tổng quan", href: "/admin" },
   { icon: Users, label: "Người dùng", href: "/admin/users" },
-  { icon: Home, label: "Homestay", href: "/admin/properties" },
+  // { icon: Home, label: "Homestay", href: "/admin/properties" },
   { icon: DoorOpen, label: "Phòng", href: "/admin/rooms" },
   { icon: Calendar, label: "Đặt phòng", href: "/admin/bookings" },
   { icon: Star, label: "Bình luận & Đánh giá", href: "/admin/reviews" },
   { icon: Gift, label: "Khách hàng Thân thiết", href: "/admin/loyalty" },
   { icon: MapPin, label: "Vị trí", href: "/admin/locations" },
-  { icon: BarChart3, label: "Báo cáo & Thống kê", href: "/admin/reports" },
-  { icon: TrendingUp, label: "Doanh thu", href: "/admin/revenue" },
+  // { icon: BarChart3, label: "Báo cáo & Thống kê", href: "/admin/reports" },
+  // { icon: TrendingUp, label: "Doanh thu", href: "/admin/revenue" },
   { icon: Settings, label: "Cài đặt", href: "/admin/settings" },
 ];
 

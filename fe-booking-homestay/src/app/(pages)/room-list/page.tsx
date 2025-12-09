@@ -19,6 +19,8 @@ import { Loader2 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
+import { mockRooms } from "@/constants/la-lo";
+import { useLang } from "@/context/lang-context";
 
 export default function HotelsListPage() {
   const [rooms, setRooms] = useState<Room[]>([]);
@@ -44,6 +46,7 @@ export default function HotelsListPage() {
   const MapRooms = dynamic(() => import("@/components/rooms/MapRoom"), {
     ssr: false,
   });
+  const { t } = useLang();
 
   const handleFilterChange = (newFilters: any) => {
     setFilters(newFilters);
@@ -239,7 +242,7 @@ export default function HotelsListPage() {
             sticky lg:top-24 
             rounded-lg overflow-hidden shadow-md"
           >
-            <MapRooms rooms={rooms} height="h-120" />
+            <MapRooms rooms={mockRooms} height="h-120" />
           </div>
           <div className="w-full lg:w-3/4 mt-4 lg:mt-0">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 lg:gap-6 mb-6">
@@ -255,7 +258,7 @@ export default function HotelsListPage() {
               <div className="flex items-center justify-center py-6">
                 <div className="flex items-center gap-3 text-muted">
                   <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                  <span className="text-sm">Loading more hotels...</span>
+                  <span className="text-sm">{t("loading more rooms...")}</span>
                 </div>
               </div>
             )}
@@ -264,10 +267,15 @@ export default function HotelsListPage() {
               <div className="flex items-center justify-center py-2">
                 <div className="text-center text-muted">
                   <p className="text-sm ">
-                    You{"'"}ve reached the end of the results
+                    {t("You{'ve'} reached the end of the results")}
                   </p>
                   <p className="text-xs mt-1">
-                    Total: {rooms.length} hotels found
+                    {rooms.length > 1
+                      ? t("totalRooms").replace("{count}", rooms.length.toString())
+                      : t("totalRoom").replace(
+                          "{count}",
+                          rooms.length.toString()
+                        )}
                   </p>
                 </div>
               </div>

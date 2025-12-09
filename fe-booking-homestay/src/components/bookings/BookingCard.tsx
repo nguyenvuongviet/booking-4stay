@@ -7,11 +7,13 @@ import { MapPin, Star } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { BookingStatusBadge } from "./BookingStatusBadge";
+import { useLang } from "@/context/lang-context";
 
 type BookingCardProps = { booking: Booking };
 
 export function BookingCard({ booking }: BookingCardProps) {
   const router = useRouter();
+  const {t} = useLang();
 
   const formatPrice = (price: number) => {
     return `${price.toLocaleString()} VND`;
@@ -77,7 +79,7 @@ export function BookingCard({ booking }: BookingCardProps) {
             <div className="flex flex-col">
               <div className="flex justify-between items-center">
               <p className="elegant-subheading text-sm text-muted-foreground flex items-center gap-1">
-                Booking code:
+                {t("Booking code")}:
                 <span className="text-green-700">#{booking.id}</span>
               </p>
               <div className="text-right">
@@ -85,7 +87,7 @@ export function BookingCard({ booking }: BookingCardProps) {
                   {formatPrice(booking.room.price)}
                 </span>
                 <span className="elegant-subheading text-muted-foreground">
-                  /night
+                  /{t("night")}
                 </span>
               </div>
               </div>

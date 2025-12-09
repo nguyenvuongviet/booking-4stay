@@ -1,7 +1,8 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { RefreshCcw, Plus, Upload } from "lucide-react";
+import { Plus, Upload } from "lucide-react";
+import { RefreshButton } from "../../_components/RefreshButton";
 
 interface LocationHeaderProps {
   onRefresh: () => void;
@@ -15,7 +16,7 @@ export function LocationHeader({
   openImport,
 }: LocationHeaderProps) {
   return (
-    <div className="flex items-center justify-between">
+    <div className="flex items-center justify-between pb-4 border-b">
       <div>
         <h1 className="text-3xl font-bold">Quản lý Vị trí</h1>
         <p className="text-muted-foreground">
@@ -24,10 +25,7 @@ export function LocationHeader({
       </div>
 
       <div className="flex gap-3">
-        <Button variant="outline" className="gap-2" onClick={onRefresh}>
-          <RefreshCcw className="w-4 h-4" /> Làm mới
-        </Button>
-
+        <RefreshButton onRefresh={onRefresh} />
         <Button
           className="gap-2 bg-primary text-primary-foreground"
           onClick={onAdd}
@@ -36,7 +34,7 @@ export function LocationHeader({
         </Button>
         <Button
           variant="outline"
-          className="gap-2 flex-shrink-0"
+          className="gap-2 shrink-0"
           onClick={openImport}
         >
           <Upload className="w-4 h-4" /> Import All

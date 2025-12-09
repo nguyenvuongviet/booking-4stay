@@ -5,18 +5,18 @@ export interface RoomImage {
 }
 
 export interface Room {
-  id: string;
+  id: string | number;
   name: string;
   description?: string;
   price: number;
   adultCapacity: number;
   childCapacity?: number;
   location: {
-    id: string;
+    id?: string;
     fullAddress?: string;
     province?: string;
-    latitude?: string;
-    longitude?: string;
+    latitude?: string | number;
+    longitude?: string | number;
   };
   rating?: number;
   reviewCount: number;

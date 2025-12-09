@@ -22,3 +22,41 @@ export async function getBookingById(id: number): Promise<Booking> {
     throw err;
   }
 }
+
+export async function acceptBooking(id: number, paidAmount: number) {
+  try {
+    const res = await api.patch(`/bookings/${id}/accept`, { paidAmount });
+    return res.data?.data;
+  } catch (err) {
+    console.error("Accept Booking error:", err);
+    throw err;
+  }
+}
+
+export async function rejectBooking(id: number, reason: string) {
+  try {
+    const res = await api.patch(`/bookings/${id}/reject`, { reason });
+    return res.data?.data;
+  } catch (err) {
+    console.error("Reject Booking error:", err);
+    throw err;
+  }
+}
+
+export async function refundBooking(
+  bookingId: number,
+  amount: number,
+  reason?: string
+) {
+  try {
+    const res = await api.post("/api/refund", {
+      bookingId,
+      amount,
+      reason: reason ?? null,
+    });
+    return res.data?.data;
+  } catch (err) {
+    console.error("Refund Booking error:", err);
+    throw err;
+  }
+}

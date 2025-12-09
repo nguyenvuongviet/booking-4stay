@@ -3,12 +3,14 @@ import { ReviewItem } from "./ReviewItem";
 import { ReviewItem as ReviewItemType } from "@/models/Review";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { get_review } from "@/services/roomApi";
+import { useLang } from "@/context/lang-context";
 
 interface Props {
   roomId?: number | string;
   pageSize?: number;
 }
 export const ReviewList: React.FC<Props> = ({ roomId, pageSize = 3 }) => {
+  const { t } = useLang();
   const [reviews, setReviews] = useState<ReviewItemType[]>([]);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
@@ -66,13 +68,13 @@ export const ReviewList: React.FC<Props> = ({ roomId, pageSize = 3 }) => {
   if (!reviews.length)
     return (
       <div className="rounded-xl border p-4 bg-white shadow-sm text-gray-500 text-center">
-        <p>No reviews available for this room.</p>
+        <p>{t("No reviews available for this room.")}</p>
       </div>
     );
 
   return (
     <div className="rounded-xl border p-4 bg-white shadow-sm">
-      <h3 className="text-lg elegant-sans">Reviews ({total})</h3>
+      <h3 className="text-lg elegant-sans">{t("Reviews")} ({total})</h3>
 
       <div className="space-y-4">
         {reviews.map((r) => (

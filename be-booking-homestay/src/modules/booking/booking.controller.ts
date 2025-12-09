@@ -92,4 +92,31 @@ export class BookingController {
   async listByRoom(@Param('roomId', ParseIntPipe) roomId: number) {
     return this.bookingService.listByRoom(roomId);
   }
+
+  @Get('users/:userId')
+  @Roles('ADMIN')
+  @ApiBearerAuth('AccessToken')
+  async listByUser(@Param('userId', ParseIntPipe) userId: number) {
+    return this.bookingService.listByUser(userId);
+  }
+
+  @Patch('/:id/accept')
+  @Roles('ADMIN')
+  @ApiBearerAuth('AccessToken')
+  async acceptBooking(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: { paidAmount: number },
+  ) {
+    return this.bookingService.adminAcceptBooking(id, dto);
+  }
+
+  @Patch('/:id/reject')
+  @Roles('ADMIN')
+  @ApiBearerAuth('AccessToken')
+  async rejectBooking(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: CancelBookingDto,
+  ) {
+    return this.bookingService.adminRejectBooking(id, dto);
+  }
 }

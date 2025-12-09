@@ -18,6 +18,9 @@ import { PhotoGalleryModal } from "./PhotoGalleryModal";
 import { ReviewList } from "./ReviewList";
 import { getAmenityIcon } from "@/constants/amenity-icons";
 import { get_unavailable_dates } from "@/services/bookingApi";
+import { mockRooms } from "@/constants/la-lo";
+import { useLang } from "@/context/lang-context";
+import { format } from "date-fns";
 
 interface RoomDetailClientProps {
   roomId: string;
@@ -27,7 +30,7 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
   const { openSignIn, user } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
-
+  const { t } = useLang();
   // States
   const [room, setRoom] = useState<Room | null>(null);
   const [loading, setLoading] = useState(true);
@@ -41,10 +44,7 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
   const [showFullOverview, setShowFullOverview] = useState(false);
   const [soldOutDates, setSoldOutDates] = useState<Date[]>([]);
-
-  // Refs
-  const checkInRef = useRef<HTMLInputElement>(null);
-  const checkOutRef = useRef<HTMLInputElement>(null);
+  const [highlightDatePicker, setHighlightDatePicker] = useState(false);
 
   // fetch data
   useEffect(() => {
@@ -107,12 +107,12 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
       setAvailable(data.available);
 
       if (!data.available) {
-        toast.error("This room is not available for the selected dates");
+        toast.error("This room is not available for the selected dates. Please choose different dates.");
       }
 
       updateURL({
-        checkIn: checkInDate.toISOString(),
-        checkOut: checkOutDate.toISOString(),
+        checkIn: format(checkInDate, "yyyy-MM-dd"),
+        checkOut: format(checkOutDate, "yyyy-MM-dd"),
         adults: adults.toString(),
         children: children.toString(),
         status,
@@ -126,21 +126,17 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
 
   const handleRoomSelect = async (roomId: number | string) => {
     if (!checkIn || !checkOut) {
-      if (!checkIn) {
-        setTimeout(() => checkInRef.current?.focus(), 0);
-        return;
-      }
-      if (!checkOut) {
-        setTimeout(() => checkOutRef.current?.focus(), 0);
-        return;
-      }
+      toast.error("Please select check-in and check-out dates");
+      // bật highlight
+      setHighlightDatePicker(true);
+      // tự tắt sau 2s
+      setTimeout(() => setHighlightDatePicker(false), 2000);
+      return;
     }
-
     if (!room) return;
     if (adults > (room.adultCapacity ?? 0)) {
       toast.error(
-        `This room only allows up to ${room!.adultCapacity} adult${
-          room!.adultCapacity > 1 ? "s" : ""
+        `This room only allows up to ${room!.adultCapacity} adult${room!.adultCapacity > 1 ? "s" : ""
         }.`
       );
       return;
@@ -178,8 +174,8 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
       router.push(
         `/checkout?${new URLSearchParams({
           roomId: String(roomId),
-          checkIn: checkIn?.toISOString() ?? "",
-          checkOut: checkOut?.toISOString() ?? "",
+          ...(checkIn ? { checkIn: format(checkIn, "yyyy-MM-dd") } : {}),
+          ...(checkOut ? { checkOut: format(checkOut, "yyyy-MM-dd") } : {}),
           adults: String(adults),
           children: String(children),
         })}`
@@ -198,7 +194,7 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
       </div>
     );
 
-  if (!room) return <p>Room not found</p>;
+  if (!room) return <p>{t("Room not found")}</p>;
 
   return (
     <div className="min-h-screen bg-background">
@@ -241,7 +237,7 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
                 variant="secondary"
                 className="absolute bottom-4 right-4 bg-background hover:cursor-pointer rounded-xl"
               >
-                More photos
+                {t("More photos")}
               </Button>
 
               {room?.images?.gallery && (
@@ -283,7 +279,7 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
 
             {/* Amenities */}
             <div className="p-4">
-              <h2 className="text-xl elegant-sans mb-4">Amenities</h2>
+              <h2 className="text-xl elegant-sans mb-4">{t("Amenities")}</h2>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 {amenitiesToDisplay.map((amenity) => (
                   <div
@@ -300,7 +296,7 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
                     className="text-sm elegant-subheading text-primary hover:text-accent hover:cursor-pointer flex items-center gap-1"
                   >
                     <span>...</span>
-                    <span>More Amenities</span>
+                    <span>{t("Show more")}</span>
                   </button>
                 )}
               </div>
@@ -308,7 +304,7 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
 
             {/* Overview */}
             <div className="p-4">
-              <h2 className="text-xl elegant-sans  mb-4">Overview</h2>
+              <h2 className="text-xl elegant-sans  mb-4">{t("Overview")}</h2>
               <p className="text-sm elegant-subheading leading-relaxed text-muted-foreground">
                 {/* {showFullOverview
                   ? room.overview
@@ -320,7 +316,7 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
                   onClick={() => setShowFullOverview(true)}
                   className="text-sm elegant-subheading text-primary hover:text-accent hover:cursor-pointer mt-3 font-medium"
                 >
-                  Show more
+                  {t("Show more")}
                 </button>
               )}
             </div>
@@ -340,15 +336,15 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
                     {room.price?.toLocaleString()} VND
                   </span>
                   <span className="text-md elegant-subheading text-muted-foreground">
-                    /night
+                    /{t("night")}
                   </span>
                 </div>
                 <p className="text-sm elegant-subheading text-muted-foreground">
                   {/* Total: {hotel.totalPrice.toLocaleString()} VND */}
-                  Total: {room.price?.toLocaleString()} VND
+                  {t("total")}: {room.price?.toLocaleString()} VND
                 </p>
                 <p className="text-sm elegant-subheading text-muted-foreground">
-                  (1 room x 1 nights incl. taxes & fees)
+                  (1 {t("room")} x 1 {t("night")}, {t("incl. taxes & fees")})
                 </p>
               </div>
               {/* Sold Out Banner */}
@@ -367,7 +363,7 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
                       d="M6 18L18 6M6 6l12 12"
                     />
                   </svg>
-                  SOLD OUT
+                  {t("sold out")}
                 </div>
               )}
               {/* Info    */}
@@ -419,13 +415,12 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
                   }
                 }}
                 disabled={available === false}
-                className={`w-full h-10 rounded-3xl mb-6 hover:bg-primary/80 ${
-                  available === false
-                    ? "bg-muted cursor-not-allowed hover:bg-muted"
-                    : ""
-                }`}
+                className={`w-full h-10 rounded-3xl mb-6 hover:bg-primary/80 ${available === false
+                  ? "bg-muted cursor-not-allowed hover:bg-muted"
+                  : ""
+                  }`}
               >
-                {available === false ? "Sold Out" : "Select room"}
+                {available === false ? t("sold out") : t("Select")}
               </Button>
 
               {/* Check-in/out */}
@@ -433,13 +428,13 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
                 <div className="grid grid-cols-2 divide-x">
                   <div className="flex flex-col items-center justify-center">
                     <p className="text-xs text-muted-foreground mb-1">
-                      Check-in
+                      {t("checkIn")}
                     </p>
                     <p className="text-lg elegant-sans">14:00</p>
                   </div>
                   <div className="flex flex-col items-center justify-center">
                     <p className="text-xs text-muted-foreground mb-1">
-                      Check-out
+                      {t("checkOut")}
                     </p>
                     <p className="text-lg elegant-sans">12:00</p>
                   </div>
@@ -447,20 +442,20 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
               </div>
 
               {/* Map */}
-              <MapRooms rooms={[room]} height="h-[30vh]" />
+              <MapRooms rooms={mockRooms[Number(roomId)]} height="h-[30vh]" />
 
               {/* Policy */}
               <div className="p-4">
                 <div className="flex items-center gap-2 ">
                   {/* <Info className="w-4 h-4" /> */}
                   <h2 className="text-xl elegant-sans mb-2">
-                    Cancellation Policy
+                    {t("Cancellation & Refund Policy")}
                   </h2>
                 </div>
                 <ul className="list-disc pl-5 space-y-1 elegant-subheading text-sm text-muted-foreground">
-                  <li>Cancel 7+ days before check-in → Full refund (100%).</li>
-                  <li>Cancel 3–6 days before check-in → 50% refund.</li>
-                  <li>Cancel within 2 days → No refund.</li>
+                  <li>{t("Cancel 7 or more days before check-in → Full refund (100%)")}.</li>
+                  <li>{t("Cancel 3–6 days before check-in → 50% refund")}.</li>
+                  <li>{t("Cancel within 2 days of check-in → No refund")}.</li>
                 </ul>
               </div>
 

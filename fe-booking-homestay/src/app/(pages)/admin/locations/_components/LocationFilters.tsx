@@ -33,7 +33,7 @@ export function LocationFilters({
 
   return (
     <div className="flex flex-wrap items-center gap-4">
-      <div className="flex items-center gap-2 w-full md:w-auto flex-shrink-0 min-w-[200px]">
+      <div className="flex items-center gap-2 w-full md:w-auto shrink-0 min-w-[200px]">
         <Database className="w-4 h-4" />
         <Select
           value={dataType}
@@ -55,7 +55,7 @@ export function LocationFilters({
       </div>
 
       {dataType !== "Country" && (
-        <div className="flex items-center gap-2 w-full md:w-auto flex-shrink-0 min-w-[200px]">
+        <div className="flex items-center gap-2 w-full md:w-auto shrink-0 min-w-[200px]">
           <Filter className="w-4 h-4" />
           <Select
             value={selectedParent ?? ""}

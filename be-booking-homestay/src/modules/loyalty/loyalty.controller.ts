@@ -26,12 +26,6 @@ export class LoyaltyController {
     return this.loyaltyService.findAllLevels();
   }
 
-  @Get('levels/:id')
-  @Roles('ADMIN')
-  findOneLevel(@Param('id', ParseIntPipe) id: number) {
-    return this.loyaltyService.findOneLevel(id);
-  }
-
   @Post('levels')
   @Roles('ADMIN')
   createLevel(@Body() dto: CreateLoyaltyLevelDto) {
@@ -53,6 +47,19 @@ export class LoyaltyController {
     return this.loyaltyService.toggleActive(id);
   }
 
+  @Post('recompute')
+  @Roles('ADMIN')
+  @ApiOperation({ summary: 'Cập nhật thông tin cấp độ loyalty (Admin)' })
+  async recomputeLevels() {
+    return this.loyaltyService.recomputeAllUserLevels();
+  }
+
+  @Get('users/all')
+  @Roles('ADMIN')
+  findAllUserLoyalty() {
+    return this.loyaltyService.findAllUserLoyalty();
+  }
+
   @Get('user/:userId')
   findUserLoyalty(@Param('userId', ParseIntPipe) userId: number) {
     return this.loyaltyService.findUserLoyalty(userId);
@@ -65,12 +72,5 @@ export class LoyaltyController {
     @Body() dto: UpdateUserLoyaltyDto,
   ) {
     return this.loyaltyService.updateUserLoyalty(userId, dto);
-  }
-
-  @Post('recompute')
-  @Roles('ADMIN')
-  @ApiOperation({ summary: 'Cập nhật thông tin cấp độ loyalty (Admin)' })
-  async recomputeLevels() {
-    return this.loyaltyService.recomputeAllUserLevels();
   }
 }

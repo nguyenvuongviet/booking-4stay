@@ -3,10 +3,12 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ArrowLeft, Pencil, RefreshCcw, Trash2 } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@radix-ui/react-tabs";
+import { ArrowLeft, Pencil, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { use, useState } from "react";
+import { RefreshButton } from "../../_components/RefreshButton";
 import { RoomFormModal } from "../_components/RoomFormModal";
 import { UpdateAmenitiesModal } from "./_components/UpdateAmenitiesModal";
 import { UpdateBedsModal } from "./_components/UpdateBedsModal";
@@ -16,7 +18,6 @@ import RoomBookingsTab from "./room-tabs/RoomBookingsTab";
 import RoomImagesTab from "./room-tabs/RoomImagesTab";
 import RoomInfoTab from "./room-tabs/RoomInfoTab";
 import RoomReviewsTab from "./room-tabs/RoomReviewsTab";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@radix-ui/react-tabs";
 
 export default function RoomDetailPage({
   params,
@@ -81,30 +82,31 @@ export default function RoomDetailPage({
 
           <div>
             <h1 className="text-3xl font-bold">{room.name}</h1>
-            <Badge
-              className={`mt-1 ${
-                room.status === "AVAILABLE"
-                  ? "bg-green-100 text-green-700"
-                  : room.status === "BOOKED"
-                  ? "bg-yellow-100 text-yellow-700"
-                  : "bg-red-100 text-red-700"
-              }`}
-            >
-              {room.status}
-            </Badge>
+
+            <div className="flex items-center gap-3 mt-2">
+              <span className="px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-semibold tracking-wide shadow-sm">
+                ROOM ID: {room.id}
+              </span>
+              <Badge
+                className={
+                  room.status === "AVAILABLE"
+                    ? "bg-green-100 text-green-700"
+                    : room.status === "BOOKED"
+                    ? "bg-yellow-100 text-yellow-700"
+                    : "bg-red-100 text-red-700"
+                }
+              >
+                {room.status}
+              </Badge>
+            </div>
           </div>
         </div>
 
         <div className="flex gap-2">
-          <Button variant="outline" onClick={reload}>
-            <RefreshCcw className="w-4 h-4 mr-1" />
-            Làm mới
-          </Button>
-
+          <RefreshButton onRefresh={reload} />
           <Button variant="outline" onClick={() => setOpenEditRoom(true)}>
             <Pencil className="w-4 h-4 mr-1" /> Chỉnh sửa
           </Button>
-
           <Button
             className="bg-red-500/70 backdrop-blur-md hover:bg-red-600/70 text-white"
             onClick={handleDelete}

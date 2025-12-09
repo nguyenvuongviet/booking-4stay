@@ -1,16 +1,19 @@
 "use client";
 
-import { useEffect, useMemo, useState, useCallback } from "react";
 import { getBookings } from "@/services/admin/bookingsApi";
 import type { PaginatedBookings } from "@/types/booking";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { DateRange } from "react-day-picker";
 
 export function useBookingList() {
-  const [loading, setLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
+
+  const [refreshing, setRefreshing] = useState(false);
+
   const [raw, setRaw] = useState<PaginatedBookings | null>(null);
 
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("ALL");
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
 
   const [sortCheckIn, setSortCheckIn] = useState<"asc" | "desc" | null>(null);
@@ -19,24 +22,41 @@ export function useBookingList() {
   const pageSize = 6;
   const [page, setPage] = useState(1);
 
-  const load = useCallback(async () => {
-    setLoading(true);
+  const loadInitial = useCallback(async () => {
     try {
       const data = await getBookings();
       setRaw(data);
     } finally {
-      setLoading(false);
+      setInitialLoading(false);
+    }
+  }, []);
+
+  const refresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      const data = await getBookings();
+      setRaw(data);
+    } finally {
+      setRefreshing(false);
     }
   }, []);
 
   useEffect(() => {
-    load();
-  }, [load]);
+    loadInitial();
+  }, [loadInitial]);
+
+  useEffect(() => {
+    const timer = setInterval(() => refresh(), 60000);
+    return () => clearInterval(timer);
+  }, [refresh]);
 
   const getNights = (ci: string, co: string) => {
-    const d1 = new Date(ci);
-    const d2 = new Date(co);
-    return Math.max(1, Math.round((d2.getTime() - d1.getTime()) / 86400000));
+    const ciDate = new Date(ci);
+    const coDate = new Date(co);
+    return Math.max(
+      1,
+      Math.round((coDate.getTime() - ciDate.getTime()) / 86400000)
+    );
   };
 
   const processed = useMemo(() => {
@@ -46,20 +66,22 @@ export function useBookingList() {
 
     data = data.filter((b) => {
       const g = b.guestInfo;
-      const matchSearch =
+      const searchMatch =
         g.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         g.email.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchStatus =
-        statusFilter === "all" ||
+
+      const filterMatch =
+        statusFilter === "ALL" ||
         b.status.toLowerCase() === statusFilter.toLowerCase();
-      const matchDateFrom = dateRange?.from
+
+      const dateFromMatch = dateRange?.from
         ? new Date(b.checkIn) >= dateRange.from
         : true;
-      const matchDateTo = dateRange?.to
+      const dateToMatch = dateRange?.to
         ? new Date(b.checkIn) <= dateRange.to
         : true;
 
-      return matchSearch && matchStatus && matchDateFrom && matchDateTo;
+      return searchMatch && filterMatch && dateFromMatch && dateToMatch;
     });
     if (sortCheckIn) {
       data.sort((a, b) =>
@@ -83,10 +105,15 @@ export function useBookingList() {
   const paged = processed.slice((page - 1) * pageSize, page * pageSize);
 
   return {
-    loading,
+    initialLoading,
+    refreshing,
+
     raw,
-    processed,
     paged,
+    processed,
+    page,
+    pageCount,
+    setPage,
 
     searchTerm,
     setSearchTerm,
@@ -103,11 +130,7 @@ export function useBookingList() {
     sortTotal,
     setSortTotal,
 
-    page,
-    pageCount,
-    setPage,
-
+    refresh,
     getNights,
-    refresh: load,
   };
 }

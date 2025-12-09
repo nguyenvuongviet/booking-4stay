@@ -1,3 +1,5 @@
+import { Booking } from "@/types/booking";
+import { Review } from "@/types/review";
 import { CreateUserDto, UpdateUserDto, User } from "@/types/user";
 import api from "../api";
 
@@ -62,6 +64,26 @@ export async function uploadUserAvatar(id: number, file: File) {
     return res.data.data;
   } catch (error) {
     console.error("Upload user avatar error:", error);
+    throw error;
+  }
+}
+
+export async function getBookingUser(id: number): Promise<Booking[]> {
+  try {
+    const res = await api.get(`/bookings/users/${id}`);
+    return res.data.data;
+  } catch (error) {
+    console.error("Get room by id error:", error);
+    throw error;
+  }
+}
+
+export async function getReviewsUser(id: number): Promise<Review[]> {
+  try {
+    const res = await api.get(`/review/users/${id}`);
+    return res.data.data;
+  } catch (error) {
+    console.error("Get room by id error:", error);
     throw error;
   }
 }
