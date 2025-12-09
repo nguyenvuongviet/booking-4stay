@@ -431,12 +431,17 @@ export class BookingService {
     const booking = await this.prisma.bookings.findUnique({
       where: { id: orderId },
     });
+
     if (!booking) throw new NotFoundException();
 
-    const newStatus =
-      paidAmount >= Number(booking.totalPrice)
-        ? bookings_status.CONFIRMED
-        : bookings_status.PARTIALLY_PAID;
+    const total = Number(booking.totalPrice);
+    let newStatus: bookings_status = bookings_status.PENDING;
+
+    if (paidAmount > 0 && paidAmount < total) {
+      newStatus = bookings_status.PARTIALLY_PAID;
+    } else if (paidAmount >= total) {
+      newStatus = bookings_status.CONFIRMED;
+    }
 
     return this.changeBookingStatus(orderId, newStatus, {
       allowOverride: true,

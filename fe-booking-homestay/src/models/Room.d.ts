@@ -26,4 +26,10 @@ export interface Room {
   };
   amenities?: Amenity[];
   status?: "Available" | "Sold out";
+  host?: {
+    name: string;
+    avatar: string;
+    email: string;
+    phoneNumber: string;
+  };
 }

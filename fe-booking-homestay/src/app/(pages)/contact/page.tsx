@@ -1,15 +1,13 @@
 "use client";
 
-import type React from "react";
-
-import { useState } from "react";
-import { Mail, Phone, MapPin, Send } from "lucide-react";
+import Footer from "@/components/Footer";
+import Header from "@/components/Header";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Card } from "@/components/ui/card";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
+import { Mail, MapPin, Phone, Send } from "lucide-react";
+import { useState } from "react";
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -20,190 +18,173 @@ export default function ContactPage() {
   });
   const [submitted, setSubmitted] = useState(false);
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
+  const handleChange = (e: any) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setFormData((p) => ({ ...p, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (e: any) => {
     e.preventDefault();
-    // Here you would typically send the form data to a server
-    console.log("Form submitted:", formData);
     setSubmitted(true);
     setFormData({ name: "", email: "", subject: "", message: "" });
     setTimeout(() => setSubmitted(false), 3000);
   };
 
   return (
-    <main className="min-h-screen bg-linear-to-br from-primary/40 to-secondary/50">
+    <main className="min-h-screen bg-background">
       <Header />
-      {/* Header Section */}
-      <section className="mt-16">
-        <div className="mx-auto max-w-7xl px-8 py-6">
-          <h1 className="text-4xl elegant-heading">Get In Touch</h1>
-          <p className="mt-4 text-lg text-muted-foreground">
-            We would love to hear from you. Send us a message and we will
-            respond as soon as possible.
+
+      <section className="relative pt-28 pb-20 bg-linear-to-br from-primary/10 via-white to-secondary/10">
+        <div className="mx-auto max-w-5xl px-8 text-center">
+          <h1 className="text-5xl elegant-heading text-gray-900 font-bold mb-4">
+            Liên hệ 4Stay
+          </h1>
+          <p className="text-lg elegant-subheading text-muted-foreground leading-relaxed max-w-2xl mx-auto">
+            Bạn gặp vấn đề khi đặt phòng, thanh toán, hay đơn giản muốn hợp tác?
+            Chúng tôi luôn sẵn sàng hỗ trợ bạn nhanh nhất có thể.
           </p>
         </div>
       </section>
 
-      {/* Contact Content */}
-      <section className="px-8 py-4 mb-16">
-        <div className="mx-auto max-w-7xl">
-          <div className="grid gap-12 lg:grid-cols-3">
-            {/* Contact Info Cards */}
-            <div className="space-y-6">
-              <Card className="border-0 bg-card p-8 shadow-sm hover:shadow-md transition-shadow">
-                <div className="flex items-start gap-4">
-                  <div className="rounded-lg bg-blue-100 p-3">
-                    <Mail className="h-6 w-6 text-blue-600" />
-                  </div>
-                  <div>
-                    <h3 className="elegant-sans">Email</h3>
-                    <p className="mt-1 text-muted-foreground">
-                      support@4stay.com
-                    </p>
-                    <p className="text-sm text-muted">
-                      We typically respond within 24 hours
-                    </p>
-                  </div>
+      <section className="px-6 pb-20">
+        <div className="mx-auto max-w-7xl grid gap-12 lg:grid-cols-3">
+          <div className="space-y-6 lg:pr-6">
+            <Card className="p-8 shadow-sm hover:shadow-md transition-all">
+              <div className="flex items-start gap-4">
+                <div className="rounded-lg bg-blue-100 p-3">
+                  <Mail className="h-6 w-6 text-blue-700" />
                 </div>
-              </Card>
-
-              <Card className="border-0 bg-card p-8 shadow-sm hover:shadow-md transition-shadow">
-                <div className="flex items-start gap-4">
-                  <div className="rounded-lg bg-indigo-100 p-3">
-                    <Phone className="h-6 w-6 text-indigo-600" />
-                  </div>
-                  <div>
-                    <h3 className="elegant-sans">Phone</h3>
-                    <p className="mt-1 text-muted-foreground">+1 (555) 123-4567</p>
-                    <p className="text-sm text-muted">
-                      Monday - Sunday, 7AM - 10PM
-                    </p>
-                  </div>
+                <div>
+                  <h3 className="text-xl elegant-sans font-semibold">Email</h3>
+                  <p className="mt-1 text-muted-foreground">
+                    support@4stay.com
+                  </p>
+                  <p className="text-sm text-gray-400">
+                    Thời gian phản hồi: dưới 24 giờ
+                  </p>
                 </div>
-              </Card>
+              </div>
+            </Card>
 
-              <Card className="border-0 bg-card p-8 shadow-sm hover:shadow-md transition-shadow">
-                <div className="flex items-start gap-4">
-                  <div className="rounded-lg bg-purple-100 p-3">
-                    <MapPin className="h-6 w-6 text-purple-600" />
-                  </div>
-                  <div>
-                    <h3 className="elegant-sans">Office</h3>
-                    <p className="mt-1 text-muted-foreground">1 Vo Van Ngan Street</p>
-                    <p className="text-sm text-muted">
-                      Thu Duc, Ho Chi Minh city, Viet Nam
-                    </p>
-                  </div>
+            <Card className="p-8 shadow-sm hover:shadow-md transition-all">
+              <div className="flex items-start gap-4">
+                <div className="rounded-lg bg-indigo-100 p-3">
+                  <Phone className="h-6 w-6 text-indigo-700" />
                 </div>
-              </Card>
-            </div>
+                <div>
+                  <h3 className="text-xl elegant-sans font-semibold">
+                    Hotline
+                  </h3>
+                  <p className="mt-1 text-muted-foreground">+84 909 123 456</p>
+                  <p className="text-sm text-gray-400">
+                    Hỗ trợ 7 ngày/tuần – 7:00 đến 22:00
+                  </p>
+                </div>
+              </div>
+            </Card>
 
-            {/* Contact Form */}
-            <div className="lg:col-span-2">
-              <Card className="border-0 bg-white p-8 shadow-sm">
-                <form onSubmit={handleSubmit} className="space-y-6">
+            <Card className="p-8 shadow-sm hover:shadow-md transition-all">
+              <div className="flex items-start gap-4">
+                <div className="rounded-lg bg-purple-100 p-3">
+                  <MapPin className="h-6 w-6 text-purple-700" />
+                </div>
+                <div>
+                  <h3 className="text-xl elegant-sans font-semibold">
+                    Văn phòng
+                  </h3>
+                  <p className="mt-1 text-muted-foreground">
+                    1 Võ Văn Ngân, Thủ Đức
+                  </p>
+                  <p className="text-sm text-gray-400">
+                    TP. Hồ Chí Minh, Việt Nam
+                  </p>
+                </div>
+              </div>
+            </Card>
+          </div>
+
+          <div className="lg:col-span-2">
+            <Card className="p-10 shadow-md border bg-white">
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="grid md:grid-cols-2 gap-6">
                   <div>
-                    <label
-                      htmlFor="name"
-                      className="block text-sm font-semibold text-slate-900"
-                    >
-                      Full Name
+                    <label className="block text-sm font-semibold text-gray-800">
+                      Họ và tên
                     </label>
                     <Input
-                      id="name"
                       name="name"
-                      type="text"
-                      placeholder="Your name"
                       value={formData.name}
-                      onChange={handleChange}
                       required
+                      placeholder="Nguyễn Văn A..."
+                      onChange={handleChange}
                       className="mt-2 h-12 rounded-xl"
                     />
                   </div>
 
                   <div>
-                    <label
-                      htmlFor="email"
-                      className="block text-sm font-semibold text-slate-900"
-                    >
-                      Email Address
+                    <label className="block text-sm font-semibold text-gray-800">
+                      Email
                     </label>
                     <Input
-                      id="email"
                       name="email"
                       type="email"
-                      placeholder="your.email@example.com"
                       value={formData.email}
-                      onChange={handleChange}
                       required
+                      placeholder="email@example.com"
+                      onChange={handleChange}
                       className="mt-2 h-12 rounded-xl"
                     />
                   </div>
+                </div>
 
-                  <div>
-                    <label
-                      htmlFor="subject"
-                      className="block text-sm font-semibold text-slate-900"
-                    >
-                      Subject
-                    </label>
-                    <Input
-                      id="subject"
-                      name="subject"
-                      type="text"
-                      placeholder="What is this about?"
-                      value={formData.subject}
-                      onChange={handleChange}
-                      required
-                      className="mt-2 h-12 rounded-xl"
-                    />
+                <div>
+                  <label className="block text-sm font-semibold text-gray-800">
+                    Tiêu đề
+                  </label>
+                  <Input
+                    name="subject"
+                    value={formData.subject}
+                    required
+                    placeholder="Bạn muốn trao đổi về điều gì?"
+                    onChange={handleChange}
+                    className="mt-2 h-12 rounded-xl"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-800">
+                    Nội dung
+                  </label>
+                  <Textarea
+                    name="message"
+                    value={formData.message}
+                    required
+                    placeholder="Hãy mô tả chi tiết yêu cầu của bạn..."
+                    onChange={handleChange}
+                    rows={6}
+                    className="mt-2 rounded-xl"
+                  />
+                </div>
+
+                <Button
+                  type="submit"
+                  className="h-12 w-full rounded-xl text-lg"
+                >
+                  <Send className="mr-2 h-5 w-5" />
+                  Gửi Tin Nhắn
+                </Button>
+
+                {submitted && (
+                  <div className="rounded-lg bg-green-50 p-4 text-green-700 text-center">
+                    Cảm ơn bạn! Chúng tôi sẽ phản hồi sớm nhất.
                   </div>
-
-                  <div>
-                    <label
-                      htmlFor="message"
-                      className="block text-sm font-semibold text-slate-900"
-                    >
-                      Message
-                    </label>
-                    <Textarea
-                      id="message"
-                      name="message"
-                      placeholder="Your message here..."
-                      value={formData.message}
-                      onChange={handleChange}
-                      required
-                      rows={6}
-                      className="mt-2 h-12 rounded-xl bg-input"
-                    />
-                  </div>
-
-                  <Button type="submit" className="h-12 w-full ">
-                    <Send className="mr-2 h-5 w-5" />
-                    Send Message
-                  </Button>
-
-                  {submitted && (
-                    <div className="rounded-lg bg-green-50 p-4 text-green-700">
-                      Thank you for your message! We will get back to you
-                      shortly.
-                    </div>
-                  )}
-                </form>
-              </Card>
-            </div>
+                )}
+              </form>
+            </Card>
           </div>
         </div>
       </section>
+
       <Footer />
     </main>
   );

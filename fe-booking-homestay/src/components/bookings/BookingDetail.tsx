@@ -1,4 +1,6 @@
+import { usePayment } from "@/_hooks/usePayment";
 import { BookingCancelSection } from "@/components/bookings/BookingCancelSection";
+import { useLang } from "@/context/lang-context";
 import { Booking } from "@/models/Booking";
 import { cancel_booking, post_review } from "@/services/bookingApi";
 import { differenceInDays, format } from "date-fns";
@@ -7,18 +9,16 @@ import {
   CalendarDays,
   CheckCircle,
   Clock,
-  DollarSign,
+  CreditCard,
   Users,
 } from "lucide-react";
 import { useState } from "react";
 import toast from "react-hot-toast";
+import CountdownTimer from "../CountdownTimer";
+import PaymentModal from "../payment/PaymentModal";
+import { Button } from "../ui/button";
 import { BookingStatusBadge } from "./BookingStatusBadge";
 import { ReviewSection } from "./ReviewSection";
-import { useLang } from "@/context/lang-context";
-import { Button } from "../ui/button";
-import PaymentModal from "../payment/PaymentModal";
-import CountdownTimer from "../CountdownTimer";
-import { usePayment } from "@/_hooks/usePayment";
 
 export const BookingDetail = ({
   booking: initialBooking,
@@ -302,7 +302,7 @@ export const BookingDetail = ({
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <DollarSign className="w-4 h-4 text-muted-foreground" />
+              <CreditCard className="w-4 h-4 text-muted-foreground" />
               <p className="text-muted-foreground elegant-subheading">
                 {t("total")} {t("amount")}:
               </p>
@@ -360,15 +360,13 @@ export const BookingDetail = ({
             ))}
         </div>
         <div className="flex flex-row-reverse gap-4">
-          {booking.status !== "CANCELLED" &&
-            booking.status !== "CHECKED_OUT" && (
-              <div className="flex items-center justify-end">
-                <BookingCancelSection
-                  booking={booking}
-                  onCancel={handleCancel}
-                />
-              </div>
-            )}
+          {["PENDING", "PARTIALLY_PAID", "CONFIRMED"].includes(
+            booking.status
+          ) && (
+            <div className="flex items-center justify-end">
+              <BookingCancelSection booking={booking} onCancel={handleCancel} />
+            </div>
+          )}
 
           {booking.status === "PENDING" && (
             <div className="flex items-center justify-end">

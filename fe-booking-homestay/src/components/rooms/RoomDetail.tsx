@@ -2,12 +2,18 @@
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { getAmenityIcon } from "@/constants/amenity-icons";
+import { mockRooms } from "@/constants/la-lo";
 import { useAuth } from "@/context/auth-context";
+import { useLang } from "@/context/lang-context";
 import { Room } from "@/models/Room";
+import { get_unavailable_dates } from "@/services/bookingApi";
 import { room_available, room_detail } from "@/services/roomApi";
-import { Loader2, MapPin, Star, Users } from "lucide-react";
+import { format } from "date-fns";
+import { Loader2, Mail, MapPin, Phone, Star, Users } from "lucide-react";
+import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import "react-datepicker/dist/react-datepicker.css";
 import toast from "react-hot-toast";
 import GuestPicker from "../GuestPicker";
@@ -16,11 +22,6 @@ import DateRangePicker from "../ui/date-range-picker";
 import MapRooms from "./MapRoom";
 import { PhotoGalleryModal } from "./PhotoGalleryModal";
 import { ReviewList } from "./ReviewList";
-import { getAmenityIcon } from "@/constants/amenity-icons";
-import { get_unavailable_dates } from "@/services/bookingApi";
-import { mockRooms } from "@/constants/la-lo";
-import { useLang } from "@/context/lang-context";
-import { format } from "date-fns";
 
 interface RoomDetailClientProps {
   roomId: string;
@@ -45,6 +46,8 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
   const [showFullOverview, setShowFullOverview] = useState(false);
   const [soldOutDates, setSoldOutDates] = useState<Date[]>([]);
   const [highlightDatePicker, setHighlightDatePicker] = useState(false);
+
+  console.log({ room });
 
   // fetch data
   useEffect(() => {
@@ -106,9 +109,10 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
       const status = data.available ? "Available" : "SoldOut";
       setAvailable(data.available);
 
-      if (!data.available) {
-        toast.error("This room is not available for the selected dates. Please choose different dates.");
-      }
+      if (!data.available)
+        toast.error(
+          "This room is not available for the selected dates. Please choose different dates."
+        );
 
       updateURL({
         checkIn: format(checkInDate, "yyyy-MM-dd"),
@@ -136,7 +140,8 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
     if (!room) return;
     if (adults > (room.adultCapacity ?? 0)) {
       toast.error(
-        `This room only allows up to ${room!.adultCapacity} adult${room!.adultCapacity > 1 ? "s" : ""
+        `This room only allows up to ${room!.adultCapacity} adult${
+          room!.adultCapacity > 1 ? "s" : ""
         }.`
       );
       return;
@@ -209,7 +214,6 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
             {/* Photo Gallery */}
             <div className="relative">
               <div className="grid grid-cols-4 gap-2 h-[400px]">
-                {" "}
                 {/* cố định height */}
                 <div className="col-span-2 row-span-2 overflow-hidden rounded-l-lg">
                   <img
@@ -270,12 +274,57 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
                     {room.rating}
                     <Star className="h-4 w-4 mr-1 fill-yellow-400 text-yellow-400" />
                   </div>
-                  <p className="text-sm elegant-subheading text-muted-foreground">
-                    {/* Not Good */}
-                  </p>
+                  <p className="text-sm elegant-subheading text-muted-foreground"></p>
                 </div>
               </div>
             </div>
+
+            {room.host && (
+              <div className="mt-10 p-6 rounded-2xl border bg-white shadow-sm hover:shadow-md transition-all duration-200">
+                <h2 className="text-2xl elegant-heading mb-6 flex items-center gap-2">
+                  Thông tin chủ phòng
+                  <span className="inline-block bg-primary/10 text-primary text-xs px-2 py-1 rounded-full">
+                    Verified Host
+                  </span>
+                </h2>
+
+                <div className="flex items-center gap-6">
+                  <div className="relative">
+                    <Image
+                      src={room.host.avatar || "/placeholder.svg"}
+                      alt="host avatar"
+                      width={100}
+                      height={100}
+                      className="w-20 h-20 object-cover rounded-full"
+                    />
+                    <span className="absolute bottom-1 right-1 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></span>
+                  </div>
+
+                  <div className="flex-1">
+                    <p className="text-xl elegant-sans font-semibold text-foreground">
+                      {room.host.name}
+                    </p>
+
+                    <div className="mt-2 space-y-1 text-sm text-muted-foreground elegant-subheading">
+                      <p className="flex items-center gap-2">
+                        <Mail className="w-4 h-4 text-primary" />
+                        {room.host.email}
+                      </p>
+                      <p className="flex items-center gap-2">
+                        <Phone className="w-4 h-4 text-primary" />
+                        {room.host.phoneNumber}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-6 p-4 bg-gray-50 border rounded-xl text-sm elegant-subheading text-muted-foreground">
+                  Chủ phòng đã xác minh danh tính và thông tin liên hệ.
+                  <br />
+                  Luôn sẵn sàng hỗ trợ bạn trong quá trình lưu trú.
+                </div>
+              </div>
+            )}
 
             {/* Amenities */}
             <div className="p-4">
@@ -415,10 +464,11 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
                   }
                 }}
                 disabled={available === false}
-                className={`w-full h-10 rounded-3xl mb-6 hover:bg-primary/80 ${available === false
-                  ? "bg-muted cursor-not-allowed hover:bg-muted"
-                  : ""
-                  }`}
+                className={`w-full h-10 rounded-3xl mb-6 hover:bg-primary/80 ${
+                  available === false
+                    ? "bg-muted cursor-not-allowed hover:bg-muted"
+                    : ""
+                }`}
               >
                 {available === false ? t("sold out") : t("Select")}
               </Button>
@@ -453,7 +503,12 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
                   </h2>
                 </div>
                 <ul className="list-disc pl-5 space-y-1 elegant-subheading text-sm text-muted-foreground">
-                  <li>{t("Cancel 7 or more days before check-in → Full refund (100%)")}.</li>
+                  <li>
+                    {t(
+                      "Cancel 7 or more days before check-in → Full refund (100%)"
+                    )}
+                    .
+                  </li>
                   <li>{t("Cancel 3–6 days before check-in → 50% refund")}.</li>
                   <li>{t("Cancel within 2 days of check-in → No refund")}.</li>
                 </ul>

@@ -65,7 +65,13 @@ export class VNPayService {
 
     const bookingId = Number(query.vnp_OrderInfo);
     const responseCode = query.vnp_ResponseCode;
+    const vnp_Amount = query.vnp_Amount;
+
+    console.log({ vnp_Amount });
+
     const amount = Number(query.vnp_Amount) / 100;
+
+    console.log({ amount });
 
     try {
       if (verified.isVerified && responseCode === '00') {
@@ -120,7 +126,7 @@ export class VNPayService {
       vnp_TmnCode: VNPAY_TMN_CODE,
       vnp_TransactionType,
       vnp_TxnRef: payment.txnRef,
-      vnp_Amount: (amount / 100) * 100,
+      vnp_Amount: amount * 100,
       vnp_OrderInfo: reason ?? `Refund by ${adminId}`,
       vnp_TransactionNo: payment.transactionNo,
       vnp_TransactionDate: payment.transactionDate,
