@@ -1,98 +1,224 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# 🚀 4Stay – Booking Homestay Backend
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+Backend service cho nền tảng **4Stay**, xây dựng bằng **NestJS**, **Prisma ORM**, **MySQL**, hỗ trợ đầy đủ chức năng quản lý người dùng, phòng, đặt phòng, thanh toán VNPay, loyalty, đánh giá, Dashboard, Cloudinary và hệ thống gửi email.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## 📌 Mục lục
 
-## Description
+- [Giới thiệu](#-giới-thiệu)
+- [Công nghệ sử dụng](#-công-nghệ-sử-dụng)
+- [Yêu cầu hệ thống](#-yêu-cầu-hệ-thống)
+- [Cài đặt dự án](#-cài-đặt-dự-án)
+- [Cấu hình môi trường (.env)](#-cấu-hình-môi-trường-env)
+- [Khởi tạo database](#-khởi-tạo-database)
+- [Chạy dự án](#-chạy-dự-án)
+- [Cấu trúc thư mục](#-cấu-trúc-thư-mục)
+- [Danh sách API](#-danh-sách-api)
+- [Tích hợp VNPay](#-tích-hợp-vnpay)
+- [Upload Cloudinary](#-upload-cloudinary)
+- [Dashboard Admin](#-dashboard-admin)
+- [Ghi chú bảo mật](#-ghi-chú-bảo-mật)
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## 📖 Giới thiệu
 
-## Project setup
+Dự án backend cung cấp API cho hệ thống đặt phòng homestay **4Stay**, bao gồm:
 
-```bash
-$ npm install
-```
+- Đăng ký, đăng nhập, xác thực OTP, Google Login, Đổi mật khẩu
+- Quản lý người dùng và quản trị viên
+- Quản lý phòng, ảnh, tiện ích, giường
+- Hệ thống location đa cấp (Country → Province → District → Ward)
+- Quản lý booking + cron job tự động cập nhật trạng thái
+- Loyalty program
+- Đánh giá phòng
+- VNPay Payment + Refund
+- Gửi email thông báo
+- Dashboard thống kê doanh thu và booking
 
-## Compile and run the project
+## 🧩 Công nghệ sử dụng
 
-```bash
-# development
-$ npm run start
+| Công nghệ         | Vai trò                  |
+| ----------------- | ------------------------ |
+| **NestJS**        | Framework backend        |
+| **Prisma ORM**    | ORM kết nối MySQL        |
+| **MySQL 8**       | Database chính           |
+| **Swagger**       | Tài liệu API             |
+| **Nodemailer**    | Gửi email                |
+| **Cloudinary**    | Upload ảnh               |
+| **VNPay Sandbox** | Thanh toán & refund      |
+| **Passport JWT**  | Xác thực & phân quyền    |
+| **Cron Job**      | Tự động cập nhật booking |
 
-# watch mode
-$ npm run start:dev
+## ⚙️ Yêu cầu hệ thống
 
-# production mode
-$ npm run start:prod
-```
+- Node.js **>= 18**
+- NPM hoặc trình quản lý gói khác
+- MySQL **>= 8.0**
+- Git
 
-## Run tests
-
-```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
-```
-
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+## 📥 Cài đặt dự án
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+git clone https://github.com/your-repo/be-booking-homestay.git
+cd be-booking-homestay
+npm install
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+## 🔐 Cấu hình môi trường (.env)
 
-## Resources
+Dự án có sẵn file:
 
-Check out a few resources that may come in handy when working with NestJS:
+```
+.env.example
+```
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+Tạo file `.env` theo `.env.example`:
 
-## Support
+```bash
+cp .env.example .env
+```
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+## 🗄 Khởi tạo database
 
-## Stay in touch
+Thư mục `db/` bao gồm:
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+- `db_booking_homestay.sql` → tạo bảng
+- `db_trigger.sql` → trigger rating, review count, loyalty
+- `db_insert.sql` → dữ liệu mẫu
 
-## License
+### Cách 1: Import bằng MySQL Workbench
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+```sql
+SOURCE ./db/db_booking_homestay.sql;
+SOURCE ./db/db_trigger.sql;
+SOURCE ./db/db_insert.sql;
+```
+
+### Cách 2: Prisma
+
+```bash
+npx prisma migrate dev
+npx prisma generate
+```
+
+## ▶️ Chạy dự án
+
+### Development
+
+```bash
+npm run start:dev
+```
+
+### Production
+
+```bash
+npm run build
+npm run start:prod
+```
+
+## 📁 Cấu trúc thư mục
+
+```
+be-booking-homestay/
+│── db/                     # SQL schema, triggers, seed data
+│── dist/
+│── prisma/
+│   ├── schema.prisma
+│
+│── public/
+│
+│── src/
+│   ├── common/             # Guards, decorators, middleware
+│   ├── config/             # Config module
+│   ├── helpers/            # Utils chia sẻ
+│   ├── utils/              # Hàm tiện ích
+│
+│   ├── modules/
+│       ├── amenity/
+│       ├── auth/
+│       ├── booking/
+│       ├── cloudinary/
+│       ├── dashboard/
+│       ├── location/
+│       ├── loyalty/
+│       ├── mail/
+│       ├── notification/
+│       ├── otp/
+│       ├── payment/
+│       ├── prisma/
+│       ├── review/
+│       ├── room/
+│       ├── token/
+│       └── user/
+│
+│── test/
+│── .env.example
+│── package.json
+│── README.md
+```
+
+## 🔗 Danh sách API
+
+Dự án tự động tạo tài liệu API bằng Swagger:
+
+```
+http://localhost:3069/api/docs
+```
+
+### Nhóm API chính:
+
+- **/auth** → Login, Register, OTP, Refresh, Google Login
+- **/user** → CRUD user & admin
+- **/location** → Countries, Provinces, Districts, Wards
+- **/room** → Manage room, images, amenities
+- **/bookings** → Booking, cancel, availability check
+- **/review** → CRUD review
+- **/loyalty** → Levels & user loyalty
+- **/payment (VNPay)** → QR, callback, refund
+- **/admin/dashboard** → Stats, revenue, bookings, popular rooms
+
+## 💳 Tích hợp VNPay
+
+### 1. Tạo URL/QR thanh toán
+
+```
+POST /api/create-qr
+```
+
+### 2. Callback sau thanh toán
+
+```
+GET /api/payment-return
+```
+
+### 3. Hoàn tiền
+
+```
+POST /api/refund
+```
+
+## ☁ Upload Cloudinary
+
+Hỗ trợ:
+
+- Upload ảnh local (multer)
+- Upload Cloudinary
+- Chọn ảnh chính
+- Sắp xếp thư viện ảnh
+- Xoá ảnh
+
+## 📊 Dashboard Admin
+
+Bao gồm:
+
+- Tổng doanh thu
+- Tổng booking
+- Doanh thu theo tháng
+- 5 phòng được đặt nhiều nhất
+- Danh sách booking gần nhất
+- Thống kê trạng thái booking
+
+## 🔒 Ghi chú bảo mật
+
+- Không commit file `.env`
+- Không để lộ API key, secret
+- Dùng App Password Gmail khi dùng SMTP
+- Sử dụng HTTPS khi deploy production

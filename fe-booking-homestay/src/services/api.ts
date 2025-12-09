@@ -4,10 +4,11 @@ type TConfig = {
   headers: any;
 };
 
+import { API_BASE_URL } from "@/constants/app.constant";
 import { STORAGE_KEYS } from "../constants";
 
 const api = axios.create({
-  baseURL: "http://localhost:3069",
+  baseURL: API_BASE_URL,
 });
 
 api.interceptors.request.use((config: TConfig) => {
