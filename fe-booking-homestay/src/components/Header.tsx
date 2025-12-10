@@ -1,12 +1,13 @@
 "use client";
 
 import { useAuth } from "@/context/auth-context";
+import { useLang } from "@/context/lang-context";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "./ui/button";
-import { useLang } from "@/context/lang-context";
+import { UserAvatar } from "./UserAvatar";
 
 export default function Header() {
   const { openSignIn, openNewPassword, user, logout } = useAuth();
@@ -114,11 +115,10 @@ export default function Header() {
                   onClick={() => setOpenMenu((prev) => !prev)}
                   className="flex items-center gap-2 hover:cursor-pointer"
                 >
-                  <img
-                    src={user?.avatar || "/default-avatar.png"}
-                    // src={"images/default-avatar.jpg"}
-                    alt="avatar"
-                    className="w-8 h-8 rounded-full object-cover"
+                  <UserAvatar
+                    avatarUrl={user?.avatar}
+                    fullName={user.firstName + " " + user.lastName}
+                    size="md"
                   />
                   <span className="text-secondary-foreground elegant-subheading">
                     {user.firstName + " " + user.lastName}

@@ -57,6 +57,8 @@ export default function AdminDashboardPage() {
   const [loading, setLoading] = useState(true);
   const currentYear = new Date().getFullYear();
   const [year, setYear] = useState(currentYear);
+  const [statusMonth, setStatusMonth] = useState<number | "all">("all");
+  const [statusYear, setStatusYear] = useState<number>(currentYear);
 
   const load = async () => {
     setLoading(true);
@@ -91,6 +93,17 @@ export default function AdminDashboardPage() {
     }
   };
 
+  const loadStatus = async (y: number, m: number | "all") => {
+    try {
+      const res = await getBookingStatusSummary(y, m === "all" ? undefined : m);
+      setStatus(res);
+    } catch {
+      toast.error("Không thể tải tỷ lệ trạng thái booking");
+    }
+  };
+
+  const totalStatusCount = status.reduce((sum, s) => sum + s.count, 0);
+
   useEffect(() => {
     load();
   }, []);
@@ -98,6 +111,10 @@ export default function AdminDashboardPage() {
   useEffect(() => {
     loadRevenue(year);
   }, [year]);
+
+  useEffect(() => {
+    loadStatus(statusYear, statusMonth);
+  }, [statusYear, statusMonth]);
 
   if (!stats && loading) return <div className="p-6">Đang tải...</div>;
 
@@ -241,39 +258,80 @@ export default function AdminDashboardPage() {
 
           <div className="flex flex-col lg:flex-row lg:items-start gap-6">
             <div className="lg:w-2/3 w-full">
-              <ResponsiveContainer width="100%" height={260}>
-                <PieChart>
-                  <Pie
-                    data={status}
-                    dataKey="count"
-                    nameKey="status"
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={55}
-                    outerRadius={90}
-                    paddingAngle={2}
-                    stroke="white"
-                    strokeWidth={2}
-                  >
-                    {status.map((item) => (
-                      <Cell
-                        key={item.status}
-                        fill={BOOKING_STATUS_COLORS[item.status].color}
-                      />
-                    ))}
-                  </Pie>
+              <div className="flex items-center gap-3">
+                {/* Filter năm */}
+                <select
+                  className="h-9 px-3 border rounded-md"
+                  value={statusYear}
+                  onChange={(e) => setStatusYear(Number(e.target.value))}
+                >
+                  {Array.from({ length: 5 }).map((_, i) => {
+                    const y = currentYear - i;
+                    return (
+                      <option key={y} value={y}>
+                        {y}
+                      </option>
+                    );
+                  })}
+                </select>
 
-                  <RTooltip
-                    formatter={(value: number, name, entry: any) => {
-                      const s = entry?.payload?.status;
-                      return [
-                        `${value} lượt`,
-                        BOOKING_STATUS_COLORS[s]?.label ?? s,
-                      ];
-                    }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
+                {/* Filter tháng */}
+                <select
+                  className="h-9 px-3 border rounded-md"
+                  value={statusMonth}
+                  onChange={(e) =>
+                    setStatusMonth(
+                      e.target.value === "all" ? "all" : Number(e.target.value)
+                    )
+                  }
+                >
+                  <option value="all">Cả năm</option>
+                  {Array.from({ length: 12 }).map((_, i) => (
+                    <option key={i + 1} value={i + 1}>
+                      Tháng {i + 1}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              {totalStatusCount === 0 ? (
+                <div className="flex items-center justify-center h-[260px] text-gray-500">
+                  Không có dữ liệu cho khoảng thời gian đã chọn
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height={260}>
+                  <PieChart>
+                    <Pie
+                      data={status}
+                      dataKey="count"
+                      nameKey="status"
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={55}
+                      outerRadius={90}
+                      paddingAngle={2}
+                      stroke="white"
+                      strokeWidth={2}
+                    >
+                      {status.map((item) => (
+                        <Cell
+                          key={item.status}
+                          fill={BOOKING_STATUS_COLORS[item.status].color}
+                        />
+                      ))}
+                    </Pie>
+
+                    <RTooltip
+                      formatter={(value: number, name, entry: any) => {
+                        const s = entry?.payload?.status;
+                        return [
+                          `${value} lượt`,
+                          BOOKING_STATUS_COLORS[s]?.label ?? s,
+                        ];
+                      }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              )}
             </div>
             <div className="flex flex-wrap gap-3 text-sm justify-center lg:flex-col lg:justify-start">
               {status.map((item) => (

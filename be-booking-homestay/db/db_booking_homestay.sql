@@ -401,7 +401,27 @@ CREATE TABLE `users` (
 
 DROP VIEW IF EXISTS `view_rooms`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `view_rooms` AS select `r`.`id` AS `id`,`r`.`name` AS `name`,`r`.`price` AS `price`,`r`.`street` AS `street`,concat_ws(', ',`r`.`street`,`w`.`name`,`d`.`name`,`p`.`name`) AS `fullAddress`,`r`.`hostId` AS `hostId`,`r`.`status` AS `status`,`r`.`createdAt` AS `createdAt` from (((`rooms` `r` left join `location_wards` `w` on((`w`.`id` = `r`.`wardId`))) left join `location_districts` `d` on((`d`.`id` = `r`.`districtId`))) left join `location_provinces` `p` on((`p`.`id` = `r`.`provinceId`)));
+CREATE OR REPLACE VIEW `view_rooms` AS
+SELECT 
+  r.`id`,
+  r.`name`,
+  r.`price`,
+  r.`street`,
+  CONCAT_WS(', ',
+    r.`street`,
+    w.`name`,
+    d.`name`,
+    p.`name`,
+    c.`name`
+  ) AS `fullAddress`,
+  r.`hostId`,
+  r.`status`,
+  r.`createdAt`
+FROM `rooms` r
+LEFT JOIN `location_wards` w ON w.`id` = r.`wardId`
+LEFT JOIN `location_districts` d ON d.`id` = r.`districtId`
+LEFT JOIN `location_provinces` p ON p.`id` = r.`provinceId`
+LEFT JOIN `location_countries` c ON c.`id` = r.`countryId`;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
 /*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;

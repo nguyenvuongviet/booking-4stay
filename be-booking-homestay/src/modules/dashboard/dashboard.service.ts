@@ -82,17 +82,47 @@ export class DashboardService {
     }));
   }
 
-  async getBookingStatusSummary() {
+  async getBookingStatusSummary(year?: number, month?: number) {
+    const where: any = { isDeleted: false };
+
+    if (year) {
+      where.createdAt = {
+        gte: new Date(year, 0, 1),
+        lt: new Date(year + 1, 0, 1),
+      };
+
+      if (month) {
+        where.createdAt = {
+          gte: new Date(year, month - 1, 1),
+          lt: new Date(year, month, 1),
+        };
+      }
+    }
+
     const results = await this.prisma.bookings.groupBy({
       by: ['status'],
       _count: { _all: true },
-      where: { isDeleted: false },
+      where,
     });
 
-    return results.map((r) => ({
-      status: r.status,
-      count: r._count._all,
-    }));
+    const ALL_STATUSES = [
+      'PENDING',
+      'PARTIALLY_PAID',
+      'CONFIRMED',
+      'CHECKED_IN',
+      'CHECKED_OUT',
+      'CANCELLED',
+      'WAITING_REFUND',
+      'REFUNDED',
+    ];
+
+    return ALL_STATUSES.map((s) => {
+      const found = results.find((r) => r.status === s);
+      return {
+        status: s,
+        count: found?._count._all ?? 0,
+      };
+    });
   }
 
   async getTopRooms(limit = 5) {

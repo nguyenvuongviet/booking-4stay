@@ -65,7 +65,7 @@ export default function HeroSection({
         muted
         playsInline
         className="absolute inset-0 w-full h-full object-cover -z-10"
-        src="/video_bg.mp4"
+        src="https://res.cloudinary.com/nguyenvuongviet/video/upload/v1765448600/video_bg_omgnlu.mp4"
       />
 
       {/* LAYER LÀM MỜ + TỐI */}
@@ -78,7 +78,11 @@ export default function HeroSection({
             deleteSpeed={60}
             pause={1000}
             loop={true}
-            className={`elegant-heading text-gradient ${lang === "vi" ? "md:text-7xl m-4 min-h-46" : " md:text-8xl mb-4 min-h-55 "}`}
+            className={`elegant-heading text-gradient ${
+              lang === "vi"
+                ? "md:text-7xl m-4 min-h-46"
+                : " md:text-8xl mb-4 min-h-55 "
+            }`}
           />
 
           <ScrollFade

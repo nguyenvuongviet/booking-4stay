@@ -109,7 +109,9 @@ export default function ProfilePage() {
     }
   };
 
-  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const file = event.target.files?.[0];
     if (!file || !user) return;
 
@@ -233,34 +235,56 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <Tabs
+            value={activeTab}
+            onValueChange={setActiveTab}
+            className="w-full"
+          >
             <TabsList className="grid w-full grid-cols-3 gap-2 bg-transparent p-0 md:gap-4">
-              <TabsTrigger value="profile" className="rounded-lg shadow-sm transition-all gap-2 py-3">
+              <TabsTrigger
+                value="profile"
+                className="rounded-lg shadow-sm transition-all gap-2 py-3"
+              >
                 <User className="h-4 w-4" />
                 <span className="hidden sm:inline">{t("tab_profile")}</span>
               </TabsTrigger>
 
-              <TabsTrigger value="bookings" className="rounded-lg shadow-sm transition-all gap-2 py-3">
+              <TabsTrigger
+                value="bookings"
+                className="rounded-lg shadow-sm transition-all gap-2 py-3"
+              >
                 <BookOpen className="h-4 w-4" />
                 <span className="hidden sm:inline">{t("tab_bookings")}</span>
               </TabsTrigger>
 
-              <TabsTrigger value="rewards" className="rounded-lg shadow-sm transition-all gap-2 py-3">
+              <TabsTrigger
+                value="rewards"
+                className="rounded-lg shadow-sm transition-all gap-2 py-3"
+              >
                 <Gift className="h-5 w-5" />
                 <span className="hidden sm:inline">{t("tab_rewards")}</span>
               </TabsTrigger>
             </TabsList>
 
             {/* PROFILE TAB */}
-            <TabsContent value="profile" className="mt-2 px-16 py-8 rounded-xl space-y-4 bg-card ">
+            <TabsContent
+              value="profile"
+              className="mt-2 px-16 py-8 rounded-xl space-y-4 bg-card "
+            >
               <div className="flex justify-between mb-8">
-                <h1 className="text-4xl elegant-heading mb-4">{t("my_profile")}</h1>
+                <h1 className="text-4xl elegant-heading mb-4">
+                  {t("my_profile")}
+                </h1>
                 <Button
                   onClick={isEditing ? handleSubmit : handleEditClick}
                   className="gap-2 rounded-lg"
                   variant={isEditing ? "default" : "secondary"}
                 >
-                  {isEditing ? <Save className="h-4 w-4" /> : <Edit2 className="h-4 w-4" />}
+                  {isEditing ? (
+                    <Save className="h-4 w-4" />
+                  ) : (
+                    <Edit2 className="h-4 w-4" />
+                  )}
                   {isEditing ? t("save") : t("edit")}
                 </Button>
               </div>
@@ -270,14 +294,20 @@ export default function ProfilePage() {
                 {/* Avatar */}
                 <div className="w-full md:w-1/3 flex justify-center items-center">
                   <div className="relative w-48 h-48 rounded-full overflow-hidden group">
-                    <img className="w-full h-full object-cover" src={avatarUrl} alt="avatar" />
+                    <img
+                      className="w-full h-full object-cover"
+                      src={avatarUrl}
+                      alt="avatar"
+                    />
                     {isEditing && (
                       <div
                         className="absolute inset-0 flex flex-col items-center justify-center bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer rounded-full"
                         onClick={() => fileInputRef.current?.click()}
                       >
                         <Upload className="text-white h-6 w-6 mb-1" />
-                        <span className="text-xs text-white">{t("upload")}</span>
+                        <span className="text-xs text-white">
+                          {t("upload")}
+                        </span>
                       </div>
                     )}
                     <Input
@@ -295,7 +325,9 @@ export default function ProfilePage() {
                   <div className="w-full md:w-2/3 grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* Name */}
                     <div className="space-y-2">
-                      <Label htmlFor="firstName" className="elegant-subheading">{t("firstName")}</Label>
+                      <Label htmlFor="firstName" className="elegant-subheading">
+                        {t("firstName")}
+                      </Label>
                       <Input
                         id="firstName"
                         value={firstName}
@@ -305,7 +337,9 @@ export default function ProfilePage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="lastName" className="elegant-subheading">{t("lastName")}</Label>
+                      <Label htmlFor="lastName" className="elegant-subheading">
+                        {t("lastName")}
+                      </Label>
                       <Input
                         id="lastName"
                         value={lastName}
@@ -317,7 +351,9 @@ export default function ProfilePage() {
 
                     {/* Contact Info */}
                     <div className="space-y-2 md:col-span-2">
-                      <Label htmlFor="email" className="elegant-subheading">Email</Label>
+                      <Label htmlFor="email" className="elegant-subheading">
+                        Email
+                      </Label>
                       <Input
                         id="email"
                         type="email"
@@ -327,7 +363,9 @@ export default function ProfilePage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="phone" className="elegant-subheading">{t("phone")}</Label>
+                      <Label htmlFor="phone" className="elegant-subheading">
+                        {t("phone")}
+                      </Label>
                       <Input
                         id="phone"
                         type="tel"
@@ -339,7 +377,9 @@ export default function ProfilePage() {
 
                     {/* Personal Info */}
                     <div className="space-y-2">
-                      <Label htmlFor="dob" className="elegant-subheading">{t("dob")}</Label>
+                      <Label htmlFor="dob" className="elegant-subheading">
+                        {t("dob")}
+                      </Label>
                       <div className="relative w-full">
                         <DatePicker
                           id="dob"
@@ -359,8 +399,14 @@ export default function ProfilePage() {
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="gender" className="elegant-subheading">{t("gender")}</Label>
-                      <Select value={gender} onValueChange={setGender} disabled={!isEditing}>
+                      <Label htmlFor="gender" className="elegant-subheading">
+                        {t("gender")}
+                      </Label>
+                      <Select
+                        value={gender}
+                        onValueChange={setGender}
+                        disabled={!isEditing}
+                      >
                         <SelectTrigger
                           className={`w-full bg-input rounded-xl placeholder:text-muted ${
                             !isEditing ? "opacity-70 cursor-not-allowed" : ""
@@ -376,8 +422,14 @@ export default function ProfilePage() {
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="country" className="elegant-subheading">{t("country")}</Label>
-                      <Select value={country} onValueChange={setCountry} disabled={!isEditing}>
+                      <Label htmlFor="country" className="elegant-subheading">
+                        {t("country")}
+                      </Label>
+                      <Select
+                        value={country}
+                        onValueChange={setCountry}
+                        disabled={!isEditing}
+                      >
                         <SelectTrigger
                           className={`w-full bg-input rounded-xl placeholder:text-muted ${
                             !isEditing ? "opacity-70 cursor-not-allowed" : ""
@@ -402,8 +454,13 @@ export default function ProfilePage() {
             </TabsContent>
 
             {/* BOOKINGS TAB */}
-            <TabsContent value="bookings" className="mt-2 px-16 py-8 rounded-xl space-y-4 bg-card ">
-              <h2 className="elegant-heading text-4xl my-6">{t("history_booking")}</h2>
+            <TabsContent
+              value="bookings"
+              className="mt-2 px-16 py-8 rounded-xl space-y-4 bg-card "
+            >
+              <h2 className="elegant-heading text-4xl my-6">
+                {t("history_booking")}
+              </h2>
 
               {loading ? (
                 <div className="flex items-center justify-center py-8">
@@ -416,12 +473,17 @@ export default function ProfilePage() {
                 <div className="flex flex-col items-center justify-center py-16 text-center text-muted-foreground ">
                   <CalendarX className="h-12 w-12 mb-4 text-gray-400" />
                   <p className="text-lg font-medium">{t("no_booking")}</p>
-                  <p className="text-sm text-gray-500 mt-1">{t("no_booking_desc")}</p>
+                  <p className="text-sm text-gray-500 mt-1">
+                    {t("no_booking_desc")}
+                  </p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 gap-8 mt-2 p-8 rounded-xl space-y-4">
                   {bookings.map((booking, index) => (
-                    <BookingCard key={`${booking.id}-${index}`} booking={booking} />
+                    <BookingCard
+                      key={`${booking.id}-${index}`}
+                      booking={booking}
+                    />
                   ))}
                   {loadingMore && (
                     <div className="flex items-center justify-center py-6">
@@ -437,7 +499,8 @@ export default function ProfilePage() {
                       <div className="text-center text-muted">
                         <p className="text-sm ">{t("end_result")}</p>
                         <p className="text-xs text-muted-foreground">
-                          {t("total_found")} {bookings.length} rooms {t("found")}
+                          {t("total_found")} {bookings.length} rooms{" "}
+                          {t("found")}
                         </p>
                       </div>
                     </div>
@@ -447,7 +510,10 @@ export default function ProfilePage() {
             </TabsContent>
 
             {/* REWARDS TAB */}
-            <TabsContent value="rewards" className="mt-2 px-16 py-8 rounded-xl space-y-4 bg-card ">
+            <TabsContent
+              value="rewards"
+              className="mt-2 px-16 py-8 rounded-xl space-y-4 bg-card "
+            >
               <h2 className="text-3xl elegant-sans">{t("my_rewards")}</h2>
               {/* Render rewards content here */}
               <div className="grid gap-6 md:grid-cols-3">

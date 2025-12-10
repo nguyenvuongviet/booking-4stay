@@ -1,6 +1,6 @@
-import Image from "next/image";
-import { User as UserIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { User as UserIcon } from "lucide-react";
+import Image from "next/image";
 
 interface UserAvatarProps {
   avatarUrl: string | null | undefined;
@@ -10,9 +10,9 @@ interface UserAvatarProps {
 }
 
 const sizeMap = {
-  sm: { wrapper: "w-8 h-8", icon: "w-4 h-4" },
-  md: { wrapper: "w-10 h-10", icon: "w-5 h-5" },
-  lg: { wrapper: "w-12 h-12", icon: "w-6 h-6" },
+  sm: { wrapper: "w-8 h-8", icon: "w-5 h-5" },
+  md: { wrapper: "w-10 h-10", icon: "w-6 h-6" },
+  lg: { wrapper: "w-12 h-12", icon: "w-8 h-8" },
 };
 
 export function UserAvatar({
@@ -42,7 +42,7 @@ export function UserAvatar({
     <div
       className={cn(
         wrapper,
-        "bg-muted rounded-full flex items-center justify-center",
+        "bg-gray-300 rounded-full flex items-center justify-center",
         className
       )}
     >

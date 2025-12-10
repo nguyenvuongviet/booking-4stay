@@ -45,6 +45,79 @@ BEGIN
   );
 END $$
 
+DROP TRIGGER IF EXISTS `trg_country_name_update` $$
+CREATE TRIGGER `trg_country_name_update`
+AFTER UPDATE ON `location_countries`
+FOR EACH ROW
+BEGIN
+  IF NEW.`name` <> OLD.`name` THEN
+    UPDATE `rooms`
+    SET `fullAddress` = CONCAT_WS(', ',
+      `street`,
+      (SELECT `name` FROM `location_wards` WHERE `id` = `rooms`.`wardId`),
+      (SELECT `name` FROM `location_districts` WHERE `id` = `rooms`.`districtId`),
+      (SELECT `name` FROM `location_provinces` WHERE `id` = `rooms`.`provinceId`),
+      NEW.`name`
+    )
+    WHERE `countryId` = NEW.`id`;
+  END IF;
+END $$
+
+DROP TRIGGER IF EXISTS `trg_province_name_update` $$
+CREATE TRIGGER `trg_province_name_update`
+AFTER UPDATE ON `location_provinces`
+FOR EACH ROW
+BEGIN
+  IF NEW.`name` <> OLD.`name` THEN
+    UPDATE `rooms`
+    SET `fullAddress` = CONCAT_WS(', ',
+      `street`,
+      (SELECT `name` FROM `location_wards` WHERE `id` = `rooms`.`wardId`),
+      (SELECT `name` FROM `location_districts` WHERE `id` = `rooms`.`districtId`),
+      NEW.`name`,
+      (SELECT `name` FROM `location_countries` WHERE `id` = `rooms`.`countryId`)
+    )
+    WHERE `provinceId` = NEW.`id`;
+  END IF;
+END $$
+
+DROP TRIGGER IF EXISTS `trg_district_name_update` $$
+CREATE TRIGGER `trg_district_name_update`
+AFTER UPDATE ON `location_districts`
+FOR EACH ROW
+BEGIN
+  IF NEW.`name` <> OLD.`name` THEN
+    UPDATE `rooms`
+    SET `fullAddress` = CONCAT_WS(', ',
+      `street`,
+      (SELECT `name` FROM `location_wards` WHERE `id` = `rooms`.`wardId`),
+      NEW.`name`,
+      (SELECT `name` FROM `location_provinces` WHERE `id` = `rooms`.`provinceId`),
+      (SELECT `name` FROM `location_countries` WHERE `id` = `rooms`.`countryId`)
+    )
+    WHERE `districtId` = NEW.`id`;
+  END IF;
+END $$
+
+DROP TRIGGER IF EXISTS `trg_ward_name_update` $$
+CREATE TRIGGER `trg_ward_name_update`
+AFTER UPDATE ON `location_wards`
+FOR EACH ROW
+BEGIN
+  IF NEW.`name` <> OLD.`name` THEN
+    UPDATE `rooms`
+    SET `fullAddress` = CONCAT_WS(', ',
+      `street`,
+      NEW.`name`,
+      (SELECT `name` FROM `location_districts` WHERE `id` = `rooms`.`districtId`),
+      (SELECT `name` FROM `location_provinces` WHERE `id` = `rooms`.`provinceId`),
+      (SELECT `name` FROM `location_countries` WHERE `id` = `rooms`.`countryId`)
+    )
+    WHERE `wardId` = NEW.`id`;
+  END IF;
+END $$
+
+
 -- After UPDATE on `rooms`
 DROP TRIGGER IF EXISTS `trg_rooms_fullAddress_update` $$
 CREATE TRIGGER `trg_rooms_fullAddress_update`

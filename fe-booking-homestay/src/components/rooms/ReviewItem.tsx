@@ -1,6 +1,7 @@
-import React from "react";
 import { ReviewItem as ReviewItemType } from "@/models/Review";
 import { Star } from "lucide-react";
+import React from "react";
+import { UserAvatar } from "../UserAvatar";
 
 export const ReviewItem: React.FC<{ review: ReviewItemType }> = ({
   review,
@@ -44,11 +45,7 @@ export const ReviewItem: React.FC<{ review: ReviewItemType }> = ({
   return (
     <div className="border-b py-4">
       <div className="flex items-center gap-3 mb-2">
-        <img
-          src={user.avatar || "/default-avatar.png"}
-          alt={user.name}
-          className="w-10 h-10 rounded-full object-cover"
-        />
+        <UserAvatar avatarUrl={user?.avatar} fullName={user.name} size="md" />
         <div>
           <p className="elegant-sans text-foreground">{user.name}</p>
           <p className="text-sm text-muted">
