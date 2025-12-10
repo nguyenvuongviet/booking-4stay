@@ -27,9 +27,15 @@ export class DashboardController {
     return this.dashboardService.getRecentBookings();
   }
 
-  @Get('bookings/status')
-  async getBookingStatusSummary() {
-    return this.dashboardService.getBookingStatusSummary();
+  @Get('bookings-status')
+  async getBookingStatusSummary(
+    @Query('year') year?: string,
+    @Query('month') month?: string,
+  ) {
+    return this.dashboardService.getBookingStatusSummary(
+      year ? Number(year) : undefined,
+      month ? Number(month) : undefined,
+    );
   }
 
   @Get('popular-rooms')

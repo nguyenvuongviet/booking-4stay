@@ -58,11 +58,14 @@ export const getDashboardRevenue = async (
   }
 };
 
-export const getBookingStatusSummary = async (): Promise<
-  BookingStatusSummary[]
-> => {
+export const getBookingStatusSummary = async (
+  year?: number,
+  month?: number
+): Promise<BookingStatusSummary[]> => {
   try {
-    const resp = await api.get("/admin/dashboard/bookings/status");
+    const resp = await api.get("/admin/dashboard/bookings-status", {
+      params: { year, month },
+    });
     return resp.data.data;
   } catch (error) {
     console.error("GetBookingStatusSummary Error:", error);

@@ -41,12 +41,15 @@ export function BookingActionDialog({ dialog, onCancel, onConfirm }: Props) {
       title={titles[dialog.mode]}
       description={
         dialog.mode === "refund"
-          ? `Số tiền tối đa có thể hoàn: ${dialog.maxAmount?.toLocaleString()}₫`
+          ? `Số tiền tối đa có thể hoàn = ${dialog.maxAmount?.toLocaleString()}₫`
           : undefined
       }
       placeholder={placeholders[dialog.mode]}
       type={dialog.mode === "reject" ? "text" : "number"}
       confirmText={confirmTexts[dialog.mode]}
+      defaultValue={
+        dialog.mode === "refund" ? dialog.maxAmount?.toString() : ""
+      }
       onCancel={onCancel}
       onConfirm={onConfirm}
     />
