@@ -38,6 +38,7 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 import toast from "react-hot-toast";
 
 export default function ProfilePage() {
@@ -389,6 +390,8 @@ export default function ProfilePage() {
                           className={`w-full rounded-xl border border-input bg-input px-3 py-2 text-sm shadow-xs outline-none ${
                             !isEditing ? "opacity-70 cursor-not-allowed" : ""
                           }`}
+                          wrapperClassName="w-full"
+
                           maxDate={new Date()}
                           disabled={!isEditing}
                         />

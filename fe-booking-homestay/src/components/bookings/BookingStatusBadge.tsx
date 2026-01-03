@@ -1,5 +1,5 @@
 import { useLang } from "@/context/lang-context";
-import { CheckCheck, CheckCircle, Clock, XCircle } from "lucide-react";
+import { CheckCheck, CheckCircle, Clock, DollarSign, XCircle } from "lucide-react";
 import React from "react";
 
 interface BookingStatusBadgeProps {
@@ -42,8 +42,8 @@ export const BookingStatusBadge: React.FC<BookingStatusBadgeProps> = ({
         };
       case "PARTIALLY_PAID":
         return {
-          icon: <CheckCheck className="w-4 h-4" />,
-          color: "bg-blue-100 text-blue-700 text-sm",
+          icon: <CheckCircle className="w-4 h-4" />,
+          color: "bg-green-100 text-green-700 text-sm",
           label: t("Confirmed"),
         };
       case "CANCELLED":
@@ -60,14 +60,14 @@ export const BookingStatusBadge: React.FC<BookingStatusBadgeProps> = ({
         };
       case "WAITING_REFUND":
         return {
-          icon: <CheckCircle className="w-4 h-4" />,
-          color: "bg-red-100 text-red-700 text-sm",
+          icon: <DollarSign className="w-4 h-4" />,
+          color: "bg-orange-100 text-orange-700 text-sm",
           label: t("Refund"),
         };
       case "REFUNDED":
         return {
-          icon: <CheckCircle className="w-4 h-4" />,
-          color: "bg-red-100 text-red-700 text-sm",
+          icon: <CheckCheck className="w-4 h-4" />,
+          color: "bg-pink-100 text-pink-700 text-sm",
           label: t("Refunded"),
         };
       default:

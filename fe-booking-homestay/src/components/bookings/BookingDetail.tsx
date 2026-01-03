@@ -114,7 +114,7 @@ export const BookingDetail = ({
       setBooking((prev) => ({
         ...prev,
         status: "CANCELLED",
-        cancelReason: "Timeout: user did not complete payment",
+        cancelReason: "Booking đã bị hủy do quá thời gian thanh toán!",
         refundAmount: 0,
       }));
 

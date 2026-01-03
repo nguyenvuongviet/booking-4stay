@@ -14,7 +14,7 @@ import { format, addMonths } from "date-fns";
 import { useLang } from "@/context/lang-context";
 
 interface DateRangePickerProps {
-  id?:number|string;
+  id?: number | string;
   value?: DateRange;
   soldOutDates?: Date[];
   onChange?: (range: DateRange | undefined) => void;
@@ -33,35 +33,33 @@ export default function DateRangePicker({
     DateRange | undefined
   >(value);
   const [currentMonth, setCurrentMonth] = React.useState<Date>(new Date());
-  const {t} = useLang();
+  const { t } = useLang();
 
   const formatLabel = (date?: Date) =>
     date ? format(date, "MMM dd, yyyy") : "";
 
   const handlePick = React.useCallback(
-    (day?: Date, range?: DateRange) => {
-      // Nếu gọi từ onDayClick
-      if (day) {
-        // Nếu chưa chọn gì hoặc đã chọn xong 1 range → bắt đầu range mới
-        if (!selectedRange || (selectedRange.from && selectedRange.to)) {
+    (day?: Date, range?: DateRange) => {      
+      if(!day) return;
+      const hasCompleteRange = selectedRange?.from && selectedRange?.to;
+      if (!selectedRange || hasCompleteRange) {
           const newRange: DateRange = { from: day, to: undefined };
           setSelectedRange(newRange);
           onChange?.(newRange);
           return;
         }
 
-        // Nếu đang chọn dở (from đã có, to chưa có)
-        const isSameDay = selectedRange.from!.getTime() === day.getTime();
-        const newRange: DateRange = isSameDay
-          ? { from: selectedRange.from, to: undefined }
-          : { from: selectedRange.from, to: day };
-
+        const from = selectedRange.from!;
+        const isSameDay = from.getTime() === day.getTime();
+        //click cùng ngày -> reset to 
+        let newRange: DateRange = isSameDay
+        ? { from, to: undefined } : day < from
+        ? { from: day, to: from }  : { from, to: day };
         setSelectedRange(newRange);
         onChange?.(newRange);
-
-        if (autoClose && newRange.from && newRange.to) setOpen(false);
-        return;
-      }
+        
+        if (autoClose && newRange.from && newRange.to) 
+          setOpen(false);
     },
     [selectedRange, onChange, autoClose]
   );
@@ -77,7 +75,7 @@ export default function DateRangePicker({
             className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground"
             size={20}
           />
-          <div className="ml-6 elegant-subheading truncate">
+          <div className="ml-8 elegant-subheading truncate">
             {selectedRange?.from ? (
               formatLabel(selectedRange.from)
             ) : (
