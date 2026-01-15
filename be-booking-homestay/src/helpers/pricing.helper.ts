@@ -29,4 +29,32 @@ export class PricingHelper {
     }
     return total;
   }
+
+  async applyLoyaltyDiscount(userId: number, rawTotal: number) {
+    const loyalty = await this.prisma.loyalty_program.findFirst({
+      where: { userId },
+      include: { levels: true },
+    });
+
+    if (!loyalty || !loyalty.levels || !loyalty.levels.isActive) {
+      return {
+        totalPrice: rawTotal,
+        discountAmount: 0,
+      };
+    }
+
+    const percent = Number(loyalty.levels.discountPercent);
+    const maxDiscount = Number(loyalty.levels.maxDiscountAmount ?? 0);
+
+    let discount = (rawTotal * percent) / 100;
+
+    if (maxDiscount > 0) {
+      discount = Math.min(discount, maxDiscount);
+    }
+
+    return {
+      totalPrice: rawTotal - discount,
+      discountAmount: discount,
+    };
+  }
 }

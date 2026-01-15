@@ -187,13 +187,14 @@ export class BookingService {
     if (hasOverlap)
       throw new BadRequestException('Khoảng ngày đã có người giữ hoặc bị khóa');
 
-    const totalPrice = await this.pricing.priceForRange(
+    const rawTotal = await this.pricing.priceForRange(
       roomId,
       Number(room.price),
       inDate,
       outDate,
     );
-
+    const { totalPrice, discountAmount } =
+      await this.pricing.applyLoyaltyDiscount(userId, rawTotal);
     const booking = await this.prisma.bookings.create({
       data: {
         userId,
@@ -206,6 +207,8 @@ export class BookingService {
         checkOut: outDate,
         adults,
         children,
+        rawTotalPrice: rawTotal,
+        discountAmount,
         totalPrice,
         status: 'PENDING',
         paymentMethod,
