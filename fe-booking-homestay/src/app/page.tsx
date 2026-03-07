@@ -1,11 +1,11 @@
 "use client";
 
-import Footer from "@/components/Footer";
-import Header from "@/components/Header";
-import FeaturesSection from "@/components/home/FeaturesSection";
-import HeroSection from "@/components/home/HeroSection";
-import PopularDestinations from "@/components/home/PopularDestinations";
-import RoomSection from "@/components/home/RoomSection";
+import Footer from "@/_components/Footer";
+import Header from "@/_components/Header";
+import FeaturesSection from "@/_components/home/FeaturesSection";
+import HeroSection from "@/_components/home/HeroSection";
+import PopularDestinations from "@/_components/home/PopularDestinations";
+import RoomSection from "@/_components/home/RoomSection";
 import { Location } from "@/models/Location";
 import { Room } from "@/models/Room";
 import { location, room_all, search_location } from "@/services/roomApi";
@@ -142,7 +142,7 @@ export default function HomePage() {
       }).toString();
 
       setTimeout(() => {
-        router.push(`/room-list?${query}`);
+        router.push(`/room?${query}`);
       }, 300);
     } catch (error) {
       console.error("search room error: ", error);

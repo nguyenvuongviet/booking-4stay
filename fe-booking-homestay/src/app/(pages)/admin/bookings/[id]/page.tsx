@@ -1,8 +1,8 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { UserAvatar } from "@/components/UserAvatar";
+import { Button } from "@/_components/ui/button";
+import { Card } from "@/_components/ui/card";
+import { UserAvatar } from "@/_components/UserAvatar";
 import { formatDate } from "@/lib/utils/date";
 import { getBookingById } from "@/services/admin/bookingsApi";
 import { format } from "date-fns";

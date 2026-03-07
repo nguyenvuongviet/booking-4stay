@@ -1,4 +1,4 @@
-import { RoomDetailClient } from "@/components/rooms/RoomDetail";
+import { RoomDetailClient } from "@/app/(pages)/room/_component/RoomDetail";
 
 export default async function RoomDetailPage({
   params,

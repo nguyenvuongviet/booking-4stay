@@ -1,7 +1,7 @@
 "use client";
 
-import { Card } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card } from "@/_components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/_components/ui/tabs";
 import { useState } from "react";
 
 import { RefreshButton } from "../_components/RefreshButton";

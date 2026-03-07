@@ -1,7 +1,7 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Button } from "@/_components/ui/button";
+import { Card } from "@/_components/ui/card";
 import { formatDate } from "@/lib/utils/date";
 import { Booking } from "@/types/booking";
 import { saveAs } from "file-saver";

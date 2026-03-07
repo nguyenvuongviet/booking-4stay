@@ -1,6 +1,6 @@
 "use client";
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/_components/ui/tabs";
 import { User } from "@/types/user";
 import { memo, useState } from "react";
 import UserBookingsTab from "../tabs/UserBookingsTab";

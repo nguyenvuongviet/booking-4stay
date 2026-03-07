@@ -1,12 +1,12 @@
 "use client";
 
 import { UserCreateModal } from "@/app/(pages)/admin/users/_components/UserCreateModal";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { useToast } from "@/components/ui/use-toast";
-import { UserAvatar } from "@/components/UserAvatar";
+import { Badge } from "@/_components/ui/badge";
+import { Button } from "@/_components/ui/button";
+import { Card } from "@/_components/ui/card";
+import { Input } from "@/_components/ui/input";
+import { useToast } from "@/_components/ui/use-toast";
+import { UserAvatar } from "@/_components/UserAvatar";
 import { formatDate } from "@/lib/utils/date";
 import { handleDeleteEntity } from "@/lib/utils/handleDelete";
 import { createUser, deleteUser, getAllUsers } from "@/services/admin/usersApi";

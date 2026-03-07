@@ -1,9 +1,9 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { toast } from "@/components/ui/use-toast";
-import { UserAvatar } from "@/components/UserAvatar";
+import { Badge } from "@/_components/ui/badge";
+import { Button } from "@/_components/ui/button";
+import { toast } from "@/_components/ui/use-toast";
+import { UserAvatar } from "@/_components/UserAvatar";
 import { formatDate } from "@/lib/utils/date";
 import { uploadUserAvatar } from "@/services/admin/usersApi";
 import { User } from "@/types/user";

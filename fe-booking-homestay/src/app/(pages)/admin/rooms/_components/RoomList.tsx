@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Card } from "@/components/ui/card";
+import { Card } from "@/_components/ui/card";
 import { RoomCard } from "./RoomCard";
 import { Pagination } from "../../_components/Pagination";
 

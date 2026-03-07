@@ -1,6 +1,6 @@
 "use client";
 
-import Loader from "@/components/loader/Loader";
+import Loader from "@/_components/ui/loader";
 import { getCurrentUser, isAdmin } from "@/lib/utils/auth-client";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useMemo, useState } from "react";

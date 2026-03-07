@@ -1,4 +1,4 @@
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "@/_components/ui/use-toast";
 
 /**
  * Xóa 1 resource với confirm + toast

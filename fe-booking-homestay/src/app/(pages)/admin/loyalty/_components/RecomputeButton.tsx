@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@/_components/ui/button";
 import { recomputeAllUserLevels } from "@/services/admin/loyaltyApi";
 import { Loader2, Sparkles } from "lucide-react";
 import { useState } from "react";

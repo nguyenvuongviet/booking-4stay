@@ -1,6 +1,6 @@
 "use client";
 
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/_components/ui/use-toast";
 import { deleteRoom, getAllRooms } from "@/services/admin/roomsApi";
 import { Room } from "@/types/room";
 import { useCallback, useEffect, useMemo, useState } from "react";

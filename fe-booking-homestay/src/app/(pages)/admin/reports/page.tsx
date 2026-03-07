@@ -15,8 +15,8 @@ import {
   Pie,
   Cell,
 } from "recharts";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card } from "@/_components/ui/card";
+import { Button } from "@/_components/ui/button";
 import { Download, Calendar } from "lucide-react";
 
 const revenueData = [

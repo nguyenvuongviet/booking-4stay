@@ -1,8 +1,8 @@
 "use client";
 
 import { Pagination } from "@/app/(pages)/admin/_components/Pagination";
-import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
+import { Badge } from "@/_components/ui/badge";
+import { Card } from "@/_components/ui/card";
 import { formatDate } from "@/lib/utils/date";
 import { getBookingUser } from "@/services/admin/usersApi";
 import { Booking } from "@/types/booking";

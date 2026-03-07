@@ -1,6 +1,6 @@
 "use client";
 
-import Loader from "@/components/loader/Loader";
+import Loader from "@/_components/ui/loader";
 import { LocationCard } from "./LocationCard";
 import { BaseLocation } from "@/services/admin/locationsApi";
 

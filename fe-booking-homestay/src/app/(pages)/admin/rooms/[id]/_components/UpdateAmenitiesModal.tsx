@@ -1,7 +1,7 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/_components/ui/button";
+import { Checkbox } from "@/_components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -9,7 +9,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from "@/_components/ui/dialog";
 import { getAmenityIcon } from "@/constants/amenity-icons";
 import type { Amenity } from "@/types/room";
 

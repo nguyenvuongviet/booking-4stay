@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@/_components/ui/button";
 import { Plus } from "lucide-react";
 import { RefreshButton } from "../../_components/RefreshButton";
 

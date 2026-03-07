@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@/_components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -8,9 +8,9 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+} from "@/_components/ui/dialog";
+import { Input } from "@/_components/ui/input";
+import { Textarea } from "@/_components/ui/textarea";
 import type { Room } from "@/types/room";
 import { useEffect } from "react";
 import { LocationSelector } from "../../_components/location-selector";

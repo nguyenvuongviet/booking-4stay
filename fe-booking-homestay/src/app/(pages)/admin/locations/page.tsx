@@ -1,6 +1,6 @@
 "use client";
 
-import { Card } from "@/components/ui/card";
+import { Card } from "@/_components/ui/card";
 import { useState } from "react";
 import { useLocations } from "./_hooks/useLocations";
 import { LocationHeader } from "./_components/LocationHeader";

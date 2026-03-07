@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@/_components/ui/button";
 import { RefreshCcw } from "lucide-react";
 import { useState } from "react";
 import toast from "react-hot-toast";

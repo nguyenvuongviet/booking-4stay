@@ -1,4 +1,4 @@
-import { Toaster as ShadcnToaster } from "@/components/ui/toaster";
+import { Toaster as ShadcnToaster } from "@/_components/ui/toaster";
 import { GOOGLE_CLIENT_ID } from "@/constants/app.constant";
 import { AuthProvider } from "@/context/auth-context";
 import PageTransition from "@/styles/animations/PageTransition";

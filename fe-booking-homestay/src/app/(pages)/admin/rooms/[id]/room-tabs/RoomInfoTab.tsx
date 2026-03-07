@@ -1,8 +1,8 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Badge } from "@/_components/ui/badge";
+import { Button } from "@/_components/ui/button";
+import { Card } from "@/_components/ui/card";
 import { getAmenityIcon } from "@/constants/amenity-icons";
 import type { Room } from "@/types/room";
 import {

@@ -1,8 +1,8 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { Button } from "@/_components/ui/button";
+import { Card } from "@/_components/ui/card";
+import { Input } from "@/_components/ui/input";
 import { useAuth } from "@/context/auth-context";
 import { Bell, Lock, Save, Settings, User } from "lucide-react";
 import { useState } from "react";
