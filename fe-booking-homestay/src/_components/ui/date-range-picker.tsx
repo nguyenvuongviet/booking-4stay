@@ -37,31 +37,55 @@ export default function DateRangePicker({
 
   const formatLabel = (date?: Date) =>
     date ? format(date, "MMM dd, yyyy") : "";
+  const parsedSoldOutDates = React.useMemo(
+    () =>
+      (soldOutDates || []).map(
+        (d) => (d instanceof Date ? d : new Date(d + "T00:00:00"))
+      ),
+    [soldOutDates]
+  );
+  const isRangeValid = (from: Date, to: Date) => {
+    let d = new Date(from);
+
+    while (d <= to) {
+      if (soldOutDates?.some((date) => format(date, "MMM dd, yyyy") === formatLabel(d))) return false;
+      d.setDate(d.getDate() + 1);
+    }
+
+    return true;
+  };
 
   const handlePick = React.useCallback(
-    (day?: Date, range?: DateRange) => {      
-      if(!day) return;
+    (day?: Date, range?: DateRange) => {
+      if (!day) return;
       const hasCompleteRange = selectedRange?.from && selectedRange?.to;
       if (!selectedRange || hasCompleteRange) {
-          const newRange: DateRange = { from: day, to: undefined };
-          setSelectedRange(newRange);
-          onChange?.(newRange);
-          return;
-        }
-
-        const from = selectedRange.from!;
-        const isSameDay = from.getTime() === day.getTime();
-        //click cùng ngày -> reset to 
-        let newRange: DateRange = isSameDay
-        ? { from, to: undefined } : day < from
-        ? { from: day, to: from }  : { from, to: day };
+        const newRange: DateRange = { from: day, to: undefined };
         setSelectedRange(newRange);
         onChange?.(newRange);
-        
-        if (autoClose && newRange.from && newRange.to) 
-          setOpen(false);
+        return;
+      }
+
+      const from = selectedRange.from!;
+      const isSameDay = from.getTime() === day.getTime();
+      //click cùng ngày -> reset to 
+      let newRange: DateRange = isSameDay
+        ? { from, to: undefined } : day < from
+          ? { from: day, to: from } : { from, to: day };
+
+      if (newRange.from && newRange.to) {
+        if (!isRangeValid(newRange.from, newRange.to)) {
+          setSelectedRange({ from: day, to: undefined });
+          return;
+        }
+      }
+      setSelectedRange(newRange);
+      onChange?.(newRange);
+
+      if (autoClose && newRange.from && newRange.to)
+        setOpen(false);
     },
-    [selectedRange, onChange, autoClose]
+    [selectedRange, onChange, autoClose, soldOutDates]
   );
 
   return (
@@ -107,10 +131,10 @@ export default function DateRangePicker({
                     ? setCurrentMonth(date) // prev bên trái
                     : setCurrentMonth(addMonths(date, -1)) // next bên phải
               }
-              disabled={[...(soldOutDates || []), { before: new Date() }]}
+              disabled={[...parsedSoldOutDates, { before: new Date() }]}
               modifiers={{
                 soldOut: (date) =>
-                  (soldOutDates || []).some(
+                  parsedSoldOutDates.some(
                     (d) => d.toDateString() === date.toDateString()
                   ),
               }}

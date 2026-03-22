@@ -9,7 +9,7 @@ import { useLang } from "@/context/lang-context";
 import { Room } from "@/models/Room";
 import { get_unavailable_dates } from "@/services/bookingApi";
 import { room_available, room_detail } from "@/services/roomApi";
-import { format } from "date-fns";
+import { format, parse } from "date-fns";
 import { Loader2, Mail, MapPin, Phone, Star, Users } from "lucide-react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -57,6 +57,9 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
         const dataRoom = await room_detail(roomId);
         const dataDate = await get_unavailable_dates(roomId);
         setRoom(dataRoom);
+        const parsedDates = dataDate.map(
+          (d: string) => new Date(d + "T00:00:00")
+        );
         setSoldOutDates(dataDate);
       } catch (error) {
         console.error("Fetch room failed:", error);
@@ -74,8 +77,8 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
     const co = searchParams.get("checkOut");
     const status = searchParams.get("status");
 
-    if (ci) setCheckIn(new Date(ci));
-    if (co) setCheckOut(new Date(co));
+    if (ci) setCheckIn(parse(ci, "yyyy-MM-dd", new Date()));
+    if (co) setCheckOut(parse(co, "yyyy-MM-dd", new Date()));
     if (ad) setAdults(Number(ad));
     if (ch) setChildren(Number(ch));
     setAvailable(status ? status === "Available" : true);
@@ -103,8 +106,8 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
       setLoading(true);
       const data = await room_available(
         roomId,
-        checkInDate.toISOString(),
-        checkOutDate.toISOString()
+        format(checkInDate, "yyyy-MM-dd"),
+        format(checkOutDate, "yyyy-MM-dd")
       );
       const status = data.available ? "Available" : "SoldOut";
       setAvailable(data.available);
@@ -140,8 +143,7 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
     if (!room) return;
     if (adults > (room.adultCapacity ?? 0)) {
       toast.error(
-        `This room only allows up to ${room!.adultCapacity} adult${
-          room!.adultCapacity > 1 ? "s" : ""
+        `This room only allows up to ${room!.adultCapacity} adult${room!.adultCapacity > 1 ? "s" : ""
         }.`
       );
       return;
@@ -155,8 +157,8 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
     }
 
     updateURL({
-      checkIn: checkIn.toISOString(),
-      checkOut: checkOut.toISOString(),
+      checkIn: format(checkIn, "yyyy-MM-dd"),
+      checkOut: format(checkOut, "yyyy-MM-dd"),
       adults: adults.toString(),
       children: children.toString(),
       status,
@@ -166,8 +168,8 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
       setLoading(true);
       const data = await room_available(
         roomId,
-        checkIn.toISOString(),
-        checkOut.toISOString()
+        format(checkIn, "yyyy-MM-dd"),
+        format(checkOut, "yyyy-MM-dd")
       );
       setAvailable(data.available);
       if (!data.available) {
@@ -424,7 +426,7 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
                         ? { from: checkIn, to: checkOut }
                         : undefined
                     }
-                    soldOutDates={(soldOutDates || []).map((d) => new Date(d))}
+                    soldOutDates={soldOutDates}
                     onChange={(range) => {
                       setCheckIn(range?.from ?? null);
                       setCheckOut(range?.to ?? null);
@@ -464,11 +466,10 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
                   }
                 }}
                 disabled={available === false}
-                className={`w-full h-10 rounded-3xl mb-6 hover:bg-primary/80 ${
-                  available === false
-                    ? "bg-muted cursor-not-allowed hover:bg-muted"
-                    : ""
-                }`}
+                className={`w-full h-10 rounded-3xl mb-6 hover:bg-primary/80 ${available === false
+                  ? "bg-muted cursor-not-allowed hover:bg-muted"
+                  : ""
+                  }`}
               >
                 {available === false ? t("sold out") : t("Select")}
               </Button>
