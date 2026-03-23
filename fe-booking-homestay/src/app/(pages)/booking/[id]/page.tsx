@@ -1,4 +1,4 @@
-import BookingDetailClient from "@/components/bookings/BookingDetailClient";
+import BookingDetailClient from "@/app/(pages)/booking/[id]/BookingDetailClient";
 
 export default async function BookingDetailPage({
   params,

@@ -1,9 +1,9 @@
 "use client";
 
-import NewPasswordModal from "@/components/auth/new-password-modal";
-import OTPModal from "@/components/auth/otp-modal";
-import SignInModal from "@/components/auth/signin-modal";
-import SignUpModal from "@/components/auth/signup-modal";
+import NewPasswordModal from "@/_components/auth/new-password-modal";
+import OTPModal from "@/_components/auth/otp-modal";
+import SignInModal from "@/_components/auth/signin-modal";
+import SignUpModal from "@/_components/auth/signup-modal";
 import { STORAGE_KEYS } from "@/constants";
 import { IUser } from "@/models/User";
 import api from "@/services/api";

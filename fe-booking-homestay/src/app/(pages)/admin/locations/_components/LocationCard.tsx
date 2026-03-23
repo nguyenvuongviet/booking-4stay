@@ -1,6 +1,6 @@
 "use client";
 
-import { Card } from "@/components/ui/card";
+import { Card } from "@/_components/ui/card";
 import { Eye, ImageIcon, MapPin, Trash2, Upload } from "lucide-react";
 import { BaseLocation } from "@/services/admin/locationsApi";
 import { useRef } from "react";

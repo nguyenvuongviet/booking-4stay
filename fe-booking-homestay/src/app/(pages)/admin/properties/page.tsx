@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
+import { Card } from "@/_components/ui/card";
+import { Button } from "@/_components/ui/button";
+import { Input } from "@/_components/ui/input";
+import { Badge } from "@/_components/ui/badge";
 import { Search, Filter, Plus, Eye, Edit2, Trash2, MapPin } from "lucide-react";
 import Link from "next/link";
 

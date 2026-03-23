@@ -1,7 +1,7 @@
 "use client";
 
 import { Pagination } from "@/app/(pages)/admin/_components/Pagination";
-import { Card } from "@/components/ui/card";
+import { Card } from "@/_components/ui/card";
 import { formatDate } from "@/lib/utils/date";
 import { getReviewsUser } from "@/services/admin/usersApi";
 import { Review } from "@/types/review";

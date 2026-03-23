@@ -1,7 +1,7 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Button } from "@/_components/ui/button";
+import { Card } from "@/_components/ui/card";
 import { useEffect, useState } from "react";
 
 import {
@@ -321,7 +321,7 @@ export default function AdminDashboardPage() {
                     </Pie>
 
                     <RTooltip
-                      formatter={(value: number, name, entry: any) => {
+                      formatter={(value: any, name, entry: any) => {
                         const s = entry?.payload?.status;
                         return [
                           `${value} lượt`,

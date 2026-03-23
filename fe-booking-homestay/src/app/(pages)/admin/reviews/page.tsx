@@ -1,9 +1,9 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { UserAvatar } from "@/components/UserAvatar";
+import { Button } from "@/_components/ui/button";
+import { Card } from "@/_components/ui/card";
+import { Input } from "@/_components/ui/input";
+import { UserAvatar } from "@/_components/UserAvatar";
 import { formatDate } from "@/lib/utils/date";
 import { ExternalLink, Search, Star, Trash2 } from "lucide-react";
 import Link from "next/link";

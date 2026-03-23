@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card } from "@/_components/ui/card";
+import { Button } from "@/_components/ui/button";
+import { Badge } from "@/_components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/_components/ui/tabs";
 import { ArrowLeft, Edit2, MapPin } from "lucide-react";
 import Link from "next/link";
 

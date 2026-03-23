@@ -1,11 +1,11 @@
 "use client";
 
-import Footer from "@/components/Footer";
-import Header from "@/components/Header";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import Footer from "@/_components/Footer";
+import Header from "@/_components/Header";
+import { Button } from "@/_components/ui/button";
+import { Card } from "@/_components/ui/card";
+import { Input } from "@/_components/ui/input";
+import { Textarea } from "@/_components/ui/textarea";
 import { Mail, MapPin, Phone, Send } from "lucide-react";
 import { useState } from "react";
 

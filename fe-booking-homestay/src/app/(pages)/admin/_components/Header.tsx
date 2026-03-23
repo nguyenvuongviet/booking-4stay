@@ -4,8 +4,8 @@ import { Bell, Lock, LogOut, Settings, User } from "lucide-react";
 import { useMemo, useRef, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
-import { UserAvatar } from "@/components/UserAvatar";
-import { toast } from "@/components/ui/use-toast";
+import { UserAvatar } from "@/_components/UserAvatar";
+import { toast } from "@/_components/ui/use-toast";
 
 export function AdminHeader() {
   const router = useRouter();

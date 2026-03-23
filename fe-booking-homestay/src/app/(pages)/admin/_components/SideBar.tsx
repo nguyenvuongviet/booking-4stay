@@ -5,8 +5,8 @@ import {
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { toast } from "@/components/ui/use-toast";
+} from "@/_components/ui/tooltip";
+import { toast } from "@/_components/ui/use-toast";
 import { STORAGE_KEYS } from "@/constants";
 import { cn } from "@/lib/utils";
 import {

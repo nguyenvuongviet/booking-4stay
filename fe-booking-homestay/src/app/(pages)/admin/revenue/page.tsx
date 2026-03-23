@@ -12,7 +12,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { Card } from "@/components/ui/card";
+import { Card } from "@/_components/ui/card";
 import { DollarSign, TrendingUp, Users, Calendar } from "lucide-react";
 import { StatCard } from "../_components/stat-card";
 

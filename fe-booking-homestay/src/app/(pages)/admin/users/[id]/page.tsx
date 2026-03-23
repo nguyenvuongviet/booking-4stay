@@ -1,7 +1,7 @@
 "use client";
 
-import { Skeleton } from "@/components/ui/skeleton";
-import { toast } from "@/components/ui/use-toast";
+import { Skeleton } from "@/_components/ui/skeleton";
+import { toast } from "@/_components/ui/use-toast";
 import { useAuth } from "@/context/auth-context";
 import { deleteUser, getUserById, updateUser } from "@/services/admin/usersApi";
 import { User } from "@/types/user";

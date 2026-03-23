@@ -1,15 +1,15 @@
 "use client";
 
 import { Pagination } from "@/app/(pages)/admin/_components/Pagination";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Button } from "@/_components/ui/button";
+import { Card } from "@/_components/ui/card";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { UserAvatar } from "@/components/UserAvatar";
+} from "@/_components/ui/tooltip";
+import { UserAvatar } from "@/_components/UserAvatar";
 import { formatDate } from "@/lib/utils/date";
 import { Review } from "@/types/review";
 import { ExternalLink, Star } from "lucide-react";
