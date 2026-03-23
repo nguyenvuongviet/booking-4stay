@@ -5,7 +5,13 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { bookings_status } from '@prisma/client';
-import { eachDayOfInterval, formatISO } from 'date-fns';
+import {
+  eachDayOfInterval,
+  format,
+  formatISO,
+  startOfDay,
+  subDays,
+} from 'date-fns';
 import { ADMIN_EMAIL } from 'src/common/constant/app.constant';
 import { AvailabilityHelper } from 'src/helpers/availability.helper';
 import { LoyaltyProgram } from 'src/helpers/loyalty.helper';
@@ -319,23 +325,30 @@ export class BookingService {
       where: { id: roomId, isDeleted: false },
       select: { id: true, price: true },
     });
-    if (!room) throw new NotFoundException('Phòng không tồn tại');
+    if (!room)
+      throw new NotFoundException('Phòng không tồn tại hoặc đã bị xóa');
 
-    const conflict = await this.availability.hasOverlap(
+    const isOccupied = await this.availability.hasOverlap(
       roomId,
       inDate,
       outDate,
     );
-    const totalAmount = conflict
-      ? null
-      : await this.pricing.priceForRange(
-          roomId,
-          Number(room.price),
-          inDate,
-          outDate,
-        );
 
-    return { roomId, available: !conflict, totalAmount };
+    let totalAmount: number | null = null;
+    if (!isOccupied) {
+      totalAmount = await this.pricing.priceForRange(
+        roomId,
+        Number(room.price),
+        inDate,
+        outDate,
+      );
+    }
+
+    return {
+      roomId,
+      available: !isOccupied,
+      totalAmount,
+    };
   }
 
   async listByRoom(roomId: number) {
@@ -351,48 +364,56 @@ export class BookingService {
   async getUnavailableDays(roomId: number) {
     if (!roomId) throw new BadRequestException('Thiếu roomId');
 
-    const bookings = await this.prisma.bookings.findMany({
-      where: {
-        roomId,
-        isDeleted: false,
-        status: {
-          in: [
-            'PENDING',
-            'CONFIRMED',
-            'CHECKED_IN',
-            'CHECKED_OUT',
-          ] as bookings_status[],
+    const today = startOfDay(new Date());
+    const activeStatuses: bookings_status[] = [
+      'PENDING',
+      'CONFIRMED',
+      'CHECKED_IN',
+    ];
+
+    const [bookings, blocked] = await Promise.all([
+      this.prisma.bookings.findMany({
+        where: {
+          roomId,
+          isDeleted: false,
+          status: { in: activeStatuses },
+          checkOut: { gt: today },
         },
-      },
-      select: { checkIn: true, checkOut: true },
-    });
+        select: { checkIn: true, checkOut: true },
+      }),
+      this.prisma.room_availability.findMany({
+        where: {
+          roomId,
+          isAvailable: false,
+          date: { gte: today },
+        },
+        select: { date: true },
+      }),
+    ]);
 
-    const blocked = await this.prisma.room_availability.findMany({
-      where: { roomId, isAvailable: false },
-      select: { date: true },
-    });
-
-    const unavailable = new Set<string>();
+    const unavailableSet = new Set<string>();
 
     for (const b of bookings) {
       const range = eachDayOfInterval({
-        start: b.checkIn,
-        end: new Date(b.checkOut.getTime() - 86400000),
+        start: b.checkIn < today ? today : b.checkIn,
+        end: subDays(b.checkOut, 1),
       });
-      range.forEach((d) =>
-        unavailable.add(formatISO(d, { representation: 'date' })),
-      );
+      range.forEach((d) => {
+        unavailableSet.add(format(d, 'yyyy-MM-dd'));
+      });
     }
 
-    blocked.forEach((b) =>
-      unavailable.add(formatISO(b.date, { representation: 'date' })),
-    );
+    blocked.forEach((b) => {
+      unavailableSet.add(format(b.date, 'yyyy-MM-dd'));
+    });
+
+    const sortedDays = Array.from(unavailableSet).sort();
 
     return {
       message: 'Danh sách ngày không khả dụng của phòng',
       roomId,
-      total: unavailable.size,
-      days: Array.from(unavailable).sort(),
+      total: sortedDays.length,
+      days: sortedDays,
     };
   }
 
