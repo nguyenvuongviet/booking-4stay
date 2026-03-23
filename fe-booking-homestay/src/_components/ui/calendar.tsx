@@ -1,15 +1,15 @@
 "use client"
 
-import * as React from "react"
 import {
   ChevronDownIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
 } from "lucide-react"
+import * as React from "react"
 import { DayButton, DayPicker, getDefaultClassNames } from "react-day-picker"
 
-import { cn } from "@/lib/utils"
 import { Button, buttonVariants } from "@/_components/ui/button"
+import { cn } from "@/lib/utils"
 
 function Calendar({
   className,
@@ -19,9 +19,11 @@ function Calendar({
   buttonVariant = "ghost",
   formatters,
   components,
+  getPrice,
   ...props
 }: React.ComponentProps<typeof DayPicker> & {
   buttonVariant?: React.ComponentProps<typeof Button>["variant"]
+  getPrice?: (date: Date) => number
 }) {
   const defaultClassNames = getDefaultClassNames()
 
@@ -158,7 +160,9 @@ function Calendar({
             <ChevronDownIcon className={cn("size-4", className)} {...props} />
           )
         },
-        DayButton: CalendarDayButton,
+        DayButton: (dayProps) => (
+          <CalendarDayButton {...dayProps} getPrice={getPrice} />
+        ),
         WeekNumber: ({ children, ...props }) => {
           return (
             <td {...props}>
@@ -179,14 +183,29 @@ function CalendarDayButton({
   className,
   day,
   modifiers,
+  getPrice,
   ...props
-}: React.ComponentProps<typeof DayButton>) {
+}: React.ComponentProps<typeof DayButton> & {
+  getPrice?: (date: Date) => number
+}) {
   const defaultClassNames = getDefaultClassNames()
 
   const ref = React.useRef<HTMLButtonElement>(null)
   React.useEffect(() => {
     if (modifiers.focused) ref.current?.focus()
   }, [modifiers.focused])
+
+  const price = getPrice?.(day.date);
+  const formatPrice = (price?: number) => {
+    if (!price) return "";
+    if (price >= 1_000_000) {
+      return (price / 1_000_000).toFixed(1).replace(".0", "") + "M";
+    }
+    if (price >= 1_000) {
+      return (price / 1_000).toFixed(0) + "k";
+    }
+    return price.toString();
+  };
 
   return (
     <Button
@@ -204,12 +223,20 @@ function CalendarDayButton({
       data-range-end={modifiers.range_end}
       data-range-middle={modifiers.range_middle}
       className={cn(
-        "data-[selected-single=true]:bg-primary data-[selected-single=true]:text-primary-foreground data-[range-middle=true]:bg-accent data-[range-middle=true]:text-accent-foreground data-[range-start=true]:bg-primary data-[range-start=true]:text-primary-foreground data-[range-end=true]:bg-primary data-[range-end=true]:text-primary-foreground group-data-[focused=true]/day:border-ring group-data-[focused=true]/day:ring-ring/50 dark:hover:text-accent-foreground flex aspect-square size-auto w-full min-w-(--cell-size) flex-col gap-1 leading-none font-normal group-data-[focused=true]/day:relative group-data-[focused=true]/day:z-10 group-data-[focused=true]/day:ring-[3px] data-[range-end=true]:rounded-md data-[range-end=true]:rounded-r-md data-[range-middle=true]:rounded-none data-[range-start=true]:rounded-md data-[range-start=true]:rounded-l-md [&>span]:text-xs [&>span]:opacity-70",
+        "flex flex-col items-center justify-center gap-1",
+        "data-[selected-single=true]:bg-primary data-[selected-single=true]:text-primary-foreground data-[range-middle=true]:bg-accent data-[range-middle=true]:text-accent-foreground data-[range-start=true]:bg-primary data-[range-start=true]:text-primary-foreground data-[range-end=true]:bg-primary data-[range-end=true]:text-primary-foreground group-data-[focused=true]/day:border-ring group-data-[focused=true]/day:ring-ring/50 dark:hover:text-accent-foreground flex aspect-square size-auto w-full min-w-(--cell-size) flex-col gap-1 leading-none font-normal group-data-[focused=true]/day:relative group-data-[focused=true]/day:z-10 group-data-[focused=true]/day:ring-[3px] data-[range-end=true]:rounded-md data-[range-end=true]:rounded-r-md data-[range-middle=true]:rounded-none data-[range-start=true]:rounded-md data-[range-start=true]:rounded-l-md",
         defaultClassNames.day,
         className
       )}
       {...props}
-    />
+    >
+      <span>{day.date.getDate()}</span>
+      {price !== undefined && (
+        <span className="text-[9px] opacity-70">
+          {formatPrice(price)}
+        </span>
+      )}
+    </Button>
   )
 }
 

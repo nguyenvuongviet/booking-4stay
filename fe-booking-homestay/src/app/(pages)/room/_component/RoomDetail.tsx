@@ -18,9 +18,9 @@ import "react-datepicker/dist/react-datepicker.css";
 import toast from "react-hot-toast";
 import GuestPicker from "../../../../_components/GuestPicker";
 import Header from "../../../../_components/Header";
-import DateRangePicker from "../../../../_components/ui/date-range-picker";
 import MapRooms from "../../../../_components/MapMarker";
 import { PhotoGalleryModal } from "../../../../_components/PhotoGalleryModal";
+import DateRangePicker from "../../../../_components/ui/date-range-picker";
 import { ReviewList } from "./ReviewList";
 
 interface RoomDetailClientProps {
@@ -46,8 +46,15 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
   const [showFullOverview, setShowFullOverview] = useState(false);
   const [soldOutDates, setSoldOutDates] = useState<Date[]>([]);
   const [highlightDatePicker, setHighlightDatePicker] = useState(false);
+  const [roomPrices, setRoomPrices] = useState<{ date: string; price: number }[]>([]);
 
-  console.log({ room });
+  const mockRoomPrices = [
+    { date: "2026-04-01", price: 500000 },
+    { date: "2026-04-02", price: 520000 },
+    { date: "2026-04-03", price: 550000 },
+    { date: "2026-04-04", price: 700000 },
+    { date: "2026-04-05", price: 700000 },
+  ];
 
   // fetch data
   useEffect(() => {
@@ -56,7 +63,9 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
         setLoading(true);
         const dataRoom = await room_detail(roomId);
         const dataDate = await get_unavailable_dates(roomId);
+
         setRoom(dataRoom);
+        setRoomPrices(mockRoomPrices);
         const parsedDates = dataDate.map(
           (d: string) => new Date(d + "T00:00:00")
         );
@@ -427,6 +436,8 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
                         : undefined
                     }
                     soldOutDates={soldOutDates}
+                    defaultPrice={room?.price}
+                    roomPriceDates={roomPrices}
                     onChange={(range) => {
                       setCheckIn(range?.from ?? null);
                       setCheckOut(range?.to ?? null);

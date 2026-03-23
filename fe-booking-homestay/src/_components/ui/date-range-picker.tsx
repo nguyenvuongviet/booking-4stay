@@ -1,22 +1,24 @@
 "use client";
 
-import * as React from "react";
-import { type DateRange } from "react-day-picker";
+import { Button } from "@/_components/ui/button";
+import { Calendar } from "@/_components/ui/calendar";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/_components/ui/popover";
-import { Button } from "@/_components/ui/button";
-import { Calendar as CalendarIcon } from "lucide-react";
-import { Calendar } from "@/_components/ui/calendar";
-import { format, addMonths } from "date-fns";
 import { useLang } from "@/context/lang-context";
+import { addMonths, format } from "date-fns";
+import { Calendar as CalendarIcon } from "lucide-react";
+import * as React from "react";
+import { type DateRange } from "react-day-picker";
 
 interface DateRangePickerProps {
   id?: number | string;
   value?: DateRange;
   soldOutDates?: Date[];
+  defaultPrice?: number;
+  roomPriceDates?: { date: string; price: number }[];
   onChange?: (range: DateRange | undefined) => void;
   autoClose?: boolean;
 }
@@ -25,6 +27,8 @@ export default function DateRangePicker({
   id,
   value,
   soldOutDates,
+  defaultPrice,
+  roomPriceDates,
   onChange,
   autoClose = true,
 }: DateRangePickerProps) {
@@ -44,6 +48,22 @@ export default function DateRangePicker({
       ),
     [soldOutDates]
   );
+
+  const priceMap = React.useMemo(() => {
+    const map = new Map<string, number>();
+
+    roomPriceDates?.forEach((item) => {
+      const key = new Date(item.date).toDateString();
+      map.set(key, item.price);
+    });
+
+    return map;
+  }, [roomPriceDates]);
+
+  const getPrice = (date: Date) => {
+    return priceMap.get(date.toDateString()) ?? defaultPrice ?? 0;
+  };
+
   const isRangeValid = (from: Date, to: Date) => {
     let d = new Date(from);
 
@@ -141,6 +161,9 @@ export default function DateRangePicker({
               modifiersClassNames={{
                 soldOut: "sold-out-day",
               }}
+              getPrice={(date) =>
+                priceMap.get(date.toDateString()) ?? defaultPrice ?? 0
+              }
               showOutsideDays={false}
               className={`
                 [&_.rdp-day_selected]:bg-primary 
