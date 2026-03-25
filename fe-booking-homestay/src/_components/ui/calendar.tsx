@@ -10,6 +10,8 @@ import { DayButton, DayPicker, getDefaultClassNames } from "react-day-picker"
 
 import { Button, buttonVariants } from "@/_components/ui/button"
 import { cn } from "@/lib/utils"
+import { formatPrice, getPriceStatus } from "@/lib/utils/priceStatus"
+import { PRICE_STATUS_CONFIG } from "@/styles/priceStatus"
 
 function Calendar({
   className,
@@ -20,10 +22,12 @@ function Calendar({
   formatters,
   components,
   getPrice,
+  defaultPrice,
   ...props
 }: React.ComponentProps<typeof DayPicker> & {
   buttonVariant?: React.ComponentProps<typeof Button>["variant"]
   getPrice?: (date: Date) => number
+  defaultPrice?: number
 }) {
   const defaultClassNames = getDefaultClassNames()
 
@@ -161,7 +165,7 @@ function Calendar({
           )
         },
         DayButton: (dayProps) => (
-          <CalendarDayButton {...dayProps} getPrice={getPrice} />
+          <CalendarDayButton {...dayProps} getPrice={getPrice} defaultPrice={defaultPrice}/>
         ),
         WeekNumber: ({ children, ...props }) => {
           return (
@@ -184,29 +188,23 @@ function CalendarDayButton({
   day,
   modifiers,
   getPrice,
+  defaultPrice,
   ...props
 }: React.ComponentProps<typeof DayButton> & {
   getPrice?: (date: Date) => number
+  defaultPrice?: number
 }) {
-  const defaultClassNames = getDefaultClassNames()
-
   const ref = React.useRef<HTMLButtonElement>(null)
   React.useEffect(() => {
     if (modifiers.focused) ref.current?.focus()
   }, [modifiers.focused])
 
-  const price = getPrice?.(day.date);
-  const formatPrice = (price?: number) => {
-    if (!price) return "";
-    if (price >= 1_000_000) {
-      return (price / 1_000_000).toFixed(1).replace(".0", "") + "M";
-    }
-    if (price >= 1_000) {
-      return (price / 1_000).toFixed(0) + "k";
-    }
-    return price.toString();
-  };
+  const defaultClassNames = getDefaultClassNames();
 
+  const price = getPrice?.(day.date);
+  const status = getPriceStatus(price, defaultPrice);
+
+  const { color, Icon } = PRICE_STATUS_CONFIG[status];
   return (
     <Button
       ref={ref}
@@ -223,8 +221,13 @@ function CalendarDayButton({
       data-range-end={modifiers.range_end}
       data-range-middle={modifiers.range_middle}
       className={cn(
-        "flex flex-col items-center justify-center gap-1",
-        "data-[selected-single=true]:bg-primary data-[selected-single=true]:text-primary-foreground data-[range-middle=true]:bg-accent data-[range-middle=true]:text-accent-foreground data-[range-start=true]:bg-primary data-[range-start=true]:text-primary-foreground data-[range-end=true]:bg-primary data-[range-end=true]:text-primary-foreground group-data-[focused=true]/day:border-ring group-data-[focused=true]/day:ring-ring/50 dark:hover:text-accent-foreground flex aspect-square size-auto w-full min-w-(--cell-size) flex-col gap-1 leading-none font-normal group-data-[focused=true]/day:relative group-data-[focused=true]/day:z-10 group-data-[focused=true]/day:ring-[3px] data-[range-end=true]:rounded-md data-[range-end=true]:rounded-r-md data-[range-middle=true]:rounded-none data-[range-start=true]:rounded-md data-[range-start=true]:rounded-l-md",
+        "flex flex-col items-center justify-center gap-1 ",
+        "data-[selected-single=true]:bg-primary data-[selected-single=true]:text-primary-foreground data-[range-middle=true]:bg-accent data-[range-middle=true]:text-accent-foreground", 
+        "data-[range-start=true]:bg-primary data-[range-start=true]:text-primary-foreground data-[range-end=true]:bg-primary data-[range-end=true]:text-primary-foreground",
+        "group-data-[focused=true]/day:border-ring group-data-[focused=true]/day:ring-ring/50 dark:hover:text-accent-foreground",
+        "flex aspect-square size-auto w-full min-w-(--cell-size) flex-col gap-1 leading-none font-normal",
+        "group-data-[focused=true]/day:relative group-data-[focused=true]/day:z-10 group-data-[focused=true]/day:ring-[3px]",
+        "data-[range-end=true]:rounded-md data-[range-end=true]:rounded-r-md data-[range-middle=true]:rounded-none data-[range-start=true]:rounded-md data-[range-start=true]:rounded-l-md",
         defaultClassNames.day,
         className
       )}
@@ -232,9 +235,10 @@ function CalendarDayButton({
     >
       <span>{day.date.getDate()}</span>
       {price !== undefined && (
-        <span className="text-[9px] opacity-70">
-          {formatPrice(price)}
-        </span>
+        <div className={cn("flex items-center  text-[10px] opacity-70", color)}>
+          {/* {Icon && <Icon className="w-0 h-0" />} */}
+          <span>{formatPrice(price)}</span>
+        </div>
       )}
     </Button>
   )

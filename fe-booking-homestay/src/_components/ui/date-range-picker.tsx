@@ -161,9 +161,8 @@ export default function DateRangePicker({
               modifiersClassNames={{
                 soldOut: "sold-out-day",
               }}
-              getPrice={(date) =>
-                priceMap.get(date.toDateString()) ?? defaultPrice ?? 0
-              }
+              getPrice={getPrice}
+              defaultPrice={defaultPrice}
               showOutsideDays={false}
               className={`
                 [&_.rdp-day_selected]:bg-primary 

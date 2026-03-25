@@ -51,7 +51,7 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
   const mockRoomPrices = [
     { date: "2026-04-01", price: 500000 },
     { date: "2026-04-02", price: 520000 },
-    { date: "2026-04-03", price: 550000 },
+    { date: "2026-04-10", price: 850000 },
     { date: "2026-04-04", price: 700000 },
     { date: "2026-04-05", price: 700000 },
   ];

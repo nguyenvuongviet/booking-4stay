@@ -1,0 +1,1 @@
+export type PriceStatus = "low" | "high" | "normal";
