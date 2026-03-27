@@ -1,27 +1,48 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform, TransformFnParams } from 'class-transformer';
-import { IsInt, IsOptional, IsString, Min, IsBoolean } from 'class-validator';
+import {
+  IsBoolean,
+  IsInt,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Max,
+  Min,
+} from 'class-validator';
 
 export class UpdateLoyaltyLevelDto {
-  @ApiPropertyOptional({ example: 'PLATINUM', description: 'Tên cấp độ mới' })
+  @ApiPropertyOptional({ example: 'PLATINUM' })
   @IsOptional()
   @IsString()
   @Transform(({ value }: TransformFnParams) => value?.trim().toUpperCase())
   name?: string;
 
-  @ApiPropertyOptional({ example: 1000, description: 'Điểm tối thiểu mới' })
+  @ApiPropertyOptional({ example: 1000 })
   @IsOptional()
   @IsInt()
   @Min(0)
   minPoints?: number;
 
-  @ApiPropertyOptional({ example: 'Khách hàng cao cấp', description: 'Mô tả' })
+  @ApiPropertyOptional({ example: 15 })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Max(100)
+  discountPercent?: number;
+
+  @ApiPropertyOptional({ example: 1000000 })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  maxDiscountAmount?: number;
+
+  @ApiPropertyOptional({ example: 'Mô tả mới' })
   @IsOptional()
   @IsString()
   @Transform(({ value }: TransformFnParams) => value?.trim())
   description?: string;
 
-  @ApiPropertyOptional({ example: true, description: 'Trạng thái hoạt động' })
+  @ApiPropertyOptional({ example: true })
   @IsOptional()
   @IsBoolean()
   isActive?: boolean;

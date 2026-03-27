@@ -5,13 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { bookings_status } from '@prisma/client';
-import {
-  eachDayOfInterval,
-  format,
-  formatISO,
-  startOfDay,
-  subDays,
-} from 'date-fns';
+import { eachDayOfInterval, format, startOfDay, subDays } from 'date-fns';
 import { ADMIN_EMAIL } from 'src/common/constant/app.constant';
 import { AvailabilityHelper } from 'src/helpers/availability.helper';
 import { LoyaltyProgram } from 'src/helpers/loyalty.helper';
@@ -23,6 +17,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CancelBookingDto } from './dto/cancel-booking.dto';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { ListBookingQuery } from './dto/list-booking.query';
+import { PreCheckDto } from './dto/preCheck-booking.dto';
 import { RoomAvailabilityDto } from './dto/room-availability.dto';
 
 @Injectable()
@@ -154,6 +149,58 @@ export class BookingService {
           finalStatus: bookings_status.CANCELLED,
           message: 'Booking hủy thành công. Không có khoản thanh toán nào.',
         };
+  }
+
+  async previewBooking(userId: number, dto: PreCheckDto) {
+    const { roomId, checkIn, checkOut } = dto;
+    const { inDate, outDate } = ensureDateRange(checkIn, checkOut);
+
+    const room = await this.prisma.rooms.findFirst({
+      where: { id: roomId, isDeleted: false },
+      select: { id: true, price: true, name: true },
+    });
+    if (!room) throw new NotFoundException('Phòng không tồn tại');
+
+    const isOccupied = await this.availability.hasOverlap(
+      roomId,
+      inDate,
+      outDate,
+    );
+
+    const rawTotal = await this.pricing.priceForRange(
+      roomId,
+      Number(room.price),
+      inDate,
+      outDate,
+    );
+
+    const loyaltyInfo = await this.pricing.applyLoyaltyDiscount(
+      userId,
+      rawTotal,
+    );
+
+    return {
+      available: !isOccupied,
+      roomName: room.name,
+      stayDetails: {
+        checkIn: inDate,
+        checkOut: outDate,
+        nights: Math.ceil(
+          (outDate.getTime() - inDate.getTime()) / (1000 * 60 * 60 * 24),
+        ),
+      },
+      priceSummary: {
+        basePricePerNight: Number(room.price),
+        rawTotal,
+        discountAmount: loyaltyInfo.discountAmount,
+        totalPrice: loyaltyInfo.totalPrice,
+        tierName: loyaltyInfo.tierName,
+        discountPercent: loyaltyInfo.discountPercent,
+      },
+      message: isOccupied
+        ? 'Phòng đã có người đặt trong khoảng thời gian này'
+        : 'Phòng trống, bạn có thể tiếp tục đặt phòng',
+    };
   }
 
   async create(userId: number, dto: CreateBookingDto) {

@@ -1,21 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Cron } from '@nestjs/schedule';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '../prisma/prisma.service';
 import { BookingService } from './booking.service';
-
-function getVNDayRange() {
-  const now = new Date(
-    new Date().toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' }),
-  );
-
-  const y = now.getFullYear();
-  const m = now.getMonth();
-  const d = now.getDate();
-
-  const start = new Date(Date.UTC(y, m, d, 0, 0, 0));
-  const end = new Date(Date.UTC(y, m, d + 1, 0, 0, 0));
-  return { start, end };
-}
+import { startOfDay, endOfDay, subMinutes } from 'date-fns';
 
 @Injectable()
 export class BookingCron {
@@ -26,16 +13,42 @@ export class BookingCron {
     private readonly bookingService: BookingService,
   ) {}
 
-  @Cron('5 0 * * *', { timeZone: 'Asia/Ho_Chi_Minh' })
-  async dailyStatusRoll() {
-    const { start, end } = getVNDayRange();
+  @Cron('0 12 * * *', { timeZone: 'Asia/Ho_Chi_Minh' })
+  async handleAutoCheckOut() {
+    const today = startOfDay(new Date());
+    const checkouts = await this.prisma.bookings.findMany({
+      where: {
+        isDeleted: false,
+        status: 'CHECKED_IN',
+        checkOut: { gte: today, lt: endOfDay(today) },
+      },
+      select: { id: true },
+    });
+
+    for (const b of checkouts) {
+      await this.bookingService['changeBookingStatus'](b.id, 'CHECKED_OUT', {
+        allowOverride: true,
+        notifyAdmin: false,
+        notifyUser: false,
+      });
+    }
+
+    if (checkouts.length) {
+      this.logger.log(`[Cron] Auto Check-out: ${checkouts.length} đơn.`);
+    }
+  }
+
+  @Cron('0 14 * * *', { timeZone: 'Asia/Ho_Chi_Minh' })
+  async handleAutoCheckIn() {
+    const today = startOfDay(new Date());
 
     const checkins = await this.prisma.bookings.findMany({
       where: {
         isDeleted: false,
-        status: { in: ['PENDING', 'PARTIALLY_PAID', 'CONFIRMED'] },
-        checkIn: { gte: start, lt: end },
+        status: { in: ['CONFIRMED', 'PARTIALLY_PAID'] },
+        checkIn: { gte: today, lt: endOfDay(today) },
       },
+      select: { id: true },
     });
 
     for (const b of checkins) {
@@ -46,25 +59,35 @@ export class BookingCron {
       });
     }
 
-    const checkouts = await this.prisma.bookings.findMany({
+    if (checkins.length) {
+      this.logger.log(`[Cron] Auto Check-in: ${checkins.length} đơn.`);
+    }
+  }
+
+  @Cron('*/15 * * * *')
+  async clearExpiredBookings() {
+    const expiryThreshold = subMinutes(new Date(), 30);
+
+    const expired = await this.prisma.bookings.findMany({
       where: {
+        status: 'PENDING',
+        createdAt: { lt: expiryThreshold },
         isDeleted: false,
-        status: 'CHECKED_IN',
-        checkOut: { gte: start, lt: end },
       },
+      select: { id: true },
     });
 
-    for (const b of checkouts) {
-      await this.bookingService['changeBookingStatus'](b.id, 'CHECKED_OUT', {
+    for (const b of expired) {
+      await this.bookingService['changeBookingStatus'](b.id, 'CANCELLED', {
         allowOverride: true,
-        notifyAdmin: false,
+        notifyAdmin: true,
         notifyUser: true,
       });
     }
 
-    if (checkins.length || checkouts.length) {
+    if (expired.length) {
       this.logger.log(
-        `Cron: CHECKED_IN=${checkins.length}, CHECKED_OUT=${checkouts.length}`,
+        `[Cron] Đã hủy ${expired.length} đơn PENDING quá hạn thanh toán.`,
       );
     }
   }

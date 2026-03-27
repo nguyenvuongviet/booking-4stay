@@ -14,8 +14,10 @@ export class AvailabilityHelper {
   ): Promise<boolean> {
     const activeStatuses: bookings_status[] = [
       'PENDING',
+      'PARTIALLY_PAID',
       'CONFIRMED',
       'CHECKED_IN',
+      'WAITING_REFUND',
     ];
 
     const existingBooking = await this.prisma.bookings.findFirst({
@@ -34,7 +36,10 @@ export class AvailabilityHelper {
       where: {
         roomId,
         isAvailable: false,
-        date: { gte: startOfDay(inDate), lt: startOfDay(outDate) },
+        date: {
+          gte: startOfDay(inDate),
+          lt: startOfDay(outDate),
+        },
       },
       select: { id: true },
     });

@@ -51,7 +51,7 @@ export async function createLoyaltyLevel(payload: Partial<LoyaltyLevel>) {
 
 export async function updateLoyaltyLevel(
   id: number,
-  payload: Partial<LoyaltyLevel>
+  payload: Partial<LoyaltyLevel>,
 ) {
   try {
     const res = await api.patch(`/loyalty/levels/${id}`, payload);

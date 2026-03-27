@@ -47,6 +47,8 @@ export class LoyaltyService {
       data: {
         name: dto.name,
         minPoints: dto.minPoints,
+        discountPercent: dto.discountPercent ?? 0,
+        maxDiscountAmount: dto.maxDiscountAmount ?? 0,
         description: dto.description ?? '',
         isActive: true,
       },
@@ -64,6 +66,8 @@ export class LoyaltyService {
       data: {
         name: newName,
         minPoints: newMinPoints,
+        discountPercent: dto.discountPercent ?? current.discountPercent,
+        maxDiscountAmount: dto.maxDiscountAmount ?? current.maxDiscountAmount,
         description: dto.description ?? current.description,
         isActive: dto.isActive ?? current.isActive,
       },
@@ -79,37 +83,59 @@ export class LoyaltyService {
   }
 
   async recomputeAllUserLevels() {
-    const levels = await this.prisma.levels.findMany({
+    const activeLevels = await this.prisma.levels.findMany({
       where: { isActive: true },
-      orderBy: { minPoints: 'asc' },
+      orderBy: { minPoints: 'desc' },
     });
-    if (levels.length === 0)
-      throw new BadRequestException('Chưa có cấp độ nào khả dụng');
 
-    const reversedLevels = [...levels].reverse();
-    const programs = await this.prisma.loyalty_program.findMany();
+    if (activeLevels.length === 0)
+      throw new BadRequestException('Chưa có cấp độ nào khả dụng để tính toán');
 
-    let updatedCount = 0;
+    const BATCH_SIZE = 1000;
+    let totalUpdated = 0;
+    let lastId = 0;
 
-    for (const program of programs) {
-      const match = reversedLevels.find(
-        (lvl) => program.points >= lvl.minPoints,
-      );
+    while (true) {
+      const programs = await this.prisma.loyalty_program.findMany({
+        where: { id: { gt: lastId } },
+        take: BATCH_SIZE,
+        orderBy: { id: 'asc' },
+        select: { id: true, points: true, levelId: true },
+      });
 
-      if (match && match.id !== program.levelId) {
-        await this.prisma.loyalty_program.update({
-          where: { id: program.id },
-          data: {
-            levelId: match.id,
-            lastUpgradeDate: new Date(),
-          },
-        });
-        updatedCount++;
+      if (programs.length === 0) break;
+
+      const updatesMap: Record<number, number[]> = {};
+
+      for (const pg of programs) {
+        const match = activeLevels.find((lvl) => pg.points >= lvl.minPoints);
+        if (match && match.id !== pg.levelId) {
+          if (!updatesMap[match.id]) updatesMap[match.id] = [];
+          updatesMap[match.id].push(pg.id);
+        }
+        lastId = pg.id;
+      }
+
+      const updateEntries = Object.entries(updatesMap);
+      if (updateEntries.length > 0) {
+        const results = await Promise.all(
+          updateEntries.map(([newLevelId, ids]) =>
+            this.prisma.loyalty_program.updateMany({
+              where: { id: { in: ids } },
+              data: {
+                levelId: Number(newLevelId),
+                lastUpgradeDate: new Date(),
+              },
+            }),
+          ),
+        );
+        totalUpdated += results.reduce((sum, res) => sum + res.count, 0);
       }
     }
 
     return {
-      message: `Đã cập nhật cấp độ cho ${updatedCount} người dùng.`,
+      message: `Đã quét toàn bộ hệ thống. Cập nhật thành công cấp độ cho ${totalUpdated} người dùng.`,
+      totalUpdated,
     };
   }
 
