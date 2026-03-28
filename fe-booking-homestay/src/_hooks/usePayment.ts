@@ -28,7 +28,7 @@ export function usePayment(room: any, bookingData: any) {
     setModalType(paymentMethod);
     setOpenPopupPayment(true);
   };
-  
+
   const totalNights = differenceInDays(
     new Date(bookingData.checkOut),
     new Date(bookingData.checkIn)
@@ -56,7 +56,10 @@ export function usePayment(room: any, bookingData: any) {
 
     } catch (error) {
       console.error("Payment error:", error);
-      toast.error("Payment failed!");
+      if (error == 500)
+        toast.error("Kết nối mạng đang bị gián đoạn, vui lòng thử lại sau!");
+
+      toast.error("Hết phòng, vui lòng chọn phòng khác!");
     }
   };
 
@@ -69,7 +72,10 @@ export function usePayment(room: any, bookingData: any) {
       }
     } catch (error) {
       console.error("DepositLater error:", error);
-      toast.error("DepositLater failed!");
+      if (error == 500)
+        toast.error("Kết nối mạng đang bị gián đoạn, vui lòng thử lại sau!");
+
+      toast.error("Hết phòng, vui lòng chọn phòng khác!");
     }
   };
 
