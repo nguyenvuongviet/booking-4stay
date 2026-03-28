@@ -45,11 +45,11 @@ INSERT INTO `amenities` (`id`, `name`, `description`, `category`, `isDeleted`, `
 (24, 'Coffee Maker', 'Máy pha cà phê', 'COMMON', 0, NULL, '2025-10-02 02:46:13', '2025-10-02 02:46:13'),
 (25, 'Fan', 'Quạt máy', 'COMMON', 0, NULL, '2025-10-02 02:46:13', '2025-10-02 02:46:13');
 
-INSERT INTO `levels` (`id`, `name`, `minPoints`, `description`, `isActive`) VALUES
-(1, 'BRONZE', 0, 'Cấp độ cơ bản', 0),
-(2, 'PLATINU', 1001, 'Khách hàng cao cấp', 1),
-(3, 'GOLD', 500, 'Khách hàng VIP', 1),
-(4, 'PLATINUM', 1000, 'Khách hàng cao cấp', 1);
+INSERT INTO `levels` (`id`, `name`, `minPoints`, `discountPercent`, `maxDiscountAmount`, `description`, `isActive`) VALUES
+(1, 'BRONZE', 0, 0.00, 0.00, 'Cấp độ cơ bản, không giảm giá', 1),
+(2, 'SILVER', 200, 5.00, 200000.00, 'Khách hàng thân thiết - Giảm 5%', 1),
+(3, 'GOLD', 500, 10.00, 500000.00, 'Khách hàng VIP - Giảm 10%', 1),
+(4, 'PLATINUM', 1000, 15.00, 1000000.00, 'Khách hàng cao cấp - Giảm 15%', 1);
 
 INSERT INTO `location_countries` (`id`, `name`, `code`, `createdAt`, `updatedAt`) VALUES
 (1, 'Việt Nam', 'VN', '2025-11-22 10:52:46', '2025-11-22 10:52:46');

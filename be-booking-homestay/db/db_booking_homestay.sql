@@ -51,6 +51,8 @@ CREATE TABLE `bookings` (
   `checkOut` date NOT NULL,
   `adults` int unsigned NOT NULL,
   `children` int unsigned DEFAULT '0',
+  `rawTotalPrice` decimal(12,2) NOT NULL,
+  `discountAmount` decimal(12,2) DEFAULT 0,
   `totalPrice` decimal(12,2) NOT NULL,
   `status` enum('PENDING','PARTIALLY_PAID','CONFIRMED','CHECKED_IN','CHECKED_OUT','CANCELLED','WAITING_REFUND','REFUNDED') NOT NULL DEFAULT 'PENDING',
   `paymentMethod` enum('VNPAY','CASH','BANK_TRANSFER') NOT NULL DEFAULT 'CASH',
@@ -87,10 +89,15 @@ CREATE TABLE `levels` (
   `id` int unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(50) NOT NULL,
   `minPoints` int unsigned NOT NULL DEFAULT '0',
+  `discountPercent` decimal(5,2) NOT NULL DEFAULT 0.00,
+  `maxDiscountAmount` decimal(12,2) NOT NULL DEFAULT 0.00,
   `description` varchar(255) DEFAULT NULL,
   `isActive` tinyint(1) NOT NULL DEFAULT '1',
+  `createdAt` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updatedAt` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `uq_level_name` (`name`)
+  UNIQUE KEY `uq_level_name` (`name`),
+  CHECK (`discountPercent` >= 0 AND `discountPercent` <= 100)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 DROP TABLE IF EXISTS `location_countries`;

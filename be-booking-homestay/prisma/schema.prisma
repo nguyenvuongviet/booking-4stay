@@ -31,10 +31,12 @@ model bookings {
   checkOut         DateTime               @db.Date
   adults           Int                    @db.UnsignedInt
   children         Int?                   @default(0) @db.UnsignedInt
+  discountAmount   Decimal                @default(0.00) @db.Decimal(12, 2)
+  rawTotalPrice    Decimal                @db.Decimal(12, 2)
   totalPrice       Decimal                @db.Decimal(12, 2)
+  status           bookings_status        @default(PENDING)
   paymentMethod    bookings_paymentMethod @default(CASH)
   paidAmount       Decimal                @default(0.00) @db.Decimal(12, 2)
-  status           bookings_status        @default(PENDING)
   isReview         Boolean                @default(false)
   cancelReason     String?                @db.VarChar(255)
   isDeleted        Boolean                @default(false)
@@ -64,12 +66,14 @@ model contacts {
 }
 
 model levels {
-  id              Int               @id @default(autoincrement()) @db.UnsignedInt
-  name            String            @unique(map: "uq_level_name") @db.VarChar(50)
-  minPoints       Int               @default(0) @db.UnsignedInt
-  description     String?           @db.VarChar(255)
-  isActive        Boolean           @default(true)
-  loyalty_program loyalty_program[]
+  id                Int               @id @default(autoincrement()) @db.UnsignedInt
+  name              String            @unique(map: "uq_level_name") @db.VarChar(50)
+  minPoints         Int               @default(0) @db.UnsignedInt
+  discountPercent   Decimal           @default(0.00) @db.Decimal(5, 2)
+  maxDiscountAmount Decimal           @default(0.00) @db.Decimal(12, 2)
+  description       String?           @db.VarChar(255)
+  isActive          Boolean           @default(true)
+  loyalty_program   loyalty_program[]
 }
 
 model loyalty_program {

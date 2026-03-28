@@ -17,6 +17,7 @@ import { CancelBookingDto } from './dto/cancel-booking.dto';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { ListBookingQuery } from './dto/list-booking.query';
 import { RoomAvailabilityDto } from './dto/room-availability.dto';
+import { PreCheckDto } from './dto/preCheck-booking.dto';
 
 @ApiTags('bookings')
 @Controller('bookings')
@@ -27,6 +28,13 @@ export class BookingController {
   @Public()
   async getUnavailableDays(@Query('roomId', ParseIntPipe) roomId: number) {
     return this.bookingService.getUnavailableDays(roomId);
+  }
+
+  @Post('/preview')
+  @ApiBearerAuth('AccessToken')
+  async preview(@Req() req: Request, @Body() dto: PreCheckDto) {
+    const user = req['user'];
+    return this.bookingService.previewBooking(+user.id, dto);
   }
 
   @Post('/')

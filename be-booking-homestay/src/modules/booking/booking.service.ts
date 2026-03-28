@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { bookings_status } from '@prisma/client';
-import { eachDayOfInterval, formatISO } from 'date-fns';
+import { eachDayOfInterval, format, startOfDay, subDays } from 'date-fns';
 import { ADMIN_EMAIL } from 'src/common/constant/app.constant';
 import { AvailabilityHelper } from 'src/helpers/availability.helper';
 import { LoyaltyProgram } from 'src/helpers/loyalty.helper';
@@ -17,6 +17,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CancelBookingDto } from './dto/cancel-booking.dto';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { ListBookingQuery } from './dto/list-booking.query';
+import { PreCheckDto } from './dto/preCheck-booking.dto';
 import { RoomAvailabilityDto } from './dto/room-availability.dto';
 
 @Injectable()
@@ -150,6 +151,58 @@ export class BookingService {
         };
   }
 
+  async previewBooking(userId: number, dto: PreCheckDto) {
+    const { roomId, checkIn, checkOut } = dto;
+    const { inDate, outDate } = ensureDateRange(checkIn, checkOut);
+
+    const room = await this.prisma.rooms.findFirst({
+      where: { id: roomId, isDeleted: false },
+      select: { id: true, price: true, name: true },
+    });
+    if (!room) throw new NotFoundException('Phòng không tồn tại');
+
+    const isOccupied = await this.availability.hasOverlap(
+      roomId,
+      inDate,
+      outDate,
+    );
+
+    const rawTotal = await this.pricing.priceForRange(
+      roomId,
+      Number(room.price),
+      inDate,
+      outDate,
+    );
+
+    const loyaltyInfo = await this.pricing.applyLoyaltyDiscount(
+      userId,
+      rawTotal,
+    );
+
+    return {
+      available: !isOccupied,
+      roomName: room.name,
+      stayDetails: {
+        checkIn: inDate,
+        checkOut: outDate,
+        nights: Math.ceil(
+          (outDate.getTime() - inDate.getTime()) / (1000 * 60 * 60 * 24),
+        ),
+      },
+      priceSummary: {
+        basePricePerNight: Number(room.price),
+        rawTotal,
+        discountAmount: loyaltyInfo.discountAmount,
+        totalPrice: loyaltyInfo.totalPrice,
+        tierName: loyaltyInfo.tierName,
+        discountPercent: loyaltyInfo.discountPercent,
+      },
+      message: isOccupied
+        ? 'Phòng đã có người đặt trong khoảng thời gian này'
+        : 'Phòng trống, bạn có thể tiếp tục đặt phòng',
+    };
+  }
+
   async create(userId: number, dto: CreateBookingDto) {
     const {
       roomId,
@@ -187,13 +240,14 @@ export class BookingService {
     if (hasOverlap)
       throw new BadRequestException('Khoảng ngày đã có người giữ hoặc bị khóa');
 
-    const totalPrice = await this.pricing.priceForRange(
+    const rawTotal = await this.pricing.priceForRange(
       roomId,
       Number(room.price),
       inDate,
       outDate,
     );
-
+    const { totalPrice, discountAmount } =
+      await this.pricing.applyLoyaltyDiscount(userId, rawTotal);
     const booking = await this.prisma.bookings.create({
       data: {
         userId,
@@ -206,6 +260,8 @@ export class BookingService {
         checkOut: outDate,
         adults,
         children,
+        rawTotalPrice: rawTotal,
+        discountAmount,
         totalPrice,
         status: 'PENDING',
         paymentMethod,
@@ -316,23 +372,30 @@ export class BookingService {
       where: { id: roomId, isDeleted: false },
       select: { id: true, price: true },
     });
-    if (!room) throw new NotFoundException('Phòng không tồn tại');
+    if (!room)
+      throw new NotFoundException('Phòng không tồn tại hoặc đã bị xóa');
 
-    const conflict = await this.availability.hasOverlap(
+    const isOccupied = await this.availability.hasOverlap(
       roomId,
       inDate,
       outDate,
     );
-    const totalAmount = conflict
-      ? null
-      : await this.pricing.priceForRange(
-          roomId,
-          Number(room.price),
-          inDate,
-          outDate,
-        );
 
-    return { roomId, available: !conflict, totalAmount };
+    let totalAmount: number | null = null;
+    if (!isOccupied) {
+      totalAmount = await this.pricing.priceForRange(
+        roomId,
+        Number(room.price),
+        inDate,
+        outDate,
+      );
+    }
+
+    return {
+      roomId,
+      available: !isOccupied,
+      totalAmount,
+    };
   }
 
   async listByRoom(roomId: number) {
@@ -348,48 +411,56 @@ export class BookingService {
   async getUnavailableDays(roomId: number) {
     if (!roomId) throw new BadRequestException('Thiếu roomId');
 
-    const bookings = await this.prisma.bookings.findMany({
-      where: {
-        roomId,
-        isDeleted: false,
-        status: {
-          in: [
-            'PENDING',
-            'CONFIRMED',
-            'CHECKED_IN',
-            'CHECKED_OUT',
-          ] as bookings_status[],
+    const today = startOfDay(new Date());
+    const activeStatuses: bookings_status[] = [
+      'PENDING',
+      'CONFIRMED',
+      'CHECKED_IN',
+    ];
+
+    const [bookings, blocked] = await Promise.all([
+      this.prisma.bookings.findMany({
+        where: {
+          roomId,
+          isDeleted: false,
+          status: { in: activeStatuses },
+          checkOut: { gt: today },
         },
-      },
-      select: { checkIn: true, checkOut: true },
-    });
+        select: { checkIn: true, checkOut: true },
+      }),
+      this.prisma.room_availability.findMany({
+        where: {
+          roomId,
+          isAvailable: false,
+          date: { gte: today },
+        },
+        select: { date: true },
+      }),
+    ]);
 
-    const blocked = await this.prisma.room_availability.findMany({
-      where: { roomId, isAvailable: false },
-      select: { date: true },
-    });
-
-    const unavailable = new Set<string>();
+    const unavailableSet = new Set<string>();
 
     for (const b of bookings) {
       const range = eachDayOfInterval({
-        start: b.checkIn,
-        end: new Date(b.checkOut.getTime() - 86400000),
+        start: b.checkIn < today ? today : b.checkIn,
+        end: subDays(b.checkOut, 1),
       });
-      range.forEach((d) =>
-        unavailable.add(formatISO(d, { representation: 'date' })),
-      );
+      range.forEach((d) => {
+        unavailableSet.add(format(d, 'yyyy-MM-dd'));
+      });
     }
 
-    blocked.forEach((b) =>
-      unavailable.add(formatISO(b.date, { representation: 'date' })),
-    );
+    blocked.forEach((b) => {
+      unavailableSet.add(format(b.date, 'yyyy-MM-dd'));
+    });
+
+    const sortedDays = Array.from(unavailableSet).sort();
 
     return {
       message: 'Danh sách ngày không khả dụng của phòng',
       roomId,
-      total: unavailable.size,
-      days: Array.from(unavailable).sort(),
+      total: sortedDays.length,
+      days: sortedDays,
     };
   }
 

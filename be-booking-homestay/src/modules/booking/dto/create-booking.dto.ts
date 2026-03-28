@@ -21,17 +21,23 @@ export class CreateBookingDto {
   roomId: number;
 
   @ApiProperty({
-    example: '2025-12-10',
+    example: '2026-03-24',
     description: 'Ngày nhận phòng (YYYY-MM-DD)',
   })
-  @IsDateString()
+  @IsDateString(
+    {},
+    { message: 'Ngày nhận phòng phải đúng định dạng ISO 8601 (YYYY-MM-DD)' },
+  )
   checkIn: string;
 
   @ApiProperty({
-    example: '2025-12-12',
+    example: '2026-03-25',
     description: 'Ngày trả phòng (YYYY-MM-DD)',
   })
-  @IsDateString()
+  @IsDateString(
+    {},
+    { message: 'Ngày trả phòng phải đúng định dạng ISO 8601 (YYYY-MM-DD)' },
+  )
   checkOut: string;
 
   @ApiPropertyOptional({ example: 2, description: 'Số lượng người lớn' })
