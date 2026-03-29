@@ -2,8 +2,9 @@ import { usePayment } from "@/_hooks/usePayment";
 import { useAuth } from "@/context/auth-context";
 import { useLang } from "@/context/lang-context";
 import { Room } from "@/models/Room";
-import { room_detail } from "@/services/roomApi";
+import { room_detail, room_preview } from "@/services/roomApi";
 import { PaymentMethod } from "@/types/paymentmethod";
+import toast from "react-hot-toast";
 
 import { differenceInDays, format, parseISO } from "date-fns";
 import { useSearchParams } from "next/navigation";
@@ -24,6 +25,8 @@ export function useCheckout() {
     const parsedCheckOut = checkOut ? parseISO(checkOut) : null;
 
     const [room, setRoom] = useState<Room | null>(null);
+    const [roomPreview, setRoomPreview] = useState<{ available: boolean, priceSummary: { totalPrice: number, rawTotal: number, discountPercent: number } } | null>(null);
+
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -31,8 +34,20 @@ export function useCheckout() {
 
         const fetchRoom = async () => {
             try {
-                const data = await room_detail(roomId);
-                setRoom(data);
+                const room = await room_detail(roomId);
+                setRoom(room);
+
+                const data = await room_preview(
+                    Number(room?.id),
+                    format(bookingData.checkIn, "yyyy-MM-dd"),
+                    format(bookingData.checkOut, "yyyy-MM-dd")
+                );
+                setRoomPreview(data);
+
+                if (data.available === false) {
+                    toast.error("Phòng này đã hết!");
+                }
+
             } catch (error) {
                 console.error("Fetch room failed", error);
             } finally {
@@ -72,7 +87,9 @@ export function useCheckout() {
         adults,
         children,
         pricePerNight: room?.price ?? 0,
-        roomImage: room?.images?.main ?? ""
+        totalAmount: roomPreview?.priceSummary?.totalPrice ?? 0,
+        discountPercent: roomPreview?.priceSummary?.discountPercent ?? 0,
+        roomImage: room?.images?.main ?? "",
     };
 
     const totalNights =
@@ -80,9 +97,7 @@ export function useCheckout() {
             ? differenceInDays(parsedCheckOut, parsedCheckIn)
             : 0;
 
-    const totalAmount = bookingData.pricePerNight * totalNights;
-
-    const payment = usePayment(room, bookingData);
+    const payment = usePayment(room, bookingData, roomPreview?.available);
 
     const confirmNow = async () => {
         if (!roomId || !checkIn || !checkOut) return;
@@ -129,8 +144,9 @@ export function useCheckout() {
         loading,
 
         bookingData,
-        totalAmount,
+        totalAmount: bookingData.totalAmount,
         totalNights,
+        discountPercent: bookingData.discountPercent,
 
         firstName,
         lastName,

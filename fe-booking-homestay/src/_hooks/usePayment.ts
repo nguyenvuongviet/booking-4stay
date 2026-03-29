@@ -3,7 +3,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { create_booking, pay_with_vnpay } from "@/services/bookingApi";
-import { differenceInDays } from "date-fns";
+import { differenceInDays, format } from "date-fns";
+import { room_preview } from "@/services/roomApi";
 
 type BookingPayload = {
   roomId: string | number;
@@ -18,7 +19,7 @@ type BookingPayload = {
   paymentMethod: "VNPAY" | "CASH";
 };
 
-export function usePayment(room: any, bookingData: any) {
+export function usePayment(room: any, bookingData: any, roomAvailable?: boolean) {
   const router = useRouter();
   const [modalType, setModalType] = useState<"VNPAY" | "CASH" | null>(null);
   const [openPopupPayment, setOpenPopupPayment] = useState(false);
@@ -36,6 +37,7 @@ export function usePayment(room: any, bookingData: any) {
 
   const handleDepositNow = async (payload: BookingPayload, bookingId?: number | string) => {
     try {
+
       let id = bookingId;
       if (!id) {
         const resp = await create_booking(payload);
@@ -65,6 +67,8 @@ export function usePayment(room: any, bookingData: any) {
 
   const handleDepositLater = async (payload: BookingPayload, bookingId?: number | string) => {
     try {
+      
+
       if (!bookingId) {
         const resp = await create_booking(payload);
         router.push("/booking");

@@ -106,6 +106,20 @@ export const room_available = async (
   }
 };
 
+export const room_preview = async (
+  roomId: number,
+  checkIn: string,
+  checkOut: string
+) => {
+  try {
+    const resp = await api.post(`bookings/preview`, { roomId, checkIn, checkOut });
+    return resp.data?.data || {};
+  } catch (error) {
+    console.error("Check room preview error:", error);
+    throw error;
+  }
+};
+
 export const get_review = async (
   roomId: number | string,
   page = 1,

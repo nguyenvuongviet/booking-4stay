@@ -31,6 +31,7 @@ export default function CheckoutClient() {
         bookingData,
         totalAmount,
         totalNights,
+        discountPercent,
         isLoading,
         modalType,
         openPopupPayment,
