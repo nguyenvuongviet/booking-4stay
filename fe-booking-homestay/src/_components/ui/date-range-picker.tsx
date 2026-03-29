@@ -66,8 +66,8 @@ export default function DateRangePicker({
 
   const isRangeValid = (from: Date, to: Date) => {
     let d = new Date(from);
-
-    while (d <= to) {
+    // ✅ Kiểm tra từ from đến to-1 (vì to là checkout date, không lưu trú ngày đó)
+    while (d < to) {
       if (soldOutDates?.some((date) => format(date, "MMM dd, yyyy") === formatLabel(d))) return false;
       d.setDate(d.getDate() + 1);
     }
@@ -151,7 +151,7 @@ export default function DateRangePicker({
                     ? setCurrentMonth(date) // prev bên trái
                     : setCurrentMonth(addMonths(date, -1)) // next bên phải
               }
-              disabled={[...parsedSoldOutDates, { before: new Date() }]}
+              disabled={[{ before: new Date() }]}
               modifiers={{
                 soldOut: (date) =>
                   parsedSoldOutDates.some(

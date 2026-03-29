@@ -372,10 +372,11 @@ body {
 }
 
 .sold-out-day {
-  color: gray; 
-  pointer-events: none; 
+  color: var(--muted-foreground); 
+  opacity: 0.5;
+  pointer-events: auto;
   text-decoration: line-through; 
-  text-decoration-color: black; 
+  text-decoration-color: var(--muted-foreground); 
   text-decoration-thickness: 1px; 
   text-decoration-skip-ink: none;
 }

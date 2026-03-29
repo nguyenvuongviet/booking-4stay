@@ -235,7 +235,7 @@ function CalendarDayButton({
     >
       <span>{day.date.getDate()}</span>
       {price !== undefined && (
-        <div className={cn("flex items-center  text-[10px] opacity-70", color)}>
+        <div className={cn("flex items-center  text-[10px] opacity-80", color)}>
           {/* {Icon && <Icon className="w-0 h-0" />} */}
           <span>{formatPrice(price)}</span>
         </div>
