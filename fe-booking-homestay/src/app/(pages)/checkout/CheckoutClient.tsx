@@ -5,7 +5,7 @@ import { Card } from "@/_components/ui/card";
 import { useLang } from "@/context/lang-context";
 import GuestInfor from "./_component/GuestInfor";
 import PaymentMethod from "./_component/PaymentMethod";
-import BookingSummary from "../profile/_component/BookingSummary";
+import BookingSummary from "./_component/BookingSummary";
 import PaymentModal from "./_component/PaymentModal";
 import { useCheckout } from "../../../_hooks/useCheckout";
 

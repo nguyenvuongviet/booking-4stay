@@ -93,13 +93,13 @@ export function BookingCard({ booking }: BookingCardProps) {
               </div>
               <div className="text-right pt-1">
                 <span className="text-2xl elegant-sans text-secondary-foreground">
-                  {formatPrice(booking.room.price * nights)}
+                  {formatPrice(booking.totalAmount)}
                 </span>
               </div>
             </div>
           </CardContent>
         </div>
       </div>
-    </Card>
+    </Card> 
   );
 }

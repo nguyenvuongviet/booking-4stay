@@ -308,7 +308,7 @@ export const BookingDetail = ({
               </p>
             </div>
             <p className="text-primary text-lg font-semibold ml-6">
-              {formatPrice(booking.room.price * totalNights) || "None"}
+              {formatPrice(booking.totalAmount) || "None"}
             </p>
           </div>
 
