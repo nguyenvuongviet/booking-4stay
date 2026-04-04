@@ -41,9 +41,10 @@ export function usePayment(room: any, bookingData: any, roomAvailable?: boolean)
       let id = bookingId;
       if (!id) {
         const resp = await create_booking(payload);
+        toast.success("Đã tạo đặt phòng. Đang chuyển hướng đến trang thanh toán...");
         id = resp.data?.booking?.id;
         if (!id) {
-          toast.error("Cannot process payment — bookingId not returned!");
+          toast.error("Không thể tạo đặt phòng. Vui lòng thử lại.");
           return;
         }
         console.log("id: ", id);
@@ -72,7 +73,7 @@ export function usePayment(room: any, bookingData: any, roomAvailable?: boolean)
       if (!bookingId) {
         const resp = await create_booking(payload);
         router.push("/booking");
-        toast.success("Reservation saved. Deposit later.");
+        toast.success("Đặt phòng đã được lưu. Thanh toán sau.");
       }
     } catch (error) {
       console.error("DepositLater error:", error);

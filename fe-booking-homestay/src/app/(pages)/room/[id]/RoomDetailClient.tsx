@@ -14,14 +14,13 @@ import { Loader2, Mail, MapPin, Phone, Star, Users } from "lucide-react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import "react-datepicker/dist/react-datepicker.css";
 import toast from "react-hot-toast";
 import GuestPicker from "../../../../_components/GuestPicker";
 import Header from "../../../../_components/Header";
 import MapRooms from "../../../../_components/MapMarker";
 import { PhotoGalleryModal } from "../../../../_components/PhotoGalleryModal";
 import DateRangePicker from "../../../../_components/ui/date-range-picker";
-import { ReviewList } from "./ReviewList";
+import { ReviewList } from "../_component/ReviewList";
 
 interface RoomDetailClientProps {
   roomId: number;

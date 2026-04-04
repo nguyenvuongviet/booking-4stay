@@ -12,6 +12,7 @@ import { addMonths, format } from "date-fns";
 import { Calendar as CalendarIcon } from "lucide-react";
 import * as React from "react";
 import { type DateRange } from "react-day-picker";
+import toast from "react-hot-toast";
 
 interface DateRangePickerProps {
   id?: number | string;
@@ -66,7 +67,7 @@ export default function DateRangePicker({
 
   const isRangeValid = (from: Date, to: Date) => {
     let d = new Date(from);
-    // ✅ Kiểm tra từ from đến to-1 (vì to là checkout date, không lưu trú ngày đó)
+    // Kiểm tra từ from đến to-1 (vì to là checkout date, không lưu trú ngày đó)
     while (d < to) {
       if (soldOutDates?.some((date) => format(date, "MMM dd, yyyy") === formatLabel(d))) return false;
       d.setDate(d.getDate() + 1);
@@ -96,6 +97,7 @@ export default function DateRangePicker({
       if (newRange.from && newRange.to) {
         if (!isRangeValid(newRange.from, newRange.to)) {
           setSelectedRange({ from: day, to: undefined });
+          toast.error("Ngày bạn chọn đã hết phòng. Vui lòng chọn ngày khác.");
           return;
         }
       }
