@@ -10,11 +10,11 @@ export const PRICE_STATUS_CONFIG: Record<
 > = {
   low: {
     color: "text-green-600",
-    // Icon: ArrowDown,
+    Icon: ArrowDown,
   },
   high: {
     color: "text-red-500",
-    // Icon: ArrowUp,
+    Icon: ArrowUp,
   },
   normal: {
     color: "text-muted-foreground",

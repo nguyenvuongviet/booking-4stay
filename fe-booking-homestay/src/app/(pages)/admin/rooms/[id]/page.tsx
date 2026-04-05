@@ -4,7 +4,7 @@ import { Badge } from "@/_components/ui/badge";
 import { Button } from "@/_components/ui/button";
 import { Card } from "@/_components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@radix-ui/react-tabs";
-import { ArrowLeft, Pencil, Trash2 } from "lucide-react";
+import { ArrowLeft, Calendar, Pencil, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { use, useState } from "react";
@@ -18,6 +18,7 @@ import RoomBookingsTab from "./room-tabs/RoomBookingsTab";
 import RoomImagesTab from "./room-tabs/RoomImagesTab";
 import RoomInfoTab from "./room-tabs/RoomInfoTab";
 import RoomReviewsTab from "./room-tabs/RoomReviewsTab";
+import CalendarGrid from "../../_components/calendar/CalendarGrid";
 
 export default function RoomDetailPage({
   params,
@@ -27,7 +28,7 @@ export default function RoomDetailPage({
   const { id } = use(params);
   const router = useRouter();
 
-  const { room, bookings, reviews, loading, reload, handleDelete } =
+  const { room, bookings, reviews, soldOutDates, roomPrices, loading, reload, handleDelete } =
     useRoomDetail(Number(id), () => router.push("/admin/rooms"));
 
   const extras = useRoomExtrasForm(Number(id));
@@ -35,6 +36,8 @@ export default function RoomDetailPage({
   const [openEditRoom, setOpenEditRoom] = useState(false);
   const [openAmenities, setOpenAmenities] = useState(false);
   const [openBeds, setOpenBeds] = useState(false);
+  const [isOpen, setIsOpen] = useState(true);
+  const defaultPrice = room?.price || 0;
 
   const handleOpenAmenities = () => {
     if (!room) return;
@@ -92,8 +95,8 @@ export default function RoomDetailPage({
                   room.status === "AVAILABLE"
                     ? "bg-green-100 text-green-700"
                     : room.status === "BOOKED"
-                    ? "bg-yellow-100 text-yellow-700"
-                    : "bg-red-100 text-red-700"
+                      ? "bg-yellow-100 text-yellow-700"
+                      : "bg-red-100 text-red-700"
                 }
               >
                 {room.status}
@@ -115,6 +118,20 @@ export default function RoomDetailPage({
           </Button>
         </div>
       </div>
+
+      <details className="shadow rounded-2xl p-3 bg-card px-6">
+        <summary className="cursor-pointer font-semibold">
+          <Calendar className="w-6 h-6 inline-block mx-2" /> Lịch phòng 
+        </summary>
+        <div className="mt-4">
+          <CalendarGrid 
+            soldOutDates={soldOutDates} 
+            defaultPrice={defaultPrice} 
+            roomPriceDates={roomPrices} 
+            bookings={bookings}
+          />
+        </div>
+      </details>
 
       <Tabs defaultValue="info">
         <TabsList className="grid grid-cols-4 w-full h-12 backdrop-blur-md bg-white/30 border border-white/20 shadow-sm rounded-2xl p-1 mb-5">
