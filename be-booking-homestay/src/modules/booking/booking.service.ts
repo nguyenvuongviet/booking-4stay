@@ -5,12 +5,18 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { bookings_status } from '@prisma/client';
-import { eachDayOfInterval, format, startOfDay, subDays } from 'date-fns';
+import {
+  eachDayOfInterval,
+  format,
+  startOfDay,
+  endOfDay,
+  subDays,
+} from 'date-fns';
 import { ADMIN_EMAIL } from 'src/common/constant/app.constant';
 import { AvailabilityHelper } from 'src/helpers/availability.helper';
 import { LoyaltyProgram } from 'src/helpers/loyalty.helper';
 import { PricingHelper } from 'src/helpers/pricing.helper';
-import { ensureDateRange } from 'src/utils/date.util';
+import { ensureDateRange, nightsBetween } from 'src/utils/date.util';
 import { sanitizeBooking } from 'src/utils/sanitize/booking.sanitize';
 import { MailService } from '../mail/mail.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -179,15 +185,15 @@ export class BookingService {
       rawTotal,
     );
 
+    const nights = nightsBetween(inDate, outDate);
+
     return {
       available: !isOccupied,
       roomName: room.name,
       stayDetails: {
         checkIn: inDate,
         checkOut: outDate,
-        nights: Math.ceil(
-          (outDate.getTime() - inDate.getTime()) / (1000 * 60 * 60 * 24),
-        ),
+        nights,
       },
       priceSummary: {
         basePricePerNight: Number(room.price),
@@ -441,13 +447,15 @@ export class BookingService {
     const unavailableSet = new Set<string>();
 
     for (const b of bookings) {
-      const range = eachDayOfInterval({
-        start: b.checkIn < today ? today : b.checkIn,
-        end: subDays(b.checkOut, 1),
-      });
-      range.forEach((d) => {
-        unavailableSet.add(format(d, 'yyyy-MM-dd'));
-      });
+      const start = b.checkIn < today ? today : startOfDay(b.checkIn);
+      const end = startOfDay(subDays(b.checkOut, 1));
+
+      if (start <= end) {
+        const range = eachDayOfInterval({ start, end });
+        range.forEach((d) => {
+          unavailableSet.add(format(d, 'yyyy-MM-dd'));
+        });
+      }
     }
 
     blocked.forEach((b) => {
@@ -505,18 +513,19 @@ export class BookingService {
 
     if (!booking) throw new NotFoundException();
 
+    const newPaidAmount = Number(booking.paidAmount) + paidAmount;
     const total = Number(booking.totalPrice);
-    let newStatus: bookings_status = bookings_status.PENDING;
+    let newStatus: bookings_status = booking.status;
 
-    if (paidAmount > 0 && paidAmount < total) {
+    if (newPaidAmount > 0 && newPaidAmount < total) {
       newStatus = bookings_status.PARTIALLY_PAID;
-    } else if (paidAmount >= total) {
+    } else if (newPaidAmount >= total) {
       newStatus = bookings_status.CONFIRMED;
     }
 
     return this.changeBookingStatus(orderId, newStatus, {
       allowOverride: true,
-      paidAmount,
+      paidAmount: newPaidAmount,
     });
   }
 
@@ -556,6 +565,27 @@ export class BookingService {
 
     return {
       message,
+      booking: sanitizeBooking(updated),
+    };
+  }
+
+  async adminCancelBooking(bookingId: number) {
+    const booking = await this.prisma.bookings.findUnique({
+      where: { id: bookingId },
+    });
+    if (!booking) throw new NotFoundException('Không tìm thấy booking');
+
+    const { finalStatus } = this.determineCancelFinalStatus(
+      booking.paidAmount.toNumber(),
+    );
+
+    const updated = await this.changeBookingStatus(bookingId, finalStatus, {
+      reason: 'Admin chủ động huỷ đơn',
+      allowOverride: true,
+    });
+
+    return {
+      message: 'Đã huỷ đơn thành công',
       booking: sanitizeBooking(updated),
     };
   }

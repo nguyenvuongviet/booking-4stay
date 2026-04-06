@@ -1,4 +1,3 @@
-import { payments_status } from '@prisma/client';
 import { buildImageUrl, sanitizeCollection } from '../object.util';
 import { sanitizeRoom } from './room.sanitize';
 
@@ -15,6 +14,8 @@ function sanitize(booking: any) {
     checkOut: booking.checkOut,
     adults: booking.adults,
     children: booking.children,
+    rawTotalPrice: Number(booking.rawTotalPrice || 0),
+    discountAmount: Number(booking.discountAmount || 0),
     totalAmount: Number(booking.totalPrice),
     createdAt: booking.createdAt,
     updatedAt: booking.updatedAt,

@@ -62,23 +62,13 @@ export class RoomService {
       outDate = r.outDate;
     }
 
-    let provinceId: number | undefined;
-    if (search) {
-      const exists = await this.prisma.location_provinces.findFirst({
-        where: {
-          name: { contains: search },
-          isDeleted: false,
-        },
-        select: { id: true },
-      });
-      if (!exists) {
-        throw new NotFoundException(`Không tìm thấy province = "${search}"`);
-      }
-      provinceId = exists.id;
-    }
-
     const where: any = { isDeleted: false };
-    if (provinceId) where.provinceId = provinceId;
+    if (search) {
+      where.OR = [
+        { name: { contains: search } },
+        { location_provinces: { name: { contains: search } } },
+      ];
+    }
 
     if (minPrice || maxPrice) {
       where.price = {};
@@ -193,6 +183,19 @@ export class RoomService {
 
     if (!roomExist) {
       throw new BadRequestException('Phòng không tồn tại hoặc đã bị xoá');
+    }
+
+    const activeBookings = await this.prisma.bookings.count({
+      where: {
+        roomId: id,
+        status: { in: ['PENDING', 'CONFIRMED', 'CHECKED_IN'] },
+      },
+    });
+
+    if (activeBookings > 0) {
+      throw new BadRequestException(
+        'Không thể xoá phòng đang có booking chưa hoàn thành',
+      );
     }
 
     await this.prisma.rooms.update({

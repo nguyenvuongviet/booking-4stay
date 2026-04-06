@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Cron, CronExpression } from '@nestjs/schedule';
+import { Cron } from '@nestjs/schedule';
+import { endOfDay, startOfDay, subMinutes } from 'date-fns';
 import { PrismaService } from '../prisma/prisma.service';
 import { BookingService } from './booking.service';
-import { startOfDay, endOfDay, subMinutes } from 'date-fns';
 
 @Injectable()
 export class BookingCron {

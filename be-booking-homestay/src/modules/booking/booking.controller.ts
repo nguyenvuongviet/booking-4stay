@@ -127,4 +127,11 @@ export class BookingController {
   ) {
     return this.bookingService.adminRejectBooking(id, dto);
   }
+
+  @Patch('/:id/admin-cancel')
+  @Roles('ADMIN')
+  @ApiBearerAuth('AccessToken')
+  async adminCancelBooking(@Param('id', ParseIntPipe) id: number) {
+    return this.bookingService.adminCancelBooking(id);
+  }
 }

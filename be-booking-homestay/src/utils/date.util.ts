@@ -1,10 +1,13 @@
 import { BadRequestException } from '@nestjs/common';
+import { differenceInDays, startOfDay } from 'date-fns';
 
 export function ensureDateRange(checkIn: string, checkOut: string) {
-  const inDate = new Date(checkIn);
-  const outDate = new Date(checkOut);
-  if (!(inDate < outDate))
-    throw new BadRequestException('Khoảng ngày không hợp lệ');
+  const inDate = startOfDay(new Date(checkIn));
+  const outDate = startOfDay(new Date(checkOut));
+
+  if (inDate >= outDate) {
+    throw new BadRequestException('Ngày nhận phòng phải trước ngày trả phòng');
+  }
   return { inDate, outDate };
 }
 
@@ -17,5 +20,5 @@ export function* eachDate(inDate: Date, outDate: Date) {
 }
 
 export function nightsBetween(inDate: Date, outDate: Date) {
-  return Math.ceil((+outDate - +inDate) / (1000 * 60 * 60 * 24));
+  return differenceInDays(outDate, inDate);
 }
