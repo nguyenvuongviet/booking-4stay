@@ -1,9 +1,29 @@
 import { BadRequestException } from '@nestjs/common';
-import { differenceInDays, startOfDay } from 'date-fns';
+import { differenceInDays, format } from 'date-fns';
 
-export function ensureDateRange(checkIn: string, checkOut: string) {
-  const inDate = startOfDay(new Date(checkIn));
-  const outDate = startOfDay(new Date(checkOut));
+export function toISODate(input: Date | string): string {
+  if (typeof input === 'string') {
+    return input.split('T')[0];
+  }
+  return format(input, 'yyyy-MM-dd');
+}
+
+export function getStartOfDayUTC(input: string | Date): Date {
+  const str = toISODate(input);
+  return new Date(`${str}T00:00:00.000Z`);
+}
+
+export function getEndOfDayUTC(input: string | Date): Date {
+  const str = toISODate(input);
+  return new Date(`${str}T23:59:59.999Z`);
+}
+
+export function ensureDateRange(
+  checkIn: string | Date,
+  checkOut: string | Date,
+) {
+  const inDate = getStartOfDayUTC(checkIn);
+  const outDate = getStartOfDayUTC(checkOut);
 
   if (inDate >= outDate) {
     throw new BadRequestException('Ngày nhận phòng phải trước ngày trả phòng');
@@ -11,14 +31,6 @@ export function ensureDateRange(checkIn: string, checkOut: string) {
   return { inDate, outDate };
 }
 
-export function* eachDate(inDate: Date, outDate: Date) {
-  const d = new Date(inDate);
-  while (d < outDate) {
-    yield new Date(d);
-    d.setDate(d.getDate() + 1);
-  }
-}
-
-export function nightsBetween(inDate: Date, outDate: Date) {
-  return differenceInDays(outDate, inDate);
+export function nightsBetween(inDate: Date | string, outDate: Date | string) {
+  return differenceInDays(getStartOfDayUTC(outDate), getStartOfDayUTC(inDate));
 }

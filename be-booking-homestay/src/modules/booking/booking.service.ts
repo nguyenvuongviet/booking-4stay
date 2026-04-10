@@ -7,9 +7,9 @@ import {
 import { bookings_status } from '@prisma/client';
 import {
   eachDayOfInterval,
+  endOfDay,
   format,
   startOfDay,
-  endOfDay,
   subDays,
 } from 'date-fns';
 import { ADMIN_EMAIL } from 'src/common/constant/app.constant';
@@ -196,7 +196,7 @@ export class BookingService {
         nights,
       },
       priceSummary: {
-        basePricePerNight: Number(room.price),
+        averagePricePerNight: Math.round(rawTotal / nights),
         rawTotal,
         discountAmount: loyaltyInfo.discountAmount,
         totalPrice: loyaltyInfo.totalPrice,

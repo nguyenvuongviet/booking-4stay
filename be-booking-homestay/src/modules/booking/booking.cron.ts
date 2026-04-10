@@ -91,4 +91,27 @@ export class BookingCron {
       );
     }
   }
+
+  @Cron('0 2 * * *', { timeZone: 'Asia/Ho_Chi_Minh' })
+  async clearOldCalendarData() {
+    const thresholdDate = startOfDay(subMinutes(new Date(), 30 * 24 * 60));
+
+    try {
+      const deletedPrices = await this.prisma.room_prices.deleteMany({
+        where: { date: { lt: thresholdDate } },
+      });
+
+      const deletedAvail = await this.prisma.room_availability.deleteMany({
+        where: { date: { lt: thresholdDate } },
+      });
+
+      if (deletedPrices.count > 0 || deletedAvail.count > 0) {
+        this.logger.log(
+          `[Cron] Dọn dẹp Calendar: Xoá ${deletedPrices.count} bản ghi giá và ${deletedAvail.count} bản ghi trạng thái cũ (Trôi qua hơn 30 ngày).`,
+        );
+      }
+    } catch (e) {
+      this.logger.error('[Cron] Lỗi khi dọn dẹp dữ liệu Calendar cũ', e);
+    }
+  }
 }

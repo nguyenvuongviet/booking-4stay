@@ -20,6 +20,10 @@ import { Roles } from 'src/common/decorator/roles.decorator';
 import { UploadRoomImagesDto } from 'src/common/dto/upload-file.dto';
 import { CreateRoomDto } from './dto/create-room.dto';
 import { RoomFilterDto } from './dto/filter-room.dto';
+import {
+  RoomCalendarQueryDto,
+  UpdateCalendarDto,
+} from './dto/room-calendar.dto';
 import { SetRoomAmenitiesDto } from './dto/set-room-amenities.dto';
 import { SetRoomBedsDto } from './dto/set-room-beds.dto';
 import { DeleteRoomImagesDto, ImageItemDto } from './dto/set-room-images.dto';
@@ -131,5 +135,25 @@ export class RoomController {
     @Body('order') order: number[],
   ) {
     return this.roomService.updateImageOrder(roomId, order);
+  }
+
+  @Get(':id/calendar')
+  @Public()
+  async getCalendar(
+    @Param('id', ParseIntPipe) id: number,
+    @Query() query: RoomCalendarQueryDto,
+  ) {
+    return this.roomService.getCalendar(id, query);
+  }
+
+  @Put(':id/calendar')
+  @Roles('ADMIN')
+  @ApiBearerAuth('AccessToken')
+  @ApiBody({ type: UpdateCalendarDto })
+  async updateCalendar(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateCalendarDto,
+  ) {
+    return this.roomService.updateCalendar(id, dto.updates);
   }
 }
