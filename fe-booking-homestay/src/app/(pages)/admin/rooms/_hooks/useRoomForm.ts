@@ -16,6 +16,8 @@ export interface RoomFormValues {
   provinceId: number | null;
   districtId: number | null;
   wardId: number | null;
+  latitude: number | null;
+  longitude: number | null;
 }
 
 const defaultForm: RoomFormValues = {
@@ -29,6 +31,8 @@ const defaultForm: RoomFormValues = {
   provinceId: null,
   districtId: null,
   wardId: null,
+  latitude: null,
+  longitude: null,
 };
 
 interface UseRoomFormProps {
@@ -59,6 +63,8 @@ export function useRoomForm({
         provinceId: initialData.location.provinceId,
         districtId: initialData.location.districtId,
         wardId: initialData.location.wardId,
+        latitude: initialData.location.latitude ?? null,
+        longitude: initialData.location.longitude ?? null,
       });
     } else {
       setForm(defaultForm);
@@ -108,6 +114,8 @@ export function useRoomForm({
         districtId: Number(form.districtId),
         wardId: Number(form.wardId),
         street: form.street,
+        latitude: form.latitude ?? undefined,
+        longitude: form.longitude ?? undefined,
       };
       if (isEditMode && initialData) {
         await updateRoom(initialData.id, payload);

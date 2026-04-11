@@ -246,6 +246,8 @@ model rooms {
   reviewCount        Int?                @default(0) @db.UnsignedInt
   isDeleted          Boolean             @default(false)
   deletedAt          DateTime?           @db.Timestamp(0)
+  latitude           Decimal?            @db.Decimal(10, 7)
+  longitude          Decimal?            @db.Decimal(10, 7)
   createdAt          DateTime            @default(now()) @db.Timestamp(0)
   updatedAt          DateTime            @default(now()) @db.Timestamp(0)
   bookings           bookings[]
@@ -342,6 +344,8 @@ model location_provinces {
   name               String               @unique(map: "uq_location_province_name") @db.VarChar(100)
   code               String?              @db.VarChar(20)
   imageUrl           String?              @db.VarChar(255)
+  latitude           Decimal?             @db.Decimal(10, 7)
+  longitude          Decimal?             @db.Decimal(10, 7)
   isDeleted          Boolean              @default(false)
   deletedAt          DateTime?            @db.Timestamp(0)
   createdAt          DateTime             @default(now()) @db.Timestamp(0)

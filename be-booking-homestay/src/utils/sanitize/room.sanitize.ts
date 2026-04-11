@@ -39,8 +39,9 @@ function sanitize(room: any) {
             ward: ward?.name || null,
             wardId: ward?.id || null,
             street: room.street || null,
-
             fullAddress: room.fullAddress || '',
+            latitude: room.latitude != null ? Number(room.latitude) : null,
+            longitude: room.longitude != null ? Number(room.longitude) : null,
           }
         : null,
     images: {

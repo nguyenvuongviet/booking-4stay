@@ -12,9 +12,20 @@ import {
 import { Input } from "@/_components/ui/input";
 import { Textarea } from "@/_components/ui/textarea";
 import type { Room } from "@/types/room";
+import dynamic from "next/dynamic";
 import { useEffect } from "react";
 import { LocationSelector } from "../../_components/location-selector";
 import { useRoomForm } from "../_hooks/useRoomForm";
+
+const MapPicker = dynamic(
+  () => import("../../_components/MapPicker").then((m) => m.MapPicker),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="h-[280px] bg-muted rounded-lg animate-pulse" />
+    ),
+  },
+);
 
 interface Props {
   open: boolean;
@@ -114,9 +125,24 @@ export function RoomFormModal({
           <div className="space-y-1">
             <label className="text-sm font-medium">Đường</label>
             <Input
-              placeholder="Số nhà / Tên đường"
+              placeholder="Nhập đầy đủ để lấy tọa độ chính xác: số nhà, tên đường, quận, thành phố"
               value={form.street}
               onChange={(e) => update("street", e.target.value)}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium block">
+              Vị trí trên bản đồ
+            </label>
+            <MapPicker
+              lat={form.latitude}
+              lng={form.longitude}
+              address={form.street || undefined}
+              onChange={(lat, lng) => {
+                update("latitude", lat);
+                update("longitude", lng);
+              }}
             />
           </div>
 
@@ -142,8 +168,8 @@ export function RoomFormModal({
                 ? "Đang lưu..."
                 : "Đang tạo..."
               : isEditMode
-              ? "Lưu thay đổi"
-              : "Tạo phòng"}
+                ? "Lưu thay đổi"
+                : "Tạo phòng"}
           </Button>
         </DialogFooter>
       </DialogContent>

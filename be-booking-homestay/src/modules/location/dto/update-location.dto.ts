@@ -40,4 +40,14 @@ export class UpdateLocationDto {
   @Transform(({ value }) => Number(value))
   @IsNumber()
   districtId?: number;
+
+  @ApiPropertyOptional({ example: 10.776 })
+  @IsOptional()
+  @IsNumber()
+  latitude?: number;
+
+  @ApiPropertyOptional({ example: 106.701 })
+  @IsOptional()
+  @IsNumber()
+  longitude?: number;
 }

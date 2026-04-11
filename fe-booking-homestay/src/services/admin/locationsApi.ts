@@ -13,6 +13,8 @@ export interface BaseLocation {
   province?: string;
   district?: string;
   imageUrl?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
 }
 
 export async function getCountries(): Promise<BaseLocation[]> {

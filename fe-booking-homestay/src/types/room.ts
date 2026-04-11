@@ -41,6 +41,8 @@ export interface RoomLocation {
   wardId: number;
   street: string;
   fullAddress: string;
+  latitude?: number | null;
+  longitude?: number | null;
 }
 
 export interface UserRoom {
@@ -86,6 +88,8 @@ export interface CreateRoomDto {
   districtId: number;
   wardId: number;
   street: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 export interface UpdateRoomDto extends Partial<CreateRoomDto> {}

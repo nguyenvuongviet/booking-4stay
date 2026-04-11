@@ -85,6 +85,8 @@ export class LocationService {
         code: true,
         imageUrl: true,
         countryId: true,
+        latitude: true,
+        longitude: true,
         createdAt: true,
         updatedAt: true,
       },
@@ -113,6 +115,8 @@ export class LocationService {
         name: dto.name,
         code: dto.code ?? null,
         countryId: dto.countryId,
+        latitude: dto.latitude ?? null,
+        longitude: dto.longitude ?? null,
         imageUrl: null,
       },
     });
@@ -249,6 +253,8 @@ export class LocationService {
         const data: any = {};
         if (dto.name !== undefined) data.name = dto.name;
         if (dto.countryId !== undefined) data.countryId = dto.countryId;
+        if (dto.latitude !== undefined) data.latitude = dto.latitude;
+        if (dto.longitude !== undefined) data.longitude = dto.longitude;
         const updated = await this.prisma.location_provinces.update({
           where: { id },
           data,

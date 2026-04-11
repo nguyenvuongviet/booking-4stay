@@ -211,3 +211,35 @@ BEGIN
 END $$
 
 DELIMITER ;
+
+/* ==========================================================
+    VIEW: view_rooms (tiện ích xem dữ liệu phòng đầy đủ)
+   ========================================================== */
+CREATE OR REPLACE VIEW `view_rooms` AS
+SELECT
+  r.`id`,
+  r.`name`,
+  r.`description`,
+  r.`price`,
+  r.`adultCapacity`,
+  r.`childCapacity`,
+  r.`status`,
+  r.`rating`,
+  r.`reviewCount`,
+  r.`street`,
+  r.`fullAddress`,
+  r.`latitude`,
+  r.`longitude`,
+  r.`hostId`,
+  r.`countryId`,  c.`name` AS `countryName`,
+  r.`provinceId`, p.`name` AS `provinceName`,
+  r.`districtId`, d.`name` AS `districtName`,
+  r.`wardId`,     w.`name` AS `wardName`,
+  r.`isDeleted`,
+  r.`createdAt`,
+  r.`updatedAt`
+FROM `rooms` r
+LEFT JOIN `location_wards`     w ON w.`id` = r.`wardId`
+LEFT JOIN `location_districts` d ON d.`id` = r.`districtId`
+LEFT JOIN `location_provinces` p ON p.`id` = r.`provinceId`
+LEFT JOIN `location_countries` c ON c.`id` = r.`countryId`;

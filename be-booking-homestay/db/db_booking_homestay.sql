@@ -38,6 +38,19 @@ CREATE TABLE `amenities` (
   UNIQUE KEY `uq_amenity_name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+DROP TABLE IF EXISTS `app_configs`;
+CREATE TABLE `app_configs` (
+    `key` VARCHAR(100) NOT NULL,
+    `value` JSON NOT NULL,
+    `description` VARCHAR(500) NULL,
+    `updatedBy` INTEGER UNSIGNED NULL,
+    `createdAt` TIMESTAMP(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
+    `updatedAt` TIMESTAMP(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
+
+    INDEX `idx_app_configs_key`(`key`),
+    PRIMARY KEY (`key`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
 DROP TABLE IF EXISTS `bookings`;
 CREATE TABLE `bookings` (
   `id` int unsigned NOT NULL AUTO_INCREMENT,
@@ -353,6 +366,8 @@ CREATE TABLE `rooms` (
   `reviewCount` int unsigned DEFAULT '0',
   `isDeleted` tinyint(1) NOT NULL DEFAULT '0',
   `deletedAt` timestamp NULL DEFAULT NULL,
+  `latitude` decimal(10,7) DEFAULT NULL,
+  `longitude` decimal(10,7) DEFAULT NULL,
   `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
@@ -412,8 +427,16 @@ CREATE OR REPLACE VIEW `view_rooms` AS
 SELECT 
   r.`id`,
   r.`name`,
+  r.`description`,
   r.`price`,
+  r.`adultCapacity`,
+  r.`childCapacity`,
+  r.`status`,
+  r.`rating`,
+  r.`reviewCount`,
   r.`street`,
+  r.`latitude`,
+  r.`longitude`,
   CONCAT_WS(', ',
     r.`street`,
     w.`name`,
@@ -422,8 +445,13 @@ SELECT
     c.`name`
   ) AS `fullAddress`,
   r.`hostId`,
-  r.`status`,
-  r.`createdAt`
+  r.`countryId`,  c.`name` AS `countryName`,
+  r.`provinceId`, p.`name` AS `provinceName`,
+  r.`districtId`, d.`name` AS `districtName`,
+  r.`wardId`,     w.`name` AS `wardName`,
+  r.`isDeleted`,
+  r.`createdAt`,
+  r.`updatedAt`
 FROM `rooms` r
 LEFT JOIN `location_wards` w ON w.`id` = r.`wardId`
 LEFT JOIN `location_districts` d ON d.`id` = r.`districtId`

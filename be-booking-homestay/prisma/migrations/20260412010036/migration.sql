@@ -260,6 +260,8 @@ CREATE TABLE `rooms` (
     `reviewCount` INTEGER UNSIGNED NULL DEFAULT 0,
     `isDeleted` BOOLEAN NOT NULL DEFAULT false,
     `deletedAt` TIMESTAMP(0) NULL,
+    `latitude` DECIMAL(10, 7) NULL,
+    `longitude` DECIMAL(10, 7) NULL,
     `createdAt` TIMESTAMP(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
     `updatedAt` TIMESTAMP(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
 
@@ -343,6 +345,8 @@ CREATE TABLE `location_provinces` (
     `name` VARCHAR(100) NOT NULL,
     `code` VARCHAR(20) NULL,
     `imageUrl` VARCHAR(255) NULL,
+    `latitude` DECIMAL(10, 7) NULL,
+    `longitude` DECIMAL(10, 7) NULL,
     `isDeleted` BOOLEAN NOT NULL DEFAULT false,
     `deletedAt` TIMESTAMP(0) NULL,
     `createdAt` TIMESTAMP(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),

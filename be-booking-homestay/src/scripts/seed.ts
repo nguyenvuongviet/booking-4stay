@@ -9,14 +9,19 @@ const prisma = new PrismaClient();
 /**
  * Hàm hỗ trợ đợi database sẵn sàng (retry 5 lần)
  */
-async function waitForDatabase(dbUrl: string, retries = 5): Promise<mysql.Connection | null> {
+async function waitForDatabase(
+  dbUrl: string,
+  retries = 5,
+): Promise<mysql.Connection | null> {
   for (let i = 0; i < retries; i++) {
     try {
       const conn = await mysql.createConnection({ uri: dbUrl });
       return conn;
     } catch (err) {
-      console.log(`[!] Đang đợi database sẵn sàng... (Lần thử ${i + 1}/${retries})`);
-      await new Promise(res => setTimeout(res, 2000));
+      console.log(
+        `[!] Đang đợi database sẵn sàng... (Lần thử ${i + 1}/${retries})`,
+      );
+      await new Promise((res) => setTimeout(res, 2000));
     }
   }
   return null;
@@ -50,9 +55,14 @@ async function executeSqlFileWithMysql2(filePath: string) {
     console.log(`[+] Hoàn tất ${path.basename(filePath)} thành công.`);
   } catch (err: any) {
     if (err.message.includes('Duplicate entry')) {
-      console.log(`[!] ${path.basename(filePath)}: Đã có dữ liệu, bỏ qua các bản ghi trùng.`);
+      console.log(
+        `[!] ${path.basename(filePath)}: Đã có dữ liệu, bỏ qua các bản ghi trùng.`,
+      );
     } else {
-      console.error(`[X] Lỗi thực thi ${path.basename(filePath)}:`, err.message);
+      console.error(
+        `[X] Lỗi thực thi ${path.basename(filePath)}:`,
+        err.message,
+      );
     }
   } finally {
     await connection.end();
@@ -70,7 +80,8 @@ async function main() {
   try {
     // Kiểm tra kết nối trước
     const conn = await waitForDatabase(dbUrl);
-    if (!conn) throw new Error('Không thể kết nối đến Database sau nhiều lần thử.');
+    if (!conn)
+      throw new Error('Không thể kết nối đến Database sau nhiều lần thử.');
     await conn.end();
 
     // Bước 1: App Configs
@@ -79,21 +90,24 @@ async function main() {
 
     // Bước 2: Triggers & Procedures
     console.log('\n Bước 2: Thiết lập Triggers & Procedures...');
-    await executeSqlFileWithMysql2(path.join(__dirname, '../../db/db_trigger.sql'));
+    await executeSqlFileWithMysql2(
+      path.join(__dirname, '../../db/db_trigger.sql'),
+    );
 
-    // Bước 3: Dữ liệu mẫu (Inserts)
-    console.log('\n Bước 3: Đang nạp dữ liệu mẫu Insert...');
-    await executeSqlFileWithMysql2(path.join(__dirname, '../../db/db_insert.sql'));
-
-    // Bước 4: Locations API
-    console.log('\n Bước 4: Đồng bộ 63 tỉnh thành Việt Nam (API)...');
+    // Bước 3: Locations API
+    console.log('\n Bước 3: Đồng bộ 63 tỉnh thành Việt Nam (API)...');
     execSync('npx ts-node src/scripts/seed-locations.ts', { stdio: 'inherit' });
+
+    // Bước 4: Dữ liệu mẫu (Inserts)
+    console.log('\n Bước 4: Đang nạp dữ liệu mẫu Insert...');
+    await executeSqlFileWithMysql2(
+      path.join(__dirname, '../../db/db_insert.sql'),
+    );
 
     const end = Date.now();
     console.log('\n-------------------------------------------------------');
     console.log(` TẤT CẢ ĐÃ SẴN SÀNG (${((end - start) / 1000).toFixed(2)}s)`);
     console.log('-------------------------------------------------------');
-
   } catch (error: any) {
     console.error('\n LỖI KHỞI ĐỘNG:', error.message);
     process.exit(1);
