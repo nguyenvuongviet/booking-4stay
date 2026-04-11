@@ -19,6 +19,17 @@ model amenities {
   room_amenities room_amenities[]
 }
 
+model app_configs {
+  key         String   @id @db.VarChar(100)
+  value       Json
+  description String?  @db.VarChar(500)
+  updatedBy   Int?     @db.UnsignedInt
+  createdAt   DateTime @default(now()) @db.Timestamp(0)
+  updatedAt   DateTime @default(now()) @db.Timestamp(0)
+
+  @@index([key], map: "idx_app_configs_key")
+}
+
 model bookings {
   id               Int                    @id @default(autoincrement()) @db.UnsignedInt
   userId           Int                    @db.UnsignedInt
@@ -431,15 +442,4 @@ enum payments_status {
   FAILED
   CANCELED
   REFUNDED
-}
-
-model app_configs {
-  key         String   @id @db.VarChar(100)
-  value       Json
-  description String?  @db.VarChar(500)
-  updatedBy   Int?     @db.UnsignedInt
-  createdAt   DateTime @default(now()) @db.Timestamp(0)
-  updatedAt   DateTime @default(now()) @db.Timestamp(0)
-
-  @@index([key], map: "idx_app_configs_key")
 }

@@ -191,14 +191,23 @@ AFTER UPDATE ON `bookings`
 FOR EACH ROW
 BEGIN
   IF NEW.`status` = 'CHECKED_OUT' AND OLD.`status` <> 'CHECKED_OUT' THEN
-    UPDATE `loyalty_program`
-    SET 
+    INSERT INTO `loyalty_program` (`userId`, `levelId`, `totalBookings`, `totalNights`, `points`, `lastUpgradeDate`)
+    VALUES (NEW.`userId`, 1, 1, DATEDIFF(NEW.`checkOut`, NEW.`checkIn`), ROUND(NEW.`totalPrice` / 1000, 0), NOW())
+    ON DUPLICATE KEY UPDATE
       `totalBookings` = `totalBookings` + 1,
       `totalNights` = `totalNights` + DATEDIFF(NEW.`checkOut`, NEW.`checkIn`),
       `points` = `points` + ROUND(NEW.`totalPrice` / 1000, 0),
-      `lastUpgradeDate` = NOW()
-    WHERE `userId` = NEW.`userId`;
+      `lastUpgradeDate` = NOW();
   END IF;
+END $$
+
+DROP TRIGGER IF EXISTS `trg_users_after_insert_loyalty` $$
+CREATE TRIGGER `trg_users_after_insert_loyalty`
+AFTER INSERT ON `users`
+FOR EACH ROW
+BEGIN
+  INSERT IGNORE INTO `loyalty_program` (`userId`, `levelId`, `points`)
+  VALUES (NEW.`id`, 1, 0);
 END $$
 
 DELIMITER ;
