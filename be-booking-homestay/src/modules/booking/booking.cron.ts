@@ -79,6 +79,7 @@ export class BookingCron {
 
     for (const b of expired) {
       await this.bookingService['changeBookingStatus'](b.id, 'CANCELLED', {
+        reason: 'Hết hạn thanh toán tự động (Hệ thống tự huỷ do quá 30 phút chưa thanh toán)',
         allowOverride: true,
         notifyAdmin: true,
         notifyUser: true,
