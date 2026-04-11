@@ -4,6 +4,8 @@ export interface LoyaltyLevel {
   id: number;
   name: string;
   minPoints: number;
+  discountPercent: number;
+  maxDiscountAmount: number;
   description: string;
   isActive: boolean;
 }
@@ -22,7 +24,11 @@ export interface LoyaltyUserProgram {
     roles: string[];
     avatar: string;
   };
-  level: string;
+  level: {
+    name: string;
+    discountPercent: number;
+    maxDiscountAmount: number;
+  };
   points: number;
   totalBookings: number;
   totalNights: number;

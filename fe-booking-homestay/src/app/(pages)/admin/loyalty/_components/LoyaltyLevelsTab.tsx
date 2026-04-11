@@ -66,6 +66,12 @@ export default function LoyaltyLevelsTab({
                 <th className="py-3 px-4 text-left font-semibold">
                   Điểm tối thiểu
                 </th>
+                <th className="py-3 px-4 text-left font-semibold">
+                  Giảm giá (%)
+                </th>
+                <th className="py-3 px-4 text-left font-semibold">
+                  Giảm tối đa
+                </th>
                 <th className="py-3 px-4 text-left font-semibold">Mô tả</th>
                 <th className="py-3 px-4 text-center font-semibold">Active</th>
                 <th className="py-3 px-4 text-center w-12"></th>
@@ -79,8 +85,14 @@ export default function LoyaltyLevelsTab({
                   className="border-b hover:bg-muted/10 transition-colors"
                 >
                   <td className="py-4 px-4 font-medium">{lv.name}</td>
-                  <td className="py-4 px-4">{lv.minPoints}</td>
-                  <td className="py-4 px-4 text-muted-foreground">
+                  <td className="py-4 px-4">{lv.minPoints.toLocaleString()}</td>
+                  <td className="py-4 px-4 font-semibold text-primary">
+                    {lv.discountPercent}%
+                  </td>
+                  <td className="py-4 px-4">
+                    {lv.maxDiscountAmount.toLocaleString()} đ
+                  </td>
+                  <td className="py-4 px-4 text-muted-foreground text-xs max-w-[200px] truncate">
                     {lv.description || "—"}
                   </td>
 

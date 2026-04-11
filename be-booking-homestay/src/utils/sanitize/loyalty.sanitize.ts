@@ -17,7 +17,11 @@ function sanitize(program: any) {
       roles: program.users.user_roles.map((ur: any) => ur.roles?.name),
       avatar: buildImageUrl(program.users.avatar),
     },
-    level: program.levels.name,
+    level: {
+      name: program.levels.name,
+      discountPercent: Number(program.levels.discountPercent),
+      maxDiscountAmount: Number(program.levels.maxDiscountAmount),
+    },
     points: program.points,
     totalBookings: program.totalBookings,
     totalNights: program.totalNights,

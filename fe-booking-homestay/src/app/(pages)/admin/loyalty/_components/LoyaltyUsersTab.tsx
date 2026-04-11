@@ -98,10 +98,10 @@ export default function LoyaltyUsersTab({
         !kw ||
         u.user.email.toLowerCase().includes(kw) ||
         fullName.includes(kw) ||
-        u.level.toLowerCase().includes(kw);
+        u.level.name.toLowerCase().includes(kw);
 
       const matchesLevel =
-        levelFilter === "ALL" || u.level.toUpperCase() === levelFilter;
+        levelFilter === "ALL" || u.level.name.toUpperCase() === levelFilter;
 
       return matchesKeyword && matchesLevel;
     });
@@ -168,6 +168,8 @@ export default function LoyaltyUsersTab({
             <tr className="border-b bg-gray-50 text-left">
               <th className="py-3 px-4 font-medium text-gray-700">User</th>
               <th className="py-3 px-4 font-medium text-gray-700">Level</th>
+              <th className="py-3 px-4 font-medium text-gray-700">Quyền lợi</th>
+              <th className="py-3 px-4 font-medium text-gray-700">Ngày thăng cấp</th>
 
               <th
                 className="py-3 px-4 font-medium text-gray-700 cursor-pointer"
@@ -223,9 +225,19 @@ export default function LoyaltyUsersTab({
                 </td>
 
                 <td className="py-4 px-4">
-                  <Badge className={levelColor(u.level)}>{u.level}</Badge>
+                  <Badge className={levelColor(u.level.name)}>{u.level.name}</Badge>
                 </td>
-
+                <td className="py-4 px-4">
+                  <div className="text-sm font-medium text-primary">
+                    Giảm {u.level.discountPercent}%
+                  </div>
+                  <div className="text-[10px] text-gray-400">
+                    Tối đa {u.level.maxDiscountAmount.toLocaleString()}đ
+                  </div>
+                </td>
+                <td className="py-4 px-4 text-gray-500 text-xs">
+                  {u.lastUpgradeDate ? new Intl.DateTimeFormat('vi-VN').format(new Date(u.lastUpgradeDate)) : "—"}
+                </td>
                 <td className="py-4 px-4 font-semibold">
                   {u.points.toLocaleString()}
                 </td>
