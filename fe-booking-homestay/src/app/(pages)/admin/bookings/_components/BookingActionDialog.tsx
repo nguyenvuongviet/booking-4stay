@@ -21,18 +21,21 @@ export function BookingActionDialog({ dialog, onCancel, onConfirm }: Props) {
     accept: "Nhập số tiền khách đã trả",
     reject: "Nhập lý do từ chối",
     refund: "Nhập số tiền hoàn",
+    cancel: "Nhập lý do huỷ đơn",
   };
 
   const placeholders: Record<BookingActionMode, string> = {
     accept: "VD: 1500000",
     reject: "VD: Khách yêu cầu huỷ...",
     refund: "VD: 500000",
+    cancel: "VD: Chủ động hủy do lỗi hệ thống...",
   };
 
   const confirmTexts: Record<BookingActionMode, string> = {
     accept: "Duyệt booking",
     reject: "Từ chối booking",
     refund: "Hoàn tiền",
+    cancel: "Xác nhận huỷ đơn",
   };
 
   return (
@@ -45,7 +48,11 @@ export function BookingActionDialog({ dialog, onCancel, onConfirm }: Props) {
           : undefined
       }
       placeholder={placeholders[dialog.mode]}
-      type={dialog.mode === "reject" ? "text" : "number"}
+      type={
+        dialog.mode === "reject" || dialog.mode === "cancel"
+          ? "text"
+          : "number"
+      }
       confirmText={confirmTexts[dialog.mode]}
       defaultValue={
         dialog.mode === "refund" ? dialog.maxAmount?.toString() : ""

@@ -34,7 +34,7 @@ INSERT IGNORE INTO `levels` (`id`, `name`, `minPoints`, `discountPercent`, `maxD
 (4, 'PLATINUM', 1000, 15.00, 1000000.00);
 
 -- 5. Loyalty Program
-INSERT IGNORE INTO `loyalty_program` (`userId`, `levelId`, `points`) VALUES (1, 1, 0), (2, 2, 250), (3, 1, 50);
+INSERT IGNORE INTO `loyalty_program` (`userId`, `levelId`, `points`) VALUES (1, 1, 0), (2, 1, 0), (3, 1, 0);
 
 -- 6. Payment Methods
 INSERT IGNORE INTO `payment_methods` (`id`, `name`, `description`, `isActive`) VALUES
@@ -52,9 +52,6 @@ INSERT IGNORE INTO `amenities` (`id`, `name`, `category`) VALUES
 
 -- 8. Locations
 INSERT IGNORE INTO `location_countries` (`id`, `name`, `code`) VALUES (1, 'Việt Nam', 'VN');
-INSERT IGNORE INTO `location_provinces` (`id`, `countryId`, `name`, `code`) VALUES (1, 1, 'Hồ Chí Minh', 'HCM'), (2, 1, 'Hà Nội', 'HN'), (3, 1, 'Đà Nẵng', 'DN');
-INSERT IGNORE INTO `location_districts` (`id`, `provinceId`, `name`, `code`) VALUES (1, 1, 'Quận 1', 'Q1'), (2, 2, 'Ba Đình', 'BADINH'), (3, 3, 'Sơn Trà', 'SONTRA');
-INSERT IGNORE INTO `location_wards` (`id`, `districtId`, `name`, `code`) VALUES (1, 1, 'Nguyễn Thái Bình', 'NTB'), (2, 2, 'Phúc Xá', 'PHUCXA'), (3, 3, 'An Hải Bắc', 'AHB');
 
 -- 9. Rooms
 INSERT IGNORE INTO `rooms` (`id`, `hostId`, `provinceId`, `districtId`, `wardId`, `street`, `name`, `description`, `price`, `adultCapacity`, `childCapacity`) VALUES
@@ -90,7 +87,7 @@ INSERT IGNORE INTO `room_amenities` (`roomId`, `amenityId`) VALUES
 
 -- 12. Bookings
 INSERT IGNORE INTO `bookings` (`id`, `userId`, `roomId`, `guestFullName`, `guestEmail`, `guestPhoneNumber`, `checkIn`, `checkOut`, `adults`, `children`, `rawTotalPrice`, `totalPrice`, `status`, `paymentMethod`) VALUES
-(1, 2, 1, 'Demo Customer', 'user@gmail.com', '0907654321', '2025-11-01', '2025-11-03', 2, 0, 2400000.00, 2400000.00, 'CHECKED_OUT', 'VNPAY');
+(1, 1, 1, 'Demo Customer', 'user@gmail.com', '0907654321', '2025-11-01', '2025-11-03', 2, 0, 2400000.00, 2400000.00, 'CHECKED_OUT', 'VNPAY');
 
 -- 13. Reviews
 INSERT IGNORE INTO `reviews` (`bookingId`, `userId`, `rating`, `comment`) VALUES (1, 2, 5.0, 'Tuyệt vời, sạch sẽ!');

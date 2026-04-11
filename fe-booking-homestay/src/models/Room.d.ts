@@ -5,7 +5,7 @@ export interface RoomImage {
 }
 
 export interface Room {
-  id: string | number;
+  id: number;
   name: string;
   description?: string;
   price: number;

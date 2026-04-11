@@ -9,8 +9,9 @@ import {
 import { useLang } from "@/context/lang-context";
 import { Booking } from "@/models/Booking";
 import { IUser } from "@/models/User";
+import { get_booking } from "@/services/bookingApi";
 import { BookOpen, Gift, User } from "lucide-react";
-import { RefObject } from "react";
+import { RefObject, useCallback, useEffect, useState } from "react";
 import BookingTab from "./BookingTab";
 import ProfileTab from "./ProfileTab";
 import RewardsTab from "./RewardsTab";
@@ -36,15 +37,76 @@ interface Props {
   gender: string;
   setGender: (v: string) => void;
   country: string;
-  setCountry: (v: string) => void; bookings: Booking[];
-  loading: boolean;
-  loadingMore: boolean;
-  hasMore: boolean;
+  setCountry: (v: string) => void;
   getTierPoints: (point: number) => number;
 }
 
 export default function ProfileTabs(props: Props) {
   const { t } = useLang();
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [page, setPage] = useState(1);
+  const [bookingsLoaded, setBookingsLoaded] = useState(false);
+
+  const fetchBookings = useCallback(async (pageNumber: number) => {
+    if (pageNumber === 1) {
+      setLoading(true);
+    } else {
+      setLoadingMore(true);
+    }
+
+    try {
+      const res = await get_booking({ page: pageNumber, pageSize: 3 });      
+      const items = res.bookings || [];
+      const totalPages = Math.ceil(res.total / 3);
+
+      setBookings((prev) =>
+        pageNumber === 1 ? items : [...prev, ...items]
+      );
+      setHasMore(pageNumber < totalPages);
+    } catch (err) {
+      console.error("Fetch booking history error:", err);
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
+    }
+  }, []);
+
+  // Fetch bookings when bookings tab is selected
+  useEffect(() => {
+    if (props.activeTab === "bookings" && !bookingsLoaded) {
+      fetchBookings(1);
+      setBookingsLoaded(true);
+    }
+  }, [props.activeTab, bookingsLoaded]);
+
+  // Handle pagination
+  useEffect(() => {
+    if (page > 1) {
+      fetchBookings(page);
+    }
+  }, [page, fetchBookings]);
+
+  // Handle infinite scroll
+  useEffect(() => {
+    const handleScroll = () => {
+      if (loading || loadingMore || !hasMore) return;
+
+      const scrollTop = window.scrollY;
+      const scrollHeight = document.documentElement.scrollHeight;
+      const clientHeight = window.innerHeight;
+
+      if (scrollTop + clientHeight >= scrollHeight - 200) {
+        setPage((prev) => prev + 1);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [loading, loadingMore, hasMore]);
+
 
   return (
     <Tabs value={props.activeTab} onValueChange={props.setActiveTab}>
@@ -91,17 +153,17 @@ export default function ProfileTabs(props: Props) {
       <TabsContent value="bookings">
         <BookingTab
           user={props.user}
-          bookings={props.bookings}
-          loading={props.loading}
-          loadingMore={props.loadingMore}
-          hasMore={props.hasMore}
+          bookings={bookings}
+          loading={loading}
+          loadingMore={loadingMore}
+          hasMore={hasMore}
         />
       </TabsContent>
 
       <TabsContent value="rewards">
         <RewardsTab
           user={props.user}
-          bookings={props.bookings}
+          bookings={bookings}
           getTierPoints={props.getTierPoints}
         />
       </TabsContent>

@@ -3,7 +3,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { create_booking, pay_with_vnpay } from "@/services/bookingApi";
-import { differenceInDays } from "date-fns";
+import { differenceInDays, format } from "date-fns";
+import { room_preview } from "@/services/roomApi";
 
 type BookingPayload = {
   roomId: string | number;
@@ -18,7 +19,7 @@ type BookingPayload = {
   paymentMethod: "VNPAY" | "CASH";
 };
 
-export function usePayment(room: any, bookingData: any) {
+export function usePayment(room: any, bookingData: any, roomAvailable?: boolean) {
   const router = useRouter();
   const [modalType, setModalType] = useState<"VNPAY" | "CASH" | null>(null);
   const [openPopupPayment, setOpenPopupPayment] = useState(false);
@@ -28,7 +29,7 @@ export function usePayment(room: any, bookingData: any) {
     setModalType(paymentMethod);
     setOpenPopupPayment(true);
   };
-  
+
   const totalNights = differenceInDays(
     new Date(bookingData.checkOut),
     new Date(bookingData.checkIn)
@@ -36,12 +37,14 @@ export function usePayment(room: any, bookingData: any) {
 
   const handleDepositNow = async (payload: BookingPayload, bookingId?: number | string) => {
     try {
+
       let id = bookingId;
       if (!id) {
         const resp = await create_booking(payload);
+        toast.success("Đã tạo đặt phòng. Đang chuyển hướng đến trang thanh toán...");
         id = resp.data?.booking?.id;
         if (!id) {
-          toast.error("Cannot process payment — bookingId not returned!");
+          toast.error("Không thể tạo đặt phòng. Vui lòng thử lại.");
           return;
         }
         console.log("id: ", id);
@@ -56,20 +59,28 @@ export function usePayment(room: any, bookingData: any) {
 
     } catch (error) {
       console.error("Payment error:", error);
-      toast.error("Payment failed!");
+      if (error == 500)
+        toast.error("Kết nối mạng đang bị gián đoạn, vui lòng thử lại sau!");
+
+      toast.error("Hết phòng, vui lòng chọn phòng khác!");
     }
   };
 
   const handleDepositLater = async (payload: BookingPayload, bookingId?: number | string) => {
     try {
+      
+
       if (!bookingId) {
         const resp = await create_booking(payload);
         router.push("/booking");
-        toast.success("Reservation saved. Deposit later.");
+        toast.success("Đặt phòng đã được lưu. Thanh toán sau.");
       }
     } catch (error) {
       console.error("DepositLater error:", error);
-      toast.error("DepositLater failed!");
+      if (error == 500)
+        toast.error("Kết nối mạng đang bị gián đoạn, vui lòng thử lại sau!");
+
+      toast.error("Hết phòng, vui lòng chọn phòng khác!");
     }
   };
 

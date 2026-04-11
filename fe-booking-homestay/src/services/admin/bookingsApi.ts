@@ -60,3 +60,14 @@ export async function refundBooking(
     throw err;
   }
 }
+
+export async function cancelBooking(id: number, reason: string) {
+  try {
+    const res = await api.patch(`/bookings/${id}/admin-cancel`, { reason });
+    return res.data?.data;
+  } catch (err) {
+    console.error("Cancel Booking error:", err);
+    throw err;
+  }
+}
+

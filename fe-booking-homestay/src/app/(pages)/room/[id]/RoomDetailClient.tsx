@@ -8,23 +8,22 @@ import { useAuth } from "@/context/auth-context";
 import { useLang } from "@/context/lang-context";
 import { Room } from "@/models/Room";
 import { get_unavailable_dates } from "@/services/bookingApi";
-import { room_available, room_detail } from "@/services/roomApi";
-import { format } from "date-fns";
+import { room_available, room_detail, room_preview } from "@/services/roomApi";
+import { format, parse } from "date-fns";
 import { Loader2, Mail, MapPin, Phone, Star, Users } from "lucide-react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import "react-datepicker/dist/react-datepicker.css";
 import toast from "react-hot-toast";
 import GuestPicker from "../../../../_components/GuestPicker";
 import Header from "../../../../_components/Header";
-import DateRangePicker from "../../../../_components/ui/date-range-picker";
 import MapRooms from "../../../../_components/MapMarker";
 import { PhotoGalleryModal } from "../../../../_components/PhotoGalleryModal";
-import { ReviewList } from "./ReviewList";
+import DateRangePicker from "../../../../_components/ui/date-range-picker";
+import { ReviewList } from "../_component/ReviewList";
 
 interface RoomDetailClientProps {
-  roomId: string;
+  roomId: number;
 }
 
 export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
@@ -46,8 +45,15 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
   const [showFullOverview, setShowFullOverview] = useState(false);
   const [soldOutDates, setSoldOutDates] = useState<Date[]>([]);
   const [highlightDatePicker, setHighlightDatePicker] = useState(false);
-
-  console.log({ room });
+  const [roomPrices, setRoomPrices] = useState<{ date: string; price: number }[]>([]);
+  const [roomPreview, setRoomPreview] = useState<{ priceSummary: { totalPrice: number, rawTotal: number, discountPercent: number } } | null>(null);
+  const mockRoomPrices = [
+    { date: "2026-04-01", price: 500000 },
+    { date: "2026-04-02", price: 520000 },
+    { date: "2026-04-10", price: 850000 },
+    { date: "2026-04-04", price: 700000 },
+    { date: "2026-04-05", price: 700000 },
+  ];
 
   // fetch data
   useEffect(() => {
@@ -57,7 +63,20 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
         const dataRoom = await room_detail(roomId);
         const dataDate = await get_unavailable_dates(roomId);
         setRoom(dataRoom);
+        setRoomPrices(mockRoomPrices);
+        const parsedDates = dataDate.map(
+          (d: string) => new Date(d + "T00:00:00")
+        );
         setSoldOutDates(dataDate);
+
+        // enforce selected guests to room limits
+        if (dataRoom.adultCapacity && adults > dataRoom.adultCapacity) {
+          setAdults(dataRoom.adultCapacity);
+        }
+        const maxChild = dataRoom.childCapacity ?? 0;
+        if (children > maxChild) {
+          setChildren(maxChild);
+        }
       } catch (error) {
         console.error("Fetch room failed:", error);
       } finally {
@@ -74,12 +93,25 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
     const co = searchParams.get("checkOut");
     const status = searchParams.get("status");
 
-    if (ci) setCheckIn(new Date(ci));
-    if (co) setCheckOut(new Date(co));
+    if (ci) setCheckIn(parse(ci, "yyyy-MM-dd", new Date()));
+    if (co) setCheckOut(parse(co, "yyyy-MM-dd", new Date()));
     if (ad) setAdults(Number(ad));
     if (ch) setChildren(Number(ch));
     setAvailable(status ? status === "Available" : true);
-  }, [searchParams]);
+
+    // Restore price summary from localStorage if dates are set
+    if (ci && co) {
+      const priceKey = `room_${roomId}_${ci}_${co}_price`;
+      const savedPrice = localStorage.getItem(priceKey);
+      if (savedPrice) {
+        try {
+          setRoomPreview(JSON.parse(savedPrice));
+        } catch {
+          console.error("Failed to parse saved price summary");
+        }
+      }
+    }
+  }, [searchParams, roomId]);
 
   const updateURL = (params: Record<string, string>) => {
     router.replace(
@@ -94,21 +126,28 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
     ? room?.amenities ?? []
     : room?.amenities?.slice(0, 5) ?? [];
 
-  const checkRoomAvailable = async (inDate?: Date, outDate?: Date) => {
+  const checkRoomPreview = async (inDate?: Date, outDate?: Date) => {
     const checkInDate = inDate || checkIn;
     const checkOutDate = outDate || checkOut;
     if (!checkInDate || !checkOutDate) return;
 
     try {
       setLoading(true);
-      const data = await room_available(
-        roomId,
-        checkInDate.toISOString(),
-        checkOutDate.toISOString()
+      console.log("roomId:", roomId, typeof roomId);
+      const data = await room_preview(
+        Number(roomId),
+        format(checkInDate, "yyyy-MM-dd"),
+        format(checkOutDate, "yyyy-MM-dd")
       );
+      setRoomPreview(data);
+
+      // Save price summary to localStorage
+      const priceKey = `room_${roomId}_${format(checkInDate, "yyyy-MM-dd")}_${format(checkOutDate, "yyyy-MM-dd")}_price`;
+      localStorage.setItem(priceKey, JSON.stringify(data));
+
       const status = data.available ? "Available" : "SoldOut";
       setAvailable(data.available);
-
+      console.log("Room preview:", data);
       if (!data.available)
         toast.error(
           "This room is not available for the selected dates. Please choose different dates."
@@ -128,7 +167,7 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
     }
   };
 
-  const handleRoomSelect = async (roomId: number | string) => {
+  const handleRoomSelect = async (roomId: number) => {
     if (!checkIn || !checkOut) {
       toast.error("Please select check-in and check-out dates");
       // bật highlight
@@ -138,25 +177,10 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
       return;
     }
     if (!room) return;
-    if (adults > (room.adultCapacity ?? 0)) {
-      toast.error(
-        `This room only allows up to ${room!.adultCapacity} adult${
-          room!.adultCapacity > 1 ? "s" : ""
-        }.`
-      );
-      return;
-    }
-
-    if (children > (room?.childCapacity || 0)) {
-      toast.error(
-        `This room only allows up to ${room?.childCapacity} children .`
-      );
-      return;
-    }
 
     updateURL({
-      checkIn: checkIn.toISOString(),
-      checkOut: checkOut.toISOString(),
+      checkIn: format(checkIn, "yyyy-MM-dd"),
+      checkOut: format(checkOut, "yyyy-MM-dd"),
       adults: adults.toString(),
       children: children.toString(),
       status,
@@ -166,16 +190,17 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
       setLoading(true);
       const data = await room_available(
         roomId,
-        checkIn.toISOString(),
-        checkOut.toISOString()
+        format(checkIn, "yyyy-MM-dd"),
+        format(checkOut, "yyyy-MM-dd")
       );
       setAvailable(data.available);
       if (!data.available) {
         toast.error(
-          "This room is not available for the selected dates or seleted guest."
+          "This room is not available for the selected dates. Please choose different dates."
         );
         return;
       }
+
       router.push(
         `/checkout?${new URLSearchParams({
           roomId: String(roomId),
@@ -213,7 +238,7 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
           <div className="lg:col-span-2 space-y-6">
             {/* Photo Gallery */}
             <div className="relative">
-              <div className="grid grid-cols-4 gap-2 h-[400px]">
+              <div className="grid grid-cols-4 gap-2 h-100">
                 {/* cố định height */}
                 <div className="col-span-2 row-span-2 overflow-hidden rounded-l-lg">
                   <img
@@ -378,19 +403,30 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
           <div className="lg:col-span-1 sticky top-24">
             <Card className="p-6 sticky top-24">
               <div className="mb-4">
-                <div className="flex items-baseline gap-2 mb-1">
-                  <span className="text-4xl elegant-sans text-secondary-foreground">
-                    {" "}
-                    {/* {hotel.pricePerNight.toLocaleString()} VND */}
-                    {room.price?.toLocaleString()} VND
+                <div className="flex items-baseline mb-1 gap-2">
+                  <span className="text-3xl elegant-sans text-secondary-foreground">
+                    {roomPreview?.priceSummary?.totalPrice?.toLocaleString() || room.price.toLocaleString()} VND
                   </span>
+                  {roomPreview?.priceSummary?.discountPercent ? (
+                    <span className="text-sm elegant-sans text-green-600 align-top">
+                      -{roomPreview.priceSummary.discountPercent}%
+                    </span>
+                  ) : null}
+                </div>
+                <div className="flex items-baseline gap-2 mb-1">
+                  {roomPreview?.priceSummary?.discountPercent !== undefined && roomPreview?.priceSummary?.discountPercent !== 0 ? (
+                    <span className="text-xl elegant-subheading text-muted line-through">
+                      {roomPreview?.priceSummary?.rawTotal?.toLocaleString()} VND
+                    </span>
+                  ) : null}
+                </div>
+
+                <p className="text-md elegant-subheading text-muted-foreground">
+                  {/* Total: {hotel.totalPrice.toLocaleString()} VND */}
+                  Tiền phòng: {room.price?.toLocaleString()} VND
                   <span className="text-md elegant-subheading text-muted-foreground">
                     /{t("night")}
                   </span>
-                </div>
-                <p className="text-sm elegant-subheading text-muted-foreground">
-                  {/* Total: {hotel.totalPrice.toLocaleString()} VND */}
-                  {t("total")}: {room.price?.toLocaleString()} VND
                 </p>
                 <p className="text-sm elegant-subheading text-muted-foreground">
                   (1 {t("room")} x 1 {t("night")}, {t("incl. taxes & fees")})
@@ -424,12 +460,14 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
                         ? { from: checkIn, to: checkOut }
                         : undefined
                     }
-                    soldOutDates={(soldOutDates || []).map((d) => new Date(d))}
+                    soldOutDates={soldOutDates}
+                    defaultPrice={room?.price}
+                    roomPriceDates={roomPrices}
                     onChange={(range) => {
                       setCheckIn(range?.from ?? null);
                       setCheckOut(range?.to ?? null);
                       if (range?.from && range?.to) {
-                        checkRoomAvailable(range.from, range.to);
+                        checkRoomPreview(range.from, range.to);
                       }
                     }}
                   />
@@ -444,6 +482,14 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
                     children={children}
                     setAdults={setAdults}
                     setChildren={setChildren}
+                    maxAdults={room.adultCapacity}
+                    maxChildren={room.childCapacity ?? 0}
+                    onLimitReached={(type, limit) => {
+                      const label = type === "adults" ? t("adults") : t("children");
+                      toast.error(
+                        "Đã đạt tối đa " + limit + " " + label
+                      );
+                    }}
                   />
                 </div>
               </div>
@@ -464,11 +510,10 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
                   }
                 }}
                 disabled={available === false}
-                className={`w-full h-10 rounded-3xl mb-6 hover:bg-primary/80 ${
-                  available === false
-                    ? "bg-muted cursor-not-allowed hover:bg-muted"
-                    : ""
-                }`}
+                className={`w-full h-10 rounded-3xl mb-6 hover:bg-primary/80 ${available === false
+                  ? "bg-muted cursor-not-allowed hover:bg-muted"
+                  : ""
+                  }`}
               >
                 {available === false ? t("sold out") : t("Select")}
               </Button>

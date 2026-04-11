@@ -12,7 +12,7 @@ import { Roles } from 'src/common/decorator/roles.decorator';
 import { AppConfigsService } from './app-configs.service';
 import { AppConfigKey } from './constants/app-config.constant';
 
-@ApiTags('App Configs')
+@ApiTags('app configs')
 @Controller('app-configs')
 @ApiBearerAuth('AccessToken')
 export class AppConfigsController {

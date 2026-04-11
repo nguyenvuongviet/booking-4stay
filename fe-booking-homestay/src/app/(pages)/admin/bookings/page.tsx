@@ -55,6 +55,7 @@ export default function BookingListPage() {
     openAccept,
     openReject,
     openRefund,
+    openAdminCancel,
     closeDialog,
     handleConfirm,
   } = useBookingActions(refresh);
@@ -226,6 +227,7 @@ export default function BookingListPage() {
                       onAccept={openAccept}
                       onReject={openReject}
                       onRefund={openRefund}
+                      onCancel={openAdminCancel}
                     />
                   </td>
 

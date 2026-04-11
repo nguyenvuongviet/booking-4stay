@@ -20,6 +20,7 @@ export default function BookingTab({
   hasMore,
 }: Props) {
   const { t } = useLang();
+  
   return (
     <div className="mt-2 px-16 py-8 rounded-xl space-y-4 bg-card ">
       <h2 className="elegant-heading text-4xl my-6">
@@ -33,7 +34,7 @@ export default function BookingTab({
             <span className="text-sm">{t("loading_bookings")}</span>
           </div>
         </div>
-      ) : user?.loyalty_program.totalBooking === 0 ? (
+      ) : bookings.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-center text-muted-foreground ">
           <CalendarX className="h-12 w-12 mb-4 text-gray-400" />
           <p className="text-lg font-medium">{t("no_booking")}</p>

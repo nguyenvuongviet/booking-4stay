@@ -2,13 +2,14 @@
 
 import {
   acceptBooking,
+  cancelBooking,
   refundBooking,
   rejectBooking,
 } from "@/services/admin/bookingsApi";
 import { useState } from "react";
 import toast from "react-hot-toast";
 
-export type BookingActionMode = "accept" | "reject" | "refund";
+export type BookingActionMode = "accept" | "reject" | "refund" | "cancel";
 
 interface ActionState {
   open: boolean;
@@ -33,6 +34,9 @@ export function useBookingActions(onSuccess?: () => void) {
   const openRefund = (id: number, maxAmount: number) =>
     setDialog({ open: true, mode: "refund", id, maxAmount });
 
+  const openAdminCancel = (id: number) =>
+    setDialog({ open: true, mode: "cancel", id });
+
   const closeDialog = () =>
     setDialog({ open: false, mode: null, id: null, maxAmount: undefined });
 
@@ -55,6 +59,11 @@ export function useBookingActions(onSuccess?: () => void) {
         toast.success("Hoàn tiền thành công");
       }
 
+      if (dialog.mode === "cancel") {
+        await cancelBooking(dialog.id, value);
+        toast.success("Huỷ đơn đặt phòng thành công");
+      }
+
       onSuccess?.();
     } catch (err: any) {
       const msg = err?.response?.data?.message || "Thao tác thất bại";
@@ -69,6 +78,7 @@ export function useBookingActions(onSuccess?: () => void) {
     openAccept,
     openReject,
     openRefund,
+    openAdminCancel,
     closeDialog,
     handleConfirm,
   };

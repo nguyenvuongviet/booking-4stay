@@ -85,7 +85,7 @@ export default function RewardsTab({
       {/* Rewards History Table */}
       <h3 className="text-2xl elegant-sans mb-6 mt-10">Lịch sử điểm thưởng </h3>
       <div className="overflow-x-auto rounded-2xl border border-slate-200 overflow-hidden shadow-md">
-        {user.loyalty_program.totalBooking === 0 ? (
+        {bookings.length === 0 ? (
           <div className="py-16 text-center text-muted">
             <CalendarX className="mx-auto h-12 w-12 mb-4" />
             No bookings yet

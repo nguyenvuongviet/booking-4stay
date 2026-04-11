@@ -14,6 +14,19 @@ CREATE TABLE `amenities` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
+CREATE TABLE `app_configs` (
+    `key` VARCHAR(100) NOT NULL,
+    `value` JSON NOT NULL,
+    `description` VARCHAR(500) NULL,
+    `updatedBy` INTEGER UNSIGNED NULL,
+    `createdAt` TIMESTAMP(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
+    `updatedAt` TIMESTAMP(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
+
+    INDEX `idx_app_configs_key`(`key`),
+    PRIMARY KEY (`key`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
 CREATE TABLE `bookings` (
     `id` INTEGER UNSIGNED NOT NULL AUTO_INCREMENT,
     `userId` INTEGER UNSIGNED NOT NULL,
@@ -26,8 +39,8 @@ CREATE TABLE `bookings` (
     `checkOut` DATE NOT NULL,
     `adults` INTEGER UNSIGNED NOT NULL,
     `children` INTEGER UNSIGNED NULL DEFAULT 0,
-    `discountAmount` DECIMAL(12, 2) NOT NULL DEFAULT 0.00,
     `rawTotalPrice` DECIMAL(12, 2) NOT NULL,
+    `discountAmount` DECIMAL(12, 2) NULL DEFAULT 0.00,
     `totalPrice` DECIMAL(12, 2) NOT NULL,
     `status` ENUM('PENDING', 'PARTIALLY_PAID', 'CONFIRMED', 'CHECKED_IN', 'CHECKED_OUT', 'CANCELLED', 'WAITING_REFUND', 'REFUNDED') NOT NULL DEFAULT 'PENDING',
     `paymentMethod` ENUM('VNPAY', 'CASH', 'BANK_TRANSFER') NOT NULL DEFAULT 'CASH',
@@ -67,6 +80,8 @@ CREATE TABLE `levels` (
     `maxDiscountAmount` DECIMAL(12, 2) NOT NULL DEFAULT 0.00,
     `description` VARCHAR(255) NULL,
     `isActive` BOOLEAN NOT NULL DEFAULT true,
+    `createdAt` TIMESTAMP(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
+    `updatedAt` TIMESTAMP(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
 
     UNIQUE INDEX `uq_level_name`(`name`),
     PRIMARY KEY (`id`)
@@ -371,19 +386,6 @@ CREATE TABLE `refunds` (
     INDEX `idx_paymentId`(`paymentId`),
     INDEX `fk_refunds_createdBy`(`createdBy`),
     PRIMARY KEY (`id`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
--- CreateTable
-CREATE TABLE `app_configs` (
-    `key` VARCHAR(100) NOT NULL,
-    `value` JSON NOT NULL,
-    `description` VARCHAR(500) NULL,
-    `updatedBy` INTEGER UNSIGNED NULL,
-    `createdAt` TIMESTAMP(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
-    `updatedAt` TIMESTAMP(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
-
-    INDEX `idx_app_configs_key`(`key`),
-    PRIMARY KEY (`key`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- AddForeignKey

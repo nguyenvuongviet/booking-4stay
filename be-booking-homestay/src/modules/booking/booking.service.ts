@@ -569,7 +569,7 @@ export class BookingService {
     };
   }
 
-  async adminCancelBooking(bookingId: number) {
+  async adminCancelBooking(bookingId: number, dto: CancelBookingDto) {
     const booking = await this.prisma.bookings.findUnique({
       where: { id: bookingId },
     });
@@ -580,7 +580,7 @@ export class BookingService {
     );
 
     const updated = await this.changeBookingStatus(bookingId, finalStatus, {
-      reason: 'Admin chủ động huỷ đơn',
+      reason: dto.reason || 'Admin chủ động huỷ đơn',
       allowOverride: true,
     });
 

@@ -5,6 +5,7 @@ import {
   Command,
   CommandEmpty,
   CommandGroup,
+  CommandInput,
   CommandItem,
   CommandList,
 } from "@/_components/ui/command";
@@ -172,18 +173,19 @@ export function LocationSelector({
           )}
         </div>
 
-        <PopoverContent className="w-full p-0 max-w-[calc(100vw-32px)] sm:max-w-md">
-          <Command>
-            <div className="p-1 border-b">
-              <Input
-                placeholder={`Tìm kiếm ${label.toLowerCase()}...`}
-                value={searchValue}
-                onChange={(e) => setSearchValue(e.target.value)}
-                className="border-none focus-visible:ring-0"
-              />
-            </div>
+        <PopoverContent className="w-[300px] p-0" align="start">
+          <Command
+            shouldFilter={false}
+            className="w-full"
+            onWheel={(e) => e.stopPropagation()}
+          >
+            <CommandInput
+              placeholder={`Tìm kiếm ${label.toLowerCase()}...`}
+              value={searchValue}
+              onValueChange={setSearchValue}
+            />
 
-            <CommandList className="max-h-60 overflow-y-auto">
+            <CommandList className="max-h-[300px] overflow-y-auto overflow-x-hidden">
               {filteredItems.length === 0 ? (
                 <CommandEmpty>Không tìm thấy.</CommandEmpty>
               ) : (

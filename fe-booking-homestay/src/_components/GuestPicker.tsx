@@ -4,12 +4,16 @@ import { useState } from "react";
 import { Button } from "./ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { useLang } from "@/context/lang-context";
+import toast from "react-hot-toast";
 
 interface GuestPickerProps {
   adults: number;
   children: number;
   setAdults: (value: number) => void;
   setChildren: (value: number) => void;
+  maxAdults?: number;
+  maxChildren?: number;
+  onLimitReached?: (type: "adults" | "children", limit: number) => void;
 }
 
 export default function GuestPicker({
@@ -17,9 +21,12 @@ export default function GuestPicker({
   children,
   setAdults,
   setChildren,
+  maxAdults,
+  maxChildren,
+  onLimitReached,
 }: GuestPickerProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const { lang, t } = useLang();
+  const { t } = useLang();
 
   const getGuestDisplayText = () => {
     const total = adults + children;
@@ -52,7 +59,7 @@ export default function GuestPicker({
         </button>
       </PopoverTrigger>
 
-      <PopoverContent className="w-[250px] p-0 rounded-2xl" align="start">
+      <PopoverContent className="w-62.5 p-0 rounded-2xl" align="start">
         <div className="p-6 space-y-4">
           {/* Adults */}
           <div className="flex items-center justify-between ">
@@ -74,48 +81,62 @@ export default function GuestPicker({
                 {adults}
               </span>
               <button
-                onClick={() => setAdults(adults + 1)}
-                className="w-6 h-6 rounded-full border-2 border-border flex items-center justify-center text-muted-foreground hover:border-primary hover:text-primary"
+                onClick={() => {
+                  if (maxAdults !== undefined && adults >= maxAdults) {
+                    onLimitReached?.("adults", maxAdults);
+                    return;
+                  }
+                  setAdults(adults + 1);
+                }}
+              disabled={maxAdults !== undefined && adults >= maxAdults}
+              className="w-6 h-6 rounded-full border-2 border-border flex items-center justify-center text-muted-foreground hover:border-primary hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed"
               >
-                +
-              </button>
-            </div>
+              +
+            </button>
           </div>
-
-          {/* Children */}
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="elegant-subheading text-foreground">{t("children")}</p>
-              <p className="text-xs text-muted-foreground">2 – 12 {t("year old")}</p>
-            </div>
-            <div className="flex items-center gap-1">
-              <button
-                onClick={() => setChildren(Math.max(0, children - 1))}
-                disabled={children <= 0}
-                className="w-6 h-6 rounded-full border-2 border-border flex items-center justify-center text-muted-foreground hover:border-primary hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed"
-              >
-                -
-              </button>
-              <span className="w-8 text-center elegant-subheading text-foreground">
-                {children}
-              </span>
-              <button
-                onClick={() => setChildren(children + 1)}
-                className="w-6 h-6 rounded-full border-2 border-border flex items-center justify-center text-muted-foreground hover:border-primary hover:text-primary"
-              >
-                +
-              </button>
-            </div>
-          </div>
-
-          <Button
-            onClick={() => setIsOpen(false)}
-            className="w-full bg-white elegant-sans elegant-subheading hover:bg-background text-primary border border-border rounded-xl"
-          >
-            {t("close")}
-          </Button>
         </div>
-      </PopoverContent>
-    </Popover>
+
+        {/* Children */}
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="elegant-subheading text-foreground">{t("children")}</p>
+            <p className="text-xs text-muted-foreground">2 – 12 {t("year old")}</p>
+          </div>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => setChildren(Math.max(0, children - 1))}
+              disabled={children <= 0}
+              className="w-6 h-6 rounded-full border-2 border-border flex items-center justify-center text-muted-foreground hover:border-primary hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              -
+            </button>
+            <span className="w-8 text-center elegant-subheading text-foreground">
+              {children}
+            </span>
+            <button
+              onClick={() => {
+                if (maxChildren !== undefined && children >= maxChildren) {
+                  onLimitReached?.("children", maxChildren);
+                  return;
+                }
+                setChildren(children + 1);
+              }}
+              disabled={maxChildren !== undefined && children >= maxChildren}
+              className="w-6 h-6 rounded-full border-2 border-border flex items-center justify-center text-muted-foreground hover:border-primary hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              +
+            </button>
+          </div>
+        </div>
+
+        <Button
+          onClick={() => setIsOpen(false)}
+          className="w-full bg-white elegant-sans elegant-subheading hover:bg-background text-primary border border-border rounded-xl"
+        >
+          {t("close")}
+        </Button>
+      </div>
+    </PopoverContent>
+    </Popover >
   );
 }

@@ -10,6 +10,7 @@ export function BookingActionButtons({
   onAccept,
   onReject,
   onRefund,
+  onCancel,
   className,
 }: {
   status: string;
@@ -18,6 +19,7 @@ export function BookingActionButtons({
   onAccept: (id: number) => void;
   onReject: (id: number) => void;
   onRefund: (id: number, maxAmount: number) => void;
+  onCancel: (id: number) => void;
   className?: string;
 }) {
   if (status === "PENDING")
@@ -52,6 +54,19 @@ export function BookingActionButtons({
         Hoàn tiền
       </Button>
     );
+
+  if (status === "CONFIRMED" || status === "PARTIALLY_PAID") {
+    return (
+      <Button
+        size="sm"
+        variant="destructive"
+        className={`rounded-full shadow-sm font-semibold flex items-center gap-1 ${className}`}
+        onClick={() => onCancel(id)}
+      >
+        <X className="w-4 h-4" /> Huỷ đơn
+      </Button>
+    );
+  }
 
   return <span className={`text-xs text-gray-400 italic ${className}`}>-</span>;
 }
