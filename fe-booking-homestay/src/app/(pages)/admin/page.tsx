@@ -55,6 +55,7 @@ export default function AdminDashboardPage() {
   const [recent, setRecent] = useState<RecentBookingItem[]>([]);
   const [popular, setPopular] = useState<PopularRoomItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const currentYear = new Date().getFullYear();
   const [year, setYear] = useState(currentYear);
   const [statusMonth, setStatusMonth] = useState<number | "all">("all");
@@ -62,6 +63,7 @@ export default function AdminDashboardPage() {
 
   const load = async () => {
     setLoading(true);
+    setError(false);
 
     try {
       const [statsRes, revenueRes, statusRes, recentRes, popularRes] =
@@ -77,7 +79,9 @@ export default function AdminDashboardPage() {
       setStatus(statusRes);
       setRecent(recentRes);
       setPopular(popularRes);
-    } catch {
+    } catch (err) {
+      console.error("Dashboard Load Error:", err);
+      setError(true);
       toast.error("Không thể tải dashboard");
     } finally {
       setLoading(false);
@@ -116,7 +120,13 @@ export default function AdminDashboardPage() {
     loadStatus(statusYear, statusMonth);
   }, [statusYear, statusMonth]);
 
-  if (!stats && loading) return <div className="p-6">Đang tải...</div>;
+  if (loading) return <div className="p-10 text-center animate-pulse">Đang tải dữ liệu...</div>;
+  if (error || !stats) return (
+    <div className="p-10 text-center">
+      <p className="text-red-500 mb-4">Lỗi tải dữ liệu Dashboard</p>
+      <Button onClick={load}>Thử lại</Button>
+    </div>
+  );
 
   const chartData = revenue.map((m) => ({
     month: m.month,
