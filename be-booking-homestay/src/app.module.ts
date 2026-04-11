@@ -18,6 +18,7 @@ import { VNPayModule } from './modules/payment/vnpay.module';
 import { AmenityModule } from './modules/amenity/amenity.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { AppConfigsModule } from './modules/app-configs/app-configs.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { ScheduleModule } from '@nestjs/schedule';
       rootPath: join(__dirname, '..', 'public'),
       serveRoot: '/public',
     }), // xem ảnh local được lưu trong thư mục public
+    AppConfigsModule,
     AuthModule,
     TokenModule,
     OtpModule,

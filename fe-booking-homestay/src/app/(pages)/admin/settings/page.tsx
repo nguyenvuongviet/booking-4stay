@@ -4,14 +4,54 @@ import { Button } from "@/_components/ui/button";
 import { Card } from "@/_components/ui/card";
 import { Input } from "@/_components/ui/input";
 import { useAuth } from "@/context/auth-context";
-import { Bell, Lock, Save, Settings, User } from "lucide-react";
-import { useState } from "react";
+import { Bell, Lock, Save, Settings, User, RefreshCw } from "lucide-react";
+import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
+import { appConfigApi, AppConfig } from "@/services/admin/appConfigApi";
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState("account");
+  const [appConfigs, setAppConfigs] = useState<AppConfig[]>([]);
+  const [loadingConfigs, setLoadingConfigs] = useState(false);
 
   const { user, updateUser } = useAuth();
+
+  useEffect(() => {
+    if (activeTab === "system") {
+      fetchConfigs();
+    }
+  }, [activeTab]);
+
+  const fetchConfigs = async () => {
+    setLoadingConfigs(true);
+    try {
+      const data = await appConfigApi.getAllConfigs();
+      setAppConfigs(data);
+    } catch (error) {
+      toast.error("Không thể tải cấu hình hệ thống");
+    } finally {
+      setLoadingConfigs(false);
+    }
+  };
+
+  const handleConfigChange = (key: string, value: any) => {
+    setAppConfigs((prev) =>
+      prev.map((c) => (c.key === key ? { ...c, value } : c))
+    );
+  };
+
+  const saveConfig = async (key: string) => {
+    const config = appConfigs.find((c) => c.key === key);
+    if (!config) return;
+
+    try {
+      await appConfigApi.updateConfig(key, config.value);
+      toast.success(`Đã cập nhật cấu hình ${key}`);
+      fetchConfigs();
+    } catch (error) {
+      toast.error("Lỗi khi cập nhật cấu hình");
+    }
+  };
 
   const [profile, setProfile] = useState({
     fullName: user ? `${user.firstName} ${user.lastName}` : "",
@@ -160,72 +200,80 @@ export default function SettingsPage() {
 
       {activeTab === "system" && (
         <div className="space-y-6 max-w-3xl">
-          <Card className="p-6 shadow-sm">
-            <h2 className="text-lg font-semibold mb-4">Cấu hình chung</h2>
-
-            <div className="grid grid-cols-2 gap-4">
-              <Input defaultValue="4Stay - Admin Dashboard" />
-              <Input defaultValue="support@4stay.com" />
-              <Input defaultValue="Nền tảng quản lý đặt phòng homestay" />
-            </div>
-
-            <Button className="mt-4 bg-primary hover:bg-primary/90 gap-2">
-              <Save className="w-4 h-4" />
-              Lưu cấu hình
+          <div className="flex justify-between items-center bg-muted/30 p-4 rounded-lg mb-4">
+            <h2 className="text-lg font-semibold flex items-center gap-2">
+              <Settings className="w-5 h-5 text-primary" />
+              Cấu hình vận hành
+            </h2>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={fetchConfigs}
+              disabled={loadingConfigs}
+              className="gap-2"
+            >
+              <RefreshCw
+                className={`w-4 h-4 ${loadingConfigs ? "animate-spin" : ""}`}
+              />
+              Làm mới
             </Button>
-          </Card>
+          </div>
 
-          <Card className="p-6 shadow-sm">
-            <h2 className="text-lg font-semibold mb-4">Cài đặt khu vực</h2>
-
-            <div className="grid grid-cols-2 gap-4">
-              <select className="w-full p-2 border rounded-lg">
-                <option>UTC+7 — Việt Nam</option>
-              </select>
-
-              <select className="w-full p-2 border rounded-lg">
-                <option>Tiếng Việt</option>
-                <option>English</option>
-              </select>
-
-              <select className="w-full p-2 border rounded-lg">
-                <option>DD/MM/YYYY</option>
-                <option>MM/DD/YYYY</option>
-              </select>
-            </div>
-
-            <Button className="mt-4 bg-primary hover:bg-primary/90 gap-2">
-              <Save className="w-4 h-4" />
-              Lưu cài đặt
-            </Button>
-          </Card>
-
-          <Card className="p-6 shadow-sm">
-            <h2 className="text-lg font-semibold mb-4">Cài đặt thanh toán</h2>
-
-            <div className="space-y-4">
-              <select className="w-full p-2 border rounded-lg">
-                <option>VND (₫)</option>
-                <option>USD ($)</option>
-              </select>
-
-              <Input type="number" defaultValue="10" />
-
-              <div className="grid grid-cols-2 gap-3">
-                {["Thẻ tín dụng", "Chuyển khoản", "Ví điện tử", "Tiền mặt"].map(
-                  (method) => (
-                    <label key={method} className="flex items-center gap-2">
-                      <input type="checkbox" defaultChecked />
-                      <span>{method}</span>
-                    </label>
-                  )
-                )}
+          <Card className="p-6 shadow-sm border-primary/20">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="text-md font-bold">Thời gian hết hạn thanh toán</h3>
+                <p className="text-sm text-muted-foreground">
+                  Số phút tối đa khách được giữ chỗ chờ thanh toán trước khi hệ
+                  thống tự động hủy đơn (Mặc định: 30 phút).
+                </p>
               </div>
+            </div>
 
-              <Button className="bg-primary hover:bg-primary/90 gap-2">
-                <Save className="w-4 h-4" />
-                Lưu cài đặt thanh toán
+            <div className="flex items-center gap-4 max-w-md">
+              <div className="relative flex-1">
+                <Input
+                  type="number"
+                  min="5"
+                  max="1440"
+                  value={
+                    appConfigs.find((c) => c.key === "BOOKING_EXPIRY_MINUTES")
+                      ?.value || 30
+                  }
+                  onChange={(e) =>
+                    handleConfigChange(
+                      "BOOKING_EXPIRY_MINUTES",
+                      parseInt(e.target.value)
+                    )
+                  }
+                  className="pr-12 text-lg font-medium"
+                />
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-medium">
+                  phút
+                </div>
+              </div>
+              <Button
+                onClick={() => saveConfig("BOOKING_EXPIRY_MINUTES")}
+                className="bg-primary hover:bg-primary/90 h-11"
+              >
+                Cập nhật
               </Button>
+            </div>
+          </Card>
+
+          <Card className="p-6 shadow-sm opacity-60">
+            <h2 className="text-lg font-semibold mb-4 text-muted-foreground">
+              Các cấu hình khác (Sắp ra mắt)
+            </h2>
+            <div className="space-y-4">
+              <div className="p-3 bg-muted rounded border border-dashed flex justify-between items-center">
+                <span className="text-sm font-medium">Chính sách phí phạt hủy phòng</span>
+                <span className="text-xs bg-muted-foreground/20 px-2 py-1 rounded">Locked</span>
+              </div>
+              <div className="p-3 bg-muted rounded border border-dashed flex justify-between items-center">
+                <span className="text-sm font-medium">Cấu hình Email Marketing</span>
+                <span className="text-xs bg-muted-foreground/20 px-2 py-1 rounded">Locked</span>
+              </div>
             </div>
           </Card>
         </div>

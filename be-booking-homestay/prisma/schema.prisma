@@ -432,3 +432,14 @@ enum payments_status {
   CANCELED
   REFUNDED
 }
+
+model app_configs {
+  key         String   @id @db.VarChar(100)
+  value       Json
+  description String?  @db.VarChar(500)
+  updatedBy   Int?     @db.UnsignedInt
+  createdAt   DateTime @default(now()) @db.Timestamp(0)
+  updatedAt   DateTime @default(now()) @db.Timestamp(0)
+
+  @@index([key], map: "idx_app_configs_key")
+}

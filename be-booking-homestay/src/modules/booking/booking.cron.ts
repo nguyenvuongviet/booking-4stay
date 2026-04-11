@@ -3,6 +3,8 @@ import { Cron } from '@nestjs/schedule';
 import { endOfDay, startOfDay, subMinutes } from 'date-fns';
 import { PrismaService } from '../prisma/prisma.service';
 import { BookingService } from './booking.service';
+import { AppConfigsService } from '../app-configs/app-configs.service';
+import { AppConfigKey } from '../app-configs/constants/app-config.constant';
 
 @Injectable()
 export class BookingCron {
@@ -11,6 +13,7 @@ export class BookingCron {
   constructor(
     private readonly prisma: PrismaService,
     private readonly bookingService: BookingService,
+    private readonly appConfigsService: AppConfigsService,
   ) {}
 
   @Cron('0 12 * * *', { timeZone: 'Asia/Ho_Chi_Minh' })
@@ -66,7 +69,10 @@ export class BookingCron {
 
   @Cron('*/15 * * * *')
   async clearExpiredBookings() {
-    const expiryThreshold = subMinutes(new Date(), 30);
+    const minutes = await this.appConfigsService.getConfigValue<number>(
+      AppConfigKey.BOOKING_EXPIRY_MINUTES,
+    );
+    const expiryThreshold = subMinutes(new Date(), minutes);
 
     const expired = await this.prisma.bookings.findMany({
       where: {
@@ -79,7 +85,7 @@ export class BookingCron {
 
     for (const b of expired) {
       await this.bookingService['changeBookingStatus'](b.id, 'CANCELLED', {
-        reason: 'Hết hạn thanh toán tự động (Hệ thống tự huỷ do quá 30 phút chưa thanh toán)',
+        reason: `Hết hạn thanh toán tự động (Hệ thống tự huỷ do quá ${minutes} phút chưa thanh toán)`,
         allowOverride: true,
         notifyAdmin: true,
         notifyUser: true,
@@ -88,7 +94,7 @@ export class BookingCron {
 
     if (expired.length) {
       this.logger.log(
-        `[Cron] Đã hủy ${expired.length} đơn PENDING quá hạn thanh toán.`,
+        `[Cron] Đã hủy ${expired.length} đơn PENDING quá hạn thanh toán (${minutes} phút).`,
       );
     }
   }
