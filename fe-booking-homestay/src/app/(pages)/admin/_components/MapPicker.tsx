@@ -13,7 +13,6 @@ import {
   useMapEvents,
 } from "react-leaflet";
 
-// Fix icon mặc định của Leaflet bị mất khi build Next.js
 const DefaultIcon = L.icon({
   iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
   iconRetinaUrl:
@@ -29,12 +28,10 @@ L.Marker.prototype.options.icon = DefaultIcon;
 interface Props {
   lat: number | null;
   lng: number | null;
-  /** Địa chỉ dạng chữ để geocode tự động */
   address?: string;
   onChange: (lat: number, lng: number) => void;
 }
 
-/** Lắng nghe click trên bản đồ để cập nhật tọa độ */
 function ClickHandler({
   onChange,
 }: {
@@ -48,7 +45,6 @@ function ClickHandler({
   return null;
 }
 
-/** Tự động bay đến vị trí mới khi lat/lng thay đổi */
 function MapFlyTo({ lat, lng }: { lat: number; lng: number }) {
   const map = useMap();
   useEffect(() => {
@@ -57,7 +53,6 @@ function MapFlyTo({ lat, lng }: { lat: number; lng: number }) {
   return null;
 }
 
-/** Marker có thể kéo thả */
 function DraggableMarker({
   lat,
   lng,
@@ -91,7 +86,6 @@ export function MapPicker({ lat, lng, address, onChange }: Props) {
   const [geocoding, setGeocoding] = useState(false);
   const [geocodeError, setGeocodeError] = useState<string | null>(null);
 
-  /** Gọi Nominatim (OpenStreetMap miễn phí) để lấy tọa độ từ địa chỉ */
   const handleGeocode = async () => {
     if (!address?.trim()) {
       setGeocodeError(
@@ -124,7 +118,6 @@ export function MapPicker({ lat, lng, address, onChange }: Props) {
 
   return (
     <div className="flex flex-col gap-2">
-      {/* Nút tự động lấy tọa độ */}
       <div className="flex items-center gap-3">
         <Button
           type="button"
@@ -144,7 +137,7 @@ export function MapPicker({ lat, lng, address, onChange }: Props) {
 
         {hasCoords && (
           <span className="text-xs text-muted-foreground">
-            📍 {lat!.toFixed(5)}, {lng!.toFixed(5)}
+            📍 {Number(lat).toFixed(5)}, {Number(lng).toFixed(5)}
           </span>
         )}
       </div>
@@ -153,10 +146,9 @@ export function MapPicker({ lat, lng, address, onChange }: Props) {
         <p className="text-xs text-destructive">{geocodeError}</p>
       )}
 
-      {/* Bản đồ */}
       <div className="rounded-lg overflow-hidden border border-border shadow-sm h-[260px]">
         <MapContainer
-          center={hasCoords ? [lat!, lng!] : DEFAULT_CENTER}
+          center={hasCoords ? [Number(lat), Number(lng)] : DEFAULT_CENTER}
           zoom={hasCoords ? 15 : DEFAULT_ZOOM}
           style={{ height: "100%", width: "100%" }}
           scrollWheelZoom
@@ -168,8 +160,12 @@ export function MapPicker({ lat, lng, address, onChange }: Props) {
           <ClickHandler onChange={onChange} />
           {hasCoords && (
             <>
-              <MapFlyTo lat={lat!} lng={lng!} />
-              <DraggableMarker lat={lat!} lng={lng!} onChange={onChange} />
+              <MapFlyTo lat={Number(lat)} lng={Number(lng)} />
+              <DraggableMarker
+                lat={Number(lat)}
+                lng={Number(lng)}
+                onChange={onChange}
+              />
             </>
           )}
         </MapContainer>

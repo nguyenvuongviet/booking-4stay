@@ -4,7 +4,6 @@ import {
   Delete,
   Get,
   Param,
-  ParseIntPipe,
   Patch,
   Post,
   Put,
@@ -28,6 +27,7 @@ import { CreateCountryDto } from './dto/create-country.dto';
 import { CreateDistrictDto } from './dto/create-district.dto';
 import { CreateProvinceDto } from './dto/create-province.dto';
 import { CreateWardDto } from './dto/create-ward.dto';
+import { LocationQueryDto } from './dto/location-query.dto';
 import { UpdateLocationDto } from './dto/update-location.dto';
 import { LocationService } from './location.service';
 
@@ -45,35 +45,26 @@ export class LocationController {
 
   @Get('countries')
   @Public()
-  async getCountries() {
-    return await this.locationService.getCountries();
+  async getCountries(@Query() query: LocationQueryDto) {
+    return await this.locationService.getCountries(query);
   }
 
   @Get('provinces')
   @Public()
-  @ApiQuery({ name: 'countryId', required: false })
-  async getProvinces(@Query('countryId') countryId?: string) {
-    return await this.locationService.getProvinces(
-      countryId ? +countryId : undefined,
-    );
+  async getProvinces(@Query() query: LocationQueryDto) {
+    return await this.locationService.getProvinces(query);
   }
 
   @Get('districts')
   @Public()
-  @ApiQuery({ name: 'provinceId', required: false })
-  async getDistricts(@Query('provinceId') provinceId?: string) {
-    return await this.locationService.getDistricts(
-      provinceId ? +provinceId : undefined,
-    );
+  async getDistricts(@Query() query: LocationQueryDto) {
+    return await this.locationService.getDistricts(query);
   }
 
   @Get('wards')
   @Public()
-  @ApiQuery({ name: 'districtId', required: false })
-  async getWards(@Query('districtId') districtId?: string) {
-    return await this.locationService.getWards(
-      districtId ? +districtId : undefined,
-    );
+  async getWards(@Query() query: LocationQueryDto) {
+    return await this.locationService.getWards(query);
   }
 
   @Post('admin/countries')
@@ -146,23 +137,5 @@ export class LocationController {
     @Param('id') id: string,
   ) {
     return await this.locationService.setProvinceImage(+id, file);
-  }
-
-  // @Delete('admin/provinces/:id/image')
-  // @Roles('ADMIN')
-  // @ApiBearerAuth('AccessToken')
-  // @ApiParam({ name: 'id', required: true, example: '1' })
-  // async deleteProvinceImage(@Param('id') id: string) {
-  //   return this.locationService.deleteProvinceImage(+id);
-  // }
-
-  @Post('admin/import')
-  @Roles('ADMIN')
-  @ApiBearerAuth('AccessToken')
-  @ApiConsumes('multipart/form-data')
-  @UseInterceptors(FileInterceptor('file'))
-  @ApiBody({ type: UploadFileDto })
-  async importLocation(@UploadedFile() file: Express.Multer.File) {
-    return await this.locationService.importFromFile(file);
   }
 }

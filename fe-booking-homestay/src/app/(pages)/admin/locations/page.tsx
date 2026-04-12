@@ -1,14 +1,14 @@
 "use client";
 
-import { Card } from "@/_components/ui/card";
-import { useState } from "react";
-import { useLocations } from "./_hooks/useLocations";
-import { LocationHeader } from "./_components/LocationHeader";
-import { LocationFilters } from "./_components/LocationFilters";
-import { LocationList } from "./_components/LocationList";
-import { AddLocationModal } from "./_components/AddLocationModal";
 import { BaseLocation } from "@/services/admin/locationsApi";
+import { useState } from "react";
+import { AddLocationModal } from "./_components/AddLocationModal";
 import { EditLocationModal } from "./_components/EditLocationModal";
+import { LocationFilters } from "./_components/LocationFilters";
+import { LocationHeader } from "./_components/LocationHeader";
+import { LocationList } from "./_components/LocationList";
+import { LocationPagination } from "./_components/LocationPagination";
+import { useLocations } from "./_hooks/useLocations";
 
 export default function LocationsPage() {
   const state = useLocations();
@@ -20,10 +20,10 @@ export default function LocationsPage() {
     state.dataType === "Province"
       ? state.countries
       : state.dataType === "District"
-      ? state.provinces
-      : state.dataType === "Ward"
-      ? state.districts
-      : [];
+        ? state.provinces
+        : state.dataType === "Ward"
+          ? state.districts
+          : [];
 
   const handleEdit = (item: BaseLocation) => {
     setEditingItem(item);
@@ -31,18 +31,24 @@ export default function LocationsPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 max-w-[1600px] mx-auto">
       <LocationHeader
         onRefresh={state.fetchData}
         onAdd={() => setOpenAdd(true)}
-        openImport={() => alert("Import sau")}
       />
 
-      <Card className="p-4">
-        <LocationFilters {...state} />
-      </Card>
+      <div className="bg-white/5 backdrop-blur-xl border border-white/10 p-2 rounded-2xl shadow-xl">
+        <LocationFilters
+          {...state}
+          districts={state.districts}
+          provinces={state.provinces}
+          filterProvinceId={state.filterProvinceId}
+          setFilterProvinceId={state.setFilterProvinceId}
+          clearFilters={state.clearFilters}
+        />
+      </div>
 
-      <Card className="p-4">
+      <div className="bg-white/5 backdrop-blur-xl border border-white/10 p-3 rounded-2xl">
         <LocationList
           loading={state.loading}
           filteredList={state.filteredList}
@@ -51,13 +57,22 @@ export default function LocationsPage() {
           onDelete={state.remove}
           onUploadImage={state.uploadProvinceImage}
         />
-      </Card>
+        <LocationPagination
+          currentPage={state.page}
+          totalPages={state.meta.totalPages}
+          totalItems={state.meta.totalItems}
+          onPageChange={state.setPage}
+        />
+      </div>
 
       <AddLocationModal
         open={openAdd}
         onClose={() => setOpenAdd(false)}
         currentType={state.dataType}
         parents={parents}
+        countries={state.countries}
+        provinces={state.provinces}
+        districts={state.districts}
         onSubmit={(raw) => state.create(state.dataType, raw)}
       />
 
@@ -66,6 +81,9 @@ export default function LocationsPage() {
         onClose={() => setOpenEdit(false)}
         currentType={state.dataType}
         parents={parents}
+        countries={state.countries}
+        provinces={state.provinces}
+        districts={state.districts}
         item={editingItem}
         onSubmit={(raw) => state.edit(state.dataType, editingItem!.id, raw)}
       />

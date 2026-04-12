@@ -17,10 +17,34 @@ export interface BaseLocation {
   longitude?: number | null;
 }
 
-export async function getCountries(): Promise<BaseLocation[]> {
+export interface Meta {
+  totalItems: number;
+  itemsPerPage: number;
+  totalPages: number;
+  currentPage: number;
+}
+
+export interface PaginatedResponse<T> {
+  message: string;
+  items: T[];
+  meta: Meta;
+}
+
+export interface LocationQueryParams {
+  page?: number;
+  pageSize?: number;
+  search?: string;
+  countryId?: number;
+  provinceId?: number;
+  districtId?: number;
+}
+
+export async function getCountries(
+  params?: LocationQueryParams,
+): Promise<PaginatedResponse<BaseLocation>> {
   try {
-    const res = await api.get("/location/countries");
-    return res.data?.data.items ?? [];
+    const res = await api.get("/location/countries", { params });
+    return res.data?.data;
   } catch (err) {
     console.error("Get Countries error:", err);
     throw err;
@@ -28,13 +52,11 @@ export async function getCountries(): Promise<BaseLocation[]> {
 }
 
 export async function getProvinces(
-  countryId?: number
-): Promise<BaseLocation[]> {
+  params?: LocationQueryParams,
+): Promise<PaginatedResponse<BaseLocation>> {
   try {
-    const res = await api.get("/location/provinces", {
-      params: countryId ? { countryId } : {},
-    });
-    return res.data?.data.items ?? [];
+    const res = await api.get("/location/provinces", { params });
+    return res.data?.data;
   } catch (err) {
     console.error("Get Provinces error:", err);
     throw err;
@@ -42,25 +64,23 @@ export async function getProvinces(
 }
 
 export async function getDistricts(
-  provinceId?: number
-): Promise<BaseLocation[]> {
+  params?: LocationQueryParams,
+): Promise<PaginatedResponse<BaseLocation>> {
   try {
-    const res = await api.get("/location/districts", {
-      params: provinceId ? { provinceId } : {},
-    });
-    return res.data?.data.items ?? [];
+    const res = await api.get("/location/districts", { params });
+    return res.data?.data;
   } catch (err) {
     console.error("Get Districts error:", err);
     throw err;
   }
 }
 
-export async function getWards(districtId?: number): Promise<BaseLocation[]> {
+export async function getWards(
+  params?: LocationQueryParams,
+): Promise<PaginatedResponse<BaseLocation>> {
   try {
-    const res = await api.get("/location/wards", {
-      params: districtId ? { districtId } : {},
-    });
-    return res.data?.data.items ?? [];
+    const res = await api.get("/location/wards", { params });
+    return res.data?.data;
   } catch (err) {
     console.error("Get Wards error:", err);
     throw err;
@@ -69,20 +89,20 @@ export async function getWards(districtId?: number): Promise<BaseLocation[]> {
 
 export async function getLocationsByType(
   type: LocationType,
-  parentId?: number
-): Promise<BaseLocation[]> {
+  params?: LocationQueryParams,
+): Promise<PaginatedResponse<BaseLocation>> {
   try {
     switch (type) {
       case "country":
-        return await getCountries();
+        return await getCountries(params);
       case "province":
-        return await getProvinces(parentId);
+        return await getProvinces(params);
       case "district":
-        return await getDistricts(parentId);
+        return await getDistricts(params);
       case "ward":
-        return await getWards(parentId);
+        return await getWards(params);
       default:
-        return [];
+        throw new Error(`Invalid type: ${type}`);
     }
   } catch (err) {
     console.error("getLocationsByType error:", err);
@@ -99,7 +119,7 @@ const typeToEndpointMap: Record<LocationType, string> = {
 
 export async function createLocation(
   type: LocationType,
-  payload: Record<string, any>
+  payload: Record<string, any>,
 ): Promise<BaseLocation> {
   try {
     const endpointName = typeToEndpointMap[type];
@@ -115,7 +135,7 @@ export async function createLocation(
 export async function updateLocation(
   type: LocationType,
   id: number,
-  payload: Record<string, any>
+  payload: Record<string, any>,
 ): Promise<BaseLocation> {
   try {
     const res = await api.patch(`/location/admin/${type}/${id}`, payload);
@@ -128,7 +148,7 @@ export async function updateLocation(
 
 export async function deleteLocation(
   type: LocationType,
-  id: number
+  id: number,
 ): Promise<void> {
   try {
     await api.delete(`/location/admin/${type}/${id}`);
@@ -140,7 +160,7 @@ export async function deleteLocation(
 
 export async function uploadProvinceImage(
   id: number,
-  file: File
+  file: File,
 ): Promise<void> {
   try {
     const formData = new FormData();
@@ -148,26 +168,12 @@ export async function uploadProvinceImage(
 
     const res = await api.put(
       `/location/admin/provinces/${id}/image`,
-      formData
+      formData,
     );
 
     return res.data?.data?.imgUrl ?? "";
   } catch (err) {
     console.error("Upload Province Image error:", err);
-    throw err;
-  }
-}
-
-export async function importLocations(file: File): Promise<void> {
-  try {
-    const formData = new FormData();
-    formData.append("file", file);
-
-    await api.post("/location/admin/import", formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
-  } catch (err) {
-    console.error("Import Locations error:", err);
     throw err;
   }
 }
