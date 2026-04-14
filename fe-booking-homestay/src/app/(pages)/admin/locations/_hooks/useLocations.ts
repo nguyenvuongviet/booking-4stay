@@ -56,18 +56,10 @@ export function useLocations() {
       };
 
       if (selectedParent && selectedParent !== "all") {
-        if (dataType === "Province")
-          params.countryId = countries.find(
-            (c) => c.name === selectedParent,
-          )?.id;
-        if (dataType === "District")
-          params.provinceId = provinces.find(
-            (p) => p.name === selectedParent,
-          )?.id;
-        if (dataType === "Ward")
-          params.districtId = districts.find(
-            (d) => d.name === selectedParent,
-          )?.id;
+        const pId = Number(selectedParent);
+        if (dataType === "Province") params.countryId = pId;
+        if (dataType === "District") params.provinceId = pId;
+        if (dataType === "Ward") params.districtId = pId;
       }
 
       if (!params.provinceId && filterProvinceId && dataType === "District") {

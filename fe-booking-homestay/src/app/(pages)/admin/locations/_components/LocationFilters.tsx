@@ -56,7 +56,7 @@ export function LocationFilters({
 
   const parentOptionsForCombobox = [
     { value: "all", label: `Tất cả ${parentLabel}` },
-    ...parentOptions.map((p: any) => ({ value: p.name, label: p.name })),
+    ...parentOptions.map((p: any) => ({ value: String(p.id), label: p.name })),
   ];
 
   return (

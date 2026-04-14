@@ -30,8 +30,8 @@ export function useLocationSelector(initial?: Partial<LocationValue>) {
 
   useEffect(() => {
     (async () => {
-      const res = await getCountries();
-      setCountries(res);
+      const res = await getCountries({ page: 1, pageSize: 100 });
+      setCountries(res?.items || []);
     })();
   }, []);
 
@@ -41,8 +41,12 @@ export function useLocationSelector(initial?: Partial<LocationValue>) {
       return;
     }
     (async () => {
-      const res = await getProvinces(Number(value.countryId));
-      setProvinces(res);
+      const res = await getProvinces({
+        countryId: Number(value.countryId),
+        page: 1,
+        pageSize: 100,
+      });
+      setProvinces(res?.items || []);
     })();
   }, [value.countryId]);
 
@@ -52,8 +56,12 @@ export function useLocationSelector(initial?: Partial<LocationValue>) {
       return;
     }
     (async () => {
-      const res = await getDistricts(Number(value.provinceId));
-      setDistricts(res);
+      const res = await getDistricts({
+        provinceId: Number(value.provinceId),
+        page: 1,
+        pageSize: 100,
+      });
+      setDistricts(res?.items || []);
     })();
   }, [value.provinceId]);
 
@@ -63,8 +71,12 @@ export function useLocationSelector(initial?: Partial<LocationValue>) {
       return;
     }
     (async () => {
-      const res = await getWards(Number(value.districtId));
-      setWards(res);
+      const res = await getWards({
+        districtId: Number(value.districtId),
+        page: 1,
+        pageSize: 100,
+      });
+      setWards(res?.items || []);
     })();
   }, [value.districtId]);
 
