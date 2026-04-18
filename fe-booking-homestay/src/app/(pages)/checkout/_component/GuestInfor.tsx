@@ -8,13 +8,14 @@ interface Props {
     setFirstName: (v: string) => void;
     lastName: string;
     setLastName: (v: string) => void;
-    emailInput: string; 
+    emailInput: string;
     setEmailInput: (v: string) => void;
     phone: string;
     setPhone: (v: string) => void;
     firstNameError: string;
     lastNameError: string;
     phoneError: string;
+    emailError: string;
 }
 
 export default function GuestInfor(props: Props) {
@@ -31,8 +32,9 @@ export default function GuestInfor(props: Props) {
         firstNameError,
         lastNameError,
         phoneError,
+        emailError,
     } = props;
-    
+
     return (
         <Card className="p-6">
             <h2 className="text-2xl elegant-heading mb-4">
@@ -94,6 +96,9 @@ export default function GuestInfor(props: Props) {
                         value={emailInput}
                         onChange={(e) => setEmailInput(e.target.value)}
                     />
+                    {emailError && (
+                        <p className="text-destructive text-xs mb-2">{emailError}</p>
+                    )}
                 </div>
                 {/* Phone Number  */}
                 <div>
@@ -110,10 +115,10 @@ export default function GuestInfor(props: Props) {
                         value={phone}
                         onChange={(e) => setPhone(e.target.value)}
                     />
+                    {phoneError && (
+                        <p className="text-destructive text-xs mb-2">{phoneError}</p>
+                    )}
                 </div>
-                {phoneError && (
-                    <p className="text-destructive text-xs mb-2">{phoneError}</p>
-                )}
             </div>
         </Card>
     );

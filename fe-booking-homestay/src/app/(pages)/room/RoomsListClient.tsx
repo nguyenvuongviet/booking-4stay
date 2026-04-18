@@ -20,8 +20,9 @@ import { Loader2 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
-import { mockRooms } from "@/constants/la-lo";
 import { useLang } from "@/context/lang-context";
+import WeatherBadge from "@/_components/WeatherBadge";
+import EmptyRoom from "../../../../public/empty.svg";
 
 export default function RoomsListPage() {
   const [rooms, setRooms] = useState<Room[]>([]);
@@ -102,7 +103,8 @@ export default function RoomsListPage() {
         totalPages = Math.ceil(result?.total / 6);
       }
 
-      if (!roomsData.length || page > totalPages) {
+      if (!roomsData.length) {
+        if (page === 1) setRooms([]);
         setHasMore(false);
         return;
       }
@@ -232,29 +234,48 @@ export default function RoomsListPage() {
           `}
           transition={{ layout: { duration: 0.35, ease: "easeInOut" } }}
         >
-        <SearchBar compact={scrolled} />
+          <SearchBar compact={scrolled} />
         </motion.div>
         <FilterBar onFilterChange={handleFilterChange} />
         <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
           {/* Map */}
-          <div
-            className="w-full lg:w-1/4 
-            h-50 lg:h-120
-            sticky lg:top-24 
-            rounded-lg overflow-hidden shadow-md"
-          >
-            <MapRooms rooms={mockRooms} height="h-120" />
+          <div className="w-full lg:w-1/4 sticky lg:top-18 self-start">
+            <div className="space-y-4">
+              {location && (
+                <WeatherBadge location={location} lat={rooms[0]?.location?.latitude} lon={rooms[0]?.location?.longitude} />
+              )}
+              <div className="h-[calc(100vh-200px)] overflow-hidden rounded-lg shadow-md">
+                <MapRooms rooms={rooms} />
+              </div>
+            </div>
           </div>
           <div className="w-full lg:w-3/4 mt-4 lg:mt-0">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 lg:gap-6 mb-6">
-              {rooms.map((room, index) => (
-                <StaggerItem index={index} key={`${room.id}-${index}`}>
-                  <HoverScale>
-                    <RoomCard room={room} />
-                  </HoverScale>
-                </StaggerItem>
-              ))}
-            </div>
+            {rooms.length > 0 && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 lg:gap-6 mb-6">
+                {rooms.map((room, index) => (
+                  <StaggerItem index={index} key={`${room.id}-${index}`}>
+                    <HoverScale>
+                      <RoomCard room={room} />
+                    </HoverScale>
+                  </StaggerItem>
+                ))}
+              </div>
+            )}
+
+            {!loading && rooms.length === 0 && (
+              <div className="flex flex-col items-center justify-center py-20 text-center">
+                <img src="/empty.svg" className="w-48" />
+
+                <h2 className="text-xl font-semibold mt-4">
+                  Không tìm thấy phòng
+                </h2>
+
+                <p className="text-muted text-sm mt-2 max-w-md">
+                  Hãy thử điều chỉnh bộ lọc hoặc chọn một vị trí khác.
+                </p>
+              </div>
+            )}
+
             {loading && (
               <div className="flex items-center justify-center py-6">
                 <div className="flex items-center gap-3 text-muted">
@@ -264,7 +285,7 @@ export default function RoomsListPage() {
               </div>
             )}
 
-            {!hasMore && !loading && (
+            {!hasMore && !loading && rooms.length > 0 && (
               <div className="flex items-center justify-center py-2">
                 <div className="text-center text-muted">
                   <p className="text-sm ">
@@ -274,9 +295,9 @@ export default function RoomsListPage() {
                     {rooms.length > 1
                       ? t("totalRooms").replace("{count}", rooms.length.toString())
                       : t("totalRoom").replace(
-                          "{count}",
-                          rooms.length.toString()
-                        )}
+                        "{count}",
+                        rooms.length.toString()
+                      )}
                   </p>
                 </div>
               </div>

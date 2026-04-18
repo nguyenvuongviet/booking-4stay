@@ -31,7 +31,7 @@ export default function PopularDestinations({
 
         {locations.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {locations.map((loc, index) => (
+            {locations.slice(0, 3).map((loc, index) => (
               <BlurInScroll key={loc.id} delay={index * 120}>
                 <HoverScale>
                   <Card

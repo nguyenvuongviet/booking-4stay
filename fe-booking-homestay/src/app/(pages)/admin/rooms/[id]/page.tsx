@@ -23,7 +23,7 @@ import CalendarGrid from "../../_components/calendar/CalendarGrid";
 export default function RoomDetailPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ id: number | string }>;
 }) {
   const { id } = use(params);
   const router = useRouter();
@@ -125,10 +125,8 @@ export default function RoomDetailPage({
         </summary>
         <div className="mt-4">
           <CalendarGrid 
-            soldOutDates={soldOutDates} 
+            roomId={id}
             defaultPrice={defaultPrice} 
-            roomPriceDates={roomPrices} 
-            bookings={bookings}
           />
         </div>
       </details>

@@ -9,8 +9,8 @@ interface CalendarCellProps {
     day: DayCell;
     getPrice: (date: Date) => number;
     defaultPrice: number;
-    isSoldOut: (date: Date) => boolean;
-    booking?: Booking;
+    status: "AVAILABLE" | "SOLD_OUT" | "BLOCKED";
+    bookingDetail: Booking | null;
     isSelected?: boolean;
     onClick?: (date: Date, e: React.MouseEvent<HTMLDivElement>) => void;
 }
@@ -19,21 +19,24 @@ export default function CalendarCell({
     day,
     getPrice,
     defaultPrice,
-    isSoldOut,
-    booking,
+    status,
+    bookingDetail,
     isSelected,
     onClick,
 }: CalendarCellProps) {
     const today = new Date();
     today.setHours(0, 0, 0, 0); // reset giờ để so sánh chỉ ngày
     const isPast = day.date < today;
-
+    const availabilityStatus =
+        status === "BLOCKED"
+            ? "Hết phòng"
+            : status === "SOLD_OUT"
+                ? "Đã đặt"
+                : "Còn phòng";
     const price = getPrice(day.date);
     const isOutMonth = !day.currentMonth ? "text-muted-foreground bg-muted/20" : "";
-    const status = getPriceStatus(price, defaultPrice);
-    const { color, Icon } = PRICE_STATUS_CONFIG[status];
-
-    const availabilityStatus = isSoldOut(day.date) ? "Hết phòng" : "Còn phòng";
+    const statusPrice = getPriceStatus(price, defaultPrice);
+    const { color, Icon } = PRICE_STATUS_CONFIG[statusPrice];
 
     return (
         <Tooltip.Provider>
@@ -43,8 +46,9 @@ export default function CalendarCell({
                     <div
                         onClick={(e) => !isPast && onClick?.(day.date, e)}
                         className={cn(
-                            `aspect-square p-2 border border-primary cursor-pointer 
-                            hover:bg-primary/20 transition text-md gap-2 flex flex-col 
+                            `aspect-square p-2 border border-primary 
+                            cursor-pointer hover:bg-primary/20 transition 
+                            text-sm md:text-md gap-2 flex flex-col 
                             text-center justify-between select-none relative`,
                             isOutMonth,
                             isSelected && "bg-primary/50",
@@ -57,25 +61,25 @@ export default function CalendarCell({
                         <div
                             className={cn(
                                 `${isOutMonth ? "opacity-90" : ""}`,
-                                isSoldOut(day.date) ? "bg-red-400" : "bg-green-400",
-                                "text-white text-sm rounded-full p-1 w-full",
+                                status === "SOLD_OUT" || status === "BLOCKED" ? "bg-red-400" : "bg-green-400",
+                                "text-white text-xs md:text-sm rounded-full p-1 w-full ",
                                 isPast && "opacity-0"
                             )}
                         >
                             {availabilityStatus}
                         </div>
-                        <div className={cn(`text-md mt-2,
+                        <div className={cn(`mt-2 text-sm md:text-md,
                                 ${isOutMonth ? "opacity-90" : ""}`,
-                                isPast && "opacity-0", color)}>
+                            isPast && "opacity-0", color)}>
                             <span className="flex justify-center gap-2">
                                 {price.toLocaleString()}
-                                {Icon && <Icon className="w-5 h-5" />}
+                                {Icon && <Icon className="w-4 h-4 md:w-5 md:h-5" />}
                             </span>
                         </div>
                     </div>
                 </Tooltip.Trigger>
 
-                {booking && booking.status !== "CANCELLED" && (
+                {bookingDetail && bookingDetail.status !== "CANCELLED" && (
                     <Tooltip.Portal>
                         <Tooltip.Content
                             side="top"
@@ -85,14 +89,14 @@ export default function CalendarCell({
                                         data-[state=delayed-open]:animate-fade-in data-[state=delayed-close]:animate-fade-out"
                         >
                             <p className="truncate elegant-sans text-secondary-foreground ">
-                                {booking.guestInfo.fullName}
+                                {bookingDetail.guestInfo.fullName}
                             </p>
                             <div className="flex flex-col text-left gap-1 mt-1 text-sm">
                                 <span>
-                                    <Mail className="w-4 h-4 inline mr-1" />: {booking.guestInfo.email}
+                                    <Mail className="w-4 h-4 inline mr-1" />: {bookingDetail.guestInfo.email}
                                 </span>
                                 <span>
-                                    <Phone className="w-4 h-4 inline mr-1" />: {booking.guestInfo.phoneNumber}
+                                    <Phone className="w-4 h-4 inline mr-1" />: {bookingDetail.guestInfo.phoneNumber}
                                 </span>
                             </div>
                             <Tooltip.Arrow className="fill-primary/30" />

@@ -2,22 +2,21 @@
 
 import { Button } from "@/_components/ui/button";
 import { Card } from "@/_components/ui/card";
+import { useCalendarPricing } from "@/_hooks/useCalendarPricing";
 import { getAmenityIcon } from "@/constants/amenity-icons";
-import { mockRooms } from "@/constants/la-lo";
 import { useAuth } from "@/context/auth-context";
 import { useLang } from "@/context/lang-context";
 import { Room } from "@/models/Room";
-import { get_unavailable_dates } from "@/services/bookingApi";
 import { room_available, room_detail, room_preview } from "@/services/roomApi";
-import { format, parse } from "date-fns";
+import { addMonths, format, parse } from "date-fns";
 import { Loader2, Mail, MapPin, Phone, Star, Users } from "lucide-react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import GuestPicker from "../../../../_components/GuestPicker";
 import Header from "../../../../_components/Header";
-import MapRooms from "../../../../_components/MapMarker";
+import MapMarker from "../../../../_components/MapMarker";
 import { PhotoGalleryModal } from "../../../../_components/PhotoGalleryModal";
 import DateRangePicker from "../../../../_components/ui/date-range-picker";
 import { ReviewList } from "../_component/ReviewList";
@@ -43,17 +42,9 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
   const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
   const [showFullOverview, setShowFullOverview] = useState(false);
-  const [soldOutDates, setSoldOutDates] = useState<Date[]>([]);
   const [highlightDatePicker, setHighlightDatePicker] = useState(false);
-  const [roomPrices, setRoomPrices] = useState<{ date: string; price: number }[]>([]);
   const [roomPreview, setRoomPreview] = useState<{ priceSummary: { totalPrice: number, rawTotal: number, discountPercent: number } } | null>(null);
-  const mockRoomPrices = [
-    { date: "2026-04-01", price: 500000 },
-    { date: "2026-04-02", price: 520000 },
-    { date: "2026-04-10", price: 850000 },
-    { date: "2026-04-04", price: 700000 },
-    { date: "2026-04-05", price: 700000 },
-  ];
+  const [currentMonth, setCurrentMonth] = useState(new Date());
 
   // fetch data
   useEffect(() => {
@@ -61,13 +52,7 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
       try {
         setLoading(true);
         const dataRoom = await room_detail(roomId);
-        const dataDate = await get_unavailable_dates(roomId);
         setRoom(dataRoom);
-        setRoomPrices(mockRoomPrices);
-        const parsedDates = dataDate.map(
-          (d: string) => new Date(d + "T00:00:00")
-        );
-        setSoldOutDates(dataDate);
 
         // enforce selected guests to room limits
         if (dataRoom.adultCapacity && adults > dataRoom.adultCapacity) {
@@ -84,6 +69,24 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
       }
     })();
   }, [roomId]);
+
+  const current = currentMonth;
+  const next = addMonths(current, 1);
+  const months = useMemo(() => {
+    const current = currentMonth;
+    const next = addMonths(current, 1);
+
+    return [
+      { month: current.getMonth() + 1, year: current.getFullYear() },
+      { month: next.getMonth() + 1, year: next.getFullYear() }
+    ];
+  }, [currentMonth]);
+
+  const { statusMap, getPrice } = useCalendarPricing({
+    roomId,
+    defaultPrice: room?.price ?? 0,
+    months
+  });
 
   // Load params from URL
   useEffect(() => {
@@ -215,6 +218,18 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleMonthChange = (date: Date) => {
+    setCurrentMonth((prev) => {
+      if (
+        prev.getMonth() === date.getMonth() &&
+        prev.getFullYear() === date.getFullYear()
+      ) {
+        return prev; // ❌ không update → tránh re-render
+      }
+      return date;
+    });
   };
 
   if (loading)
@@ -460,9 +475,9 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
                         ? { from: checkIn, to: checkOut }
                         : undefined
                     }
-                    soldOutDates={soldOutDates}
+                    statusMap={statusMap}
                     defaultPrice={room?.price}
-                    roomPriceDates={roomPrices}
+                    getPrice={getPrice}
                     onChange={(range) => {
                       setCheckIn(range?.from ?? null);
                       setCheckOut(range?.to ?? null);
@@ -470,6 +485,7 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
                         checkRoomPreview(range.from, range.to);
                       }
                     }}
+                    onMonthChange={handleMonthChange}
                   />
                 </div>
                 <div className="relative md:col-span-3">
@@ -537,7 +553,7 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
               </div>
 
               {/* Map */}
-              <MapRooms rooms={mockRooms[Number(roomId)]} height="h-[30vh]" />
+              <MapMarker rooms={[room]} />
 
               {/* Policy */}
               <div className="p-4">

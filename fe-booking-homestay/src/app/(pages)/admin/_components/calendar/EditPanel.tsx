@@ -25,7 +25,7 @@ export default function EditPanel({
   onClose,
 }: EditPanelProps) {
   const [price, setPrice] = useState<number>(currentPrice);
-  const [soldOut, setSoldOut] = useState(isSoldOut);
+  const [soldOut, setSoldOut] = useState<boolean>(isSoldOut);
   const [showConfirm, setShowConfirm] = useState(false);
 
   useEffect(() => {
@@ -40,7 +40,7 @@ export default function EditPanel({
   const confirmSave = () => {
     onSave(price, soldOut);
     setShowConfirm(false);
-    // onClose(); 
+    onClose();
   };
 
   const label = useMemo(() => {
@@ -132,12 +132,11 @@ export default function EditPanel({
 
       {/* Buttons */}
       <div className="flex gap-2 mt-6">
-        <Button onClick={handleSave} className="flex-1">
-          Lưu
-        </Button>
-
         <Button onClick={onClose} variant="outline" className="flex-1">
           Hủy
+        </Button>
+        <Button onClick={handleSave} className="flex-1">
+          Lưu
         </Button>
       </div>
 
@@ -201,16 +200,15 @@ export default function EditPanel({
 
             {/* Actions */}
             <div className="flex gap-2 pt-2">
-              <Button onClick={confirmSave} className="flex-1">
-                Xác nhận
-              </Button>
-
               <Button
                 variant="outline"
                 onClick={() => setShowConfirm(false)}
                 className="flex-1"
               >
                 Hủy
+              </Button>
+              <Button onClick={confirmSave} className="flex-1">
+                Xác nhận
               </Button>
             </div>
           </div>

@@ -23,13 +23,6 @@ export function useRoomDetail(id: number, onDeleted?: () => void) {
   const [soldOutDates, setSoldOutDates] = useState<Date[]>([]);
   const [loading, setLoading] = useState(true);
   const [roomPrices, setRoomPrices] = useState<{ date: string; price: number }[]>([]);
-  const mockRoomPrices = [
-    { date: "2026-04-01", price: 500000 },
-    { date: "2026-04-02", price: 520000 },
-    { date: "2026-04-10", price: 850000 },
-    { date: "2026-04-04", price: 700000 },
-    { date: "2026-04-05", price: 700000 },
-  ];
 
   const load = useCallback(async () => {
     try {
@@ -43,7 +36,6 @@ export function useRoomDetail(id: number, onDeleted?: () => void) {
       const dataDate = await get_unavailable_dates(id);
 
       setSoldOutDates(dataDate);
-      setRoomPrices(mockRoomPrices);
       setRoom(r);
       setBookings(b);
       setReviews(rv);

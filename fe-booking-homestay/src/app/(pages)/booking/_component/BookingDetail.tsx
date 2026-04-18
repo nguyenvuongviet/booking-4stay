@@ -337,7 +337,7 @@ export const BookingDetail = ({
             <div className="bg-yellow-100 p-2 text-center font-medium text-yellow-700 rounded-lg">
               <CountdownTimer
                 createdAt={booking.createdAt}
-                onFinish={() => handleAutoCancelBooking()}
+                // onFinish={() => handleAutoCancelBooking()}
               />
             </div>
           )}

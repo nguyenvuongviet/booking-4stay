@@ -20,6 +20,7 @@ export default function CheckoutClient() {
         firstNameError,
         lastNameError,
         phoneError,
+        emailError,
         setFirstName,
         setLastName,
         setEmailInput,
@@ -31,7 +32,6 @@ export default function CheckoutClient() {
         bookingData,
         totalAmount,
         totalNights,
-        discountPercent,
         isLoading,
         modalType,
         openPopupPayment,
@@ -39,6 +39,7 @@ export default function CheckoutClient() {
         confirmNow,
         confirmLater,
         handleConfirmBooking,
+        validateGuestInfo,
     } = useCheckout();
 
     return (
@@ -72,6 +73,7 @@ export default function CheckoutClient() {
                             firstNameError={firstNameError}
                             lastNameError={lastNameError}
                             phoneError={phoneError}
+                            emailError={emailError}
                         />
 
                         {/* Payment */}
@@ -96,7 +98,16 @@ export default function CheckoutClient() {
                     {/* Right  */}
                     <div className="lg:col-span-1 sticky top-20">
                         {/* Booking Summary  */}
-                        <BookingSummary bookingData={bookingData} totalNights={totalNights} totalAmount={totalAmount} paymentMethod={paymentMethod} handleConfirmBooking={handleConfirmBooking} />
+                        <BookingSummary
+                            bookingData={bookingData}
+                            totalNights={totalNights}
+                            totalAmount={totalAmount}
+                            paymentMethod={paymentMethod}
+                            handleConfirmBooking={() => {
+                                if (!validateGuestInfo()) return;
+                                handleConfirmBooking(paymentMethod);
+                            }}
+                        />
                     </div>
                 </div>
             </main>

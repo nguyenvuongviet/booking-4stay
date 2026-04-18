@@ -4,6 +4,7 @@ import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { Room } from "@/models/Room";
+import { useRouter } from "next/navigation";
 
 const RedIcon = L.icon({
   iconUrl:
@@ -17,11 +18,6 @@ const RedIcon = L.icon({
   popupAnchor: [1, -34],
   shadowSize: [41, 41],
 });
-
-interface MapRoomsProps {
-  rooms: Room[] | Room | null;
-  height?: string;
-}
 
 function MapAutoFit({ roomsArray }: { roomsArray: Room[] }) {
   const map = useMap();
@@ -39,8 +35,9 @@ function MapAutoFit({ roomsArray }: { roomsArray: Room[] }) {
   return null;
 }
 
-export default function MapRooms({ rooms, height }: MapRoomsProps) {
+export default function MapRooms({ rooms }: { rooms: Room[] | Room | null; }) {
   const roomsArray = Array.isArray(rooms) ? rooms : rooms ? [rooms] : [];
+  const router = useRouter();
 
   // Default center nếu chưa có room
   const defaultCenter: [number, number] = [10.762622, 106.660172];
@@ -49,7 +46,7 @@ export default function MapRooms({ rooms, height }: MapRoomsProps) {
     <MapContainer
       center={defaultCenter}
       zoom={14}
-      className={`w-full ${height} rounded-lg`}
+      className={`w-full h-full rounded-lg`}
     >
       <TileLayer
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -69,7 +66,9 @@ export default function MapRooms({ rooms, height }: MapRoomsProps) {
               icon={RedIcon}
             >
               <Popup>
-                <div>
+                <div className="cursor-pointer"
+                  onClick={() => router.push(`/room/${room.id}`)}
+                >
                   {/* Ảnh phòng */}
                   {room.images?.main && (
                     <img
@@ -90,8 +89,8 @@ export default function MapRooms({ rooms, height }: MapRoomsProps) {
             </Marker>
           )
       )}
-
+      
       <MapAutoFit roomsArray={roomsArray} />
-    </MapContainer>
+    </MapContainer >
   );
 }

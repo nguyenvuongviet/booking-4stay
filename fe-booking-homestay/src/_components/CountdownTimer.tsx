@@ -2,14 +2,14 @@
 import { useEffect, useState } from "react";
 interface CountdownTimerProps {
   createdAt: string;
-  onFinish?: () => void; 
+  onFinish?: () => void;
 }
 export default function CountdownTimer({ createdAt, onFinish }: CountdownTimerProps) {
   const [timeLeft, setTimeLeft] = useState<string>("");
 
   useEffect(() => {
     const startTime = new Date(createdAt).getTime();         // thời điểm đặt phòng
-    const deadline = startTime + 24 * 60 * 60 * 1000;         // +24 giờ
+    const deadline = startTime + 30 * 60 * 1000;         // +30 phut
 
     const timer = setInterval(() => {
       const now = Date.now();
@@ -32,7 +32,7 @@ export default function CountdownTimer({ createdAt, onFinish }: CountdownTimerPr
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [createdAt,onFinish]);
+  }, [createdAt, onFinish]);
 
   return (
     <div className=" text-yellow-700 text-center text-sm elegant-subheading">

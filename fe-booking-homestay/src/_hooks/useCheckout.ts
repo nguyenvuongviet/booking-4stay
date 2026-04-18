@@ -65,6 +65,7 @@ export function useCheckout() {
     const [firstNameError, setFirstNameError] = useState("");
     const [lastNameError, setLastNameError] = useState("");
     const [phoneError, setPhoneError] = useState("");
+    const [emailError, setEmailError] = useState("");
 
     useEffect(() => {
         if (!user) return;
@@ -137,6 +138,44 @@ export function useCheckout() {
         }).finally(() => setIsLoading(false));
     };
 
+    const validateGuestInfo = () => {
+        let isValid = true;
+
+        if (!firstName.trim()) {
+            document.getElementById("firstName")?.focus();
+            setFirstNameError("Vui lòng nhập tên");
+            isValid = false;
+        } else setFirstNameError("");
+
+        if (!lastName.trim()) {
+            document.getElementById("lastName")?.focus();
+            setLastNameError("Vui lòng nhập họ");
+            isValid = false;
+        } else setLastNameError("");
+
+        if (!emailInput.trim()) {
+            document.getElementById("emailInput")?.focus();
+            setEmailError("Vui lòng nhập email");
+            isValid = false;
+        } else if (!/\S+@\S+\.\S+/.test(emailInput)) {
+            document.getElementById("firstName")?.focus();
+            setEmailError("Email không hợp lệ");
+            isValid = false;
+        } else setEmailError("");
+
+        if (!phone.trim()) {
+            document.getElementById("phone")?.focus();
+            setPhoneError("Vui lòng nhập số điện thoại");
+            isValid = false;
+        } else if (!/^0\d{9}$/.test(phone)) {
+            document.getElementById("phone")?.focus();
+            setPhoneError("SĐT không hợp lệ");
+            isValid = false;
+        } else setPhoneError("");
+
+        return isValid;
+    };
+
     return {
         ...payment,
 
@@ -156,6 +195,7 @@ export function useCheckout() {
         firstNameError,
         lastNameError,
         phoneError,
+        emailError,
 
         setFirstName,
         setLastName,
@@ -170,6 +210,7 @@ export function useCheckout() {
 
         isLoading,
         confirmNow,
-        confirmLater
+        confirmLater,
+        validateGuestInfo,
     };
 }
