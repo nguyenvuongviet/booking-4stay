@@ -11,6 +11,8 @@ interface BookingData {
     adults: string | null,
     children: string | null,
     pricePerNight: number,
+    rawTotal: number,
+    totalAmount: number,
     discountPercent: number,
     roomImage: string | null,
 }
@@ -18,13 +20,13 @@ interface BookingData {
 interface Props {
     bookingData: BookingData,
     totalNights: number,
-    totalAmount: number,
+    // totalAmount: number,
     paymentMethod: PaymentMethod,
     handleConfirmBooking: (v: PaymentMethod) => void,
 }
 
 export default function BookingSummary(props: Props) {
-    const { bookingData, totalNights, totalAmount, paymentMethod, handleConfirmBooking } = props;
+    const { bookingData, totalNights, paymentMethod, handleConfirmBooking } = props;
     const { t } = useLang();
 
     return (
@@ -84,13 +86,11 @@ export default function BookingSummary(props: Props) {
             <div className="border-t pt-4 space-y-2">
                 <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">
-                        {bookingData?.pricePerNight?.toLocaleString()}đ x{" "}
+                        {bookingData.pricePerNight.toLocaleString()}đ x{" "}
                         {totalNights} {t("nights")}
                     </span>
                     <span className="text-foreground">
-                        {(
-                            bookingData.pricePerNight * totalNights
-                        ).toLocaleString()}đ
+                        {(bookingData.rawTotal).toLocaleString()}đ
                     </span>
                 </div>
                 <div className="flex justify-between text-sm">
@@ -100,7 +100,7 @@ export default function BookingSummary(props: Props) {
                 <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Giảm giá</span>
                     <span className="text-foreground">
-                        -{Math.floor(totalAmount * bookingData.discountPercent / 100).toLocaleString()}đ<span className="text-xs text-green-600"> ({bookingData.discountPercent}%)</span>
+                        -{Math.floor(bookingData.totalAmount * bookingData.discountPercent / 100).toLocaleString()}đ<span className="text-xs text-green-600"> ({bookingData.discountPercent}%)</span>
                     </span>
                 </div>
             </div>
@@ -112,13 +112,13 @@ export default function BookingSummary(props: Props) {
                         {t("total")}
                     </span>
                     <span className="text-lg elegant-sans text-foreground">
-                        {totalAmount.toLocaleString()}đ
+                        {bookingData.totalAmount.toLocaleString()}đ
                     </span>
                 </div>
                 <div className="flex justify-between items-baseline">
                     <span className="text-sm text-foreground">{t("Points earned")}</span>
                     <span className="text-sm text-green-600">
-                        +{(totalAmount / 1000).toLocaleString()}
+                        +{(bookingData.totalAmount / 1000).toLocaleString()}
                     </span>
                 </div>
             </div>

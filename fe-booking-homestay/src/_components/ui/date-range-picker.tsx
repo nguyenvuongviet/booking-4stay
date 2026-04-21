@@ -20,7 +20,7 @@ interface DateRangePickerProps {
   value?: DateRange;
   statusMap?: Map<number, "AVAILABLE" | "SOLD_OUT" | "BLOCKED">;
   defaultPrice?: number;
-  getPrice: (date: Date) => number;
+  getPrice?: (date: Date) => number;
   onChange?: (range: DateRange | undefined) => void;
   onMonthChange?: (date: Date) => void;
   autoClose?: boolean;

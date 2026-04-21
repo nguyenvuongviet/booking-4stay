@@ -3,7 +3,7 @@
 import { Button } from "@/_components/ui/button";
 import { useAuth } from "@/context/auth-context";
 import { useLang } from "@/context/lang-context";
-import { active_account, forgot_password, verify_otp } from "@/services/authApi";
+import { active_account, forgot_password } from "@/services/authApi";
 import { X } from "lucide-react";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
@@ -56,10 +56,9 @@ export default function OTPModals({
 
     try {
       await verifySignup();
-
-      toast.success("Xác thực OTP thành công!");
-
+      onSuccess(otpCode);
       setShow(false);
+      toast.success("Đăng ký thành công!");
     } catch (err: any) {
       setApiError(err?.response?.data?.message || "Mã OTP không hợp lệ!");
       setOtpValues(Array(6).fill(""));
@@ -68,14 +67,14 @@ export default function OTPModals({
   };
 
   const handleSendOtp = async (e: React.FormEvent) => {
-      e.preventDefault();
-      setApiError("");
-      try {
-        await forgot_password({ email: email.trim() });
-      } catch (error: any) {
-        setApiError(error.response?.data?.message || "Failed to send OTP!");
-      }
-    };
+    e.preventDefault();
+    setApiError("");
+    try {
+      await forgot_password({ email: email.trim() });
+    } catch (error: any) {
+      setApiError(error.response?.data?.message || "Failed to send OTP!");
+    }
+  };
 
   const handleOtpChange = (index: number, value: string) => {
     if (!/^\d?$/.test(value)) return;

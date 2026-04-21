@@ -226,7 +226,7 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
         prev.getMonth() === date.getMonth() &&
         prev.getFullYear() === date.getFullYear()
       ) {
-        return prev; // ❌ không update → tránh re-render
+        return prev; 
       }
       return date;
     });

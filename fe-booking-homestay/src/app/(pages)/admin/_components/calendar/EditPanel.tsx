@@ -132,7 +132,7 @@ export default function EditPanel({
 
       {/* Buttons */}
       <div className="flex gap-2 mt-6">
-        <Button onClick={onClose} variant="outline" className="flex-1">
+        <Button onClick={onClose} variant="destructive" className="flex-1">
           Hủy
         </Button>
         <Button onClick={handleSave} className="flex-1">
@@ -201,7 +201,7 @@ export default function EditPanel({
             {/* Actions */}
             <div className="flex gap-2 pt-2">
               <Button
-                variant="outline"
+                variant="destructive"
                 onClick={() => setShowConfirm(false)}
                 className="flex-1"
               >

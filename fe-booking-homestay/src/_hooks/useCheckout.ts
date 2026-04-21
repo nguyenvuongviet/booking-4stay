@@ -9,6 +9,7 @@ import toast from "react-hot-toast";
 import { differenceInDays, format, parseISO } from "date-fns";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import { BookingPre } from "@/models/BookingPre";
 
 export function useCheckout() {
     const { user } = useAuth();
@@ -20,12 +21,11 @@ export function useCheckout() {
     const children = searchParams.get("children");
     const checkIn = searchParams.get("checkIn");
     const checkOut = searchParams.get("checkOut");
-
     const parsedCheckIn = checkIn ? parseISO(checkIn) : null;
     const parsedCheckOut = checkOut ? parseISO(checkOut) : null;
-
+    
     const [room, setRoom] = useState<Room | null>(null);
-    const [roomPreview, setRoomPreview] = useState<{ available: boolean, priceSummary: { totalPrice: number, rawTotal: number, discountPercent: number } } | null>(null);
+    const [bookingPre, setBookingPre] = useState< BookingPre | null>(null);
 
     const [loading, setLoading] = useState(true);
 
@@ -38,11 +38,11 @@ export function useCheckout() {
                 setRoom(room);
 
                 const data = await room_preview(
-                    Number(room?.id),
+                    Number(roomId),
                     format(bookingData.checkIn, "yyyy-MM-dd"),
                     format(bookingData.checkOut, "yyyy-MM-dd")
                 );
-                setRoomPreview(data);
+                setBookingPre(data);
 
                 if (data.available === false) {
                     toast.error("Phòng này đã hết!");
@@ -87,9 +87,10 @@ export function useCheckout() {
         checkOut: parsedCheckOut ? format(parsedCheckOut, "yyyy-MM-dd") : "",
         adults,
         children,
-        pricePerNight: room?.price ?? 0,
-        totalAmount: roomPreview?.priceSummary?.totalPrice ?? 0,
-        discountPercent: roomPreview?.priceSummary?.discountPercent ?? 0,
+        pricePerNight: bookingPre?.priceSummary.averagePricePerNight ?? 0,
+        rawTotal: bookingPre?.priceSummary.rawTotal ?? 0,
+        totalAmount: bookingPre?.priceSummary?.totalPrice ?? 0,
+        discountPercent: bookingPre?.priceSummary?.discountPercent ?? 0,
         roomImage: room?.images?.main ?? "",
     };
 
@@ -98,7 +99,7 @@ export function useCheckout() {
             ? differenceInDays(parsedCheckOut, parsedCheckIn)
             : 0;
 
-    const payment = usePayment(room, bookingData, roomPreview?.available);
+    const payment = usePayment(room, bookingData, bookingPre?.available);
 
     const confirmNow = async () => {
         if (!roomId || !checkIn || !checkOut) return;
@@ -183,9 +184,7 @@ export function useCheckout() {
         loading,
 
         bookingData,
-        totalAmount: bookingData.totalAmount,
         totalNights,
-        discountPercent: bookingData.discountPercent,
 
         firstName,
         lastName,

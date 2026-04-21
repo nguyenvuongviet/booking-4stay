@@ -168,7 +168,7 @@ export default function NewPasswordModal({ show, setShow }: NewPasswordModalProp
             {step === 3 && "Create new password"}
           </h2>
         </div>
-        {apiError && <p className="text-destructive text-sm mb-4 text-center">{apiError}</p>}
+        {apiError && <p className="text-destructive text-sm mb-4">{apiError}</p>}
 
         {/* STEP 1: EMAIL */}
         {step === 1 && (

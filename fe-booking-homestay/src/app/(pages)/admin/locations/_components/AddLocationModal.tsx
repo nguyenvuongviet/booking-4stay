@@ -23,7 +23,7 @@ import dynamic from "next/dynamic";
 import type { BaseLocation } from "@/services/admin/locationsApi";
 
 const MapPicker = dynamic(
-  () => import("../../_components/MapPicker").then((m) => m.MapPicker),
+  () => import("../../_components/MapPickerInner").then((m) => m.MapPicker),
   {
     ssr: false,
     loading: () => (

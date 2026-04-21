@@ -30,7 +30,6 @@ export default function CheckoutClient() {
         specialRequests,
         setSpecialRequests,
         bookingData,
-        totalAmount,
         totalNights,
         isLoading,
         modalType,
@@ -101,7 +100,6 @@ export default function CheckoutClient() {
                         <BookingSummary
                             bookingData={bookingData}
                             totalNights={totalNights}
-                            totalAmount={totalAmount}
                             paymentMethod={paymentMethod}
                             handleConfirmBooking={() => {
                                 if (!validateGuestInfo()) return;
