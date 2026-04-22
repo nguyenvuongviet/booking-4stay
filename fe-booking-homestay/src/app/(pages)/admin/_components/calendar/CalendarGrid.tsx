@@ -18,9 +18,19 @@ export default function CalendarGrid(
     const [currentDate, setCurrentDate] = useState(new Date());
     const current = currentDate;
 
-    const months = useMemo(() => [
-        { month: current.getMonth() + 1, year: current.getFullYear() }
-    ], [current]);
+    const months = useMemo(() => {
+        const prev = new Date(current);
+        prev.setMonth(prev.getMonth() - 1);
+
+        const next = new Date(current);
+        next.setMonth(next.getMonth() + 1);
+
+        return [
+            { month: prev.getMonth() + 1, year: prev.getFullYear() },
+            { month: current.getMonth() + 1, year: current.getFullYear() },
+            { month: next.getMonth() + 1, year: next.getFullYear() }
+        ];
+    }, [current]);
 
     const {
         loading,
@@ -55,10 +65,10 @@ export default function CalendarGrid(
                     </p>
 
                     {/* Week */}
-                    <div className="grid grid-cols-7 mb-2 text-center elegant-sans text-primary text-[10px] sm:text-xs md:text-sm">                        
+                    <div className="grid grid-cols-7 mb-2 text-center elegant-sans text-primary text-[10px] sm:text-xs md:text-sm">
                         {["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7", "Chủ nhật"].map((d) => (
-                        <div key={d}>{d}</div>
-                    ))}
+                            <div key={d}>{d}</div>
+                        ))}
                     </div>
 
                     {/* Grid */}
@@ -89,7 +99,7 @@ export default function CalendarGrid(
                         dates={selectedDates}
                         currentPrice={getPrice(selectedDates[0])}
                         defaultPrice={defaultPrice}
-                        isSoldOut={statusMap.get(firstKey) === "SOLD_OUT" || statusMap.get(firstKey) === "BLOCKED"} // ✅ FIX
+                        isSoldOut={statusMap.get(firstKey) === "BOOKED" || statusMap.get(firstKey) === "BLOCKED"}
                         booking={bookingMap.get(firstKey)}
                         onSave={(price, soldOut) => {
                             updateCalendar(selectedDates, price, soldOut);

@@ -10,7 +10,7 @@ interface EditPanelProps {
   currentPrice: number;
   defaultPrice: number;
   isSoldOut: boolean;
-  booking?: Booking;
+  booking?: { guestName: string } | null;
   onSave: (price: number, soldOut: boolean) => void;
   onClose: () => void;
 }
@@ -112,19 +112,19 @@ export default function EditPanel({
               </div>
             </div>
           </label>
-          {booking && booking.status !== "CANCELLED" && (
+          {booking && (
             <div className="mt-1 px-4 py-2 rounded bg-secondary/10 border border-secondary">
               <p className="truncate text-md">
-                Được đặt bởi: <span className="elegant-sans text-primary">{booking.guestInfo.fullName}</span>
+                Được đặt bởi: <span className="elegant-sans text-primary">{booking.guestName}</span>
               </p>
-              <div className="opacity-80 truncate flex flex-col space-y-0.5 p-2 text-sm">
+              {/* <div className="opacity-80 truncate flex flex-col space-y-0.5 p-2 text-sm">
                 <span><Mail className="w-4 h-4 inline mr-1" />: {booking.guestInfo.email}</span>
                 <span><Phone className="w-4 h-4 inline mr-1" />: {booking.guestInfo.phoneNumber}</span>
               </div>
               <span className="text-sm">Trạng thái đặt phòng: </span>
               <span className={`elegant-sans text-xs rounded-full px-2 py-1 ${getStatusColorClasses(booking.status)}`}>
                 {booking.status}
-              </span>
+              </span> */}
             </div>
           )}
         </div>

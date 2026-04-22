@@ -7,15 +7,14 @@ import { formatDateAPI } from "@/lib/utils/date";
 type CalendarItem = {
     date: string;
     price: number;
-    status: "AVAILABLE" | "SOLD_OUT" | "BLOCKED";
-    bookingDetails: Booking | null;
+    status: "AVAILABLE" | "BOOKED" | "BLOCKED";
+    bookingDetails: { guestName: string } | null;
 };
 
 export function useCalendarPricing({
     roomId,
     defaultPrice,
     months
-
 }: {
     roomId: number | string;
     defaultPrice: number;
@@ -109,7 +108,7 @@ export function useCalendarPricing({
     }, [data]);
 
     const bookingMap = useMemo(() => {
-        const map = new Map<number, Booking>();
+        const map = new Map<number,{ guestName: string}>();
 
         data.forEach((d) => {
             if (d.bookingDetails) {

@@ -18,7 +18,7 @@ import toast from "react-hot-toast";
 interface DateRangePickerProps {
   id?: number | string;
   value?: DateRange;
-  statusMap?: Map<number, "AVAILABLE" | "SOLD_OUT" | "BLOCKED">;
+  statusMap?: Map<number, "AVAILABLE" | "BOOKED" | "BLOCKED" >;
   defaultPrice?: number;
   getPrice?: (date: Date) => number;
   onChange?: (range: DateRange | undefined) => void;
@@ -49,7 +49,7 @@ export default function DateRangePicker({
   const isSoldOut = (date: Date) => {
     if (!statusMap) return false;
     const status = statusMap.get(toDateKey(date));
-    return status === "SOLD_OUT" || status === "BLOCKED";
+    return status === "BOOKED"|| status === "BLOCKED" ;
   };
 
   const isRangeValid = (from: Date, to: Date) => {

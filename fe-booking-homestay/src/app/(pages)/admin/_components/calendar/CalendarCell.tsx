@@ -9,8 +9,8 @@ interface CalendarCellProps {
     day: DayCell;
     getPrice: (date: Date) => number;
     defaultPrice: number;
-    status: "AVAILABLE" | "SOLD_OUT" | "BLOCKED";
-    bookingDetail: Booking | null;
+    status: "AVAILABLE" | "BOOKED" | "BLOCKED";
+    bookingDetail?: { guestName: string } | null;
     isSelected?: boolean;
     onClick?: (date: Date, e: React.MouseEvent<HTMLDivElement>) => void;
 }
@@ -30,7 +30,7 @@ export default function CalendarCell({
     const availabilityStatus =
         status === "BLOCKED"
             ? "Hết phòng"
-            : status === "SOLD_OUT"
+            : status === "BOOKED"
                 ? "Đã đặt"
                 : "Còn phòng";
     const price = getPrice(day.date);
@@ -61,7 +61,7 @@ export default function CalendarCell({
                         <div
                             className={cn(
                                 `${isOutMonth ? "opacity-90" : ""}`,
-                                status === "SOLD_OUT" || status === "BLOCKED" ? "bg-red-400" : "bg-green-400",
+                                status === "BOOKED" || status === "BLOCKED" ? "bg-red-400" : "bg-green-400",
                                 "text-white text-xs md:text-sm rounded-full p-1 w-full ",
                                 isPast && "opacity-0"
                             )}
@@ -79,7 +79,7 @@ export default function CalendarCell({
                     </div>
                 </Tooltip.Trigger>
 
-                {bookingDetail && bookingDetail.status !== "CANCELLED" && (
+                {bookingDetail && (
                     <Tooltip.Portal>
                         <Tooltip.Content
                             side="top"
@@ -89,16 +89,16 @@ export default function CalendarCell({
                                         data-[state=delayed-open]:animate-fade-in data-[state=delayed-close]:animate-fade-out"
                         >
                             <p className="truncate elegant-sans text-secondary-foreground ">
-                                {bookingDetail.guestInfo.fullName}
+                                {bookingDetail.guestName}
                             </p>
-                            <div className="flex flex-col text-left gap-1 mt-1 text-sm">
+                            {/* <div className="flex flex-col text-left gap-1 mt-1 text-sm">
                                 <span>
                                     <Mail className="w-4 h-4 inline mr-1" />: {bookingDetail.guestInfo.email}
                                 </span>
                                 <span>
                                     <Phone className="w-4 h-4 inline mr-1" />: {bookingDetail.guestInfo.phoneNumber}
                                 </span>
-                            </div>
+                            </div> */}
                             <Tooltip.Arrow className="fill-primary/30" />
                         </Tooltip.Content>
                     </Tooltip.Portal>
