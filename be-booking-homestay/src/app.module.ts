@@ -14,15 +14,13 @@ import { TokenModule } from './modules/token/token.module';
 import { UserModule } from './modules/user/user.module';
 import { BookingModule } from './modules/booking/booking.module';
 import { ReviewModule } from './modules/review/review.module';
-import { VNPayModule } from './modules/payment/vnpay.module';
 import { AmenityModule } from './modules/amenity/amenity.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
-import { ScheduleModule } from '@nestjs/schedule';
 import { AppConfigsModule } from './modules/app-configs/app-configs.module';
+import { PayosModule } from './modules/payos/payos.module';
 
 @Module({
   imports: [
-    ScheduleModule.forRoot(),
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'public'),
       serveRoot: '/public',
@@ -37,7 +35,7 @@ import { AppConfigsModule } from './modules/app-configs/app-configs.module';
     RoomModule,
     BookingModule,
     ReviewModule,
-    VNPayModule,
+    PayosModule,
     AmenityModule,
     DashboardModule,
   ],

@@ -15,8 +15,8 @@ import {
 import { useState } from "react";
 import toast from "react-hot-toast";
 import CountdownTimer from "../../../../_components/CountdownTimer";
-import PaymentModal from "../../checkout/_component/PaymentModal";
 import { Button } from "../../../../_components/ui/button";
+import PaymentModal from "../../checkout/_component/PaymentModal";
 import { BookingStatusBadge } from "./BookingStatusBadge";
 import { ReviewSection } from "./ReviewSection";
 
@@ -34,7 +34,7 @@ export const BookingDetail = ({
 
   const totalNights = differenceInDays(
     new Date(booking.checkOut),
-    new Date(booking.checkIn)
+    new Date(booking.checkIn),
   );
 
   const formatPrice = (price: number) => {
@@ -63,10 +63,7 @@ export const BookingDetail = ({
     guestEmail: booking.user?.email,
     guestPhoneNumber: booking.user?.phoneNumber,
     specialRequest: booking.specialRequest ?? "",
-    paymentMethod:
-      booking.paymentMethod === "VNPAY"
-        ? ("VNPAY" as const)
-        : ("CASH" as const),
+    paymentMethod: booking.paymentMethod,
   });
 
   const confirmNow = () => handleDepositNow(buildPayload(), booking.id);
@@ -74,7 +71,7 @@ export const BookingDetail = ({
 
   const handleCancel = (
     id: number | string,
-    data: { reason: string; refundAmount: number | null }
+    data: { reason: string; refundAmount: number | null },
   ) => {
     setBooking((prev) => ({
       ...prev,
@@ -88,7 +85,7 @@ export const BookingDetail = ({
   const handleReview = async (
     bookingId: number | string,
     rating: number,
-    comment: string
+    comment: string,
   ) => {
     try {
       const resp = await post_review(bookingId, rating, comment);
@@ -108,7 +105,7 @@ export const BookingDetail = ({
     try {
       await cancel_booking(
         booking.id,
-        "Timeout: user did not complete payment"
+        "Timeout: user did not complete payment",
       );
 
       setBooking((prev) => ({
@@ -298,7 +295,9 @@ export const BookingDetail = ({
               <CheckCircle className="w-4 h-4 text-muted-foreground" />
               <span className="text-gray-600">Phương thức thanh toán:</span>
               <span className="elegant-sans text-foreground text-sm">
-                {booking.paymentMethod === "CASH" ? "Tiền mặt" : "VNPay"}
+                {booking.paymentMethod === "CASH"
+                  ? "Tiền mặt"
+                  : "Chuyển khoản (PayOS)"}
               </span>
             </div>
             <div className="flex items-center gap-2">
@@ -361,7 +360,7 @@ export const BookingDetail = ({
         </div>
         <div className="flex flex-row-reverse gap-4">
           {["PENDING", "PARTIALLY_PAID", "CONFIRMED"].includes(
-            booking.status
+            booking.status,
           ) && (
             <div className="flex items-center justify-end">
               <BookingCancelSection booking={booking} onCancel={handleCancel} />
@@ -373,7 +372,9 @@ export const BookingDetail = ({
               <Button
                 onClick={() =>
                   handleConfirmBooking(
-                    booking.paymentMethod === "VNPAY" ? "VNPAY" : "CASH"
+                    booking.paymentMethod === "BANK_TRANSFER"
+                      ? "BANK_TRANSFER"
+                      : "CASH",
                   )
                 }
                 className="rounded-xl flex items-center gap-2"

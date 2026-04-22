@@ -39,8 +39,7 @@ INSERT IGNORE INTO `loyalty_program` (`userId`, `levelId`, `points`) VALUES (1, 
 -- 6. Payment Methods
 INSERT IGNORE INTO `payment_methods` (`id`, `name`, `description`, `isActive`) VALUES
 (1, 'CASH', 'Thanh toán tiền mặt', 1),
-(2, 'VNPAY', 'Thanh toán qua VNPay', 1),
-(3, 'BANK_TRANSFER', 'Chuyển khoản ngân hàng', 1);
+(2, 'BANK_TRANSFER', 'Chuyển khoản ngân hàng', 1);
 
 -- 7. Amenities
 INSERT IGNORE INTO `amenities` (`id`, `name`, `category`) VALUES
@@ -165,7 +164,7 @@ INSERT IGNORE INTO `room_images` (`id`, `roomId`, `imageUrl`, `isMain`, `positio
 
 -- 13. Bookings
 INSERT IGNORE INTO `bookings` (`id`, `userId`, `roomId`, `guestFullName`, `guestEmail`, `guestPhoneNumber`, `checkIn`, `checkOut`, `adults`, `children`, `rawTotalPrice`, `totalPrice`, `status`, `paymentMethod`) VALUES
-(1, 1, 1, 'Demo Customer', 'user@gmail.com', '0907654321', '2025-11-01', '2025-11-03', 2, 0, 2400000.00, 2400000.00, 'CHECKED_OUT', 'VNPAY');
+(1, 1, 1, 'Demo Customer', 'user@gmail.com', '0907654321', '2025-11-01', '2025-11-03', 2, 0, 2400000.00, 2400000.00, 'CHECKED_OUT', 'BANK_TRANSFER');
 
 -- 14. Reviews
 INSERT IGNORE INTO `reviews` (`bookingId`, `userId`, `rating`, `comment`) VALUES (1, 2, 5.0, 'Tuyệt vời, sạch sẽ!');

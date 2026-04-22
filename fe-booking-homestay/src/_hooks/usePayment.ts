@@ -1,10 +1,9 @@
 "use client";
-import { useState } from "react";
+import { create_booking, create_payos_link } from "@/services/bookingApi";
+import { differenceInDays } from "date-fns";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import toast from "react-hot-toast";
-import { create_booking, pay_with_vnpay } from "@/services/bookingApi";
-import { differenceInDays, format } from "date-fns";
-import { room_preview } from "@/services/roomApi";
 
 type BookingPayload = {
   roomId: string | number;
@@ -16,32 +15,42 @@ type BookingPayload = {
   guestEmail: string;
   guestPhoneNumber: string;
   specialRequest?: string;
-  paymentMethod: "VNPAY" | "CASH";
+  paymentMethod: "BANK_TRANSFER" | "CASH";
 };
 
-export function usePayment(room: any, bookingData: any, roomAvailable?: boolean) {
+export function usePayment(
+  room: any,
+  bookingData: any,
+  roomAvailable?: boolean,
+) {
   const router = useRouter();
-  const [modalType, setModalType] = useState<"VNPAY" | "CASH" | null>(null);
+  const [modalType, setModalType] = useState<"BANK_TRANSFER" | "CASH" | null>(
+    null,
+  );
   const [openPopupPayment, setOpenPopupPayment] = useState(false);
 
-  //  mở modal theo phương thức thanh toán 
-  const handleConfirmBooking = (paymentMethod: "VNPAY" | "CASH") => {
+  //  mở modal theo phương thức thanh toán
+  const handleConfirmBooking = (paymentMethod: "BANK_TRANSFER" | "CASH") => {
     setModalType(paymentMethod);
     setOpenPopupPayment(true);
   };
 
   const totalNights = differenceInDays(
     new Date(bookingData.checkOut),
-    new Date(bookingData.checkIn)
+    new Date(bookingData.checkIn),
   );
 
-  const handleDepositNow = async (payload: BookingPayload, bookingId?: number | string) => {
+  const handleDepositNow = async (
+    payload: BookingPayload,
+    bookingId?: number | string,
+  ) => {
     try {
-
       let id = bookingId;
       if (!id) {
         const resp = await create_booking(payload);
-        toast.success("Đã tạo đặt phòng. Đang chuyển hướng đến trang thanh toán...");
+        toast.success(
+          "Đã tạo đặt phòng. Đang chuyển hướng đến trang thanh toán...",
+        );
         id = resp.data?.booking?.id;
         if (!id) {
           toast.error("Không thể tạo đặt phòng. Vui lòng thử lại.");
@@ -49,14 +58,22 @@ export function usePayment(room: any, bookingData: any, roomAvailable?: boolean)
         }
         console.log("id: ", id);
       }
-      const amount = payload.paymentMethod === "VNPAY"
-        ? room.price * totalNights
-        : room.price * totalNights * 0.3; // CASH => cọc 30%
+      let amountToPay = 0;
+      if (payload.paymentMethod === "BANK_TRANSFER") {
+        amountToPay = room.price * totalNights;
+      } else if (payload.paymentMethod === "CASH") {
+        amountToPay = Math.round(room.price * totalNights * 0.3); // 30% deposit
+      }
 
-      const payment = await pay_with_vnpay(amount, id);
-      window.location.href = payment.url;
-      setTimeout(() => router.push("/booking"), 3000);
-
+      toast.success("Đang tạo mã thanh toán PayOS...");
+      const { url } = await create_payos_link(id, amountToPay);
+      console.log("url: ", url);
+      if (url) {
+        window.location.href = url;
+      } else {
+        toast.error("Không thể lấy link PayOS");
+      }
+      return;
     } catch (error) {
       console.error("Payment error:", error);
       if (error == 500)
@@ -66,10 +83,11 @@ export function usePayment(room: any, bookingData: any, roomAvailable?: boolean)
     }
   };
 
-  const handleDepositLater = async (payload: BookingPayload, bookingId?: number | string) => {
+  const handleDepositLater = async (
+    payload: BookingPayload,
+    bookingId?: number | string,
+  ) => {
     try {
-      
-
       if (!bookingId) {
         const resp = await create_booking(payload);
         router.push("/booking");

@@ -1,10 +1,9 @@
-import { is } from 'date-fns/locale';
 import { Room } from "./Room";
 
 interface User {
   id: string | number;
   name: string;
-  email: string;  
+  email: string;
   phoneNumber: string;
   avatar: string;
 }
@@ -18,6 +17,8 @@ export type BookingStatus =
   | "PARTIALLY_PAID"
   | "WAITING_REFUND"
   | "REFUNDED";
+
+export type PaymentMethod = "BANK_TRANSFER" | "CASH";
 
 export interface Booking {
   id: number | string;
@@ -35,7 +36,7 @@ export interface Booking {
   guestEmail: string;
   guestPhoneNumber: string;
   specialRequest?: string | null;
-  paymentMethod: string;
+  paymentMethod: PaymentMethod;
   review: {
     id: number | string;
     rating: number;

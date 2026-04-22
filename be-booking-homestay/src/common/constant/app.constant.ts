@@ -22,12 +22,12 @@ export const CLOUDINARY_NAME = process.env.CLOUDINARY_NAME;
 export const CLOUDINARY_API_KEY = process.env.CLOUDINARY_API_KEY;
 export const CLOUDINARY_API_SECRET = process.env.CLOUDINARY_API_SECRET;
 
-export const VNPAY_HOST = process.env.VNPAY_HOST;
-export const VNPAY_TMN_CODE = process.env.VNPAY_TMN_CODE || '';
-export const VNPAY_SECRET_KEY = process.env.VNPAY_SECRET_KEY || '';
-export const VNPAY_RETURN_URL = process.env.VNPAY_RETURN_URL || '';
+export const PAYOS_CLIENT_ID = process.env.PAYOS_CLIENT_ID || '';
+export const PAYOS_API_KEY = process.env.PAYOS_API_KEY || '';
+export const PAYOS_CHECKSUM_KEY = process.env.PAYOS_CHECKSUM_KEY || '';
 
 export const ADMIN_EMAIL = process.env.ADMIN_EMAIL || '';
+export const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:3000';
 
 console.log({
   PORT,
@@ -44,9 +44,9 @@ console.log({
   CLOUDINARY_NAME,
   CLOUDINARY_API_KEY,
   CLOUDINARY_API_SECRET,
-  VNPAY_HOST,
-  VNPAY_TMN_CODE,
-  VNPAY_SECRET_KEY,
-  VNPAY_RETURN_URL,
+  PAYOS_CLIENT_ID,
+  PAYOS_API_KEY,
+  PAYOS_CHECKSUM_KEY,
   ADMIN_EMAIL,
+  CLIENT_URL,
 });

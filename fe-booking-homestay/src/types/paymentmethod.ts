@@ -1,1 +1,1 @@
-export type PaymentMethod = "VNPAY" | "CASH";
+export type PaymentMethodType = 'CASH' | 'BANK_TRANSFER';

@@ -4,9 +4,9 @@ import { BookingCard } from "@/app/(pages)/booking/_component/BookingCard";
 import Header from "@/_components/Header";
 import { useLang } from "@/context/lang-context";
 import { Booking } from "@/models/Booking";
-import { get_booking } from "@/services/bookingApi";
+import { get_booking, sync_payos_status } from "@/services/bookingApi";
 import { CalendarX, Loader2 } from "lucide-react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
@@ -19,8 +19,12 @@ export default function HistoryBooking() {
   const [loadingMore, setLoadingMore] = useState(false);
 
   const searchParams = useSearchParams();
-  const status = searchParams.get("status");
-  const orderId = searchParams.get("orderId");
+  const router = useRouter();
+  const statusParam = searchParams.get("status");
+  const cancelParam = searchParams.get("cancel");
+  const orderCode = searchParams.get("orderCode");
+  const successPayos = searchParams.get("success_payos");
+  const cancelPayos = searchParams.get("cancel_payos");
 
   const fetchBookings = async (pageNumber: number) => {
     if (pageNumber === 1) {
@@ -63,12 +67,32 @@ export default function HistoryBooking() {
   }, [loading, loadingMore, hasMore]);
 
   useEffect(() => {
-    if (status === "success") {
-      toast.success(t("payment_success"));
-    } else if (status === "failed") {
+    const isSuccess = successPayos === "true" || statusParam === "success" || statusParam === "PAID";
+    const isCancel = cancelPayos === "true" || statusParam === "failed" || cancelParam === "true";
+
+    if (isSuccess && orderCode) {
+      const verify = async () => {
+        const success = await sync_payos_status(orderCode);
+        if (success) {
+          toast.success(t("payment_success"));
+          fetchBookings(1); // Reload
+        } else {
+          toast.error(t("payment_failed"));
+        }
+        // clear query params so it doesn't run again on reload
+        router.replace("/booking");
+      };
+      
+      toast.promise(verify(), {
+        loading: "Đang đồng bộ trạng thái thanh toán...",
+        success: "Đồng bộ thành công!",
+        error: "Lỗi đồng bộ",
+      });
+    } else if (isCancel) {
       toast.error(t("payment_failed"));
+      router.replace("/booking");
     }
-  }, [status, orderId]);
+  }, [statusParam, successPayos, cancelPayos, orderCode, cancelParam, router, t]);
 
   return (
     <div className="min-h-screen bg-background">
