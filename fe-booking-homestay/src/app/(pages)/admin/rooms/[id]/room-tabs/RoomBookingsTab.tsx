@@ -17,7 +17,7 @@ import {
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { DateRange } from "react-day-picker";
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
 import { DateRangePicker } from "../../../_components/DateRangePicker";
 import { Pagination } from "../../../_components/Pagination";
 
@@ -93,25 +93,45 @@ export default function RoomBookingsTab({ bookings }: Props) {
   const pageCount = Math.max(1, Math.ceil(processed.length / pageSize));
   const paged = processed.slice((page - 1) * pageSize, page * pageSize);
 
-  const exportExcel = () => {
-    const rows = processed.map((b) => ({
-      ID: b.id,
-      Guest: b.guestInfo.fullName,
-      Email: b.guestInfo.email,
-      CheckIn: formatDate(b.checkIn),
-      CheckOut: formatDate(b.checkOut),
-      Nights: getNights(b.checkIn, b.checkOut),
-      Adults: b.adults,
-      Children: b.children,
-      Amount: b.totalAmount,
-      Status: b.status,
-    }));
+  const exportExcel = async () => {
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Bookings");
 
-    const sheet = XLSX.utils.json_to_sheet(rows);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, sheet, "Bookings");
-    const buffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+    worksheet.columns = [
+      { header: "ID", key: "id", width: 10 },
+      { header: "Khách hàng", key: "guest", width: 25 },
+      { header: "Email", key: "email", width: 30 },
+      { header: "Ngày nhận", key: "checkIn", width: 15 },
+      { header: "Ngày trả", key: "checkOut", width: 15 },
+      { header: "Số đêm", key: "nights", width: 10 },
+      { header: "Người lớn", key: "adults", width: 10 },
+      { header: "Trẻ em", key: "children", width: 10 },
+      { header: "Tổng tiền", key: "amount", width: 15 },
+      { header: "Trạng thái", key: "status", width: 15 },
+    ];
 
+    processed.forEach((b) => {
+      worksheet.addRow({
+        id: b.id,
+        guest: b.guestInfo.fullName,
+        email: b.guestInfo.email,
+        checkIn: formatDate(b.checkIn),
+        checkOut: formatDate(b.checkOut),
+        nights: getNights(b.checkIn, b.checkOut),
+        adults: b.adults,
+        children: b.children,
+        amount: b.totalAmount,
+        status: b.status,
+      });
+    });
+
+    worksheet.getRow(1).font = { bold: true };
+    worksheet.getRow(1).alignment = {
+      vertical: "middle",
+      horizontal: "center",
+    };
+
+    const buffer = await workbook.xlsx.writeBuffer();
     saveAs(
       new Blob([buffer], {
         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",

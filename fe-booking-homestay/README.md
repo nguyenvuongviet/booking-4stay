@@ -42,7 +42,7 @@
 ### Utilities
 
 - Axios
-- XLSX + File Saver
+- ExcelJS + File Saver
 - dotenv
 - Date-fns
 

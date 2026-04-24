@@ -13,7 +13,7 @@ import { Input } from "@/_components/ui/input";
 import { Textarea } from "@/_components/ui/textarea";
 import type { Room } from "@/types/room";
 import dynamic from "next/dynamic";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { LocationSelector } from "../../_components/location-selector";
 import { useRoomForm } from "../_hooks/useRoomForm";
 
@@ -47,6 +47,8 @@ export function RoomFormModal({
     initialData,
     isEditMode,
   });
+
+  const [locationNames, setLocationNames] = useState({ provinceName: "", wardName: "" });
 
   useEffect(() => {
     if (!open) return;
@@ -114,11 +116,17 @@ export function RoomFormModal({
               value={{
                 countryId: form.countryId,
                 provinceId: form.provinceId,
-                districtId: form.districtId,
                 wardId: form.wardId,
               }}
               autoFocus={isEditMode}
-              onChange={(loc) => updateMany(loc)}
+              onChange={(loc) => {
+                const { _provinceName, _wardName, ...rest } = loc;
+                updateMany(rest);
+                setLocationNames({
+                  provinceName: _provinceName || "",
+                  wardName: _wardName || "",
+                });
+              }}
             />
           </div>
 
@@ -139,6 +147,8 @@ export function RoomFormModal({
               lat={form.latitude}
               lng={form.longitude}
               address={form.street || undefined}
+              provinceName={locationNames.provinceName || undefined}
+              wardName={locationNames.wardName || undefined}
               onChange={(lat, lng) => {
                 update("latitude", lat);
                 update("longitude", lng);

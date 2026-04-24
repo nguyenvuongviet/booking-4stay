@@ -32,6 +32,7 @@
     "cmdk": "^1.1.1",
     "date-fns": "^4.1.0",
     "dotenv": "^17.2.3",
+    "exceljs": "^4.4.0",
     "file-saver": "^2.0.5",
     "framer-motion": "^12.23.24",
     "leaflet": "^1.9.4",
@@ -50,8 +51,7 @@
     "recharts": "^3.3.0",
     "tailwind-merge": "^3.3.1",
     "tailwind-variants": "^3.1.0",
-    "tailwindcss-animate": "^1.0.7",
-    "xlsx": "^0.18.5"
+    "tailwindcss-animate": "^1.0.7"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

@@ -35,8 +35,6 @@ export interface RoomLocation {
   countryId: number;
   province: string;
   provinceId: number;
-  district: string;
-  districtId: number;
   ward: string;
   wardId: number;
   street: string;
@@ -85,7 +83,6 @@ export interface CreateRoomDto {
   adultCapacity: number;
   childCapacity?: number;
   provinceId: number;
-  districtId: number;
   wardId: number;
   street: string;
   latitude?: number;

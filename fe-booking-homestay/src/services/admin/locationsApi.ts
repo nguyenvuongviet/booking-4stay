@@ -1,6 +1,6 @@
 import api from "../api";
 
-export type LocationType = "country" | "province" | "district" | "ward";
+export type LocationType = "country" | "province" | "ward";
 
 export interface BaseLocation {
   id: number;
@@ -8,10 +8,8 @@ export interface BaseLocation {
   code?: string;
   countryId?: number;
   provinceId?: number;
-  districtId?: number;
   country?: string;
   province?: string;
-  district?: string;
   imageUrl?: string | null;
   latitude?: number | null;
   longitude?: number | null;
@@ -36,7 +34,6 @@ export interface LocationQueryParams {
   search?: string;
   countryId?: number;
   provinceId?: number;
-  districtId?: number;
 }
 
 export async function getCountries(
@@ -63,18 +60,6 @@ export async function getProvinces(
   }
 }
 
-export async function getDistricts(
-  params?: LocationQueryParams,
-): Promise<PaginatedResponse<BaseLocation>> {
-  try {
-    const res = await api.get("/location/districts", { params });
-    return res.data?.data;
-  } catch (err) {
-    console.error("Get Districts error:", err);
-    throw err;
-  }
-}
-
 export async function getWards(
   params?: LocationQueryParams,
 ): Promise<PaginatedResponse<BaseLocation>> {
@@ -97,8 +82,6 @@ export async function getLocationsByType(
         return await getCountries(params);
       case "province":
         return await getProvinces(params);
-      case "district":
-        return await getDistricts(params);
       case "ward":
         return await getWards(params);
       default:
@@ -113,7 +96,6 @@ export async function getLocationsByType(
 const typeToEndpointMap: Record<LocationType, string> = {
   country: "countries",
   province: "provinces",
-  district: "districts",
   ward: "wards",
 };
 

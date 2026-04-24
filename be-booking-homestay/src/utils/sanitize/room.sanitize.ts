@@ -5,7 +5,6 @@ function sanitize(room: any) {
 
   const country = room.location_countries;
   const province = room.location_provinces;
-  const district = room.location_districts;
   const ward = room.location_wards;
 
   return {
@@ -28,14 +27,12 @@ function sanitize(room: any) {
     rating: Number(room.rating),
     reviewCount: room.reviewCount,
     location:
-      country || province || district || ward || room.fullAddress || room.street
+      country || province || ward || room.fullAddress || room.street
         ? {
             country: country?.name || null,
             countryId: country?.id || null,
             province: province?.name || null,
             provinceId: province?.id || null,
-            district: district?.name || null,
-            districtId: district?.id || null,
             ward: ward?.name || null,
             wardId: ward?.id || null,
             street: room.street || null,

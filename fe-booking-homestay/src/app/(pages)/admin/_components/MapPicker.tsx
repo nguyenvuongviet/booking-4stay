@@ -29,6 +29,8 @@ interface Props {
   lat: number | null;
   lng: number | null;
   address?: string;
+  wardName?: string;
+  provinceName?: string;
   onChange: (lat: number, lng: number) => void;
 }
 
@@ -81,27 +83,52 @@ function DraggableMarker({
 const DEFAULT_CENTER: [number, number] = [16.0, 108.0];
 const DEFAULT_ZOOM = 6;
 
-export function MapPicker({ lat, lng, address, onChange }: Props) {
+export function MapPicker({ lat, lng, address, wardName, provinceName, onChange }: Props) {
   const hasCoords = lat !== null && lng !== null;
   const [geocoding, setGeocoding] = useState(false);
   const [geocodeError, setGeocodeError] = useState<string | null>(null);
 
   const handleGeocode = async () => {
-    if (!address?.trim()) {
+    const parts = [address, wardName, provinceName].filter(Boolean);
+    if (parts.length === 0) {
       setGeocodeError(
-        "Chưa có địa chỉ để tìm. Hãy chọn tỉnh/huyện và nhập tên đường trước.",
+        "Chưa có địa chỉ để tìm. Hãy chọn tỉnh/phường và nhập tên đường trước.",
       );
       return;
     }
     try {
       setGeocoding(true);
       setGeocodeError(null);
-      const query = encodeURIComponent(address + ", Việt Nam");
-      const res = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${query}`,
+
+      const params = new URLSearchParams({
+        format: "json",
+        limit: "1",
+        countrycodes: "vn",
+      });
+
+      if (address?.trim()) params.set("street", address.trim());
+      if (wardName?.trim() && provinceName?.trim()) {
+        params.set("city", `${wardName.trim()}, ${provinceName.trim()}`);
+      } else if (provinceName?.trim()) {
+        params.set("city", provinceName.trim());
+      }
+      params.set("country", "Việt Nam");
+
+      let res = await fetch(
+        `https://nominatim.openstreetmap.org/search?${params.toString()}`,
         { headers: { "Accept-Language": "vi" } },
       );
-      const data = await res.json();
+      let data = await res.json();
+
+      if (!data?.length) {
+        const fullQuery = encodeURIComponent(parts.join(", ") + ", Việt Nam");
+        res = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${fullQuery}`,
+          { headers: { "Accept-Language": "vi" } },
+        );
+        data = await res.json();
+      }
+
       if (data?.length > 0) {
         onChange(parseFloat(data[0].lat), parseFloat(data[0].lon));
       } else {

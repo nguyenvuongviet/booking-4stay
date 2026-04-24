@@ -8,7 +8,6 @@ import {
   deleteLocation as apiDelete,
   uploadProvinceImage as apiUploadProvinceImage,
   getCountries,
-  getDistricts,
   getLocationsByType,
   getProvinces,
   updateLocation,
@@ -16,12 +15,11 @@ import {
 import { useCallback, useEffect, useState } from "react";
 
 export function useLocations() {
-  const [dataType, setDataType] = useState<
-    "Country" | "Province" | "District" | "Ward"
-  >("Country");
+  const [dataType, setDataType] = useState<"Country" | "Province" | "Ward">(
+    "Country",
+  );
   const [selectedParent, setSelectedParent] = useState<string | null>(null);
   const [filterProvinceId, setFilterProvinceId] = useState<number | null>(null);
-  const [filterDistrictId, setFilterDistrictId] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -35,12 +33,10 @@ export function useLocations() {
 
   const [countries, setCountries] = useState<BaseLocation[]>([]);
   const [provinces, setProvinces] = useState<BaseLocation[]>([]);
-  const [districts, setDistricts] = useState<BaseLocation[]>([]);
 
   const clearFilters = () => {
     setSelectedParent(null);
     setFilterProvinceId(null);
-    setFilterDistrictId(null);
     setSearchTerm("");
     setPage(1);
   };
@@ -58,15 +54,11 @@ export function useLocations() {
       if (selectedParent && selectedParent !== "all") {
         const pId = Number(selectedParent);
         if (dataType === "Province") params.countryId = pId;
-        if (dataType === "District") params.provinceId = pId;
-        if (dataType === "Ward") params.districtId = pId;
+        if (dataType === "Ward") params.provinceId = pId;
       }
 
-      if (!params.provinceId && filterProvinceId && dataType === "District") {
+      if (!params.provinceId && filterProvinceId && dataType === "Ward") {
         params.provinceId = filterProvinceId;
-      }
-      if (!params.districtId && filterDistrictId && dataType === "Ward") {
-        params.districtId = filterDistrictId;
       }
 
       const res = await getLocationsByType(typeLower, params);
@@ -78,16 +70,9 @@ export function useLocations() {
         const cRes = await getCountries({ pageSize: 1000 });
         setCountries(cRes.items);
       }
-      if (
-        (dataType === "District" || dataType === "Ward") &&
-        provinces.length === 0
-      ) {
+      if (dataType === "Ward" && provinces.length === 0) {
         const pRes = await getProvinces({ pageSize: 1000 });
         setProvinces(pRes.items);
-      }
-      if (dataType === "Ward" && districts.length === 0) {
-        const dRes = await getDistricts({ pageSize: 1000 });
-        setDistricts(dRes.items);
       }
     } catch {
       toast({ variant: "destructive", title: "Không thể tải dữ liệu" });
@@ -98,12 +83,10 @@ export function useLocations() {
     dataType,
     selectedParent,
     filterProvinceId,
-    filterDistrictId,
     page,
     searchTerm,
     countries.length,
     provinces.length,
-    districts.length,
   ]);
 
   useEffect(() => {
@@ -117,30 +100,23 @@ export function useLocations() {
   const filteredList = list;
 
   const searchParents = async (
-    type: "Province" | "District" | "Ward",
+    type: "Province" | "Ward",
     search: string,
     parentId?: number,
   ) => {
     const params: any = { search, pageSize: 1000 };
     if (parentId) {
       if (type === "Province") params.countryId = parentId;
-      if (type === "District") params.provinceId = parentId;
-      if (type === "Ward") params.districtId = parentId;
+      if (type === "Ward") params.provinceId = parentId;
     }
 
     if (type === "Province") {
       const res = await getProvinces(params);
       setProvinces(res.items);
-    } else if (type === "District") {
-      const res = await getDistricts(params);
-      setDistricts(res.items);
     }
   };
 
-  const create = async (
-    type: "Country" | "Province" | "District" | "Ward",
-    raw: any,
-  ) => {
+  const create = async (type: "Country" | "Province" | "Ward", raw: any) => {
     try {
       let payload: any = {
         name: raw.name,
@@ -151,8 +127,7 @@ export function useLocations() {
       } else {
         const map = {
           Province: "countryId",
-          District: "provinceId",
-          Ward: "districtId",
+          Ward: "provinceId",
         } as const;
 
         const fieldName = map[type];
@@ -175,7 +150,7 @@ export function useLocations() {
   };
 
   const edit = async (
-    type: "Country" | "Province" | "District" | "Ward",
+    type: "Country" | "Province" | "Ward",
     id: number,
     raw: any,
   ) => {
@@ -187,8 +162,7 @@ export function useLocations() {
       } else {
         const map = {
           Province: "countryId",
-          District: "provinceId",
-          Ward: "districtId",
+          Ward: "provinceId",
         } as const;
 
         const parentField = map[type];
@@ -207,10 +181,7 @@ export function useLocations() {
     }
   };
 
-  const remove = async (
-    type: "Country" | "Province" | "District" | "Ward",
-    id: number,
-  ) => {
+  const remove = async (type: "Country" | "Province" | "Ward", id: number) => {
     const ok = confirm(`Bạn có chắc muốn xoá ${type} này?`);
     if (!ok) return;
 
@@ -259,12 +230,9 @@ export function useLocations() {
     setSelectedParent,
     filterProvinceId,
     setFilterProvinceId,
-    filterDistrictId,
-    setFilterDistrictId,
 
     countries,
     provinces,
-    districts,
 
     filteredList,
     loading,

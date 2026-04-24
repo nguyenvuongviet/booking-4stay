@@ -8,7 +8,7 @@ import { LocationCard } from "./LocationCard";
 interface Props {
   loading: boolean;
   filteredList: BaseLocation[];
-  currentType: "Country" | "Province" | "District" | "Ward";
+  currentType: "Country" | "Province" | "Ward";
   onEdit: (item: BaseLocation) => void;
   onDelete: (type: Props["currentType"], id: number) => void;
   onUploadImage?: (id: number, file: File) => Promise<void>;

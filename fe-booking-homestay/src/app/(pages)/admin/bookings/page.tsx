@@ -14,7 +14,7 @@ import {
   Users,
 } from "lucide-react";
 import Link from "next/link";
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
 import { DateRangePicker } from "../_components/DateRangePicker";
 import { Pagination } from "../_components/Pagination";
 import { RefreshButton } from "../_components/RefreshButton";
@@ -64,27 +64,50 @@ export default function BookingListPage() {
     return <div className="p-6">Đang tải dữ liệu…</div>;
   }
 
-  const exportExcel = () => {
-    const rows = processed.map((b) => ({
-      ID: b.id,
-      Guest: b.guestInfo.fullName,
-      Email: b.guestInfo.email,
-      Room: b.room?.name,
-      CheckIn: formatDate(b.checkIn),
-      CheckOut: formatDate(b.checkOut),
-      Nights: getNights(b.checkIn, b.checkOut),
-      Adults: b.adults,
-      Children: b.children,
-      Amount: b.totalAmount,
-      Status: b.status,
-    }));
+  const exportExcel = async () => {
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Bookings");
 
-    const sheet = XLSX.utils.json_to_sheet(rows);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, sheet, "Bookings");
+    worksheet.columns = [
+      { header: "ID", key: "id", width: 10 },
+      { header: "Khách hàng", key: "guest", width: 25 },
+      { header: "Email", key: "email", width: 30 },
+      { header: "Phòng", key: "room", width: 25 },
+      { header: "Ngày nhận", key: "checkIn", width: 15 },
+      { header: "Ngày trả", key: "checkOut", width: 15 },
+      { header: "Số đêm", key: "nights", width: 10 },
+      { header: "Người lớn", key: "adults", width: 10 },
+      { header: "Trẻ em", key: "children", width: 10 },
+      { header: "Tổng tiền", key: "amount", width: 15 },
+      { header: "Trạng thái", key: "status", width: 15 },
+    ];
 
-    const buffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
-    saveAs(new Blob([buffer]), "bookings.xlsx");
+    processed.forEach((b) => {
+      worksheet.addRow({
+        id: b.id,
+        guest: b.guestInfo.fullName,
+        email: b.guestInfo.email,
+        room: b.room?.name,
+        checkIn: formatDate(b.checkIn),
+        checkOut: formatDate(b.checkOut),
+        nights: getNights(b.checkIn, b.checkOut),
+        adults: b.adults,
+        children: b.children,
+        amount: b.totalAmount,
+        status: b.status,
+      });
+    });
+
+    worksheet.getRow(1).font = { bold: true };
+    worksheet.getRow(1).alignment = { vertical: "middle", horizontal: "center" };
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    saveAs(
+      new Blob([buffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      }),
+      "bookings.xlsx",
+    );
   };
 
   return (

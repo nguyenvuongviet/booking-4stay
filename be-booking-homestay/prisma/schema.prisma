@@ -212,7 +212,6 @@ model rooms {
   hostId             Int                 @db.UnsignedInt
   countryId          Int?                @default(1) @db.UnsignedInt
   provinceId         Int                 @db.UnsignedInt
-  districtId         Int                 @db.UnsignedInt
   wardId             Int?                @db.UnsignedInt
   street             String?             @db.VarChar(255)
   fullAddress        String?             @db.VarChar(255)
@@ -237,16 +236,14 @@ model rooms {
   room_images        room_images[]
   room_prices        room_prices[]
   location_countries location_countries? @relation(fields: [countryId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_room_country")
-  location_districts location_districts  @relation(fields: [districtId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_room_district")
   users              users               @relation(fields: [hostId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "rooms_ibfk_1")
   location_provinces location_provinces  @relation(fields: [provinceId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_room_province")
   location_wards     location_wards?     @relation(fields: [wardId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_room_ward")
 
   @@index([countryId], map: "fk_room_country")
-  @@index([districtId], map: "fk_room_district")
   @@index([hostId], map: "fk_room_host")
   @@index([wardId], map: "fk_room_ward")
-  @@index([provinceId, districtId, wardId], map: "idx_rooms_location")
+  @@index([provinceId, wardId], map: "idx_rooms_location")
 }
 
 model user_roles {
@@ -302,22 +299,6 @@ model location_countries {
   rooms              rooms[]
 }
 
-model location_districts {
-  id                 Int                @id @default(autoincrement()) @db.UnsignedInt
-  provinceId         Int                @db.UnsignedInt
-  name               String             @db.VarChar(100)
-  code               String?            @db.VarChar(20)
-  isDeleted          Boolean            @default(false)
-  deletedAt          DateTime?          @db.Timestamp(0)
-  createdAt          DateTime           @default(now()) @db.Timestamp(0)
-  updatedAt          DateTime           @default(now()) @db.Timestamp(0)
-  location_provinces location_provinces @relation(fields: [provinceId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_district_province")
-  location_wards     location_wards[]
-  rooms              rooms[]
-
-  @@unique([provinceId, name], map: "uq_location_district_name")
-}
-
 model location_provinces {
   id                 Int                  @id @default(autoincrement()) @db.UnsignedInt
   countryId          Int                  @db.UnsignedInt
@@ -330,8 +311,8 @@ model location_provinces {
   deletedAt          DateTime?            @db.Timestamp(0)
   createdAt          DateTime             @default(now()) @db.Timestamp(0)
   updatedAt          DateTime             @default(now()) @db.Timestamp(0)
-  location_districts location_districts[]
   location_countries location_countries   @relation(fields: [countryId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_province_country")
+  location_wards     location_wards[]
   rooms              rooms[]
 
   @@index([countryId], map: "fk_province_country")
@@ -339,17 +320,17 @@ model location_provinces {
 
 model location_wards {
   id                 Int                @id @default(autoincrement()) @db.UnsignedInt
-  districtId         Int                @db.UnsignedInt
+  provinceId         Int                @db.UnsignedInt
   name               String             @db.VarChar(100)
   code               String?            @db.VarChar(20)
   isDeleted          Boolean            @default(false)
   deletedAt          DateTime?          @db.Timestamp(0)
   createdAt          DateTime           @default(now()) @db.Timestamp(0)
   updatedAt          DateTime           @default(now()) @db.Timestamp(0)
-  location_districts location_districts @relation(fields: [districtId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_ward_district")
+  location_provinces location_provinces @relation(fields: [provinceId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_ward_province")
   rooms              rooms[]
 
-  @@unique([districtId, name], map: "uq_location_ward_name")
+  @@unique([provinceId, name], map: "uq_location_ward_name")
 }
 
 enum room_beds_type {

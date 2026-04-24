@@ -14,7 +14,6 @@ export interface RoomFormValues {
   street: string;
   countryId: number | null;
   provinceId: number | null;
-  districtId: number | null;
   wardId: number | null;
   latitude: number | null;
   longitude: number | null;
@@ -29,7 +28,6 @@ const defaultForm: RoomFormValues = {
   street: "",
   countryId: null,
   provinceId: null,
-  districtId: null,
   wardId: null,
   latitude: null,
   longitude: null,
@@ -61,7 +59,6 @@ export function useRoomForm({
         street: initialData.location.street,
         countryId: initialData.location.countryId,
         provinceId: initialData.location.provinceId,
-        districtId: initialData.location.districtId,
         wardId: initialData.location.wardId,
         latitude: initialData.location.latitude ?? null,
         longitude: initialData.location.longitude ?? null,
@@ -90,7 +87,7 @@ export function useRoomForm({
     if (!form.price || form.price <= 0) return "Giá phòng không hợp lệ";
     if (!form.adultCapacity || form.adultCapacity <= 0)
       return "Sức chứa người lớn không hợp lệ";
-    if (!form.countryId || !form.provinceId || !form.districtId || !form.wardId)
+    if (!form.countryId || !form.provinceId || !form.wardId)
       return "Vui lòng chọn đầy đủ vị trí";
     if (!form.street.trim()) return "Vui lòng nhập tên đường / số nhà";
     return null;
@@ -111,7 +108,6 @@ export function useRoomForm({
         adultCapacity: Number(form.adultCapacity),
         childCapacity: Number(form.childCapacity),
         provinceId: Number(form.provinceId),
-        districtId: Number(form.districtId),
         wardId: Number(form.wardId),
         street: form.street,
         latitude: form.latitude ?? undefined,

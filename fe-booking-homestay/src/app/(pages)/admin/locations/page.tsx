@@ -19,11 +19,9 @@ export default function LocationsPage() {
   const parents =
     state.dataType === "Province"
       ? state.countries
-      : state.dataType === "District"
+      : state.dataType === "Ward"
         ? state.provinces
-        : state.dataType === "Ward"
-          ? state.districts
-          : [];
+        : [];
 
   const handleEdit = (item: BaseLocation) => {
     setEditingItem(item);
@@ -40,7 +38,6 @@ export default function LocationsPage() {
       <div className="bg-white/5 backdrop-blur-xl border border-white/10 p-2 rounded-2xl shadow-xl">
         <LocationFilters
           {...state}
-          districts={state.districts}
           provinces={state.provinces}
           filterProvinceId={state.filterProvinceId}
           setFilterProvinceId={state.setFilterProvinceId}
@@ -72,7 +69,6 @@ export default function LocationsPage() {
         parents={parents}
         countries={state.countries}
         provinces={state.provinces}
-        districts={state.districts}
         onSubmit={(raw) => state.create(state.dataType, raw)}
       />
 
@@ -83,7 +79,6 @@ export default function LocationsPage() {
         parents={parents}
         countries={state.countries}
         provinces={state.provinces}
-        districts={state.districts}
         item={editingItem}
         onSubmit={(raw) => state.edit(state.dataType, editingItem!.id, raw)}
       />

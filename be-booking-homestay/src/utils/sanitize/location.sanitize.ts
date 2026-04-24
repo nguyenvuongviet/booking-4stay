@@ -10,8 +10,6 @@ function sanitize(location: any) {
 
     countryId: location.countryId ?? null,
     provinceId: location.provinceId ?? null,
-    districtId: location.districtId ?? null,
-    wardId: location.wardId ?? null,
 
     country:
       typeof location.location_countries === 'object'
@@ -21,14 +19,6 @@ function sanitize(location: any) {
       typeof location.location_provinces === 'object'
         ? location.location_provinces?.name
         : (location.province ?? null),
-    district:
-      typeof location.location_districts === 'object'
-        ? location.location_districts?.name
-        : (location.district ?? null),
-    ward:
-      typeof location.ward === 'object'
-        ? location.ward?.name
-        : (location.ward ?? null),
 
     imageUrl: buildImageUrl(location.imageUrl),
     latitude: location.latitude ?? null,

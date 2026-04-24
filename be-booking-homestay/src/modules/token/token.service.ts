@@ -15,15 +15,15 @@ export class TokenService {
     const accessToken = this.jwtService.sign(
       { userId: userId },
       {
-        secret: ACCESS_TOKEN_SECRET,
-        expiresIn: ACCESS_TOKEN_EXPIRES,
+        secret: ACCESS_TOKEN_SECRET as string,
+        expiresIn: ACCESS_TOKEN_EXPIRES as any,
       },
     );
     const refreshToken = this.jwtService.sign(
       { userId: userId },
       {
-        secret: REFRESH_TOKEN_SECRET,
-        expiresIn: REFRESH_TOKEN_EXPIRES,
+        secret: REFRESH_TOKEN_SECRET as string,
+        expiresIn: REFRESH_TOKEN_EXPIRES as any,
       },
     );
     return { accessToken, refreshToken };

@@ -24,7 +24,6 @@ import { Public } from 'src/common/decorator/public.decorator';
 import { Roles } from 'src/common/decorator/roles.decorator';
 import { UploadFileDto } from 'src/common/dto/upload-file.dto';
 import { CreateCountryDto } from './dto/create-country.dto';
-import { CreateDistrictDto } from './dto/create-district.dto';
 import { CreateProvinceDto } from './dto/create-province.dto';
 import { CreateWardDto } from './dto/create-ward.dto';
 import { LocationQueryDto } from './dto/location-query.dto';
@@ -55,12 +54,6 @@ export class LocationController {
     return await this.locationService.getProvinces(query);
   }
 
-  @Get('districts')
-  @Public()
-  async getDistricts(@Query() query: LocationQueryDto) {
-    return await this.locationService.getDistricts(query);
-  }
-
   @Get('wards')
   @Public()
   async getWards(@Query() query: LocationQueryDto) {
@@ -81,13 +74,6 @@ export class LocationController {
     return await this.locationService.createProvince(dto);
   }
 
-  @Post('admin/districts')
-  @Roles('ADMIN')
-  @ApiBearerAuth('AccessToken')
-  async createDistrict(@Body() dto: CreateDistrictDto) {
-    return await this.locationService.createDistrict(dto);
-  }
-
   @Post('admin/wards')
   @Roles('ADMIN')
   @ApiBearerAuth('AccessToken')
@@ -101,8 +87,8 @@ export class LocationController {
   @ApiParam({
     name: 'type',
     required: true,
-    enum: ['country', 'province', 'district', 'ward'],
-    description: 'Loại location cần cập nhật hoặc xóa',
+    enum: ['country', 'province', 'ward'],
+    description: 'Loại location cần cập nhật',
   })
   async updateLocation(
     @Param('type') type: string,
@@ -118,8 +104,8 @@ export class LocationController {
   @ApiParam({
     name: 'type',
     required: true,
-    enum: ['country', 'province', 'district', 'ward'],
-    description: 'Loại location cần cập nhật hoặc xóa',
+    enum: ['country', 'province', 'ward'],
+    description: 'Loại location cần xóa',
   })
   async deleteLocation(@Param('type') type: string, @Param('id') id: string) {
     return await this.locationService.deleteLocation(type, +id);

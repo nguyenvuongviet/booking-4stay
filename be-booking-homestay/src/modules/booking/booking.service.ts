@@ -384,7 +384,6 @@ export class BookingService {
           rooms: {
             include: {
               location_provinces: true,
-              location_districts: true,
               location_wards: true,
               room_images: true,
               room_amenities: { include: { amenities: true } },

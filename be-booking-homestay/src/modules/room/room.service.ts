@@ -115,16 +115,12 @@ export class RoomService {
           room_beds: true,
           location_countries: true,
           location_provinces: true,
-          location_districts: true,
           location_wards: true,
           users: true,
         },
       }),
       this.prisma.rooms.count({ where }),
     ]);
-
-    if (total === 0)
-      throw new NotFoundException('Không tìm thấy phòng nào phù hợp');
 
     return {
       message: 'Lấy danh sách phòng thành công',
@@ -148,7 +144,6 @@ export class RoomService {
       include: {
         location_countries: true,
         location_provinces: true,
-        location_districts: true,
         location_wards: true,
         room_images: true,
         room_amenities: {

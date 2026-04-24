@@ -33,10 +33,4 @@ export class LocationQueryDto {
   @Transform(({ value }) => parseInt(value))
   @IsInt()
   provinceId?: number;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @Transform(({ value }) => parseInt(value))
-  @IsInt()
-  districtId?: number;
 }

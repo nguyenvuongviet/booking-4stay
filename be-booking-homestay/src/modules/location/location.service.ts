@@ -7,7 +7,6 @@ import { sanitizeLocation } from 'src/utils/sanitize/location.sanitize';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateCountryDto } from './dto/create-country.dto';
-import { CreateDistrictDto } from './dto/create-district.dto';
 import { CreateProvinceDto } from './dto/create-province.dto';
 import { CreateWardDto } from './dto/create-ward.dto';
 import { LocationQueryDto } from './dto/location-query.dto';
@@ -215,7 +214,7 @@ export class LocationService {
     };
   }
 
-  async getDistricts(query: LocationQueryDto) {
+  async getWards(query: LocationQueryDto) {
     const { page, pageSize, search, provinceId } = query;
     const skip = (page - 1) * pageSize;
     const where: any = { isDeleted: false };
@@ -226,56 +225,12 @@ export class LocationService {
     }
 
     const [items, total] = await this.prisma.$transaction([
-      this.prisma.location_districts.findMany({
-        where,
-        orderBy: { name: 'asc' },
-        skip,
-        take: pageSize,
-        include: { location_provinces: true },
-      }),
-      this.prisma.location_districts.count({ where }),
-    ]);
-
-    return {
-      message: 'Danh sách quận/huyện',
-      items: sanitizeLocation(items),
-      meta: {
-        totalItems: total,
-        itemsPerPage: pageSize,
-        totalPages: Math.ceil(total / pageSize),
-        currentPage: page,
-      },
-    };
-  }
-
-  async createDistrict(dto: CreateDistrictDto) {
-    const province = await this.prisma.location_provinces.findUnique({
-      where: { id: dto.provinceId },
-    });
-    if (!province || province.isDeleted)
-      throw new NotFoundException('Không tìm thấy tỉnh/thành');
-
-    const created = await this.prisma.location_districts.create({ data: dto });
-    return { message: 'Tạo quận/huyện thành công', data: created };
-  }
-
-  async getWards(query: LocationQueryDto) {
-    const { page, pageSize, search, districtId } = query;
-    const skip = (page - 1) * pageSize;
-    const where: any = { isDeleted: false };
-
-    if (districtId) where.districtId = districtId;
-    if (search?.trim()) {
-      where.name = { contains: search.trim() };
-    }
-
-    const [items, total] = await this.prisma.$transaction([
       this.prisma.location_wards.findMany({
         where,
         orderBy: { name: 'asc' },
         skip,
         take: pageSize,
-        include: { location_districts: true },
+        include: { location_provinces: true },
       }),
       this.prisma.location_wards.count({ where }),
     ]);
@@ -293,12 +248,19 @@ export class LocationService {
   }
 
   async createWard(dto: CreateWardDto) {
-    const district = await this.prisma.location_districts.findUnique({
-      where: { id: dto.districtId },
+    const province = await this.prisma.location_provinces.findUnique({
+      where: { id: dto.provinceId },
     });
-    if (!district || district.isDeleted)
-      throw new NotFoundException('Không tìm thấy quận/huyện');
-    const created = await this.prisma.location_wards.create({ data: dto });
+    if (!province || province.isDeleted)
+      throw new NotFoundException('Không tìm thấy tỉnh/thành');
+
+    const created = await this.prisma.location_wards.create({
+      data: {
+        provinceId: dto.provinceId,
+        name: dto.name,
+        code: dto.code ?? null,
+      },
+    });
     return { message: 'Tạo phường/xã thành công', data: created };
   }
 
@@ -340,40 +302,20 @@ export class LocationService {
         });
         return { message: 'Cập nhật province thành công', data: updated };
       }
-      case 'district': {
-        const existing = await this.prisma.location_districts.findUnique({
-          where: { id },
-        });
-        if (!existing) throw new NotFoundException('Không tìm thấy quận/huyện');
-        if (dto.provinceId !== undefined) {
-          const parent = await this.prisma.location_provinces.findUnique({
-            where: { id: dto.provinceId },
-          });
-          if (!parent) throw new BadRequestException('Province không tồn tại');
-        }
-        const data: any = {};
-        if (dto.name !== undefined) data.name = dto.name;
-        if (dto.provinceId !== undefined) data.provinceId = dto.provinceId;
-        const updated = await this.prisma.location_districts.update({
-          where: { id },
-          data,
-        });
-        return { message: 'Cập nhật district thành công', data: updated };
-      }
       case 'ward': {
         const existing = await this.prisma.location_wards.findUnique({
           where: { id },
         });
         if (!existing) throw new NotFoundException('Không tìm thấy phường/xã');
-        if (dto.districtId !== undefined) {
-          const parent = await this.prisma.location_districts.findUnique({
-            where: { id: dto.districtId },
-          });
-          if (!parent) throw new BadRequestException('District không tồn tại');
-        }
         const data: any = {};
         if (dto.name !== undefined) data.name = dto.name;
-        if (dto.districtId !== undefined) data.districtId = dto.districtId;
+        if (dto.provinceId !== undefined) {
+          const parent = await this.prisma.location_provinces.findUnique({
+            where: { id: dto.provinceId },
+          });
+          if (!parent) throw new BadRequestException('Province không tồn tại');
+          data.provinceId = dto.provinceId;
+        }
         const updated = await this.prisma.location_wards.update({
           where: { id },
           data,
@@ -405,17 +347,6 @@ export class LocationService {
         });
         if (!existing) throw new NotFoundException('Không tìm thấy tỉnh/thành');
         deleted = await this.prisma.location_provinces.update({
-          where: { id },
-          data: { isDeleted: true, deletedAt: new Date() },
-        });
-        break;
-      }
-      case 'district': {
-        const existing = await this.prisma.location_districts.findUnique({
-          where: { id },
-        });
-        if (!existing) throw new NotFoundException('Không tìm thấy quận/huyện');
-        deleted = await this.prisma.location_districts.update({
           where: { id },
           data: { isDeleted: true, deletedAt: new Date() },
         });

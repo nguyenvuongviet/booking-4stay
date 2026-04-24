@@ -7,7 +7,7 @@ import { useRef } from "react";
 
 interface Props {
   item: BaseLocation;
-  type: "Country" | "Province" | "District" | "Ward";
+  type: "Country" | "Province" | "Ward";
   onEdit: (item: BaseLocation) => void;
   onDelete: (type: Props["type"], id: number) => void;
   onUploadImage?: (id: number, file: File) => Promise<void>;
@@ -84,14 +84,12 @@ export function LocationCard({
                   ? "Quốc gia"
                   : type === "Province"
                     ? "Tỉnh thành"
-                    : type === "District"
-                      ? "Quận huyện"
-                      : "Phường xã"}
+                    : "Phường xã"}
               </span>
 
-              {(item.country || item.province || item.district) && (
+              {(item.country || item.province) && (
                 <span className="text-xs font-semibold text-cyan-500/90 truncate">
-                  tại {item.country || item.province || item.district}
+                  tại {item.country || item.province}
                 </span>
               )}
             </div>

@@ -15,7 +15,6 @@ export function LocationFilters({
   setSearchTerm,
   countries,
   provinces,
-  districts,
   filterProvinceId,
   setFilterProvinceId,
   clearFilters,
@@ -23,36 +22,20 @@ export function LocationFilters({
   const types = [
     { id: "Country", label: "Quốc gia", icon: Database },
     { id: "Province", label: "Tỉnh/Thành phố", icon: MapPin },
-    { id: "District", label: "Quận/Huyện", icon: MapPin },
     { id: "Ward", label: "Phường/Xã", icon: MapPin },
   ];
 
-  let parentOptions =
+  const parentOptions =
     dataType === "Province"
       ? countries
-      : dataType === "District"
+      : dataType === "Ward"
         ? provinces
-        : dataType === "Ward"
-          ? districts
-          : [];
-
-  if (dataType === "Ward" && filterProvinceId) {
-    parentOptions = districts.filter(
-      (d: any) => d.provinceId === filterProvinceId,
-    );
-  }
+        : [];
 
   const parentLabel =
     dataType === "Province"
       ? "Quốc gia"
-      : dataType === "District"
-        ? "Tỉnh/Thành phố"
-        : "Quận/Huyện";
-
-  const provinceOptionsForWard = [
-    { value: "all", label: "Tất cả Tỉnh/Thành phố" },
-    ...provinces.map((p: any) => ({ value: String(p.id), label: p.name })),
-  ];
+      : "Tỉnh/Thành phố";
 
   const parentOptionsForCombobox = [
     { value: "all", label: `Tất cả ${parentLabel}` },
@@ -101,21 +84,6 @@ export function LocationFilters({
             className="w-full pl-11 h-11 rounded-2xl bg-white/5 border-white/10 focus:ring-primary/20 hover:bg-white/10 transition-colors"
           />
         </div>
-
-        {dataType === "Ward" && (
-          <div className="flex-1 lg:max-w-[240px]">
-            <Combobox
-              options={provinceOptionsForWard}
-              value={filterProvinceId ? String(filterProvinceId) : "all"}
-              onChange={(val) => {
-                setFilterProvinceId(val === "all" ? null : Number(val));
-                setSelectedParent("all");
-              }}
-              placeholder="Theo Tỉnh/Thành phố"
-              className="h-11 rounded-2xl bg-white/5 border-white/10 focus:ring-primary/20 hover:bg-white/10 transition-colors"
-            />
-          </div>
-        )}
 
         {dataType !== "Country" && (
           <div className="flex-1 lg:max-w-[240px]">

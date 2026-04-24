@@ -53,17 +53,17 @@ INSERT IGNORE INTO `amenities` (`id`, `name`, `category`) VALUES
 INSERT IGNORE INTO `location_countries` (`id`, `name`, `code`) VALUES (1, 'Việt Nam', 'VN');
 
 -- 9. Rooms
-INSERT IGNORE INTO `rooms` (`id`, `hostId`, `provinceId`, `districtId`, `wardId`, `street`, `name`, `description`, `price`, `adultCapacity`, `childCapacity`, `latitude`, `longitude`) VALUES
-(1, 3, 1, 1, 1, '47 Nguyễn Thái Bình', '4Stay Central Saigon', 'Căn hộ ngay trung tâm Q1', 1200000.00, 2, 1, 10.7769, 106.7009),
-(2, 3, 2, 2, 2, '12 Hoàng Hoa Thám', '4Stay Hanoi View', 'Phòng đôi view Hồ Tây', 950000.00, 2, 0, 21.0285, 105.8542),
-(3, 3, 3, 3, 3, '5 Trần Hưng Đạo', '4Stay Da Nang Riverside', 'Phòng sát sông Hàn', 880000.00, 2, 1, 16.0544, 108.2022),
-(4, 3, 1, 1, 1, '22 Lê Lợi', 'Saigon Luxury Loft', 'Căn hộ kiểu loft sang trọng', 1500000.00, 3, 1, 10.7740, 106.7030),
-(5, 3, 2, 2, 2, '88 Thụy Khuê', 'Hanoi Old Quarter Home', 'Phòng ấm cúng trong phố cổ', 780000.00, 2, 1, 21.0340, 105.8500),
-(6, 3, 3, 3, 3, '19 Võ Văn Kiệt', 'Da Nang Beachfront', 'Phòng hướng biển Mỹ Khê', 1100000.00, 2, 1, 16.0610, 108.2480),
-(7, 3, 1, 1, 1, '10 Nguyễn Huệ', 'Saigon Walking Street Studio', 'Studio ngay phố đi bộ', 1350000.00, 2, 0, 10.7750, 106.7020),
-(8, 3, 2, 2, 2, '55 Nguyễn Trãi', 'Hanoi Cozy Apartment', 'Căn hộ mini trung tâm', 650000.00, 2, 1, 21.0260, 105.8430),
-(9, 3, 3, 3, 3, '77 Bạch Đằng', 'Da Nang River Suite', 'Suite cao cấp sông Hàn', 1600000.00, 3, 1, 16.0670, 108.2240),
-(10, 3, 1, 1, 1, '320 Lý Tự Trọng', 'Saigon City View', 'Phòng view thành phố tuyệt đẹp', 900000.00, 2, 1, 10.7780, 106.6980);
+INSERT IGNORE INTO `rooms` (`id`, `hostId`, `provinceId`, `wardId`, `street`, `name`, `description`, `price`, `adultCapacity`, `childCapacity`, `latitude`, `longitude`) VALUES
+(1, 3, 1, 1, '47 Nguyễn Thái Bình', '4Stay Central Saigon', 'Căn hộ ngay trung tâm Q1', 1200000.00, 2, 1, 10.7769, 106.7009),
+(2, 3, 2, 2, '12 Hoàng Hoa Thám', '4Stay Hanoi View', 'Phòng đôi view Hồ Tây', 950000.00, 2, 0, 21.0285, 105.8542),
+(3, 3, 3, 3, '5 Trần Hưng Đạo', '4Stay Da Nang Riverside', 'Phòng sát sông Hàn', 880000.00, 2, 1, 16.0544, 108.2022),
+(4, 3, 1, 1, '22 Lê Lợi', 'Saigon Luxury Loft', 'Căn hộ kiểu loft sang trọng', 1500000.00, 3, 1, 10.7740, 106.7030),
+(5, 3, 2, 2, '88 Thụy Khuê', 'Hanoi Old Quarter Home', 'Phòng ấm cúng trong phố cổ', 780000.00, 2, 1, 21.0340, 105.8500),
+(6, 3, 3, 3, '19 Võ Văn Kiệt', 'Da Nang Beachfront', 'Phòng hướng biển Mỹ Khê', 1100000.00, 2, 1, 16.0610, 108.2480),
+(7, 3, 1, 1, '10 Nguyễn Huệ', 'Saigon Walking Street Studio', 'Studio ngay phố đi bộ', 1350000.00, 2, 0, 10.7750, 106.7020),
+(8, 3, 2, 2, '55 Nguyễn Trãi', 'Hanoi Cozy Apartment', 'Căn hộ mini trung tâm', 650000.00, 2, 1, 21.0260, 105.8430),
+(9, 3, 3, 3, '77 Bạch Đằng', 'Da Nang River Suite', 'Suite cao cấp sông Hàn', 1600000.00, 3, 1, 16.0670, 108.2240),
+(10, 3, 1, 1, '320 Lý Tự Trọng', 'Saigon City View', 'Phòng view thành phố tuyệt đẹp', 900000.00, 2, 1, 10.7780, 106.6980);
 
 -- 10. Room Beds
 INSERT IGNORE INTO `room_beds` (`roomId`, `type`, `quantity`) VALUES
@@ -163,8 +163,8 @@ INSERT IGNORE INTO `room_images` (`id`, `roomId`, `imageUrl`, `isMain`, `positio
 
 
 -- 13. Bookings
-INSERT IGNORE INTO `bookings` (`id`, `userId`, `roomId`, `guestFullName`, `guestEmail`, `guestPhoneNumber`, `checkIn`, `checkOut`, `adults`, `children`, `rawTotalPrice`, `totalPrice`, `status`, `paymentMethod`) VALUES
-(1, 1, 1, 'Demo Customer', 'user@gmail.com', '0907654321', '2025-11-01', '2025-11-03', 2, 0, 2400000.00, 2400000.00, 'CHECKED_OUT', 'BANK_TRANSFER');
+INSERT IGNORE INTO `bookings` (`id`, `userId`, `roomId`, `guestFullName`, `guestEmail`, `guestPhoneNumber`, `checkIn`, `checkOut`, `adults`, `children`, `rawTotalPrice`, `totalPrice`, `paidAmount`, `status`, `paymentMethod`) VALUES
+(1, 1, 1, 'Demo Customer', 'user@gmail.com', '0907654321', '2025-11-01', '2025-11-03', 2, 0, 2400000.00, 2400000.00, 2400000.00, 'CHECKED_OUT', 'BANK_TRANSFER');
 
 -- 14. Reviews
 INSERT IGNORE INTO `reviews` (`bookingId`, `userId`, `rating`, `comment`) VALUES (1, 2, 5.0, 'Tuyệt vời, sạch sẽ!');

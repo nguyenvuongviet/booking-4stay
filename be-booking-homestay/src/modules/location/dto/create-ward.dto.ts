@@ -3,9 +3,9 @@ import { Transform, TransformFnParams } from 'class-transformer';
 import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class CreateWardDto {
-  @ApiProperty({ example: 1, description: 'ID của quận/huyện' })
+  @ApiProperty({ example: 1, description: 'ID của tỉnh/thành phố' })
   @IsNumber()
-  districtId: number;
+  provinceId: number;
 
   @ApiProperty({ example: 'Phường Phúc Xá', description: 'Tên phường/xã' })
   @IsString()

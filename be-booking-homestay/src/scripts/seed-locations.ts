@@ -44,12 +44,11 @@ async function main() {
 
     console.log('Đang tải dữ liệu từ open-api.vn...');
     const response = await axios.get(
-      'https://provinces.open-api.vn/api/?depth=3',
+      'https://provinces.open-api.vn/api/v2/?depth=2',
     );
     const data = response.data;
 
     let provinceCount = 0;
-    let districtCount = 0;
     let wardCount = 0;
 
     for (const p of data) {
@@ -78,40 +77,19 @@ async function main() {
 
       provinceCount++;
 
-      for (const d of p.districts || []) {
-        let district = await prisma.location_districts.findUnique({
-          where: {
-            provinceId_name: {
-              provinceId: province.id,
-              name: d.name,
-            },
-          },
+      // Wards thuộc trực tiếp province (không qua district)
+      const wardData = (p.wards || []).map((w: any) => ({
+        provinceId: province.id,
+        name: w.name,
+        code: String(w.code),
+      }));
+
+      if (wardData.length > 0) {
+        await prisma.location_wards.createMany({
+          data: wardData,
+          skipDuplicates: true,
         });
-
-        if (!district) {
-          district = await prisma.location_districts.create({
-            data: {
-              provinceId: province.id,
-              name: d.name,
-              code: String(d.code),
-            },
-          });
-        }
-        districtCount++;
-
-        const wardData = (d.wards || []).map((w: any) => ({
-          districtId: district.id,
-          name: w.name,
-          code: String(w.code),
-        }));
-
-        if (wardData.length > 0) {
-          await prisma.location_wards.createMany({
-            data: wardData,
-            skipDuplicates: true,
-          });
-          wardCount += wardData.length;
-        }
+        wardCount += wardData.length;
       }
 
       console.log(`✓ ${p.name}`);
@@ -119,7 +97,6 @@ async function main() {
 
     console.log('\n--- TỔNG KẾT ---');
     console.log(`Tỉnh/Thành phố: ${provinceCount}`);
-    console.log(`Quận/Huyện: ${districtCount}`);
     console.log(`Phường/Xã: ${wardCount}`);
     console.log('Hoàn tất!');
   } catch (err) {

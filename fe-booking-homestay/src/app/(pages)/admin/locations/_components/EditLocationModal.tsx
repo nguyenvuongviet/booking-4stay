@@ -26,7 +26,7 @@ const MapPicker = dynamic(
   },
 );
 
-type UITypes = "Country" | "Province" | "District" | "Ward";
+type UITypes = "Country" | "Province" | "Ward";
 
 interface Props {
   open: boolean;
@@ -35,7 +35,6 @@ interface Props {
   parents: BaseLocation[];
   countries: BaseLocation[];
   provinces: BaseLocation[];
-  districts: BaseLocation[];
   currentType: UITypes;
   onSubmit: (raw: {
     name: string;
@@ -54,7 +53,6 @@ export function EditLocationModal({
   currentType,
   countries,
   provinces,
-  districts,
   onSubmit,
 }: Props) {
   const [name, setName] = useState("");
@@ -62,14 +60,12 @@ export function EditLocationModal({
 
   const [selectedCountryId, setSelectedCountryId] = useState("");
   const [selectedProvinceId, setSelectedProvinceId] = useState("");
-  const [selectedDistrictId, setSelectedDistrictId] = useState("");
 
   const [latitude, setLatitude] = useState<number | null>(null);
   const [longitude, setLongitude] = useState<number | null>(null);
 
   const isCountry = currentType === "Country";
   const isProvince = currentType === "Province";
-  const isDistrict = currentType === "District";
   const isWard = currentType === "Ward";
   const inputRef = useRef<HTMLInputElement | null>(null);
 
@@ -78,11 +74,9 @@ export function EditLocationModal({
       ? "Quốc gia"
       : currentType === "Province"
         ? "Tỉnh/Thành phố"
-        : currentType === "District"
-          ? "Quận/Huyện"
-          : currentType === "Ward"
-            ? "Phường/Xã"
-            : currentType;
+        : currentType === "Ward"
+          ? "Phường/Xã"
+          : currentType;
 
   useEffect(() => {
     if (open && item) {
@@ -93,16 +87,7 @@ export function EditLocationModal({
 
       if (isProvince) {
         setSelectedCountryId(String(item.countryId || ""));
-      } else if (isDistrict) {
-        setSelectedProvinceId(String(item.provinceId || ""));
-        const parentProv = provinces.find(
-          (p) => p.id === Number(item.provinceId),
-        );
-        if (parentProv?.countryId) {
-          setSelectedCountryId(String(parentProv.countryId));
-        }
       } else if (isWard) {
-        setSelectedDistrictId(String(item.districtId || ""));
         setSelectedProvinceId(String(item.provinceId || ""));
         const parentProv = provinces.find(
           (p) => p.id === Number(item.provinceId),
@@ -119,13 +104,12 @@ export function EditLocationModal({
   const handleSubmit = async () => {
     let finalParentId = null;
     if (isProvince) finalParentId = selectedCountryId;
-    if (isDistrict) finalParentId = selectedProvinceId;
-    if (isWard) finalParentId = selectedDistrictId;
+    if (isWard) finalParentId = selectedProvinceId;
 
     const payload: any = {
       name,
       existingParentId:
-        item?.countryId || item?.provinceId || item?.districtId || null,
+        item?.countryId || item?.provinceId || null,
     };
 
     if (isCountry) payload.code = code;
@@ -151,22 +135,11 @@ export function EditLocationModal({
     )
     .map((p) => ({ value: String(p.id), label: p.name }));
 
-  const districtOptions = districts
-    .filter(
-      (d) => !selectedProvinceId || String(d.provinceId) === selectedProvinceId,
-    )
-    .map((d) => ({ value: String(d.id), label: d.name }));
-
   const isValidToSubmit = () => {
     if (!name) return false;
     if (isCountry && !code) return false;
     if (isProvince && !selectedCountryId) return false;
-    if (isDistrict && (!selectedCountryId || !selectedProvinceId)) return false;
-    if (
-      isWard &&
-      (!selectedCountryId || !selectedProvinceId || !selectedDistrictId)
-    )
-      return false;
+    if (isWard && (!selectedCountryId || !selectedProvinceId)) return false;
     return true;
   };
 
@@ -220,14 +193,13 @@ export function EditLocationModal({
                     onChange={(val) => {
                       setSelectedCountryId(val);
                       setSelectedProvinceId("");
-                      setSelectedDistrictId("");
                     }}
                     placeholder="Tìm kiếm và chọn Quốc gia..."
                     className="h-12 rounded-2xl bg-white/5 border-white/10 focus:ring-amber-500/20 hover:bg-white/10 transition-colors"
                   />
                 </div>
 
-                {(isDistrict || isWard) && (
+                {isWard && (
                   <div className="space-y-2">
                     <label className="text-sm font-bold flex items-center gap-2">
                       <span className="p-1 rounded bg-teal-500/20 text-teal-500">
@@ -243,41 +215,11 @@ export function EditLocationModal({
                       options={provinceOptions}
                       value={selectedProvinceId}
                       disabled={!selectedCountryId}
-                      onChange={(val) => {
-                        setSelectedProvinceId(val);
-                        setSelectedDistrictId("");
-                      }}
+                      onChange={setSelectedProvinceId}
                       placeholder={
                         !selectedCountryId
                           ? "Vui lòng chọn Quốc gia trước"
                           : "Tìm kiếm Tỉnh/Thành phố..."
-                      }
-                      className="h-12 rounded-2xl bg-white/5 border-white/10 focus:ring-amber-500/20 hover:bg-white/10 transition-colors"
-                    />
-                  </div>
-                )}
-
-                {isWard && (
-                  <div className="space-y-2">
-                    <label className="text-sm font-bold flex items-center gap-2">
-                      <span className="p-1 rounded bg-amber-500/20 text-amber-500">
-                        <Database className="w-3.5 h-3.5" />
-                      </span>
-                      Quận/Huyện{" "}
-                      <span className="text-muted-foreground font-medium text-[10px] uppercase tracking-tighter">
-                        (Bước 3)
-                      </span>{" "}
-                      <span className="text-red-500">*</span>
-                    </label>
-                    <Combobox
-                      options={districtOptions}
-                      value={selectedDistrictId}
-                      disabled={!selectedProvinceId}
-                      onChange={setSelectedDistrictId}
-                      placeholder={
-                        !selectedProvinceId
-                          ? "Vui lòng chọn Tỉnh/Thành trước"
-                          : "Tìm kiếm Quận/Huyện..."
                       }
                       className="h-12 rounded-2xl bg-white/5 border-white/10 focus:ring-amber-500/20 hover:bg-white/10 transition-colors"
                     />

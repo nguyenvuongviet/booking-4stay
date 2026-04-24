@@ -29,7 +29,7 @@ function MapAutoFit({ roomsArray }: { roomsArray: Room[] }) {
   const bounds = L.latLngBounds(
     roomsArray
       .filter((r) => r.location?.latitude && r.location?.longitude)
-      .map((r) => [Number(r.location.latitude), Number(r.location.longitude)])
+      .map((r) => [Number(r.location.latitude), Number(r.location.longitude)]),
   );
 
   if (bounds.isValid()) {
@@ -88,7 +88,7 @@ export default function MapRooms({ rooms, height }: MapRoomsProps) {
                 </div>
               </Popup>
             </Marker>
-          )
+          ),
       )}
 
       <MapAutoFit roomsArray={roomsArray} />

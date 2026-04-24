@@ -39,7 +39,6 @@ BEGIN
   SET NEW.`fullAddress` = CONCAT_WS(', ',
     NEW.`street`,
     (SELECT name FROM `location_wards` WHERE `id` = NEW.`wardId`),
-    (SELECT name FROM `location_districts` WHERE `id` = NEW.`districtId`),
     (SELECT name FROM `location_provinces` WHERE `id` = NEW.`provinceId`),
     (SELECT name FROM `location_countries` WHERE `id` = NEW.`countryId`)
   );
@@ -55,7 +54,6 @@ BEGIN
     SET `fullAddress` = CONCAT_WS(', ',
       `street`,
       (SELECT `name` FROM `location_wards` WHERE `id` = `rooms`.`wardId`),
-      (SELECT `name` FROM `location_districts` WHERE `id` = `rooms`.`districtId`),
       (SELECT `name` FROM `location_provinces` WHERE `id` = `rooms`.`provinceId`),
       NEW.`name`
     )
@@ -73,29 +71,10 @@ BEGIN
     SET `fullAddress` = CONCAT_WS(', ',
       `street`,
       (SELECT `name` FROM `location_wards` WHERE `id` = `rooms`.`wardId`),
-      (SELECT `name` FROM `location_districts` WHERE `id` = `rooms`.`districtId`),
       NEW.`name`,
       (SELECT `name` FROM `location_countries` WHERE `id` = `rooms`.`countryId`)
     )
     WHERE `provinceId` = NEW.`id`;
-  END IF;
-END $$
-
-DROP TRIGGER IF EXISTS `trg_district_name_update` $$
-CREATE TRIGGER `trg_district_name_update`
-AFTER UPDATE ON `location_districts`
-FOR EACH ROW
-BEGIN
-  IF NEW.`name` <> OLD.`name` THEN
-    UPDATE `rooms`
-    SET `fullAddress` = CONCAT_WS(', ',
-      `street`,
-      (SELECT `name` FROM `location_wards` WHERE `id` = `rooms`.`wardId`),
-      NEW.`name`,
-      (SELECT `name` FROM `location_provinces` WHERE `id` = `rooms`.`provinceId`),
-      (SELECT `name` FROM `location_countries` WHERE `id` = `rooms`.`countryId`)
-    )
-    WHERE `districtId` = NEW.`id`;
   END IF;
 END $$
 
@@ -109,7 +88,6 @@ BEGIN
     SET `fullAddress` = CONCAT_WS(', ',
       `street`,
       NEW.`name`,
-      (SELECT `name` FROM `location_districts` WHERE `id` = `rooms`.`districtId`),
       (SELECT `name` FROM `location_provinces` WHERE `id` = `rooms`.`provinceId`),
       (SELECT `name` FROM `location_countries` WHERE `id` = `rooms`.`countryId`)
     )
@@ -124,19 +102,15 @@ CREATE TRIGGER `trg_rooms_fullAddress_update`
 BEFORE UPDATE ON `rooms`
 FOR EACH ROW
 BEGIN
-  -- Chỉ chạy nếu có bất kỳ trường địa chỉ nào thay đổi (Tùy chọn: tối ưu hóa hiệu suất)
   IF 
     NEW.`street` <> OLD.`street` OR
     NEW.`wardId` <> OLD.`wardId` OR
-    NEW.`districtId` <> OLD.`districtId` OR
     NEW.`provinceId` <> OLD.`provinceId` OR
     NEW.`countryId` <> OLD.`countryId` 
   THEN
-    -- Lấy tên vị trí và ghép lại
     SET NEW.`fullAddress` = CONCAT_WS(', ',
       NEW.`street`,
       (SELECT name FROM `location_wards` WHERE `id` = NEW.`wardId`),
-      (SELECT name FROM `location_districts` WHERE `id` = NEW.`districtId`),
       (SELECT name FROM `location_provinces` WHERE `id` = NEW.`provinceId`),
       (SELECT name FROM `location_countries` WHERE `id` = NEW.`countryId`)
     );
@@ -233,13 +207,11 @@ SELECT
   r.`hostId`,
   r.`countryId`,  c.`name` AS `countryName`,
   r.`provinceId`, p.`name` AS `provinceName`,
-  r.`districtId`, d.`name` AS `districtName`,
   r.`wardId`,     w.`name` AS `wardName`,
   r.`isDeleted`,
   r.`createdAt`,
   r.`updatedAt`
 FROM `rooms` r
 LEFT JOIN `location_wards`     w ON w.`id` = r.`wardId`
-LEFT JOIN `location_districts` d ON d.`id` = r.`districtId`
 LEFT JOIN `location_provinces` p ON p.`id` = r.`provinceId`
 LEFT JOIN `location_countries` c ON c.`id` = r.`countryId`;
