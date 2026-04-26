@@ -1,5 +1,6 @@
 "use client";
 import { create_booking, create_payos_link } from "@/services/bookingApi";
+import { PaymentMethod } from "@/types/paymentmethod";
 import { differenceInDays } from "date-fns";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -15,7 +16,8 @@ type BookingPayload = {
   guestEmail: string;
   guestPhoneNumber: string;
   specialRequest?: string;
-  paymentMethod: "BANK_TRANSFER" | "CASH";
+  paymentMethod: PaymentMethod;
+  policyUpdatedAt?: string;
 };
 
 export function usePayment(
@@ -74,12 +76,19 @@ export function usePayment(
         toast.error("Không thể lấy link PayOS");
       }
       return;
-    } catch (error) {
+    } catch (error: any) {
       console.error("Payment error:", error);
-      if (error == 500)
-        toast.error("Kết nối mạng đang bị gián đoạn, vui lòng thử lại sau!");
+      const status = error?.response?.status;
+      const message = error?.response?.data?.message;
 
-      toast.error("Hết phòng, vui lòng chọn phòng khác!");
+      if (status === 409) {
+        toast.error(message || "Chính sách huỷ phòng vừa được cập nhật, vui lòng kiểm tra lại.");
+      } else if (status === 500) {
+        toast.error("Kết nối mạng đang bị gián đoạn, vui lòng thử lại sau!");
+      } else {
+        toast.error(message || "Không thể tạo đặt phòng. Vui lòng thử lại!");
+      }
+      throw error;
     }
   };
 
@@ -93,12 +102,19 @@ export function usePayment(
         router.push("/booking");
         toast.success("Đặt phòng đã được lưu. Thanh toán sau.");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("DepositLater error:", error);
-      if (error == 500)
-        toast.error("Kết nối mạng đang bị gián đoạn, vui lòng thử lại sau!");
+      const status = error?.response?.status;
+      const message = error?.response?.data?.message;
 
-      toast.error("Hết phòng, vui lòng chọn phòng khác!");
+      if (status === 409) {
+        toast.error(message || "Chính sách huỷ phòng vừa có thay đổi, vui lòng tải lại!");
+      } else if (status === 500) {
+        toast.error("Kết nối mạng đang bị gián đoạn, vui lòng thử lại sau!");
+      } else {
+        toast.error(message || "Không thể lưu đơn đặt phòng. Vui lòng thử lại!");
+      }
+      throw error;
     }
   };
 

@@ -1,15 +1,15 @@
 import { Card } from "@/_components/ui/card";
 import { useLang } from "@/context/lang-context";
-import { Check, CreditCard, DollarSign } from "lucide-react";
+import { PaymentMethod } from "@/types/paymentmethod";
 import { RadioGroup, RadioGroupItem } from "@radix-ui/react-radio-group";
-import { PaymentMethodType } from "@/types/paymentmethod";
+import { Check, CreditCard, DollarSign } from "lucide-react";
 
 interface Props {
-  paymentMethod: PaymentMethodType;
-  setPaymentMethod: (v: PaymentMethodType) => void;
+  paymentMethod: PaymentMethod;
+  setPaymentMethod: (v: PaymentMethod) => void;
 }
 
-export default function PaymentMethod(props: Props) {
+export default function PaymentMethodSelector(props: Props) {
   const { paymentMethod, setPaymentMethod } = props;
   const { t } = useLang();
 
@@ -18,7 +18,7 @@ export default function PaymentMethod(props: Props) {
       <h2 className="text-2xl mb-4 elegant-heading">{t("Payment menthod")}</h2>
       <RadioGroup
         value={paymentMethod}
-        onValueChange={(value) => setPaymentMethod(value as PaymentMethodType)}
+        onValueChange={(value) => setPaymentMethod(value as PaymentMethod)}
       >
         <div className="space-y-3">
           {/* Cash Payment */}

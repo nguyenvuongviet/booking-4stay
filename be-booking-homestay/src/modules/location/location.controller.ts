@@ -22,6 +22,7 @@ import {
 } from '@nestjs/swagger';
 import { Public } from 'src/common/decorator/public.decorator';
 import { Roles } from 'src/common/decorator/roles.decorator';
+import { Role } from '../user/dto/enum.dto';
 import { UploadFileDto } from 'src/common/dto/upload-file.dto';
 import { CreateCountryDto } from './dto/create-country.dto';
 import { CreateProvinceDto } from './dto/create-province.dto';
@@ -61,28 +62,28 @@ export class LocationController {
   }
 
   @Post('admin/countries')
-  @Roles('ADMIN')
+  @Roles(Role.ADMIN)
   @ApiBearerAuth('AccessToken')
   async createCountry(@Body() dto: CreateCountryDto) {
     return await this.locationService.createCountry(dto);
   }
 
   @Post('admin/provinces')
-  @Roles('ADMIN')
+  @Roles(Role.ADMIN)
   @ApiBearerAuth('AccessToken')
   async createProvince(@Body() dto: CreateProvinceDto) {
     return await this.locationService.createProvince(dto);
   }
 
   @Post('admin/wards')
-  @Roles('ADMIN')
+  @Roles(Role.ADMIN)
   @ApiBearerAuth('AccessToken')
   async createWard(@Body() dto: CreateWardDto) {
     return await this.locationService.createWard(dto);
   }
 
   @Patch('admin/:type/:id')
-  @Roles('ADMIN')
+  @Roles(Role.ADMIN)
   @ApiBearerAuth('AccessToken')
   @ApiParam({
     name: 'type',
@@ -99,7 +100,7 @@ export class LocationController {
   }
 
   @Delete('admin/:type/:id')
-  @Roles('ADMIN')
+  @Roles(Role.ADMIN)
   @ApiBearerAuth('AccessToken')
   @ApiParam({
     name: 'type',
@@ -112,7 +113,7 @@ export class LocationController {
   }
 
   @Put('admin/provinces/:id/image')
-  @Roles('ADMIN')
+  @Roles(Role.ADMIN)
   @ApiBearerAuth('AccessToken')
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('file'))

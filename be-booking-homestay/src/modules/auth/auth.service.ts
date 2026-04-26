@@ -19,6 +19,7 @@ import { VerifyOtpDto } from '../otp/dto/verifyOtp.dto';
 import { OtpService } from '../otp/otp.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { TokenService } from '../token/token.service';
+import { Role } from '../user/dto/enum.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { GoogleLoginDto } from './dto/google-login.dto';
 import { LoginDto } from './dto/login.dto';
@@ -321,7 +322,7 @@ export class AuthService {
       });
       if (!user) {
         const defaultRole = await this.prismaService.roles.findUnique({
-          where: { name: 'USER' },
+          where: { name: Role.USER },
         });
         if (!defaultRole)
           throw new BadRequestException('Không tìm thấy role mặc định!');

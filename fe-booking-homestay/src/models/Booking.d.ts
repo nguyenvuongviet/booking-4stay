@@ -18,8 +18,6 @@ export type BookingStatus =
   | "WAITING_REFUND"
   | "REFUNDED";
 
-export type PaymentMethod = "BANK_TRANSFER" | "CASH";
-
 export interface Booking {
   id: number | string;
   status: BookingStatus;
@@ -28,6 +26,7 @@ export interface Booking {
   adults: number;
   children: number;
   totalAmount: number | 0;
+  expiryMinutes?: number;
   paidAmount: number | 0;
   createdAt: string;
   updatedAt: string;
@@ -44,6 +43,17 @@ export interface Booking {
     createdAt: string;
   } | null;
   isReview: boolean;
+  refundAmount?: number;
+  cancellationPolicy?: any;
+  bankInfo?: {
+    bankName: string;
+    bankAccountNumber: string;
+    bankAccountName: string;
+  };
+  refundInfo?: {
+    refundEvidence: string;
+    refundedAt: string;
+  };
   user: User;
   room: Room;
 }

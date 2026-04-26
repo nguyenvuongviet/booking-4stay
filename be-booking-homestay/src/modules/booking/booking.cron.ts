@@ -67,7 +67,7 @@ export class BookingCron {
     }
   }
 
-  @Cron('*/15 * * * *')
+  @Cron('* * * * *')
   async clearExpiredBookings() {
     const minutes = await this.appConfigsService.getConfigValue<number>(
       AppConfigKey.BOOKING_EXPIRY_MINUTES,

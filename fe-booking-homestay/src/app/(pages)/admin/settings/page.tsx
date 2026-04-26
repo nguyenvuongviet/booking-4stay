@@ -3,11 +3,21 @@
 import { Button } from "@/_components/ui/button";
 import { Card } from "@/_components/ui/card";
 import { Input } from "@/_components/ui/input";
+import { AppConfigKey } from "@/constants/app.constant";
 import { useAuth } from "@/context/auth-context";
-import { Bell, Lock, Save, Settings, User, RefreshCw } from "lucide-react";
-import { useState, useEffect } from "react";
+import { AppConfig, appConfigApi } from "@/services/admin/appConfigApi";
+import {
+  Bell,
+  Lock,
+  Plus,
+  RefreshCw,
+  Save,
+  Settings,
+  Trash2,
+  User,
+} from "lucide-react";
+import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import { appConfigApi, AppConfig } from "@/services/admin/appConfigApi";
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState("account");
@@ -36,7 +46,7 @@ export default function SettingsPage() {
 
   const handleConfigChange = (key: string, value: any) => {
     setAppConfigs((prev) =>
-      prev.map((c) => (c.key === key ? { ...c, value } : c))
+      prev.map((c) => (c.key === key ? { ...c, value } : c)),
     );
   };
 
@@ -222,7 +232,9 @@ export default function SettingsPage() {
           <Card className="p-6 shadow-sm border-primary/20">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h3 className="text-md font-bold">Thời gian hết hạn thanh toán</h3>
+                <h3 className="text-md font-bold">
+                  Thời gian hết hạn thanh toán
+                </h3>
                 <p className="text-sm text-muted-foreground">
                   Số phút tối đa khách được giữ chỗ chờ thanh toán trước khi hệ
                   thống tự động hủy đơn (Mặc định: 30 phút).
@@ -237,13 +249,14 @@ export default function SettingsPage() {
                   min="5"
                   max="1440"
                   value={
-                    appConfigs.find((c) => c.key === "BOOKING_EXPIRY_MINUTES")
-                      ?.value || 30
+                    appConfigs.find(
+                      (c) => c.key === AppConfigKey.BOOKING_EXPIRY_MINUTES,
+                    )?.value || 30
                   }
                   onChange={(e) =>
                     handleConfigChange(
-                      "BOOKING_EXPIRY_MINUTES",
-                      parseInt(e.target.value)
+                      AppConfigKey.BOOKING_EXPIRY_MINUTES,
+                      parseInt(e.target.value),
                     )
                   }
                   className="pr-12 text-lg font-medium"
@@ -253,11 +266,133 @@ export default function SettingsPage() {
                 </div>
               </div>
               <Button
-                onClick={() => saveConfig("BOOKING_EXPIRY_MINUTES")}
+                onClick={() => saveConfig(AppConfigKey.BOOKING_EXPIRY_MINUTES)}
                 className="bg-primary hover:bg-primary/90 h-11"
               >
                 Cập nhật
               </Button>
+            </div>
+          </Card>
+
+          <Card className="p-6 shadow-sm border-primary/20">
+            <h3 className="text-md font-bold mb-4">
+              Chính sách phí phạt hủy phòng
+            </h3>
+            <p className="text-sm text-muted-foreground mb-6">
+              Cấu hình các mốc thời gian và tỷ lệ hoàn tiền tương ứng cho khách
+              hàng khi thực hiện huỷ đơn.
+            </p>
+
+            <div className="space-y-4">
+              <div className="grid grid-cols-12 gap-4 text-xs font-bold uppercase tracking-wider text-muted-foreground pb-2 border-b">
+                <div className="col-span-5">Huỷ trước (ngày)</div>
+                <div className="col-span-5">Hoàn tiền (%)</div>
+                <div className="col-span-2 text-right">Thao tác</div>
+              </div>
+
+              {(
+                appConfigs.find(
+                  (c) => c.key === AppConfigKey.CANCELLATION_POLICY,
+                )?.value || []
+              ).map((rule: any, index: number) => (
+                <div
+                  key={index}
+                  className="grid grid-cols-12 gap-4 items-center animate-in fade-in slide-in-from-top-1"
+                >
+                  <div className="col-span-5 relative">
+                    <Input
+                      type="number"
+                      value={rule.daysBefore}
+                      onChange={(e) => {
+                        const newValue = [
+                          ...(appConfigs.find(
+                            (c) => c.key === AppConfigKey.CANCELLATION_POLICY,
+                          )?.value || []),
+                        ];
+                        newValue[index].daysBefore = parseInt(e.target.value);
+                        handleConfigChange(
+                          AppConfigKey.CANCELLATION_POLICY,
+                          newValue,
+                        );
+                      }}
+                      className="pr-12"
+                    />
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                      ngày
+                    </div>
+                  </div>
+                  <div className="col-span-5 relative">
+                    <Input
+                      type="number"
+                      value={rule.refundPercent * 100}
+                      onChange={(e) => {
+                        const newValue = [
+                          ...(appConfigs.find(
+                            (c) => c.key === AppConfigKey.CANCELLATION_POLICY,
+                          )?.value || []),
+                        ];
+                        newValue[index].refundPercent =
+                          parseInt(e.target.value) / 100;
+                        handleConfigChange(
+                          AppConfigKey.CANCELLATION_POLICY,
+                          newValue,
+                        );
+                      }}
+                      className="pr-8"
+                    />
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                      %
+                    </div>
+                  </div>
+                  <div className="col-span-2 text-right">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                      onClick={() => {
+                        const newValue = (
+                          appConfigs.find(
+                            (c) => c.key === AppConfigKey.CANCELLATION_POLICY,
+                          )?.value || []
+                        ).filter((_: any, i: number) => i !== index);
+                        handleConfigChange(
+                          AppConfigKey.CANCELLATION_POLICY,
+                          newValue,
+                        );
+                      }}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+
+              <div className="pt-4 flex justify-between items-center">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                  onClick={() => {
+                    const currentPolicy =
+                      appConfigs.find(
+                        (c) => c.key === AppConfigKey.CANCELLATION_POLICY,
+                      )?.value || [];
+                    handleConfigChange(AppConfigKey.CANCELLATION_POLICY, [
+                      ...currentPolicy,
+                      { daysBefore: 1, refundPercent: 0 },
+                    ]);
+                  }}
+                >
+                  <Plus className="w-4 h-4" /> Thêm mốc
+                </Button>
+
+                <Button
+                  onClick={() => saveConfig(AppConfigKey.CANCELLATION_POLICY)}
+                  className="bg-primary hover:bg-primary/90"
+                >
+                  Lưu chính sách huỷ
+                </Button>
+              </div>
             </div>
           </Card>
 
@@ -267,12 +402,12 @@ export default function SettingsPage() {
             </h2>
             <div className="space-y-4">
               <div className="p-3 bg-muted rounded border border-dashed flex justify-between items-center">
-                <span className="text-sm font-medium">Chính sách phí phạt hủy phòng</span>
-                <span className="text-xs bg-muted-foreground/20 px-2 py-1 rounded">Locked</span>
-              </div>
-              <div className="p-3 bg-muted rounded border border-dashed flex justify-between items-center">
-                <span className="text-sm font-medium">Cấu hình Email Marketing</span>
-                <span className="text-xs bg-muted-foreground/20 px-2 py-1 rounded">Locked</span>
+                <span className="text-sm font-medium">
+                  Cấu hình Email Marketing
+                </span>
+                <span className="text-xs bg-muted-foreground/20 px-2 py-1 rounded">
+                  Locked
+                </span>
               </div>
             </div>
           </Card>

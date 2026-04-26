@@ -2,6 +2,7 @@ import { Button } from "@/_components/ui/button";
 import { Card } from "@/_components/ui/card";
 import { useLang } from "@/context/lang-context";
 import { PaymentMethod } from "@/types/paymentmethod";
+import { CancellationPolicy } from "@/_components/CancellationPolicy";
 
 interface BookingData {
     roomName: string,
@@ -21,10 +22,11 @@ interface Props {
     totalAmount: number,
     paymentMethod: PaymentMethod,
     handleConfirmBooking: (v: PaymentMethod) => void,
+    onPolicyLoad?: (updatedAt: string) => void,
 }
 
 export default function BookingSummary(props: Props) {
-    const { bookingData, totalNights, totalAmount, paymentMethod, handleConfirmBooking } = props;
+    const { bookingData, totalNights, totalAmount, paymentMethod, handleConfirmBooking, onPolicyLoad } = props;
     const { t } = useLang();
 
     return (
@@ -132,15 +134,11 @@ export default function BookingSummary(props: Props) {
             </Button>
 
             {/* Cancellation Policy */}
-            <div className="text-xs text-gray-600 space-y-1">
-                <p className="font-medium text-gray-900">
-                    {t("Cancellation & Refund Policy")}
-                </p>
-                <ul className="list-disc pl-5 space-y-1">
-                    <li>{t("Cancel 7 or more days before check-in → Full refund (100%)")}.</li>
-                    <li>{t("Cancel 3–6 days before check-in → 50% refund")}.</li>
-                    <li>{t("Cancel within 2 days of check-in → No refund")}.</li>
-                </ul>
+            <div className="pt-4 border-t border-dashed">
+                <CancellationPolicy 
+                    checkInDate={new Date(bookingData.checkIn)} 
+                    onLoad={(config) => onPolicyLoad?.(config.updatedAt)}
+                />
             </div>
         </Card>
     )

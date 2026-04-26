@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import {
   AppConfigKey,
@@ -6,10 +6,40 @@ import {
 } from './constants/app-config.constant';
 
 @Injectable()
-export class AppConfigsService {
+export class AppConfigsService implements OnModuleInit {
   private readonly logger = new Logger(AppConfigsService.name);
 
   constructor(private prisma: PrismaService) {}
+
+  /**
+   * Tự động tạo các bản ghi cấu hình mặc định nếu chưa tồn tại trong DB.
+   * Chạy 1 lần duy nhất khi ứng dụng khởi động.
+   */
+  async onModuleInit() {
+    const keys = Object.values(AppConfigKey);
+    let seeded = 0;
+
+    for (const key of keys) {
+      const existing = await this.prisma.app_configs.findUnique({
+        where: { key },
+      });
+
+      if (!existing) {
+        await this.prisma.app_configs.create({
+          data: {
+            key,
+            value: AppConfigDefaults[key] as any,
+            description: `Auto-seeded default for ${key}`,
+          },
+        });
+        seeded++;
+      }
+    }
+
+    if (seeded > 0) {
+      this.logger.log(`[Auto-Seed] Đã tạo ${seeded} config mặc định.`);
+    }
+  }
 
   async getConfigValue<T>(key: AppConfigKey, defaultValue?: T): Promise<T> {
     try {

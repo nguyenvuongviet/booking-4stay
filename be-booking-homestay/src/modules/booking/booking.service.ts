@@ -5,21 +5,18 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { bookings_status } from '@prisma/client';
-import {
-  eachDayOfInterval,
-  endOfDay,
-  format,
-  startOfDay,
-  subDays,
-} from 'date-fns';
+import { eachDayOfInterval, format, startOfDay, subDays } from 'date-fns';
 import { ADMIN_EMAIL } from 'src/common/constant/app.constant';
 import { AvailabilityHelper } from 'src/helpers/availability.helper';
 import { LoyaltyProgram } from 'src/helpers/loyalty.helper';
 import { PricingHelper } from 'src/helpers/pricing.helper';
 import { ensureDateRange, nightsBetween } from 'src/utils/date.util';
 import { sanitizeBooking } from 'src/utils/sanitize/booking.sanitize';
+import { AppConfigsService } from '../app-configs/app-configs.service';
+import { AppConfigKey } from '../app-configs/constants/app-config.constant';
 import { MailService } from '../mail/mail.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { Role } from '../user/dto/enum.dto';
 import { CancelBookingDto } from './dto/cancel-booking.dto';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { ListBookingQuery } from './dto/list-booking.query';
@@ -34,6 +31,7 @@ export class BookingService {
     private readonly availability: AvailabilityHelper,
     private readonly loyaltyProgram: LoyaltyProgram,
     private readonly mailService: MailService,
+    private readonly appConfigsService: AppConfigsService,
   ) {}
 
   async changeBookingStatus(
@@ -59,8 +57,16 @@ export class BookingService {
 
     if (!allowOverride) {
       const validTransitions: Record<bookings_status, bookings_status[]> = {
-        PENDING: ['PARTIALLY_PAID', 'CONFIRMED', 'CANCELLED'],
-        PARTIALLY_PAID: ['CONFIRMED', 'CANCELLED', 'WAITING_REFUND'],
+        [bookings_status.PENDING]: [
+          bookings_status.PARTIALLY_PAID,
+          bookings_status.CONFIRMED,
+          bookings_status.CANCELLED,
+        ],
+        [bookings_status.PARTIALLY_PAID]: [
+          bookings_status.CONFIRMED,
+          bookings_status.CANCELLED,
+          bookings_status.WAITING_REFUND,
+        ],
         CONFIRMED: ['CHECKED_IN', 'CANCELLED', 'WAITING_REFUND'],
         CHECKED_IN: ['CHECKED_OUT', 'CANCELLED'],
         CHECKED_OUT: [],
@@ -142,19 +148,66 @@ export class BookingService {
     return updated;
   }
 
-  private determineCancelFinalStatus(paidAmount: number) {
-    const isPaid = paidAmount > 0;
+  private async calculateRefundAmount(booking: any) {
+    const today = startOfDay(new Date());
+    const checkInDate = startOfDay(new Date(booking.checkIn));
 
-    return isPaid
-      ? {
-          finalStatus: bookings_status.WAITING_REFUND,
-          message:
-            'Booking đã được chuyển sang WAITING_REFUND. Vui lòng hoàn tiền cho khách.',
-        }
-      : {
-          finalStatus: bookings_status.CANCELLED,
-          message: 'Booking hủy thành công. Không có khoản thanh toán nào.',
-        };
+    const diffTime = checkInDate.getTime() - today.getTime();
+    const daysUntilCheckIn = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+    let policy = booking.cancellationPolicy;
+
+    if (!policy || (Array.isArray(policy) && (policy as any[]).length === 0)) {
+      const config = await this.prisma.app_configs.findUnique({
+        where: { key: AppConfigKey.CANCELLATION_POLICY },
+      });
+      policy = (config?.value as any[]) || [
+        { daysBefore: 0, refundPercent: 0 },
+      ];
+    }
+
+    const policyArray = Array.isArray(policy) ? [...policy] : [];
+    const sortedPolicy = policyArray.sort(
+      (a, b) => b.daysBefore - a.daysBefore,
+    );
+
+    let refundPercent = 0;
+    for (const rule of sortedPolicy) {
+      if (daysUntilCheckIn >= rule.daysBefore) {
+        refundPercent = Number(rule.refundPercent);
+        break;
+      }
+    }
+
+    const paidAmount = Number(booking.paidAmount);
+    const totalPrice = Number(booking.totalPrice);
+
+    const penaltyPercent = 1 - refundPercent;
+    const rawPenalty = totalPrice * penaltyPercent;
+    const cancellationFee = Math.round(Math.min(rawPenalty, paidAmount));
+
+    const refundAmount = Math.max(0, Math.round(paidAmount - cancellationFee));
+
+    return {
+      refundAmount,
+      cancellationFee,
+      appliedDaysBefore: daysUntilCheckIn,
+      refundPercent,
+    };
+  }
+
+  private determineCancelFinalStatus(paidAmount: number, refundAmount: number) {
+    if (refundAmount > 0) {
+      return {
+        finalStatus: 'WAITING_REFUND' as const,
+        message: `Yêu cầu hủy đã được ghi nhận. Số tiền cần hoàn trả: ${refundAmount.toLocaleString()} VNĐ.`,
+      };
+    }
+    return {
+      finalStatus: 'CANCELLED' as const,
+      message:
+        'Đơn hàng đã được hủy thành công. Không có tiền hoàn trả theo chính sách.',
+    };
   }
 
   async previewBooking(userId: number, dto: PreCheckDto) {
@@ -187,6 +240,10 @@ export class BookingService {
 
     const nights = nightsBetween(inDate, outDate);
 
+    const policyConfig = await this.prisma.app_configs.findUnique({
+      where: { key: AppConfigKey.CANCELLATION_POLICY },
+    });
+
     return {
       available: !isOccupied,
       roomName: room.name,
@@ -203,6 +260,8 @@ export class BookingService {
         tierName: loyaltyInfo.tierName,
         discountPercent: loyaltyInfo.discountPercent,
       },
+      cancellationPolicy: policyConfig?.value || [],
+      policyUpdatedAt: policyConfig?.updatedAt || null,
       message: isOccupied
         ? 'Phòng đã có người đặt trong khoảng thời gian này'
         : 'Phòng trống, bạn có thể tiếp tục đặt phòng',
@@ -225,44 +284,59 @@ export class BookingService {
 
     const { inDate, outDate } = ensureDateRange(checkIn, checkOut);
 
-    const room = await this.prisma.rooms.findFirst({
-      where: { id: roomId, isDeleted: false },
-      select: {
-        id: true,
-        price: true,
-        adultCapacity: true,
-        childCapacity: true,
-      },
-    });
+    const [room, policyConfig, expiryMinutes] = await Promise.all([
+      this.prisma.rooms.findFirst({
+        where: { id: roomId, isDeleted: false },
+        select: {
+          id: true,
+          price: true,
+          adultCapacity: true,
+          childCapacity: true,
+        },
+      }),
+      this.prisma.app_configs.findUnique({
+        where: { key: AppConfigKey.CANCELLATION_POLICY },
+      }),
+      this.getExpiryMinutes(),
+    ]);
+
     if (!room) throw new BadRequestException('Phòng không tồn tại');
     if (adults > room.adultCapacity || children > room.childCapacity)
       throw new BadRequestException('Vượt quá sức chứa phòng');
 
-    /* =========================================================================================
-     * [GIẢI PHÁP TỐI ƯU CHO 2 KỊCH BẢN RỦI RO CAO]
-     * Thay vì phải thay đổi Database Schema để thêm Cột (như `idempotencyKey`), giải pháp này
-     * tận dụng tối đa Database Transaction và cơ chế Khóa bi quan (Pessimistic Locking) của DB
-     * để xử lý gọn gàng và toàn vẹn cả 2 kịch bản cùng một lúc. Phù hợp nhất cho hệ thống này
-     * vì nó dễ maintain, không sinh ra chi phí truy vấn thừa và không làm thay đổi core tables.
-     * ========================================================================================= */
+    // 2. KIỂM TRA PHIÊN BẢN CHÍNH SÁCH (Đảm bảo khách hàng đồng ý với chính sách mới nhất)
+    if (dto.policyUpdatedAt && policyConfig) {
+      const clientDate = new Date(dto.policyUpdatedAt).getTime();
+      const serverDate = new Date(policyConfig.updatedAt).getTime();
+      if (Math.abs(clientDate - serverDate) > 1000) {
+        throw new BadRequestException(
+          'Chính sách hủy phòng đã được cập nhật. Vui lòng kiểm tra lại thông tin trước khi xác nhận đặt phòng.',
+        );
+      }
+    }
+
+    // 3. TÍNH TOÁN GIÁ (Tính toán phức tạp nên để ngoài Transaction)
+    const rawTotal = await this.pricing.priceForRange(
+      roomId,
+      Number(room.price),
+      inDate,
+      outDate,
+    );
+    const { totalPrice, discountAmount } =
+      await this.pricing.applyLoyaltyDiscount(userId, rawTotal);
+
+    // 4. THỰC HIỆN TRANSACTION (Chỉ chứa các thao tác ghi và check trùng)
     const booking = await this.prisma.$transaction(async (tx) => {
-      /*
-       * KỊCH BẢN 1: RACE CONDITION (2 người cùng click đặt 1 phòng ở cùng 1 phần nghìn giây)
-       * - BIỆN PHÁP: Pessimistic Locking qua câu lệnh `SELECT ... FOR UPDATE` chặn trực tiếp.
-       * - CÁCH HOẠT ĐỘNG: Nó sẽ khoá ĐÚNG 1 ROW (1 phòng) duy nhất đang được truy vấn.
-       *   Nếu khách A và khách B cùng ấn đặt, DB sẽ ép RQ của B chờ RQ của A chạy hết transaction này.
-       *   Khi A commit xong (nhả khóa), B mới được vào và quét xem còn phòng không.
-       *   -> Tránh 100% việc đặt trùng đè lên nhau, trong khi mọi phòng khác vẫn book song song bình thường!
-       */
+      // 4.1. Lock room để chống Race Condition
       await tx.$queryRaw`SELECT id FROM rooms WHERE id = ${roomId} FOR UPDATE`;
 
-      // Sau khi vào được khoá ưu tiên độc quyền, mới quét kiểm tra xem bị lấp lịch chưa
-      const activeStatuses: any[] = [
-        'PENDING',
-        'PARTIALLY_PAID',
-        'CONFIRMED',
-        'CHECKED_IN',
-        'WAITING_REFUND',
+      // 4.2. Check Overlap
+      const activeStatuses: bookings_status[] = [
+        bookings_status.PENDING,
+        bookings_status.PARTIALLY_PAID,
+        bookings_status.CONFIRMED,
+        bookings_status.CHECKED_IN,
+        bookings_status.WAITING_REFUND,
       ];
       const overlap = await tx.bookings.findFirst({
         where: {
@@ -275,32 +349,18 @@ export class BookingService {
       });
 
       if (overlap) {
-        /*
-         * KỊCH BẢN 2: CLIENT RETRY / DOUBLE SUBMIT (Mạng lag giật, ng dùng ấn nút Đặt quá 2 lần)
-         * - BIỆN PHÁP: Bẫy suy luận thời gian (Time-based Deduction Setup) bên trong khu vực Lock.
-         * - CÁCH HOẠT ĐỘNG: Khi network nghẽn, app gửi đi 2 request giống y hệt nhau.
-         *   Nhờ có FOR UPDATE ở trên, RQ1 và RQ2 bị bắt xếp hàng. RQ1 chạy mượt và tạo Booking.
-         *   Khi RQ2 chạy, nó sẽ thấy "overlap" có tồn tại (vì RQ1 vừa tạo ngay trước đó).
-         *   Thay vì báo lỗi văng app, ta check xem overlap này có phải của ĐÚNG USER ĐÓ
-         *   và mới vừa tạo trong dạo gần đây không (5 phút). Nếu đúng -> Đây là request dư thừa do lag.
-         *   => Server êm đẹp TRẢ VỀ CÁI OVERLAP ĐÓ luôn (Coi như success mà k tạo dư CSDL).
-         */
+        // Xử lý Double Submit
         if (overlap.userId === userId) {
           const timeDiff =
             new Date().getTime() - new Date(overlap.createdAt).getTime();
-          if (timeDiff < 5 * 60 * 1000) {
-            // 5 phút
-            return overlap;
-          }
+          if (timeDiff < 5 * 60 * 1000) return overlap;
         }
-
-        // Nếu trùng nhưng khác user (hoặc do tạo quá lâu rồi) -> Đây rành rành là bị cướp lịch -> Từ chối hợp lệ!
         throw new BadRequestException(
           'Khoảng ngày đã có người giữ hoặc bị khóa',
         );
       }
 
-      // 3. Kiểm tra ngày bị khóa thủ công (Room Availability)
+      // 4.3. Check ngày bị Host khóa thủ công
       const blockedDate = await tx.room_availability.findFirst({
         where: {
           roomId,
@@ -308,21 +368,10 @@ export class BookingService {
           date: { gte: inDate, lt: outDate },
         },
       });
-      if (blockedDate) {
+      if (blockedDate)
         throw new BadRequestException('Khoảng ngày này đã bị khóa bởi Host');
-      }
 
-      // 4. Tính toán giá
-      const rawTotal = await this.pricing.priceForRange(
-        roomId,
-        Number(room.price),
-        inDate,
-        outDate,
-      );
-      const { totalPrice, discountAmount } =
-        await this.pricing.applyLoyaltyDiscount(userId, rawTotal);
-
-      // 5. Tạo booking
+      // 4.4. Tạo Booking
       return tx.bookings.create({
         data: {
           userId,
@@ -338,37 +387,37 @@ export class BookingService {
           rawTotalPrice: rawTotal,
           discountAmount,
           totalPrice,
-          status: 'PENDING',
+          status: bookings_status.PENDING,
           paymentMethod,
           paidAmount: 0,
+          cancellationPolicy: policyConfig?.value || [],
+          policyUpdatedAt: policyConfig?.updatedAt || new Date(),
         },
         include: { rooms: { include: { room_images: true } } },
       });
     });
 
-    // Nếu đây là Double Submit trả về booking cũ, bỏ qua gửi mail lại
-    if (booking.createdAt.getTime() < new Date().getTime() - 10000) {
-      return {
-        message: 'Đơn đặt đã tồn tại',
-        booking: sanitizeBooking(booking),
-      };
-    }
-
-    await this.mailService.sendBookingMail(
-      booking.guestEmail,
-      'BOOKING_PENDING',
-      booking,
-    );
-    await this.mailService.sendBookingMail(
-      ADMIN_EMAIL,
-      'BOOKING_PENDING',
-      booking,
-    );
+    // 4. PHẢN HỒI VÀ CHẠY NGẦM CÁC TÁC VỤ PHỤ
+    // Gửi mail không dùng await
+    this.mailService
+      .sendBookingMail(booking.guestEmail, 'BOOKING_PENDING', booking)
+      .catch((e) => console.error('Mail Error:', e));
+    this.mailService
+      .sendBookingMail(ADMIN_EMAIL, 'BOOKING_PENDING', booking)
+      .catch((e) => console.error('Admin Mail Error:', e));
 
     return {
       message: 'Tạo đơn đặt thành công',
-      booking: sanitizeBooking(booking),
+      booking: sanitizeBooking({ ...booking, expiryMinutes }),
     };
+  }
+
+  private async getExpiryMinutes() {
+    return (
+      (await this.appConfigsService.getConfigValue<number>(
+        AppConfigKey.BOOKING_EXPIRY_MINUTES,
+      )) || 15
+    );
   }
 
   async listMine(userId: number, q: ListBookingQuery) {
@@ -398,11 +447,12 @@ export class BookingService {
       this.prisma.bookings.count({ where: { userId } }),
     ]);
 
+    const expiryMinutes = await this.getExpiryMinutes();
     return {
       page,
       pageSize,
       total,
-      items: sanitizeBooking(items),
+      items: sanitizeBooking(items.map((i) => ({ ...i, expiryMinutes }))),
     };
   }
 
@@ -413,13 +463,17 @@ export class BookingService {
         rooms: { include: { room_images: true, users: true } },
         users: true,
         reviews: true,
+        logs: {
+          orderBy: { createdAt: 'desc' },
+        },
       },
     });
     if (!booking) throw new NotFoundException('Không tìm thấy booking');
-    if (role !== 'ADMIN' && requesterId && booking.userId !== requesterId) {
+    if (role !== Role.ADMIN && requesterId && booking.userId !== requesterId) {
       throw new ForbiddenException('Bạn không có quyền xem booking này');
     }
-    return sanitizeBooking(booking);
+    const expiryMinutes = await this.getExpiryMinutes();
+    return sanitizeBooking({ ...booking, expiryMinutes });
   }
 
   async listAll(q: ListBookingQuery) {
@@ -491,14 +545,14 @@ export class BookingService {
     return sanitizeBooking(items);
   }
 
-  async getUnavailableDays(roomId: number) {
+  async getUnavailableDays(roomId: number, excludeBookingId?: number) {
     if (!roomId) throw new BadRequestException('Thiếu roomId');
 
     const today = startOfDay(new Date());
     const activeStatuses: bookings_status[] = [
-      'PENDING',
-      'PARTIALLY_PAID',
-      'CONFIRMED',
+      bookings_status.PENDING,
+      bookings_status.PARTIALLY_PAID,
+      bookings_status.CONFIRMED,
       'CHECKED_IN',
       'WAITING_REFUND',
     ];
@@ -510,6 +564,7 @@ export class BookingService {
           isDeleted: false,
           status: { in: activeStatuses },
           checkOut: { gt: today },
+          ...(excludeBookingId ? { id: { not: excludeBookingId } } : {}),
         },
         select: { checkIn: true, checkOut: true },
       }),
@@ -557,54 +612,145 @@ export class BookingService {
     role: string,
     dto: CancelBookingDto,
   ) {
-    const booking = await this.prisma.bookings.findUnique({ where: { id } });
-    if (!booking) throw new NotFoundException('Không tìm thấy booking');
+    return await this.prisma.$transaction(async (tx) => {
+      const booking = await tx.bookings.findUnique({
+        where: { id },
+        include: { rooms: true },
+      });
+      if (!booking) throw new NotFoundException('Không tìm thấy booking');
 
-    if (role !== 'ADMIN' && booking.userId !== requesterId)
-      throw new ForbiddenException('Bạn không có quyền hủy booking này');
+      // 1. Kiểm tra quyền
+      if (role !== Role.ADMIN && booking.userId !== requesterId)
+        throw new ForbiddenException('Bạn không có quyền hủy booking này');
 
-    if (!['PENDING', 'PARTIALLY_PAID', 'CONFIRMED'].includes(booking.status))
-      throw new BadRequestException(
-        'Chỉ được hủy khi booking đang PENDING, PARTIALLY_PAID hoặc CONFIRMED',
+      // 2. Kiểm tra trạng thái có được phép hủy không
+      if (
+        !(
+          [
+            bookings_status.PENDING,
+            bookings_status.PARTIALLY_PAID,
+            bookings_status.CONFIRMED,
+          ] as bookings_status[]
+        ).includes(booking.status as bookings_status)
+      )
+        throw new BadRequestException(
+          'Chỉ được hủy khi booking đang PENDING, PARTIALLY_PAID hoặc CONFIRMED',
+        );
+
+      // 3. Logic mới: Cho phép huỷ phút chót nhưng không hoàn tiền nếu đã đến ngày check-in
+      const now = new Date();
+      const checkInDate = new Date(booking.checkIn);
+      const isLastMinute = now >= checkInDate;
+
+      // 4. Tính toán tiền hoàn & phí phạt
+      let { refundAmount, cancellationFee } =
+        await this.calculateRefundAmount(booking);
+
+      if (isLastMinute) {
+        refundAmount = 0;
+        cancellationFee = Number(booking.paidAmount); // Phí phạt chính bằng số tiền đã đóng
+      }
+
+      const { finalStatus, message } = this.determineCancelFinalStatus(
+        booking.paidAmount.toNumber(),
+        refundAmount,
       );
 
-    if (new Date() >= booking.checkIn)
-      throw new BadRequestException('Không thể hủy khi đã đến ngày check-in');
+      // 5. Cập nhật Đơn hàng (ATOMIC UPDATE)
+      const updated = await tx.bookings.update({
+        where: { id },
+        data: {
+          status: finalStatus,
+          cancelReason: dto.reason || 'Khách hàng chủ động hủy',
+          refundAmount: refundAmount,
+          cancellationFee: cancellationFee,
+          bankName: dto.bankName || null,
+          bankAccountNumber: dto.bankAccountNumber || null,
+          bankAccountName: dto.bankAccountName || null,
+          updatedAt: new Date(),
+        } as any,
+        include: { rooms: true },
+      });
 
-    const { finalStatus, message } = this.determineCancelFinalStatus(
-      booking.paidAmount.toNumber(),
-    );
+      // 6. Ghi Log lịch sử hủy
+      await (tx as any).booking_logs.create({
+        data: {
+          bookingId: id,
+          action: 'CANCEL',
+          note: `Hủy đơn: Phí phạt ${cancellationFee.toLocaleString()}đ. Hoàn trả ${refundAmount.toLocaleString()}đ. Trạng thái: ${finalStatus}.`,
+          performedBy: requesterId,
+        },
+      });
 
-    const updated = await this.changeBookingStatus(id, finalStatus, {
-      reason: dto.reason,
+      // 7. Gửi Mail (Non-blocking)
+      this.sendStatusMail(updated, finalStatus).catch(() => {});
+
+      return {
+        message,
+        booking: sanitizeBooking(updated),
+      };
     });
+  }
 
-    return {
-      message,
-      booking: sanitizeBooking(updated),
+  private async sendStatusMail(booking: any, status: bookings_status) {
+    const mailMap: any = {
+      [bookings_status.PENDING]: 'BOOKING_PENDING',
+      [bookings_status.PARTIALLY_PAID]: 'BOOKING_PARTIALLY_PAID',
+      [bookings_status.CONFIRMED]: 'BOOKING_CONFIRMED',
+      [bookings_status.CANCELLED]: 'BOOKING_CANCELLED',
+      [bookings_status.WAITING_REFUND]: 'BOOKING_WAITING_REFUND',
+      [bookings_status.REFUNDED]: 'BOOKING_REFUNDED',
+      [bookings_status.CHECKED_IN]: 'BOOKING_CHECKED_IN',
+      [bookings_status.CHECKED_OUT]: 'BOOKING_CHECKED_OUT',
     };
+    const mailType = mailMap[status];
+    if (mailType) {
+      await this.mailService
+        .sendBookingMail(booking.guestEmail, mailType, booking)
+        .catch((err) => console.error('Email error:', err));
+      await this.mailService
+        .sendBookingMail(ADMIN_EMAIL, mailType, booking)
+        .catch((err) => console.error('Admin Email error:', err));
+    }
   }
 
   async updateStatus(orderId: number, paidAmount: number) {
-    const booking = await this.prisma.bookings.findUnique({
-      where: { id: orderId },
-    });
+    return await this.prisma.$transaction(async (tx) => {
+      const booking = await tx.bookings.findUnique({
+        where: { id: orderId },
+      });
 
-    if (!booking) throw new NotFoundException();
+      if (!booking) throw new NotFoundException();
 
-    const newPaidAmount = Number(booking.paidAmount) + paidAmount;
-    const total = Number(booking.totalPrice);
-    let newStatus: bookings_status = booking.status;
+      const newPaidAmount = Number(booking.paidAmount) + paidAmount;
+      const total = Number(booking.totalPrice);
+      let newStatus: bookings_status = booking.status as bookings_status;
 
-    if (newPaidAmount > 0 && newPaidAmount < total) {
-      newStatus = bookings_status.PARTIALLY_PAID;
-    } else if (newPaidAmount >= total) {
-      newStatus = bookings_status.CONFIRMED;
-    }
+      if (newPaidAmount > 0 && newPaidAmount < total) {
+        newStatus = bookings_status.PARTIALLY_PAID;
+      } else if (newPaidAmount >= total) {
+        newStatus = bookings_status.CONFIRMED;
+      }
 
-    return this.changeBookingStatus(orderId, newStatus, {
-      allowOverride: true,
-      paidAmount: newPaidAmount,
+      const latestPolicy = await tx.app_configs.findUnique({
+        where: { key: AppConfigKey.CANCELLATION_POLICY },
+      });
+
+      const updated = await tx.bookings.update({
+        where: { id: orderId },
+        data: {
+          status: newStatus,
+          paidAmount: newPaidAmount,
+          cancellationPolicy: latestPolicy?.value || booking.cancellationPolicy,
+          policyUpdatedAt: latestPolicy?.updatedAt || booking.policyUpdatedAt,
+          updatedAt: new Date(),
+        } as any,
+        include: { rooms: true },
+      });
+
+      this.sendStatusMail(updated, newStatus).catch(() => {});
+
+      return updated;
     });
   }
 
@@ -618,10 +764,14 @@ export class BookingService {
   }
 
   async adminAcceptBooking(bookingId: number, dto: { paidAmount: number }) {
-    const updated = await this.changeBookingStatus(bookingId, 'CONFIRMED', {
-      allowOverride: true,
-      paidAmount: dto.paidAmount,
-    });
+    const updated = await this.changeBookingStatus(
+      bookingId,
+      bookings_status.CONFIRMED,
+      {
+        allowOverride: true,
+        paidAmount: dto.paidAmount,
+      },
+    );
     return {
       message: 'Admin đã duyệt đơn',
       booking: sanitizeBooking(updated),
@@ -634,8 +784,11 @@ export class BookingService {
     });
     if (!booking) throw new NotFoundException('Không tìm thấy booking');
 
+    const { refundAmount } = await this.calculateRefundAmount(booking);
+
     const { finalStatus, message } = this.determineCancelFinalStatus(
       booking.paidAmount.toNumber(),
+      refundAmount,
     );
 
     const updated = await this.changeBookingStatus(bookingId, finalStatus, {
@@ -654,8 +807,11 @@ export class BookingService {
     });
     if (!booking) throw new NotFoundException('Không tìm thấy booking');
 
+    const { refundAmount } = await this.calculateRefundAmount(booking);
+
     const { finalStatus } = this.determineCancelFinalStatus(
       booking.paidAmount.toNumber(),
+      refundAmount,
     );
 
     const updated = await this.changeBookingStatus(bookingId, finalStatus, {
@@ -667,5 +823,47 @@ export class BookingService {
       message: 'Đã huỷ đơn thành công',
       booking: sanitizeBooking(updated),
     };
+  }
+
+  async adminConfirmRefund(
+    id: number,
+    refundAmount: number,
+    evidenceUrl?: string,
+  ) {
+    return await this.prisma.$transaction(async (tx) => {
+      const booking = await tx.bookings.findUnique({
+        where: { id },
+      });
+
+      if (!booking) throw new NotFoundException('Không tìm thấy đơn hàng');
+      if (booking.status !== 'WAITING_REFUND') {
+        throw new BadRequestException(
+          'Đơn hàng không ở trạng thái chờ hoàn tiền',
+        );
+      }
+
+      const updated = await tx.bookings.update({
+        where: { id },
+        data: {
+          status: 'REFUNDED',
+          refundAmount: refundAmount,
+          refundEvidence: evidenceUrl || null,
+          refundedAt: new Date(),
+          updatedAt: new Date(),
+        } as any,
+      });
+
+      await (tx as any).booking_logs.create({
+        data: {
+          bookingId: id,
+          action: 'REFUND_CONFIRMED',
+          note: `Admin xác nhận đã hoàn tiền: ${refundAmount.toLocaleString()}đ.`,
+        },
+      });
+
+      this.sendStatusMail(updated, 'REFUNDED').catch(() => {});
+
+      return updated;
+    });
   }
 }

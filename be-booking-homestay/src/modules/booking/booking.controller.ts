@@ -12,12 +12,13 @@ import {
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Public } from 'src/common/decorator/public.decorator';
 import { Roles } from 'src/common/decorator/roles.decorator';
+import { Role } from '../user/dto/enum.dto';
 import { BookingService } from './booking.service';
 import { CancelBookingDto } from './dto/cancel-booking.dto';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { ListBookingQuery } from './dto/list-booking.query';
-import { RoomAvailabilityDto } from './dto/room-availability.dto';
 import { PreCheckDto } from './dto/preCheck-booking.dto';
+import { RoomAvailabilityDto } from './dto/room-availability.dto';
 
 @ApiTags('bookings')
 @Controller('bookings')
@@ -26,8 +27,14 @@ export class BookingController {
 
   @Get('unavailable-days')
   @Public()
-  async getUnavailableDays(@Query('roomId', ParseIntPipe) roomId: number) {
-    return this.bookingService.getUnavailableDays(roomId);
+  async getUnavailableDays(
+    @Query('roomId', ParseIntPipe) roomId: number,
+    @Query('excludeBookingId') excludeBookingId?: number,
+  ) {
+    return this.bookingService.getUnavailableDays(
+      roomId,
+      excludeBookingId ? +excludeBookingId : undefined,
+    );
   }
 
   @Post('/preview')
@@ -69,8 +76,8 @@ export class BookingController {
     const isAdmin =
       user &&
       Array.isArray(user.user_roles) &&
-      user.user_roles.some((ur) => ur.roles && ur.roles.name === 'ADMIN');
-    const roleForService = isAdmin ? 'ADMIN' : null;
+      user.user_roles.some((ur) => ur.roles && ur.roles.name === Role.ADMIN);
+    const roleForService = isAdmin ? Role.ADMIN : null;
     return this.bookingService.detail(
       id,
       user ? +user.id : null,
@@ -79,7 +86,7 @@ export class BookingController {
   }
 
   @Get('/admin/all')
-  @Roles('ADMIN')
+  @Roles(Role.ADMIN)
   @ApiBearerAuth('AccessToken')
   async adminList(@Query() q: ListBookingQuery) {
     return this.bookingService.listAll(q);
@@ -95,21 +102,21 @@ export class BookingController {
   }
 
   @Get('rooms/:roomId/')
-  @Roles('ADMIN')
+  @Roles(Role.ADMIN)
   @ApiBearerAuth('AccessToken')
   async listByRoom(@Param('roomId', ParseIntPipe) roomId: number) {
     return this.bookingService.listByRoom(roomId);
   }
 
   @Get('users/:userId')
-  @Roles('ADMIN')
+  @Roles(Role.ADMIN)
   @ApiBearerAuth('AccessToken')
   async listByUser(@Param('userId', ParseIntPipe) userId: number) {
     return this.bookingService.listByUser(userId);
   }
 
   @Patch('/:id/accept')
-  @Roles('ADMIN')
+  @Roles(Role.ADMIN)
   @ApiBearerAuth('AccessToken')
   async acceptBooking(
     @Param('id', ParseIntPipe) id: number,
@@ -119,7 +126,7 @@ export class BookingController {
   }
 
   @Patch('/:id/reject')
-  @Roles('ADMIN')
+  @Roles(Role.ADMIN)
   @ApiBearerAuth('AccessToken')
   async rejectBooking(
     @Param('id', ParseIntPipe) id: number,
@@ -129,12 +136,26 @@ export class BookingController {
   }
 
   @Patch('/:id/admin-cancel')
-  @Roles('ADMIN')
+  @Roles(Role.ADMIN)
   @ApiBearerAuth('AccessToken')
   async adminCancelBooking(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: CancelBookingDto,
   ) {
     return this.bookingService.adminCancelBooking(id, dto);
+  }
+
+  @Patch('/:id/refund')
+  @Roles(Role.ADMIN)
+  @ApiBearerAuth('AccessToken')
+  async confirmRefund(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: { refundAmount: number; refundEvidence?: string },
+  ) {
+    return this.bookingService.adminConfirmRefund(
+      id,
+      dto.refundAmount,
+      dto.refundEvidence,
+    );
   }
 }

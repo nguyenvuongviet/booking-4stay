@@ -17,6 +17,7 @@ import { FilesInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth, ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { Public } from 'src/common/decorator/public.decorator';
 import { Roles } from 'src/common/decorator/roles.decorator';
+import { Role } from '../user/dto/enum.dto';
 import { UploadRoomImagesDto } from 'src/common/dto/upload-file.dto';
 import { CreateRoomDto } from './dto/create-room.dto';
 import { RoomFilterDto } from './dto/filter-room.dto';
@@ -48,7 +49,7 @@ export class RoomController {
   }
 
   @Post('admin')
-  @Roles('ADMIN')
+  @Roles(Role.ADMIN)
   @ApiBearerAuth('AccessToken')
   async create(@Req() req: Request, @Body() createRoomDto: CreateRoomDto) {
     const user = req['user'];
@@ -56,21 +57,21 @@ export class RoomController {
   }
 
   @Patch('admin/:id')
-  @Roles('ADMIN')
+  @Roles(Role.ADMIN)
   @ApiBearerAuth('AccessToken')
   async update(@Param('id') id: string, @Body() dto: UpdateRoomDto) {
     return await this.roomService.update(+id, dto);
   }
 
   @Delete('admin/:id')
-  @Roles('ADMIN')
+  @Roles(Role.ADMIN)
   @ApiBearerAuth('AccessToken')
   remove(@Param('id') id: string) {
     return this.roomService.remove(+id);
   }
 
   @Put(':id/amenities')
-  @Roles('ADMIN')
+  @Roles(Role.ADMIN)
   @ApiBearerAuth('AccessToken')
   @ApiBody({ type: SetRoomAmenitiesDto })
   async setAmenities(
@@ -81,7 +82,7 @@ export class RoomController {
   }
 
   @Put(':id/beds')
-  @Roles('ADMIN')
+  @Roles(Role.ADMIN)
   @ApiBearerAuth('AccessToken')
   @ApiBody({ type: SetRoomBedsDto })
   async setBeds(
@@ -92,7 +93,7 @@ export class RoomController {
   }
 
   @Post(':id/images')
-  @Roles('ADMIN')
+  @Roles(Role.ADMIN)
   @ApiBearerAuth('AccessToken')
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FilesInterceptor('files'))
@@ -107,7 +108,7 @@ export class RoomController {
   }
 
   @Delete(':id/images')
-  @Roles('ADMIN')
+  @Roles(Role.ADMIN)
   @ApiBearerAuth('AccessToken')
   @ApiBody({ type: DeleteRoomImagesDto })
   async deleteRoomImages(
@@ -118,7 +119,7 @@ export class RoomController {
   }
 
   @Patch(':id/images/main')
-  @Roles('ADMIN')
+  @Roles(Role.ADMIN)
   @ApiBearerAuth('AccessToken')
   async setMainImage(
     @Param('id', ParseIntPipe) roomId: number,
@@ -128,7 +129,7 @@ export class RoomController {
   }
 
   @Patch(':id/images/order')
-  @Roles('ADMIN')
+  @Roles(Role.ADMIN)
   @ApiBearerAuth('AccessToken')
   async updateOrder(
     @Param('id', ParseIntPipe) roomId: number,
@@ -147,7 +148,7 @@ export class RoomController {
   }
 
   @Put(':id/calendar')
-  @Roles('ADMIN')
+  @Roles(Role.ADMIN)
   @ApiBearerAuth('AccessToken')
   @ApiBody({ type: UpdateCalendarDto })
   async updateCalendar(

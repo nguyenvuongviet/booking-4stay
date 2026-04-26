@@ -57,14 +57,16 @@ export function BookingActionButtons({
 
   if (status === "CONFIRMED" || status === "PARTIALLY_PAID") {
     return (
-      <Button
-        size="sm"
-        variant="destructive"
-        className={`rounded-full shadow-sm font-semibold flex items-center gap-1 ${className}`}
-        onClick={() => onCancel(id)}
-      >
-        <X className="w-4 h-4" /> Huỷ đơn
-      </Button>
+      <div className={`flex items-center gap-2 ${className}`}>
+        <Button
+          size="sm"
+          variant="destructive"
+          className="rounded-full shadow-sm font-semibold flex items-center gap-1"
+          onClick={() => onCancel(id)}
+        >
+          <X className="w-4 h-4" /> Huỷ đơn
+        </Button>
+      </div>
     );
   }
 

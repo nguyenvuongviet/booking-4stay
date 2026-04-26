@@ -1,5 +1,5 @@
 import { Toaster as ShadcnToaster } from "@/_components/ui/toaster";
-import { GOOGLE_CLIENT_ID } from "@/constants/app.constant";
+import { NEXT_PUBLIC_GOOGLE_CLIENT_ID } from "@/constants/app.constant";
 import { AuthProvider } from "@/context/auth-context";
 import PageTransition from "@/styles/animations/PageTransition";
 import { GoogleOAuthProvider } from "@react-oauth/google";
@@ -43,7 +43,7 @@ export default function RootLayout({
         className={`${lexend.variable} ${firaMono.variable} ${lora.variable} antialiased`}
       >
         <LangProvider>
-          <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID ?? ""}>
+          <GoogleOAuthProvider clientId={NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? ""}>
             <PageTransition>
               <AuthProvider>{children}</AuthProvider>
             </PageTransition>

@@ -24,6 +24,11 @@ export interface Room {
     main: string;
     gallery: RoomImage[];
   };
+  room_images?: {
+    id: number;
+    imageUrl: string;
+    isMain: boolean;
+  }[];
   amenities?: Amenity[];
   status?: "Available" | "Sold out";
   host?: {

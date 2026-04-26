@@ -11,6 +11,7 @@ export const create_booking = async (data: {
   guestPhoneNumber: string;
   specialRequest?: string;
   paymentMethod: string;
+  policyUpdatedAt?: string;
 }) => {
   try {
     const resp = await api.post("/bookings", data);
@@ -51,12 +52,20 @@ export const get_booking_detail = async (bookingId: number | string) => {
 export const cancel_booking = async (
   bookingId: number | string,
   reason: string,
+  bankInfo?: {
+    bankName: string;
+    bankAccountNumber: string;
+    bankAccountName: string;
+  },
 ) => {
   try {
-    const resp = await api.patch(`/bookings/${bookingId}/cancel`, { reason });
+    const resp = await api.patch(`/bookings/${bookingId}/cancel`, {
+      reason,
+      ...bankInfo,
+    });
     return resp.data || {};
   } catch (error) {
-    console.error("Get booking detail error:", error);
+    console.error("Cancel booking error:", error);
     throw error;
   }
 };
@@ -112,10 +121,13 @@ export const get_review_bookingId = async (roomId: number | string) => {
   }
 };
 
-export const get_unavailable_dates = async (roomId: number | string) => {
+export const get_unavailable_dates = async (
+  roomId: number | string,
+  excludeBookingId?: number | string,
+) => {
   try {
     const resp = await api.get(`/bookings/unavailable-days`, {
-      params: { roomId },
+      params: { roomId, excludeBookingId },
     });
     return resp.data?.data?.days || []; // trả về mảng ngày
   } catch (error) {

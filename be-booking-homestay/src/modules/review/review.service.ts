@@ -4,9 +4,11 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { CreateReviewDto } from './dto/create-review.dto';
-import { PrismaService } from '../prisma/prisma.service';
+import { bookings_status } from '@prisma/client';
 import { sanitizeReviewList } from 'src/utils/sanitize/review.sanitize';
+import { PrismaService } from '../prisma/prisma.service';
+import { Role } from '../user/dto/enum.dto';
+import { CreateReviewDto } from './dto/create-review.dto';
 import { ListReviewQuery } from './dto/list-review.query';
 
 @Injectable()
@@ -65,7 +67,7 @@ export class ReviewService {
       throw new ForbiddenException(
         'Bạn không thể review booking của người khác',
       );
-    if (b.status !== 'CHECKED_OUT')
+    if (b.status !== bookings_status.CHECKED_OUT)
       throw new BadRequestException('Chỉ review được sau khi CHECKED_OUT');
 
     if (b.isReview) throw new BadRequestException('Booking này đã được review');
@@ -145,7 +147,7 @@ export class ReviewService {
     });
     if (!r || r.isDeleted) throw new NotFoundException('Review không tồn tại');
 
-    if (role !== 'ADMIN') {
+    if (role !== Role.ADMIN) {
       throw new ForbiddenException('Bạn không thể xoá review của người khác');
     }
 

@@ -20,6 +20,7 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { Roles } from 'src/common/decorator/roles.decorator';
+import { Role } from '../user/dto/enum.dto';
 import { UploadFileDto } from 'src/common/dto/upload-file.dto';
 import { uploadLocalConfig } from 'src/config/upload-local.config';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -71,39 +72,39 @@ export class UserController {
   }
 
   @Post('admin/create')
-  @Roles('ADMIN')
+  @Roles(Role.ADMIN)
   @ApiBody({ type: CreateUserDto })
   async create(@Body() createUserDto: CreateUserDto) {
     return await this.userService.create(createUserDto);
   }
 
   @Get('admin/list-roles')
-  @Roles('ADMIN')
+  @Roles(Role.ADMIN)
   async listRoles() {
     return await this.userService.listRoles();
   }
 
   @Get('admin/all')
-  @Roles('ADMIN')
+  @Roles(Role.ADMIN)
   async findAll() {
     return await this.userService.findAll();
   }
 
   @Get('admin/all-filtered')
-  @Roles('ADMIN')
+  @Roles(Role.ADMIN)
   async findAllFiltered(@Query() query: UserFilterDto) {
     return await this.userService.findAllFiltered(query);
   }
 
   @Get('admin/profile/:id')
-  @Roles('ADMIN')
+  @Roles(Role.ADMIN)
   @ApiParam({ name: 'id', type: String, description: 'User ID', example: '1' })
   async findOne(@Param('id') id: string) {
     return await this.userService.findOne(+id);
   }
 
   @Patch('admin/update/:id')
-  @Roles('ADMIN')
+  @Roles(Role.ADMIN)
   @ApiParam({ name: 'id', type: String, description: 'User ID', example: '1' })
   @ApiBody({ type: UpdateUserAdminDto })
   async adminUpdate(
@@ -114,7 +115,7 @@ export class UserController {
   }
 
   @Delete('admin/delete/:id')
-  @Roles('ADMIN')
+  @Roles(Role.ADMIN)
   @ApiParam({ name: 'id', type: String, description: 'User ID', example: '1' })
   async delete(@Param('id') id: string) {
     return await this.userService.delete(+id);

@@ -17,11 +17,14 @@ import {
   Moon,
   Users,
   Wallet,
+  History,
+  ArrowRight,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 import { RefreshButton } from "../../_components/RefreshButton";
 import { StarRating } from "../../_components/StarRating";
 import {
@@ -84,6 +87,7 @@ export default function BookingDetailPage() {
     openAccept,
     openReject,
     openRefund,
+    openAdminCancel,
     closeDialog,
     handleConfirm,
   } = useBookingActions(load);
@@ -114,8 +118,8 @@ export default function BookingDetailPage() {
     Math.round(
       (new Date(booking.checkOut).getTime() -
         new Date(booking.checkIn).getTime()) /
-        (1000 * 60 * 60 * 24)
-    )
+        (1000 * 60 * 60 * 24),
+    ),
   );
 
   const statusLabel = translateStatus(booking.status);
@@ -155,12 +159,13 @@ export default function BookingDetailPage() {
       <div className="flex justify-end">
         <BookingActionButtons
           className="mr-2"
-          id={booking.id}
+          id={Number(booking.id)}
           status={booking.status}
-          paidAmount={booking.paidAmount}
+          paidAmount={Number(booking.paidAmount)}
           onAccept={openAccept}
           onReject={openReject}
           onRefund={openRefund}
+          onCancel={openAdminCancel}
         />
 
         <RefreshButton onRefresh={load} />
@@ -280,6 +285,32 @@ export default function BookingDetailPage() {
                 icon={<CreditCard className="w-5 h-5" />}
               />
             </div>
+
+            {(Number(booking.cancellationFee) > 0 ||
+              Number(booking.refundAmount) > 0) && (
+              <div className="grid sm:grid-cols-2 gap-4 mt-4 pt-4 border-t border-dashed">
+                {Number(booking.cancellationFee) > 0 && (
+                  <div className="bg-red-50 p-3 rounded-lg border border-red-100">
+                    <p className="text-xs font-bold text-red-600 uppercase">
+                      Phí huỷ / Phạt
+                    </p>
+                    <p className="text-lg font-black text-red-700">
+                      {Number(booking.cancellationFee).toLocaleString()} ₫
+                    </p>
+                  </div>
+                )}
+                {Number(booking.refundAmount) > 0 && (
+                  <div className="bg-amber-50 p-3 rounded-lg border border-amber-100">
+                    <p className="text-xs font-bold text-amber-600 uppercase">
+                      Tiền chờ hoàn khách
+                    </p>
+                    <p className="text-lg font-black text-amber-700">
+                      {Number(booking.refundAmount).toLocaleString()} ₫
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
 
             {isRefunded && (
               <div className="pt-4 border-t mt-6 bg-blue-50 p-4 rounded-lg border-blue-200">

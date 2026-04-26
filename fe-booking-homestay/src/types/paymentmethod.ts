@@ -1,1 +1,1 @@
-export type PaymentMethodType = 'CASH' | 'BANK_TRANSFER';
+export type PaymentMethod = 'CASH' | 'BANK_TRANSFER';

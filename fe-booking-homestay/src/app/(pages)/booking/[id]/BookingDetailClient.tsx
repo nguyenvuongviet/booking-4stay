@@ -25,9 +25,9 @@ export default function BookingDetailClient({
         const res = await get_booking_detail(bookingId);
         console.log("Booking detail API response:", res);
 
-        const data = res.data;
-        if (!data) throw new Error(t("booking_not_found"));
-        setBooking(data);
+        const bookingData = res.data;
+        if (!bookingData || !bookingData.id) throw new Error(t("booking_not_found"));
+        setBooking(bookingData);
       } catch (err: any) {
         console.error("Fetch booking error:", err);
         setError(err.message || t("booking_fetch_error"));

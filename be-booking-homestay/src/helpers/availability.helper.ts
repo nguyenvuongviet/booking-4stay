@@ -13,11 +13,11 @@ export class AvailabilityHelper {
     outDate: Date,
   ): Promise<boolean> {
     const activeStatuses: bookings_status[] = [
-      'PENDING',
-      'PARTIALLY_PAID',
-      'CONFIRMED',
-      'CHECKED_IN',
-      'WAITING_REFUND',
+      bookings_status.PENDING,
+      bookings_status.PARTIALLY_PAID,
+      bookings_status.CONFIRMED,
+      bookings_status.CHECKED_IN,
+      bookings_status.WAITING_REFUND,
     ];
 
     const existingBooking = await this.prisma.bookings.findFirst({

@@ -3,6 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { bookings_status } from '@prisma/client';
 import { eachDayOfInterval, endOfMonth, format, startOfMonth } from 'date-fns';
 import { ensureDateRange } from 'src/utils/date.util';
 import { sanitizeRoom } from 'src/utils/sanitize/room.sanitize';
@@ -18,7 +19,11 @@ import { BedItemDto, BedType } from './dto/set-room-beds.dto';
 import { UpdateRoomDto } from './dto/update-room.dto';
 import { RoomHelper } from './room.helpers';
 
-const OVERLAP_STATUSES = ['PENDING', 'CONFIRMED', 'CHECKED_IN'] as const;
+const OVERLAP_STATUSES: bookings_status[] = [
+  bookings_status.PENDING,
+  bookings_status.CONFIRMED,
+  bookings_status.CHECKED_IN,
+];
 const SORT_BY = new Set(['price', 'rating', 'createdAt']);
 const SORT_ORDER = new Set(['asc', 'desc']);
 
@@ -88,7 +93,7 @@ export class RoomService {
     if (inDate && outDate) {
       where.bookings = {
         none: {
-          status: { in: ['PENDING', 'CONFIRMED', 'CHECKED_IN'] },
+          status: { in: OVERLAP_STATUSES },
           AND: [{ checkOut: { gt: inDate } }, { checkIn: { lt: outDate } }],
         },
       };
@@ -188,7 +193,7 @@ export class RoomService {
     const activeBookings = await this.prisma.bookings.count({
       where: {
         roomId: id,
-        status: { in: ['PENDING', 'CONFIRMED', 'CHECKED_IN'] },
+        status: { in: OVERLAP_STATUSES },
       },
     });
 
@@ -412,11 +417,11 @@ export class RoomService {
           isDeleted: false,
           status: {
             in: [
-              'PENDING',
-              'PARTIALLY_PAID',
-              'CONFIRMED',
-              'CHECKED_IN',
-              'CHECKED_OUT',
+              bookings_status.PENDING,
+              bookings_status.PARTIALLY_PAID,
+              bookings_status.CONFIRMED,
+              bookings_status.CHECKED_IN,
+              bookings_status.CHECKED_OUT,
             ],
           },
           checkOut: { gt: startDate },

@@ -78,6 +78,7 @@ export function useCheckout() {
     const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("CASH");
     const [specialRequests, setSpecialRequests] = useState("");
     const [isLoading, setIsLoading] = useState(false);
+    const [policyUpdatedAt, setPolicyUpdatedAt] = useState<string | null>(null);
 
     const bookingData = {
         roomName: room?.name ?? "",
@@ -114,7 +115,8 @@ export function useCheckout() {
             guestEmail: emailInput,
             guestPhoneNumber: phone,
             specialRequest: specialRequests,
-            paymentMethod
+            paymentMethod,
+            policyUpdatedAt: policyUpdatedAt ?? undefined
         }).finally(() => setIsLoading(false));
     };
 
@@ -133,7 +135,8 @@ export function useCheckout() {
             guestEmail: emailInput,
             guestPhoneNumber: phone,
             specialRequest: specialRequests,
-            paymentMethod
+            paymentMethod,
+            policyUpdatedAt: policyUpdatedAt ?? undefined
         }).finally(() => setIsLoading(false));
     };
 
@@ -170,6 +173,7 @@ export function useCheckout() {
 
         isLoading,
         confirmNow,
-        confirmLater
+        confirmLater,
+        setPolicyUpdatedAt
     };
 }

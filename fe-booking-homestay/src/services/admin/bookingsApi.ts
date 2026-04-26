@@ -46,13 +46,11 @@ export async function rejectBooking(id: number, reason: string) {
 export async function refundBooking(
   bookingId: number,
   amount: number,
-  reason?: string
+  reason?: string,
 ) {
   try {
-    const res = await api.post("/api/refund", {
-      bookingId,
-      amount,
-      reason: reason ?? null,
+    const res = await api.patch(`/bookings/${bookingId}/refund`, {
+      refundAmount: amount,
     });
     return res.data?.data;
   } catch (err) {
@@ -70,4 +68,3 @@ export async function cancelBooking(id: number, reason: string) {
     throw err;
   }
 }
-

@@ -21,6 +21,7 @@ import MapRooms from "../../../../_components/MapMarker";
 import { PhotoGalleryModal } from "../../../../_components/PhotoGalleryModal";
 import DateRangePicker from "../../../../_components/ui/date-range-picker";
 import { ReviewList } from "../_component/ReviewList";
+import { CancellationPolicy } from "@/_components/CancellationPolicy";
 
 interface RoomDetailClientProps {
   roomId: number;
@@ -540,23 +541,8 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
               <MapRooms rooms={mockRooms[Number(roomId)]} height="h-[30vh]" />
 
               {/* Policy */}
-              <div className="p-4">
-                <div className="flex items-center gap-2 ">
-                  {/* <Info className="w-4 h-4" /> */}
-                  <h2 className="text-xl elegant-sans mb-2">
-                    {t("Cancellation & Refund Policy")}
-                  </h2>
-                </div>
-                <ul className="list-disc pl-5 space-y-1 elegant-subheading text-sm text-muted-foreground">
-                  <li>
-                    {t(
-                      "Cancel 7 or more days before check-in → Full refund (100%)"
-                    )}
-                    .
-                  </li>
-                  <li>{t("Cancel 3–6 days before check-in → 50% refund")}.</li>
-                  <li>{t("Cancel within 2 days of check-in → No refund")}.</li>
-                </ul>
+              <div className="p-4 border-t">
+                <CancellationPolicy checkInDate={checkIn || undefined} />
               </div>
 
               {/* Nearby Places */}

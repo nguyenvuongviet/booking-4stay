@@ -39,12 +39,13 @@ export default function CheckoutClient() {
         confirmNow,
         confirmLater,
         handleConfirmBooking,
+        setPolicyUpdatedAt,
     } = useCheckout();
 
     return (
         <div className="min-h-screen bg-background">
             {isLoading && (
-                <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[2000]">
+                <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-2000">
                     <div className="flex flex-col items-center gap-3 text-white">
                         <div className="w-10 h-10 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
                         <p className="elegant-subheading text-sm">Đang xử lý thanh toán...</p>
@@ -96,7 +97,14 @@ export default function CheckoutClient() {
                     {/* Right  */}
                     <div className="lg:col-span-1 sticky top-20">
                         {/* Booking Summary  */}
-                        <BookingSummary bookingData={bookingData} totalNights={totalNights} totalAmount={totalAmount} paymentMethod={paymentMethod} handleConfirmBooking={handleConfirmBooking} />
+                        <BookingSummary 
+                            bookingData={bookingData} 
+                            totalNights={totalNights} 
+                            totalAmount={totalAmount} 
+                            paymentMethod={paymentMethod} 
+                            handleConfirmBooking={handleConfirmBooking}
+                            onPolicyLoad={setPolicyUpdatedAt}
+                        />
                     </div>
                 </div>
             </main>
