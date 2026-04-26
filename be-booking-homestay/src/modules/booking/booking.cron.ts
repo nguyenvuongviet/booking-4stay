@@ -1,10 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
+import { bookings_status } from '@prisma/client';
 import { endOfDay, startOfDay, subMinutes } from 'date-fns';
-import { PrismaService } from '../prisma/prisma.service';
-import { BookingService } from './booking.service';
 import { AppConfigsService } from '../app-configs/app-configs.service';
 import { AppConfigKey } from '../app-configs/constants/app-config.constant';
+import { PrismaService } from '../prisma/prisma.service';
+import { BookingLifecycleService } from './booking-lifecycle.service';
 
 @Injectable()
 export class BookingCron {
@@ -12,28 +13,36 @@ export class BookingCron {
 
   constructor(
     private readonly prisma: PrismaService,
-    private readonly bookingService: BookingService,
+    private readonly lifecycleService: BookingLifecycleService,
     private readonly appConfigsService: AppConfigsService,
   ) {}
 
+  /**
+   * Chạy lúc 12:00 trưa mỗi ngày.
+   * Tự động quét và chuyển các đơn từ CHECKED_IN sang CHECKED_OUT nếu hôm nay là ngày trả phòng.
+   */
   @Cron('0 12 * * *', { timeZone: 'Asia/Ho_Chi_Minh' })
   async handleAutoCheckOut() {
     const today = startOfDay(new Date());
     const checkouts = await this.prisma.bookings.findMany({
       where: {
         isDeleted: false,
-        status: 'CHECKED_IN',
+        status: bookings_status.CHECKED_IN,
         checkOut: { gte: today, lt: endOfDay(today) },
       },
       select: { id: true },
     });
 
     for (const b of checkouts) {
-      await this.bookingService['changeBookingStatus'](b.id, 'CHECKED_OUT', {
-        allowOverride: true,
-        notifyAdmin: false,
-        notifyUser: false,
-      });
+      await this.lifecycleService.changeBookingStatus(
+        b.id,
+        bookings_status.CHECKED_OUT,
+        {
+          allowOverride: true,
+          notifyAdmin: false,
+          notifyUser: false,
+        },
+      );
     }
 
     if (checkouts.length) {
@@ -41,6 +50,10 @@ export class BookingCron {
     }
   }
 
+  /**
+   * Chạy lúc 14:00 chiều mỗi ngày.
+   * Tự động quét và chuyển các đơn từ CONFIRMED/PARTIALLY_PAID sang CHECKED_IN nếu hôm nay là ngày nhận phòng.
+   */
   @Cron('0 14 * * *', { timeZone: 'Asia/Ho_Chi_Minh' })
   async handleAutoCheckIn() {
     const today = startOfDay(new Date());
@@ -48,18 +61,24 @@ export class BookingCron {
     const checkins = await this.prisma.bookings.findMany({
       where: {
         isDeleted: false,
-        status: { in: ['CONFIRMED', 'PARTIALLY_PAID'] },
+        status: {
+          in: [bookings_status.CONFIRMED, bookings_status.PARTIALLY_PAID],
+        },
         checkIn: { gte: today, lt: endOfDay(today) },
       },
       select: { id: true },
     });
 
     for (const b of checkins) {
-      await this.bookingService['changeBookingStatus'](b.id, 'CHECKED_IN', {
-        allowOverride: true,
-        notifyAdmin: false,
-        notifyUser: true,
-      });
+      await this.lifecycleService.changeBookingStatus(
+        b.id,
+        bookings_status.CHECKED_IN,
+        {
+          allowOverride: true,
+          notifyAdmin: false,
+          notifyUser: true,
+        },
+      );
     }
 
     if (checkins.length) {
@@ -67,6 +86,10 @@ export class BookingCron {
     }
   }
 
+  /**
+   * Chạy mỗi phút (* * * * *).
+   * Tự động quét và hủy các đơn PENDING nếu quá thời gian giữ chỗ (ví dụ: 15 phút) mà chưa thanh toán.
+   */
   @Cron('* * * * *')
   async clearExpiredBookings() {
     const minutes = await this.appConfigsService.getConfigValue<number>(
@@ -76,7 +99,7 @@ export class BookingCron {
 
     const expired = await this.prisma.bookings.findMany({
       where: {
-        status: 'PENDING',
+        status: bookings_status.PENDING,
         createdAt: { lt: expiryThreshold },
         isDeleted: false,
       },
@@ -84,12 +107,16 @@ export class BookingCron {
     });
 
     for (const b of expired) {
-      await this.bookingService['changeBookingStatus'](b.id, 'CANCELLED', {
-        reason: `Hết hạn thanh toán tự động (Hệ thống tự huỷ do quá ${minutes} phút chưa thanh toán)`,
-        allowOverride: true,
-        notifyAdmin: true,
-        notifyUser: true,
-      });
+      await this.lifecycleService.changeBookingStatus(
+        b.id,
+        bookings_status.CANCELLED,
+        {
+          reason: `Hết hạn thanh toán tự động (Hệ thống tự huỷ do quá ${minutes} phút chưa thanh toán)`,
+          allowOverride: true,
+          notifyAdmin: true,
+          notifyUser: true,
+        },
+      );
     }
 
     if (expired.length) {
@@ -99,6 +126,10 @@ export class BookingCron {
     }
   }
 
+  /**
+   * Chạy lúc 2:00 sáng mỗi ngày.
+   * Dọn dẹp các dữ liệu lịch phòng (giá phòng, khóa phòng) cũ hơn 30 ngày để làm nhẹ database.
+   */
   @Cron('0 2 * * *', { timeZone: 'Asia/Ho_Chi_Minh' })
   async clearOldCalendarData() {
     const thresholdDate = startOfDay(subMinutes(new Date(), 30 * 24 * 60));

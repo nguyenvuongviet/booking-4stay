@@ -13,17 +13,24 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Public } from 'src/common/decorator/public.decorator';
 import { Roles } from 'src/common/decorator/roles.decorator';
 import { Role } from '../user/dto/enum.dto';
+import { BookingCancelRefundService } from './booking-cancel-refund.service';
+import { BookingQueryService } from './booking-query.service';
 import { BookingService } from './booking.service';
 import { CancelBookingDto } from './dto/cancel-booking.dto';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { ListBookingQuery } from './dto/list-booking.query';
 import { PreCheckDto } from './dto/preCheck-booking.dto';
+import { RescheduleBookingDto } from './dto/reschedule-booking.dto';
 import { RoomAvailabilityDto } from './dto/room-availability.dto';
 
 @ApiTags('bookings')
 @Controller('bookings')
 export class BookingController {
-  constructor(private readonly bookingService: BookingService) {}
+  constructor(
+    private readonly bookingService: BookingService,
+    private readonly queryService: BookingQueryService,
+    private readonly cancelRefundService: BookingCancelRefundService,
+  ) {}
 
   @Get('unavailable-days')
   @Public()
@@ -31,7 +38,7 @@ export class BookingController {
     @Query('roomId', ParseIntPipe) roomId: number,
     @Query('excludeBookingId') excludeBookingId?: number,
   ) {
-    return this.bookingService.getUnavailableDays(
+    return this.queryService.getUnavailableDays(
       roomId,
       excludeBookingId ? +excludeBookingId : undefined,
     );
@@ -55,7 +62,7 @@ export class BookingController {
   @ApiBearerAuth('AccessToken')
   async myBookings(@Req() req: Request, @Query() q: ListBookingQuery) {
     const user = req['user'];
-    return this.bookingService.listMine(+user.id, q);
+    return this.queryService.listMine(+user.id, q);
   }
 
   @Patch('/:id/cancel')
@@ -66,7 +73,7 @@ export class BookingController {
     @Req() req: Request,
   ) {
     const user = req['user'];
-    return this.bookingService.cancel(id, +user.id, user.role, dto);
+    return this.cancelRefundService.cancel(id, +user.id, user.role, dto);
   }
 
   @Get('/:id')
@@ -78,18 +85,14 @@ export class BookingController {
       Array.isArray(user.user_roles) &&
       user.user_roles.some((ur) => ur.roles && ur.roles.name === Role.ADMIN);
     const roleForService = isAdmin ? Role.ADMIN : null;
-    return this.bookingService.detail(
-      id,
-      user ? +user.id : null,
-      roleForService,
-    );
+    return this.queryService.detail(id, user ? +user.id : null, roleForService);
   }
 
   @Get('/admin/all')
   @Roles(Role.ADMIN)
   @ApiBearerAuth('AccessToken')
   async adminList(@Query() q: ListBookingQuery) {
-    return this.bookingService.listAll(q);
+    return this.queryService.listAll(q);
   }
 
   @Get('rooms/:id/availability')
@@ -98,21 +101,21 @@ export class BookingController {
     @Param('id', ParseIntPipe) id: number,
     @Query() q: RoomAvailabilityDto,
   ) {
-    return this.bookingService.roomAvailability(id, q);
+    return this.queryService.roomAvailability(id, q);
   }
 
   @Get('rooms/:roomId/')
   @Roles(Role.ADMIN)
   @ApiBearerAuth('AccessToken')
   async listByRoom(@Param('roomId', ParseIntPipe) roomId: number) {
-    return this.bookingService.listByRoom(roomId);
+    return this.queryService.listByRoom(roomId);
   }
 
   @Get('users/:userId')
   @Roles(Role.ADMIN)
   @ApiBearerAuth('AccessToken')
   async listByUser(@Param('userId', ParseIntPipe) userId: number) {
-    return this.bookingService.listByUser(userId);
+    return this.queryService.listByUser(userId);
   }
 
   @Patch('/:id/accept')
@@ -132,7 +135,7 @@ export class BookingController {
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: CancelBookingDto,
   ) {
-    return this.bookingService.adminRejectBooking(id, dto);
+    return this.cancelRefundService.adminRejectBooking(id, dto);
   }
 
   @Patch('/:id/admin-cancel')
@@ -142,7 +145,7 @@ export class BookingController {
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: CancelBookingDto,
   ) {
-    return this.bookingService.adminCancelBooking(id, dto);
+    return this.cancelRefundService.adminCancelBooking(id, dto);
   }
 
   @Patch('/:id/refund')
@@ -152,7 +155,7 @@ export class BookingController {
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: { refundAmount: number; refundEvidence?: string },
   ) {
-    return this.bookingService.adminConfirmRefund(
+    return this.cancelRefundService.adminConfirmRefund(
       id,
       dto.refundAmount,
       dto.refundEvidence,

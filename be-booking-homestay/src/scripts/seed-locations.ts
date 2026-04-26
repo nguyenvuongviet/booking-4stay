@@ -3,10 +3,8 @@ import axios from 'axios';
 
 const prisma = new PrismaClient();
 
-/** Nominatim public geocoding API (rate limit: 1 req/s) */
 const NOMINATIM_URL = 'https://nominatim.openstreetmap.org/search';
 
-/** Tôn trọng rate limit 1 req/s của Nominatim */
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 /** Lấy tọa độ trung tâm của một tỉnh via Nominatim */
@@ -71,7 +69,6 @@ async function main() {
             data: { latitude: coords.lat, longitude: coords.lng },
           });
         }
-        // Tôn trọng rate limit 1 req/s của Nominatim
         await sleep(1100);
       }
 

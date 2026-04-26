@@ -138,21 +138,18 @@ export class DashboardService {
       take: limit,
     });
 
-    const enriched = await Promise.all(
-      grouped.map(async (g) => {
-        const room = await this.prisma.rooms.findUnique({
-          where: { id: g.roomId },
-          select: { name: true },
-        });
-        return {
-          roomId: g.roomId,
-          roomName: room?.name ?? 'N/A',
-          bookings: g._count.roomId,
-          revenue: Number(g._sum?.totalPrice ?? 0),
-        };
-      }),
-    );
+    const roomIds = grouped.map((g) => g.roomId);
+    const rooms = await this.prisma.rooms.findMany({
+      where: { id: { in: roomIds } },
+      select: { id: true, name: true },
+    });
+    const roomMap = new Map(rooms.map((r) => [r.id, r.name]));
 
-    return enriched;
+    return grouped.map((g) => ({
+      roomId: g.roomId,
+      roomName: roomMap.get(g.roomId) ?? 'N/A',
+      bookings: g._count.roomId,
+      revenue: Number(g._sum?.totalPrice ?? 0),
+    }));
   }
 }

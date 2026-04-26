@@ -17,8 +17,8 @@ import { FilesInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth, ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { Public } from 'src/common/decorator/public.decorator';
 import { Roles } from 'src/common/decorator/roles.decorator';
-import { Role } from '../user/dto/enum.dto';
 import { UploadRoomImagesDto } from 'src/common/dto/upload-file.dto';
+import { Role } from '../user/dto/enum.dto';
 import { CreateRoomDto } from './dto/create-room.dto';
 import { RoomFilterDto } from './dto/filter-room.dto';
 import {
@@ -29,12 +29,18 @@ import { SetRoomAmenitiesDto } from './dto/set-room-amenities.dto';
 import { SetRoomBedsDto } from './dto/set-room-beds.dto';
 import { DeleteRoomImagesDto, ImageItemDto } from './dto/set-room-images.dto';
 import { UpdateRoomDto } from './dto/update-room.dto';
+import { RoomAssetService } from './room-asset.service';
+import { RoomCalendarService } from './room-calendar.service';
 import { RoomService } from './room.service';
 
 @ApiTags('room')
 @Controller('room')
 export class RoomController {
-  constructor(private readonly roomService: RoomService) {}
+  constructor(
+    private readonly roomService: RoomService,
+    private readonly assetService: RoomAssetService,
+    private readonly calendarService: RoomCalendarService,
+  ) {}
 
   @Get('all')
   @Public()
@@ -78,7 +84,7 @@ export class RoomController {
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: SetRoomAmenitiesDto,
   ) {
-    return this.roomService.setAmenities(id, dto.amenityIds);
+    return this.assetService.setAmenities(id, dto.amenityIds);
   }
 
   @Put(':id/beds')
@@ -89,7 +95,7 @@ export class RoomController {
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: SetRoomBedsDto,
   ) {
-    return this.roomService.setBeds(id, dto.beds);
+    return this.assetService.setBeds(id, dto.beds);
   }
 
   @Post(':id/images')
@@ -104,7 +110,7 @@ export class RoomController {
     @Body('images') imagesJson?: string,
   ) {
     const images: ImageItemDto[] = imagesJson ? JSON.parse(imagesJson) : [];
-    return this.roomService.addRoomImages(id, files, images);
+    return this.assetService.addRoomImages(id, files, images);
   }
 
   @Delete(':id/images')
@@ -115,7 +121,7 @@ export class RoomController {
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: DeleteRoomImagesDto,
   ) {
-    return this.roomService.deleteRoomImagesByIds(id, dto.imageIds);
+    return this.assetService.deleteRoomImagesByIds(id, dto.imageIds);
   }
 
   @Patch(':id/images/main')
@@ -125,7 +131,7 @@ export class RoomController {
     @Param('id', ParseIntPipe) roomId: number,
     @Body('imageId', ParseIntPipe) imageId: number,
   ) {
-    return this.roomService.setMainImage(roomId, imageId);
+    return this.assetService.setMainImage(roomId, imageId);
   }
 
   @Patch(':id/images/order')
@@ -135,7 +141,7 @@ export class RoomController {
     @Param('id', ParseIntPipe) roomId: number,
     @Body('order') order: number[],
   ) {
-    return this.roomService.updateImageOrder(roomId, order);
+    return this.assetService.updateImageOrder(roomId, order);
   }
 
   @Get(':id/calendar')
@@ -144,7 +150,7 @@ export class RoomController {
     @Param('id', ParseIntPipe) id: number,
     @Query() query: RoomCalendarQueryDto,
   ) {
-    return this.roomService.getCalendar(id, query);
+    return this.calendarService.getCalendar(id, query);
   }
 
   @Put(':id/calendar')
@@ -155,6 +161,6 @@ export class RoomController {
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateCalendarDto,
   ) {
-    return this.roomService.updateCalendar(id, dto.updates);
+    return this.calendarService.updateCalendar(id, dto.updates);
   }
 }

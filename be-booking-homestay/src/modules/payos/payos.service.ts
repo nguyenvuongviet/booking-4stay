@@ -6,14 +6,14 @@ import {
   PAYOS_CHECKSUM_KEY,
   PAYOS_CLIENT_ID,
 } from 'src/common/constant/app.constant';
-import { BookingService } from '../booking/booking.service';
+import { BookingLifecycleService } from '../booking/booking-lifecycle.service';
 
 @Injectable()
 export class PayosService {
   private readonly payos: PayOS;
   private readonly logger = new Logger(PayosService.name);
 
-  constructor(private readonly bookingService: BookingService) {
+  constructor(private readonly lifecycleService: BookingLifecycleService) {
     this.payos = new PayOS({
       clientId: PAYOS_CLIENT_ID,
       apiKey: PAYOS_API_KEY,
@@ -62,7 +62,7 @@ export class PayosService {
       if (webhookData.code === '00') {
         const orderCode = webhookData.orderCode;
         const bookingId = Math.floor(Number(orderCode) / 10000);
-        await this.bookingService.updateStatus(bookingId, webhookData.amount);
+        await this.lifecycleService.updateStatus(bookingId, webhookData.amount);
       }
       return true;
     } catch (error) {
@@ -78,7 +78,7 @@ export class PayosService {
       );
       if (paymentInfo && paymentInfo.status === 'PAID') {
         const bookingId = Math.floor(Number(paymentInfo.orderCode) / 10000);
-        await this.bookingService.updateStatus(
+        await this.lifecycleService.updateStatus(
           bookingId,
           paymentInfo.amountPaid,
         );

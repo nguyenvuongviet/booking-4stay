@@ -20,13 +20,13 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { Roles } from 'src/common/decorator/roles.decorator';
-import { Role } from '../user/dto/enum.dto';
 import { UploadFileDto } from 'src/common/dto/upload-file.dto';
-import { uploadLocalConfig } from 'src/config/upload-local.config';
+import { Role } from '../user/dto/enum.dto';
+
 import { CreateUserDto } from './dto/create-user.dto';
+import { UserFilterDto } from './dto/filter-user.dto';
 import { UpdateUserAdminDto } from './dto/update-user-admin.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { UserFilterDto } from './dto/filter-user.dto';
 import { UserService } from './user.service';
 
 @ApiTags('user')
@@ -39,21 +39,6 @@ export class UserController {
   async update(@Body() updateUserDto: UpdateUserDto, @Req() req: Request) {
     const user = req['user'];
     return await this.userService.update(+user.id, updateUserDto);
-  }
-
-  @Post('/avatar-local')
-  @UseInterceptors(uploadLocalConfig('images', 'avatar', 2))
-  @ApiConsumes('multipart/form-data')
-  @ApiBody({
-    description: 'Upload file',
-    type: UploadFileDto,
-  })
-  async avatarLocal(
-    @Req() req: Request,
-    @UploadedFile() file: Express.Multer.File,
-  ) {
-    const user = req['user'];
-    return await this.userService.avatarLocal(+user.id, file);
   }
 
   @Post('/avatar-cloudinary')
@@ -119,21 +104,6 @@ export class UserController {
   @ApiParam({ name: 'id', type: String, description: 'User ID', example: '1' })
   async delete(@Param('id') id: string) {
     return await this.userService.delete(+id);
-  }
-
-  @Post('admin/:id/avatar-local')
-  @UseInterceptors(uploadLocalConfig('images', 'avatar', 2))
-  @ApiParam({ name: 'id', type: String, description: 'User ID', example: '1' })
-  @ApiConsumes('multipart/form-data')
-  @ApiBody({
-    description: 'Upload file',
-    type: UploadFileDto,
-  })
-  async adminAvatarLocal(
-    @Param('id') id: string,
-    @UploadedFile() file: Express.Multer.File,
-  ) {
-    return await this.userService.avatarLocal(+id, file);
   }
 
   @Post('admin/:id/avatar-cloudinary')

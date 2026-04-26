@@ -16,38 +16,7 @@ export class ReviewService {
   constructor(private readonly prisma: PrismaService) {}
 
   async findAll(q: ListReviewQuery) {
-    const page = Math.max(1, Number(q.page) || 1);
-    const pageSize = Math.max(1, Number(q.pageSize) || 10);
-    const skip = (page - 1) * pageSize;
-
-    const where: any = {
-      isDeleted: false,
-      bookings: { isDeleted: false },
-    };
-
-    if (q.minRating) where.rating = { gte: q.minRating };
-    if (q.maxRating) {
-      where.rating = where.rating || {};
-      where.rating.lte = q.maxRating;
-    }
-
-    const [items, total] = await this.prisma.$transaction([
-      this.prisma.reviews.findMany({
-        where,
-        orderBy: { createdAt: 'desc' },
-        skip,
-        take: pageSize,
-        include: {
-          users: {
-            select: { id: true, firstName: true, lastName: true, avatar: true },
-          },
-          bookings: { select: { id: true } },
-        },
-      }),
-      this.prisma.reviews.count({ where }),
-    ]);
-
-    return { page, pageSize, total, items: sanitizeReviewList(items) };
+    return this.queryReviews({}, q);
   }
 
   async create(userId: number, dto: CreateReviewDto) {
@@ -91,38 +60,7 @@ export class ReviewService {
   }
 
   async listByRoom(roomId: number, q: ListReviewQuery) {
-    const page = Math.max(1, Number(q.page) || 1);
-    const pageSize = Math.max(1, Number(q.pageSize) || 10);
-    const skip = (page - 1) * pageSize;
-
-    const where: any = {
-      isDeleted: false,
-      bookings: { roomId, isDeleted: false },
-    };
-
-    if (q.minRating) where.rating = { gte: q.minRating };
-    if (q.maxRating) {
-      where.rating = where.rating || {};
-      where.rating.lte = q.maxRating;
-    }
-
-    const [items, total] = await this.prisma.$transaction([
-      this.prisma.reviews.findMany({
-        where,
-        orderBy: { createdAt: 'desc' },
-        skip,
-        take: pageSize,
-        include: {
-          users: {
-            select: { id: true, firstName: true, lastName: true, avatar: true },
-          },
-          bookings: { select: { id: true } },
-        },
-      }),
-      this.prisma.reviews.count({ where }),
-    ]);
-
-    return { page, pageSize, total, items: sanitizeReviewList(items) };
+    return this.queryReviews({ bookings: { roomId } }, q);
   }
 
   async listByUser(userId: number) {
@@ -161,5 +99,44 @@ export class ReviewService {
     });
 
     return { message: 'Xoá review thành công' };
+  }
+
+  private async queryReviews(extraWhere: any, q: ListReviewQuery) {
+    const page = Math.max(1, Number(q.page) || 1);
+    const pageSize = Math.max(1, Number(q.pageSize) || 10);
+    const skip = (page - 1) * pageSize;
+
+    const where: any = {
+      isDeleted: false,
+      bookings: { isDeleted: false, ...extraWhere.bookings },
+      ...extraWhere,
+    };
+    if (extraWhere.bookings) {
+      where.bookings = { isDeleted: false, ...extraWhere.bookings };
+    }
+
+    if (q.minRating) where.rating = { gte: q.minRating };
+    if (q.maxRating) {
+      where.rating = where.rating || {};
+      where.rating.lte = q.maxRating;
+    }
+
+    const [items, total] = await this.prisma.$transaction([
+      this.prisma.reviews.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: pageSize,
+        include: {
+          users: {
+            select: { id: true, firstName: true, lastName: true, avatar: true },
+          },
+          bookings: { select: { id: true } },
+        },
+      }),
+      this.prisma.reviews.count({ where }),
+    ]);
+
+    return { page, pageSize, total, items: sanitizeReviewList(items) };
   }
 }

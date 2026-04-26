@@ -1,7 +1,4 @@
-import { CLOUDINARY_BASE_URL, PORT } from 'src/common/constant/app.constant';
-
-const BASE_URL = `http://localhost:${PORT}`;
-const AVATAR_PATH = '/public/images/avatar';
+import { CLOUDINARY_BASE_URL } from 'src/common/constant/app.constant';
 
 export function sanitizeCollection<T>(
   data: T | T[],

@@ -7,7 +7,7 @@ import * as mysql from 'mysql2/promise';
 const prisma = new PrismaClient();
 
 /**
- * Hàm hỗ trợ đợi database sẵn sàng (retry 5 lần)
+ * Hỗ trợ đợi database sẵn sàng (retry 5 lần)
  */
 async function waitForDatabase(
   dbUrl: string,
@@ -28,7 +28,7 @@ async function waitForDatabase(
 }
 
 /**
- * Hàm thực thi SQL file sử dụng mysql2 (hỗ trợ DDL như CREATE TRIGGER/PROCEDURE)
+ * Thực thi SQL file sử dụng mysql2 (hỗ trợ DDL như CREATE TRIGGER/PROCEDURE)
  */
 async function executeSqlFileWithMysql2(filePath: string) {
   if (!fs.existsSync(filePath)) {

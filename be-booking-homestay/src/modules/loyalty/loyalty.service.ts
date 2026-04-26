@@ -3,7 +3,6 @@ import { sanitizeProgram } from 'src/utils/sanitize/loyalty.sanitize';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateLoyaltyLevelDto } from './dto/create-loyalty-level.dto';
 import { UpdateLoyaltyLevelDto } from './dto/update-loyalty-level.dto';
-import { UpdateUserLoyaltyDto } from './dto/update-user-loyalty.dto';
 
 @Injectable()
 export class LoyaltyService {
@@ -153,49 +152,5 @@ export class LoyaltyService {
     });
 
     return sanitizeProgram(programs);
-  }
-
-  async findUserLoyalty(userId: number) {
-    // const program = await this.prisma.loyalty_program.findUnique({
-    //   where: { userId },
-    //   include: { levels: true },
-    // });
-    // if (!program)
-    //   throw new BadRequestException(
-    //     'Người dùng chưa tham gia chương trình Loyalty',
-    //   );
-    // return sanitizeProgram(program);
-  }
-
-  async updateUserLoyalty(userId: number, dto: UpdateUserLoyaltyDto) {
-    // const user = await this.prisma.users.findUnique({ where: { id: userId } });
-    // if (!user) throw new BadRequestException('Người dùng không tồn tại');
-    // const level = await this.prisma.levels.findUnique({
-    //   where: { name: dto.levelId },
-    // });
-    // if (!level || !level.isActive) {
-    //   throw new BadRequestException(
-    //     'Cấp độ không hợp lệ hoặc đang bị vô hiệu hoá',
-    //   );
-    // }
-    // const updated = await this.prisma.loyalty_program.upsert({
-    //   where: { userId },
-    //   create: {
-    //     userId,
-    //     levelId: activeLevel?.id ?? undefined,
-    //     points: dto.points ?? 0,
-    //     totalBookings: dto.totalBookings ?? 0,
-    //     totalNights: dto.totalNights ?? 0,
-    //   },
-    //   update: {
-    //     levelId: activeLevel?.id ?? undefined,
-    //     points: dto.points ?? undefined,
-    //     totalBookings: dto.totalBookings ?? undefined,
-    //     totalNights: dto.totalNights ?? undefined,
-    //     lastUpgradeDate: activeLevel ? new Date() : undefined,
-    //   },
-    //   include: { levels: true },
-    // });
-    // return sanitizeProgram(updated);
   }
 }

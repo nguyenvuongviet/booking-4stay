@@ -11,7 +11,6 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { LoyaltyService } from './loyalty.service';
 import { CreateLoyaltyLevelDto } from './dto/create-loyalty-level.dto';
 import { UpdateLoyaltyLevelDto } from './dto/update-loyalty-level.dto';
-import { UpdateUserLoyaltyDto } from './dto/update-user-loyalty.dto';
 import { Roles } from 'src/common/decorator/roles.decorator';
 import { Role } from '../user/dto/enum.dto';
 
@@ -59,19 +58,5 @@ export class LoyaltyController {
   @Roles(Role.ADMIN)
   findAllUserLoyalty() {
     return this.loyaltyService.findAllUserLoyalty();
-  }
-
-  @Get('user/:userId')
-  findUserLoyalty(@Param('userId', ParseIntPipe) userId: number) {
-    return this.loyaltyService.findUserLoyalty(userId);
-  }
-
-  @Patch('user/:userId')
-  @Roles(Role.ADMIN)
-  updateUserLoyalty(
-    @Param('userId', ParseIntPipe) userId: number,
-    @Body() dto: UpdateUserLoyaltyDto,
-  ) {
-    return this.loyaltyService.updateUserLoyalty(userId, dto);
   }
 }
