@@ -1,4 +1,5 @@
 import { bookings_status } from '@prisma/client';
+import { daysUntilVN } from 'src/utils/timezone.util';
 
 export const ACTIVE_BOOKING_STATUSES: bookings_status[] = [
   bookings_status.PENDING,
@@ -65,11 +66,7 @@ export const STATUS_TO_MAIL_TYPE: Record<bookings_status, BookingMailType> = {
 };
 
 export function daysUntilDate(target: Date): number {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const t = new Date(target);
-  t.setHours(0, 0, 0, 0);
-  return Math.floor((t.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+  return daysUntilVN(target);
 }
 
 export function sortPolicyDesc(

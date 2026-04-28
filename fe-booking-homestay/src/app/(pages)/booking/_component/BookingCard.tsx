@@ -1,31 +1,38 @@
 "use client";
 
 import { Card, CardContent } from "@/_components/ui/card";
+import { useLang } from "@/context/lang-context";
+import { parseAbsoluteDate } from "@/lib/utils";
 import { Booking } from "@/models/Booking";
 import { format } from "date-fns";
 import { MapPin, Star } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { BookingStatusBadge } from "./BookingStatusBadge";
-import { useLang } from "@/context/lang-context";
 
 type BookingCardProps = { booking: Booking };
 
 export function BookingCard({ booking }: BookingCardProps) {
   const router = useRouter();
-  const {t} = useLang();
+  const { t } = useLang();
 
   const formatPrice = (price: number) => {
     return `${price.toLocaleString()} VND`;
   };
 
-  const formattedCheckIn = format(booking.checkIn, "dd/MM/yyyy");
-  const formattedCheckOut = format(booking.checkOut, "dd/MM/yyyy");
+  const formattedCheckIn = format(
+    parseAbsoluteDate(booking.checkIn),
+    "dd/MM/yyyy",
+  );
+  const formattedCheckOut = format(
+    parseAbsoluteDate(booking.checkOut),
+    "dd/MM/yyyy",
+  );
 
   const nights = Math.ceil(
-    (new Date(booking.checkOut).getTime() -
-      new Date(booking.checkIn).getTime()) /
-      (1000 * 60 * 60 * 24)
+    (parseAbsoluteDate(booking.checkOut).getTime() -
+      parseAbsoluteDate(booking.checkIn).getTime()) /
+      (1000 * 60 * 60 * 24),
   );
 
   return (
@@ -78,18 +85,18 @@ export function BookingCard({ booking }: BookingCardProps) {
                         </div> */}
             <div className="flex flex-col">
               <div className="flex justify-between items-center">
-              <p className="elegant-subheading text-sm text-muted-foreground flex items-center gap-1">
-                {t("Booking code")}:
-                <span className="text-green-700">#{booking.id}</span>
-              </p>
-              <div className="text-right">
-                <span className="elegant-subheading text-foreground">
-                  {formatPrice(booking.room.price)}
-                </span>
-                <span className="elegant-subheading text-muted-foreground">
-                  /{t("night")}
-                </span>
-              </div>
+                <p className="elegant-subheading text-sm text-muted-foreground flex items-center gap-1">
+                  {t("Booking code")}:
+                  <span className="text-green-700">#{booking.id}</span>
+                </p>
+                <div className="text-right">
+                  <span className="elegant-subheading text-foreground">
+                    {formatPrice(booking.room.price)}
+                  </span>
+                  <span className="elegant-subheading text-muted-foreground">
+                    /{t("night")}
+                  </span>
+                </div>
               </div>
               <div className="text-right pt-1">
                 <span className="text-2xl elegant-sans text-secondary-foreground">
@@ -100,6 +107,6 @@ export function BookingCard({ booking }: BookingCardProps) {
           </CardContent>
         </div>
       </div>
-    </Card> 
+    </Card>
   );
 }

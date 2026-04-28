@@ -54,13 +54,12 @@ model bookings {
   cancelReason       String?                @db.VarChar(255)
   cancellationPolicy Json?
   policyUpdatedAt    DateTime?              @db.Timestamp(0)
-
-  // Bank Info for Refund
-  bankName          String?   @db.VarChar(100)
-  bankAccountNumber String?   @db.VarChar(50)
-  bankAccountName   String?   @db.VarChar(100)
-  refundEvidence    String?   @db.VarChar(255)
-  refundedAt        DateTime? @db.Timestamp(0)
+  modifiedCount      Int                    @default(0)
+  bankName           String?                @db.VarChar(100)
+  bankAccountNumber  String?                @db.VarChar(50)
+  bankAccountName    String?                @db.VarChar(100)
+  refundEvidence     String?                @db.VarChar(255)
+  refundedAt         DateTime?              @db.Timestamp(0)
 
   isDeleted Boolean        @default(false)
   deletedAt DateTime?      @db.Timestamp(0)
@@ -68,6 +67,7 @@ model bookings {
   updatedAt DateTime       @default(now()) @db.Timestamp(0)
   rooms     rooms          @relation(fields: [roomId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "bookings_ibfk_2")
   users     users          @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "bookings_ibfk_1")
+  logs      booking_logs[]
 
   reviews reviews?
 
@@ -392,4 +392,23 @@ enum bookings_status {
   CANCELLED
   WAITING_REFUND
   REFUNDED
+}
+
+model booking_logs {
+  id          Int       @id @default(autoincrement())
+  bookingId   Int       @db.UnsignedInt
+  action      String    @db.VarChar(50)
+  oldCheckIn  DateTime? @db.Timestamp(0)
+  oldCheckOut DateTime? @db.Timestamp(0)
+  newCheckIn  DateTime? @db.Timestamp(0)
+  newCheckOut DateTime? @db.Timestamp(0)
+  oldTotal    Decimal?  @db.Decimal(15, 2)
+  newTotal    Decimal?  @db.Decimal(15, 2)
+  note        String?   @db.Text
+  performedBy Int?      @db.UnsignedInt
+  createdAt   DateTime  @default(now()) @db.Timestamp(0)
+
+  booking bookings @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@index([bookingId])
 }

@@ -1,4 +1,5 @@
 import { buildImageUrl, sanitizeCollection } from '../object.util';
+import { toUTCISOString } from '../timezone.util';
 import { sanitizeRoom } from './room.sanitize';
 
 function sanitize(booking: any) {
@@ -18,9 +19,10 @@ function sanitize(booking: any) {
     discountAmount: Number(booking.discountAmount || 0),
     paidAmount: Number(booking.paidAmount),
     refundAmount: Number(booking.refundAmount || 0),
+    modifiedCount: Number(booking.modifiedCount || 0),
     totalAmount: Number(booking.totalPrice),
-    createdAt: booking.createdAt,
-    updatedAt: booking.updatedAt,
+    createdAt: toUTCISOString(booking.createdAt),
+    updatedAt: toUTCISOString(booking.updatedAt),
     expiryMinutes: booking.expiryMinutes || 15,
     cancelReason: booking.cancelReason ?? null,
     isReview: booking.isReview,
@@ -59,6 +61,20 @@ function sanitize(booking: any) {
         }
       : undefined,
     room: sanitizeRoom(room),
+    logs: Array.isArray(booking.logs)
+      ? booking.logs.map((log: any) => ({
+          id: log.id,
+          action: log.action,
+          oldCheckIn: log.oldCheckIn,
+          oldCheckOut: log.oldCheckOut,
+          newCheckIn: log.newCheckIn,
+          newCheckOut: log.newCheckOut,
+          oldTotal: Number(log.oldTotal || 0),
+          newTotal: Number(log.newTotal || 0),
+          note: log.note,
+          createdAt: log.createdAt,
+        }))
+      : [],
   };
 }
 

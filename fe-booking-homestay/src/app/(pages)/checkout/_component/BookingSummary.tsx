@@ -102,7 +102,7 @@ export default function BookingSummary(props: Props) {
                 <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Giảm giá</span>
                     <span className="text-foreground">
-                        -{Math.floor(totalAmount * bookingData.discountPercent / 100).toLocaleString()}đ<span className="text-xs text-green-600"> ({bookingData.discountPercent}%)</span>
+                        -{Math.floor((bookingData.pricePerNight * totalNights) * bookingData.discountPercent / 100).toLocaleString()}đ<span className="text-xs text-green-600"> ({bookingData.discountPercent}%)</span>
                     </span>
                 </div>
             </div>

@@ -1,17 +1,19 @@
+import { BookingStatus } from "@/constants/app.constant";
 import { useLang } from "@/context/lang-context";
-import { CheckCheck, CheckCircle, Clock, DollarSign, XCircle } from "lucide-react";
+import {
+  CheckCircle2,
+  Clock,
+  Coins,
+  DollarSign,
+  DoorOpen,
+  LogOut,
+  RefreshCw,
+  XCircle,
+} from "lucide-react";
 import React from "react";
 
 interface BookingStatusBadgeProps {
-  status:
-  | "PENDING"
-  | "CONFIRMED"
-  | "CANCELLED"
-  | "CHECKED_IN"
-  | "CHECKED_OUT"
-  | "PARTIALLY_PAID"
-  | "WAITING_REFUND"
-  | "REFUNDED";
+  status: BookingStatus;
   className?: string;
 }
 
@@ -20,70 +22,80 @@ export const BookingStatusBadge: React.FC<BookingStatusBadgeProps> = ({
   className = "",
 }) => {
   const { t } = useLang();
-  const getStatusStyles = () => {
+
+  const getStatusConfig = () => {
     switch (status) {
-      case "PENDING":
+      case BookingStatus.PENDING:
         return {
-          icon: <Clock className="w-4 h-4" />,
-          color: "bg-yellow-100 text-yellow-700 text-sm",
-          label: t("Pending"),
+          icon: <Clock className="w-4 h-4 animate-pulse" />,
+          bg: "bg-amber-50 border border-amber-200/60",
+          text: "text-amber-700 font-semibold",
+          label: "Chờ thanh toán",
         };
-      case "CHECKED_IN":
+      case BookingStatus.CHECKED_IN:
         return {
-          icon: <CheckCircle className="w-4 h-4" />,
-          color: "bg-green-100 text-green-700 text-sm",
-          label: t("Confirmed"),
+          icon: <DoorOpen className="w-4 h-4" />,
+          bg: "bg-emerald-50 border border-emerald-200/60",
+          text: "text-emerald-700 font-semibold",
+          label: "Đã nhận phòng",
         };
-      case "CONFIRMED":
+      case BookingStatus.CONFIRMED:
         return {
-          icon: <CheckCircle className="w-4 h-4" />,
-          color: "bg-green-100 text-green-700 text-sm",
-          label: t("Confirmed"),
+          icon: <CheckCircle2 className="w-4 h-4" />,
+          bg: "bg-emerald-50 border border-emerald-200/60",
+          text: "text-emerald-700 font-semibold",
+          label: "Đã xác nhận",
         };
-      case "PARTIALLY_PAID":
+      case BookingStatus.PARTIALLY_PAID:
         return {
-          icon: <CheckCircle className="w-4 h-4" />,
-          color: "bg-green-100 text-green-700 text-sm",
-          label: t("Confirmed"),
+          icon: <Coins className="w-4 h-4" />,
+          bg: "bg-teal-50 border border-teal-200/60",
+          text: "text-teal-700 font-semibold",
+          label: "Đã cọc (30%)",
         };
-      case "CANCELLED":
+      case BookingStatus.CANCELLED:
         return {
           icon: <XCircle className="w-4 h-4" />,
-          color: "bg-red-100 text-red-700 text-sm",
-          label: t("Cancelled"),
+          bg: "bg-rose-50 border border-rose-200/60",
+          text: "text-rose-700 font-semibold",
+          label: "Đã hủy",
         };
-      case "CHECKED_OUT":
+      case BookingStatus.CHECKED_OUT:
         return {
-          icon: <CheckCheck className="w-4 h-4" />,
-          color: "bg-blue-100 text-blue-700 text-sm",
-          label: t("Completed"),
+          icon: <LogOut className="w-4 h-4" />,
+          bg: "bg-gray-50 border border-gray-200/60",
+          text: "text-gray-700 font-semibold",
+          label: "Đã trả phòng",
         };
-      case "WAITING_REFUND":
+      case BookingStatus.WAITING_REFUND:
+        return {
+          icon: <RefreshCw className="w-4 h-4 animate-spin" />,
+          bg: "bg-orange-50 border border-orange-200/60",
+          text: "text-orange-700 font-semibold",
+          label: "Đang chờ hoàn tiền",
+        };
+      case BookingStatus.REFUNDED:
         return {
           icon: <DollarSign className="w-4 h-4" />,
-          color: "bg-orange-100 text-orange-700 text-sm",
-          label: t("Refund"),
-        };
-      case "REFUNDED":
-        return {
-          icon: <CheckCheck className="w-4 h-4" />,
-          color: "bg-pink-100 text-pink-700 text-sm",
-          label: t("Refunded"),
+          bg: "bg-pink-50 border border-pink-200/60",
+          text: "text-pink-700 font-semibold",
+          label: "Đã hoàn tiền",
         };
       default:
         return {
           icon: null,
-          color: "bg-gray-400",
+          bg: "bg-gray-100 border border-gray-200",
+          text: "text-gray-500 font-medium",
           label: "Unknown",
         };
     }
   };
 
-  const { icon, color, label } = getStatusStyles();
+  const { icon, bg, text, label } = getStatusConfig();
 
   return (
     <div
-      className={`px-3 py-2 rounded-xl flex items-center gap-1 shadow-sm ${color} ${className}`}
+      className={`px-3.5 py-1.5 rounded-full flex items-center gap-1.5 text-xs shadow-sm tracking-wide transition-all duration-300 ${bg} ${text} ${className}`}
     >
       {icon}
       <span>{label}</span>

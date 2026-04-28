@@ -13,6 +13,7 @@ import { Label } from "@/_components/ui/label";
 import { Textarea } from "@/_components/ui/textarea";
 import { AppConfigKey } from "@/constants/app.constant";
 import { useLang } from "@/context/lang-context";
+import { parseAbsoluteDate } from "@/lib/utils";
 import { Booking } from "@/models/Booking";
 import { appConfigApi } from "@/services/admin/appConfigApi";
 import { cancel_booking } from "@/services/bookingApi";
@@ -28,6 +29,7 @@ export const BookingCancelSection = ({
   onCancel?: (
     id: number | string,
     data: { reason: string; refundAmount: number | null },
+    newBooking?: Booking,
   ) => void;
 }) => {
   const [open, setOpen] = useState(false);
@@ -63,35 +65,33 @@ export const BookingCancelSection = ({
 
   const calculateRefund = () => {
     const policy =
-      booking.cancellationPolicy &&
-      (booking.cancellationPolicy as any[]).length > 0
-        ? (booking.cancellationPolicy as any[])
+      booking.cancellationPolicy?.length > 0
+        ? booking.cancellationPolicy
         : systemPolicy;
 
     const now = new Date();
-    const checkIn = new Date(booking.checkIn);
+    const vnTimeMs = now.getTime() + 7 * 60 * 60 * 1000;
+    const todayUtcMidnight = Math.floor(vnTimeMs / 86400000) * 86400000;
 
-    const todayStart = new Date(now.setHours(0, 0, 0, 0));
-    const checkInStart = new Date(checkIn.setHours(0, 0, 0, 0));
+    const rawCheckIn = booking.checkIn as any;
+    const checkInStr =
+      rawCheckIn instanceof Date
+        ? rawCheckIn.toISOString()
+        : String(rawCheckIn);
 
-    if (todayStart >= checkInStart) {
-      return 0;
-    }
+    const checkInTime = Date.parse(checkInStr.substring(0, 10) + "T00:00:00Z");
 
-    const diffDays = Math.floor(
-      (checkInStart.getTime() - todayStart.getTime()) / (1000 * 3600 * 24),
-    );
+    if (todayUtcMidnight >= checkInTime) return 0;
 
-    const sortedPolicy = [...policy].sort(
-      (a, b) => b.daysBefore - a.daysBefore,
-    );
+    const diffDays = (checkInTime - todayUtcMidnight) / 86400000;
 
     let refundPercent = 0;
-
-    if (sortedPolicy.length > 0) {
-      for (const rule of sortedPolicy) {
-        if (diffDays >= rule.daysBefore) {
-          refundPercent = rule.refundPercent;
+    if (policy && policy.length > 0) {
+      const sorted = [...policy].sort((a, b) => b.daysBefore - a.daysBefore);
+      for (let i = 0; i < sorted.length; i++) {
+        if (diffDays >= sorted[i].daysBefore) {
+          const rawRate = sorted[i].refundPercent;
+          refundPercent = rawRate > 1 ? rawRate / 100 : rawRate;
           break;
         }
       }
@@ -99,8 +99,11 @@ export const BookingCancelSection = ({
 
     const total =
       (booking as any).totalPrice || (booking as any).totalAmount || 0;
+    const paid = booking.paidAmount || 0;
     const cancellationFee = total * (1 - refundPercent);
-    return Math.max(0, (booking.paidAmount || 0) - cancellationFee);
+
+    const refund = paid - cancellationFee;
+    return refund > 0 ? refund : 0;
   };
 
   const handleCancelClick = () => {
@@ -142,9 +145,11 @@ export const BookingCancelSection = ({
           : undefined,
       );
 
-      toast.success(`Đơn đặt phòng đã được hủy thành công.`);
+      toast.success(
+        res.data?.message || `Đơn đặt phòng đã được hủy thành công.`,
+      );
 
-      onCancel?.(booking.id, { reason, refundAmount });
+      onCancel?.(booking.id, { reason, refundAmount }, res.data?.booking);
       setOpen(false);
       setReason("");
       setBankName("");
@@ -161,7 +166,7 @@ export const BookingCancelSection = ({
     <>
       <Button
         variant="outline"
-        className="h-16 px-8 rounded-3xl border-2 border-red-50 hover:border-red-200 hover:bg-red-50 flex items-center gap-4 group transition-all duration-300"
+        className="w-full justify-start h-16 px-6 sm:px-8 rounded-3xl border-2 border-red-50 shadow-sm hover:shadow-md hover:border-red-200 hover:bg-red-50 flex items-center gap-4 group transition-all duration-300"
         onClick={handleCancelClick}
         disabled={loading}
       >

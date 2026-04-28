@@ -60,16 +60,16 @@ export function usePayment(
         }
         console.log("id: ", id);
       }
+      const finalTotal = bookingData?.totalAmount || room.price * totalNights;
       let amountToPay = 0;
       if (payload.paymentMethod === "BANK_TRANSFER") {
-        amountToPay = room.price * totalNights;
+        amountToPay = finalTotal;
       } else if (payload.paymentMethod === "CASH") {
-        amountToPay = Math.round(room.price * totalNights * 0.3); // 30% deposit
+        amountToPay = Math.round(finalTotal * 0.3);
       }
 
       toast.success("Đang tạo mã thanh toán PayOS...");
       const { url } = await create_payos_link(id, amountToPay);
-      console.log("url: ", url);
       if (url) {
         window.location.href = url;
       } else {
@@ -82,7 +82,10 @@ export function usePayment(
       const message = error?.response?.data?.message;
 
       if (status === 409) {
-        toast.error(message || "Chính sách huỷ phòng vừa được cập nhật, vui lòng kiểm tra lại.");
+        toast.error(
+          message ||
+            "Chính sách huỷ phòng vừa được cập nhật, vui lòng kiểm tra lại.",
+        );
       } else if (status === 500) {
         toast.error("Kết nối mạng đang bị gián đoạn, vui lòng thử lại sau!");
       } else {
@@ -108,11 +111,15 @@ export function usePayment(
       const message = error?.response?.data?.message;
 
       if (status === 409) {
-        toast.error(message || "Chính sách huỷ phòng vừa có thay đổi, vui lòng tải lại!");
+        toast.error(
+          message || "Chính sách huỷ phòng vừa có thay đổi, vui lòng tải lại!",
+        );
       } else if (status === 500) {
         toast.error("Kết nối mạng đang bị gián đoạn, vui lòng thử lại sau!");
       } else {
-        toast.error(message || "Không thể lưu đơn đặt phòng. Vui lòng thử lại!");
+        toast.error(
+          message || "Không thể lưu đơn đặt phòng. Vui lòng thử lại!",
+        );
       }
       throw error;
     }

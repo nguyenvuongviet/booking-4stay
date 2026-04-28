@@ -1,3 +1,4 @@
+import { BookingStatus } from "@/constants";
 import { Room } from "./Room";
 
 interface User {
@@ -7,16 +8,6 @@ interface User {
   phoneNumber: string;
   avatar: string;
 }
-
-export type BookingStatus =
-  | "PENDING"
-  | "CONFIRMED"
-  | "CANCELLED"
-  | "CHECKED_IN"
-  | "CHECKED_OUT"
-  | "PARTIALLY_PAID"
-  | "WAITING_REFUND"
-  | "REFUNDED";
 
 export interface Booking {
   id: number | string;
@@ -31,10 +22,12 @@ export interface Booking {
   createdAt: string;
   updatedAt: string;
   cancelReason: string | null;
-  guestFullName: string;
-  guestEmail: string;
-  guestPhoneNumber: string;
-  specialRequest?: string | null;
+  guestInfo: {
+    fullName: string;
+    email: string;
+    phoneNumber: string;
+    specialRequest?: string | null;
+  };
   paymentMethod: PaymentMethod;
   review: {
     id: number | string;
@@ -43,6 +36,7 @@ export interface Booking {
     createdAt: string;
   } | null;
   isReview: boolean;
+  modifiedCount?: number;
   refundAmount?: number;
   cancellationPolicy?: any;
   bankInfo?: {
@@ -56,4 +50,16 @@ export interface Booking {
   };
   user: User;
   room: Room;
+  logs?: {
+    id: number;
+    action: string;
+    oldCheckIn: string;
+    oldCheckOut: string;
+    newCheckIn: string;
+    newCheckOut: string;
+    oldTotal: number;
+    newTotal: number;
+    note: string;
+    createdAt: string;
+  }[];
 }

@@ -34,7 +34,7 @@ INSERT IGNORE INTO `levels` (`id`, `name`, `minPoints`, `discountPercent`, `maxD
 (4, 'PLATINUM', 1000, 15.00, 1000000.00);
 
 -- 5. Loyalty Program
-INSERT IGNORE INTO `loyalty_program` (`userId`, `levelId`, `points`) VALUES (1, 1, 0), (2, 1, 0), (3, 1, 0);
+INSERT IGNORE INTO `loyalty_program` (`userId`, `levelId`, `points`) VALUES (1, 4, 2400), (2, 1, 0), (3, 1, 0);
 
 -- 6. Payment Methods
 INSERT IGNORE INTO `payment_methods` (`id`, `name`, `description`, `isActive`) VALUES

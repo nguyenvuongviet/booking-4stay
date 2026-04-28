@@ -1,22 +1,18 @@
 import { BadRequestException } from '@nestjs/common';
-import { differenceInDays, format } from 'date-fns';
+import { differenceInDays } from 'date-fns';
+import { toUTCMidnight } from './timezone.util';
 
 export function toISODate(input: Date | string): string {
   if (typeof input === 'string') {
     return input.split('T')[0];
   }
-  return format(input, 'yyyy-MM-dd');
+  return toUTCMidnight(input).toISOString().split('T')[0];
 }
 
 export function getStartOfDayUTC(input: string | Date): Date {
-  const str = toISODate(input);
-  return new Date(`${str}T00:00:00.000Z`);
+  return toUTCMidnight(input);
 }
 
-export function getEndOfDayUTC(input: string | Date): Date {
-  const str = toISODate(input);
-  return new Date(`${str}T23:59:59.999Z`);
-}
 
 export function ensureDateRange(
   checkIn: string | Date,

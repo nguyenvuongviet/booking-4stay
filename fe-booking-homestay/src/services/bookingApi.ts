@@ -129,9 +129,27 @@ export const get_unavailable_dates = async (
     const resp = await api.get(`/bookings/unavailable-days`, {
       params: { roomId, excludeBookingId },
     });
-    return resp.data?.data?.days || []; // trả về mảng ngày
+    return resp.data?.data?.days || [];
   } catch (error) {
     console.error("Get unavailable dates error:", error);
+    throw error;
+  }
+};
+
+export const update_booking = async (
+  bookingId: number | string,
+  data: {
+    checkIn?: string;
+    checkOut?: string;
+    adults?: number;
+    children?: number;
+  },
+) => {
+  try {
+    const resp = await api.patch(`/bookings/${bookingId}`, data);
+    return resp.data || {};
+  } catch (error) {
+    console.error("Update booking error:", error);
     throw error;
   }
 };

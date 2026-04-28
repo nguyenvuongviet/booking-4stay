@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { bookings_status } from '@prisma/client';
 import { sanitizeBooking } from 'src/utils/sanitize/booking.sanitize';
+import { nowVN } from 'src/utils/timezone.util';
 import { AppConfigKey } from '../app-configs/constants/app-config.constant';
 import { PrismaService } from '../prisma/prisma.service';
 import { Role } from '../user/dto/enum.dto';
@@ -59,7 +60,7 @@ export class BookingCancelRefundService {
 
       this.assertCancellable(booking.status as bookings_status);
 
-      const isLastMinute = new Date() >= new Date(booking.checkIn);
+      const isLastMinute = nowVN() >= new Date(booking.checkIn);
 
       let { refundAmount, cancellationFee } =
         await this.calculateRefundAmount(booking);

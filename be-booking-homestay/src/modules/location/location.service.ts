@@ -36,6 +36,8 @@ export class LocationService {
         code: true,
         imageUrl: true,
         countryId: true,
+        latitude: true,
+        longitude: true,
       },
     });
 

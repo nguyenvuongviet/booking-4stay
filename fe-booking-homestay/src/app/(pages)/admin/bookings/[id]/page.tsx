@@ -3,6 +3,7 @@
 import { Button } from "@/_components/ui/button";
 import { Card } from "@/_components/ui/card";
 import { UserAvatar } from "@/_components/UserAvatar";
+import { parseAbsoluteDate } from "@/lib/utils";
 import { formatDate } from "@/lib/utils/date";
 import { getBookingById } from "@/services/admin/bookingsApi";
 import { format } from "date-fns";
@@ -17,14 +18,11 @@ import {
   Moon,
   Users,
   Wallet,
-  History,
-  ArrowRight,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import toast from "react-hot-toast";
 import { RefreshButton } from "../../_components/RefreshButton";
 import { StarRating } from "../../_components/StarRating";
 import {
@@ -116,8 +114,8 @@ export default function BookingDetailPage() {
   const nights = Math.max(
     1,
     Math.round(
-      (new Date(booking.checkOut).getTime() -
-        new Date(booking.checkIn).getTime()) /
+      (parseAbsoluteDate(booking.checkOut).getTime() -
+        parseAbsoluteDate(booking.checkIn).getTime()) /
         (1000 * 60 * 60 * 24),
     ),
   );

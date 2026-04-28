@@ -20,8 +20,8 @@ import { CancelBookingDto } from './dto/cancel-booking.dto';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { ListBookingQuery } from './dto/list-booking.query';
 import { PreCheckDto } from './dto/preCheck-booking.dto';
-import { RescheduleBookingDto } from './dto/reschedule-booking.dto';
 import { RoomAvailabilityDto } from './dto/room-availability.dto';
+import { UpdateBookingDto } from './dto/update-booking.dto';
 
 @ApiTags('bookings')
 @Controller('bookings')
@@ -74,6 +74,17 @@ export class BookingController {
   ) {
     const user = req['user'];
     return this.cancelRefundService.cancel(id, +user.id, user.role, dto);
+  }
+
+  @Patch('/:id')
+  @ApiBearerAuth('AccessToken')
+  async update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateBookingDto,
+    @Req() req: Request,
+  ) {
+    const user = req['user'];
+    return this.bookingService.update(id, +user.id, user.role, dto);
   }
 
   @Get('/:id')

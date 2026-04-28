@@ -1,3 +1,4 @@
+import { BookingStatus } from "@/constants/app.constant";
 import { Room } from "./room";
 
 export interface PaginatedBookings {
@@ -43,15 +44,7 @@ export interface Booking {
   children: number;
   checkIn: string;
   checkOut: string;
-  status:
-    | "PENDING"
-    | "PARTIALLY_PAID"
-    | "CONFIRMED"
-    | "CHECKED_IN"
-    | "CHECKED_OUT"
-    | "CANCELLED"
-    | "WAITING_REFUND"
-    | "REFUNDED";
+  status: BookingStatus;
   totalAmount?: number;
   cancelReason?: string | null;
   paymentMethod?: string;

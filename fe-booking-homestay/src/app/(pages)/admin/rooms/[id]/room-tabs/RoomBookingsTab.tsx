@@ -4,6 +4,7 @@ import { Button } from "@/_components/ui/button";
 import { Card } from "@/_components/ui/card";
 import { formatDate } from "@/lib/utils/date";
 import { Booking } from "@/types/booking";
+import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import {
   ArrowUpDown,
@@ -17,7 +18,6 @@ import {
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { DateRange } from "react-day-picker";
-import ExcelJS from "exceljs";
 import { DateRangePicker } from "../../../_components/DateRangePicker";
 import { Pagination } from "../../../_components/Pagination";
 
@@ -44,7 +44,7 @@ export default function RoomBookingsTab({ bookings }: Props) {
       CHECKED_IN: "bg-blue-100 text-blue-700",
       CHECKED_OUT: "bg-gray-200 text-gray-700",
       CANCELLED: "bg-red-100 text-red-700",
-    }[status] || "bg-gray-100 text-gray-800");
+    })[status] || "bg-gray-100 text-gray-800";
 
   const getNights = (ci: string, co: string) => {
     const d1 = new Date(ci);
@@ -63,12 +63,12 @@ export default function RoomBookingsTab({ bookings }: Props) {
     });
     if (statusFilter !== "all") {
       data = data.filter(
-        (b) => b.status.toLowerCase() === statusFilter.toLowerCase()
+        (b) => b.status.toLowerCase() === statusFilter.toLowerCase(),
       );
     }
     if (dateRange?.from) {
       data = data.filter(
-        (b) => new Date(b.checkIn) >= new Date(dateRange.from!)
+        (b) => new Date(b.checkIn) >= new Date(dateRange.from!),
       );
     }
     if (dateRange?.to)
@@ -77,14 +77,14 @@ export default function RoomBookingsTab({ bookings }: Props) {
       data.sort((a, b) =>
         sortCheckIn === "asc"
           ? +new Date(a.checkIn) - +new Date(b.checkIn)
-          : +new Date(b.checkIn) - +new Date(a.checkIn)
+          : +new Date(b.checkIn) - +new Date(a.checkIn),
       );
     }
     if (sortTotal) {
       data.sort((a, b) =>
         sortTotal === "asc"
           ? (a.totalAmount ?? 0) - (b.totalAmount ?? 0)
-          : (b.totalAmount ?? 0) - (a.totalAmount ?? 0)
+          : (b.totalAmount ?? 0) - (a.totalAmount ?? 0),
       );
     }
     return data;
@@ -136,7 +136,7 @@ export default function RoomBookingsTab({ bookings }: Props) {
       new Blob([buffer], {
         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       }),
-      "bookings.xlsx"
+      "bookings.xlsx",
     );
   };
 
@@ -261,7 +261,7 @@ export default function RoomBookingsTab({ bookings }: Props) {
                   <td className="py-4 px-4 text-center">
                     <span
                       className={`px-3 py-1 rounded-full text-xs font-semibold ${statusColor(
-                        b.status
+                        b.status,
                       )}`}
                     >
                       {b.status}

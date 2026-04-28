@@ -41,7 +41,7 @@ export default function DateRangePicker({
   const { t } = useLang();
 
   const formatLabel = (date?: Date) =>
-    date ? format(date, "MMM dd, yyyy") : "";
+    date ? format(date, "dd/MM/yyyy") : "";
   const parsedSoldOutDates = React.useMemo(
     () =>
       (soldOutDates || []).map(
@@ -115,7 +115,7 @@ export default function DateRangePicker({
       <PopoverTrigger asChild>
         <Button
           variant="outline"
-          className="w-full h-12 px-4 bg-transparent border border-border rounded-3xl hover:border-ring focus:border-ring focus:ring-2 focus:ring-accent hover:bg-transparent text-left flex items-center justify-between"
+          className="relative w-full h-12 px-4 bg-transparent border border-border rounded-3xl hover:border-ring focus:border-ring focus:ring-2 focus:ring-accent hover:bg-transparent text-left flex items-center justify-between"
         >
           <CalendarIcon
             className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground"

@@ -1,8 +1,8 @@
 import { Toaster as ShadcnToaster } from "@/_components/ui/toaster";
-import { NEXT_PUBLIC_GOOGLE_CLIENT_ID } from "@/constants/app.constant";
+
 import { AuthProvider } from "@/context/auth-context";
 import PageTransition from "@/styles/animations/PageTransition";
-import { GoogleOAuthProvider } from "@react-oauth/google";
+import GoogleAuthProviderWrapper from "@/_components/providers/GoogleAuthProviderWrapper";
 import type { Metadata } from "next";
 import { Fira_Mono, Lora,Lexend } from "next/font/google";
 import { Toaster as HotToaster } from "react-hot-toast";
@@ -43,11 +43,11 @@ export default function RootLayout({
         className={`${lexend.variable} ${firaMono.variable} ${lora.variable} antialiased`}
       >
         <LangProvider>
-          <GoogleOAuthProvider clientId={NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? ""}>
+          <GoogleAuthProviderWrapper>
             <PageTransition>
               <AuthProvider>{children}</AuthProvider>
             </PageTransition>
-          </GoogleOAuthProvider>
+          </GoogleAuthProviderWrapper>
           <ShadcnToaster />
           <HotToaster
             toastOptions={{ duration: 4000 }}
