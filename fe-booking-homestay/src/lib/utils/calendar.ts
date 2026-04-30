@@ -1,6 +1,6 @@
 export const getMonthDays = (year: number, month: number) => {
   const firstDay = new Date(year, month, 1);
-  
+
   // vị trí của ngày 1 trong tuần (0-6, chủ nhật là 0)
   const startDay = (firstDay.getDay() + 6) % 7;
 
@@ -39,11 +39,11 @@ export const getMonthDays = (year: number, month: number) => {
 };
 
 export const toDateKey = (dateInput: Date | string | number) => {
-    const date = new Date(dateInput);
+  const date = new Date(dateInput);
 
-    return new Date(
-        date.getFullYear(),
-        date.getMonth(),
-        date.getDate()
-    ).getTime();
+  return new Date(
+    date.getFullYear(),
+    date.getMonth(),
+    date.getDate(),
+  ).getTime();
 };

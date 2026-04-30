@@ -27,47 +27,12 @@ export const room_detail = async (id: number | string) => {
   }
 };
 
-export const location = async () => {
-  try {
-    const resp = await api.get(`/location/provinces/search`);
-    return resp.data;
-  } catch (error) {
-    console.error("list location error: ", error);
-    throw error;
-  }
-};
-
-export const search_location = async (keyword: string) => {
-  try {
-    if (!keyword.trim()) {
-      return { data: { data: [] } };
-    }
-
-    const resp = await api.get("/location/provinces/search", {
-      params: {
-        keyword: keyword.trim(),
-      },
-    });
-
-    return {
-      data: {
-        data: Array.isArray(resp.data?.data?.data)
-          ? resp.data.data.data
-          : resp.data?.data || [],
-      },
-    };
-  } catch (error) {
-    console.error("search location error:", error);
-    return { data: { data: [] } };
-  }
-};
-
 export const search_room = async (
   keyword: string,
   adults: number,
   children: number,
   page: number = 1,
-  pageSize: number = 6
+  pageSize: number = 6,
 ) => {
   try {
     const resp = await api.get("/room/all", {
@@ -81,7 +46,10 @@ export const search_room = async (
       total: mainData.total || 0,
       page: mainData.page || page,
     };
-  } catch (error) {
+  } catch (error: any) {
+    if (error.response?.status === 404) {
+      return { rooms: [], totalPages: 1, total: 0, page };
+    }
     console.error("Get list room error:", error);
     return { rooms: [], totalPages: 1, total: 0, page };
   }
@@ -90,7 +58,7 @@ export const search_room = async (
 export const room_available = async (
   roomId: number | string,
   checkIn: string,
-  checkOut: string
+  checkOut: string,
 ) => {
   try {
     const resp = await api.get(`bookings/rooms/${roomId}/availability`, {
@@ -109,10 +77,14 @@ export const room_available = async (
 export const room_preview = async (
   roomId: number,
   checkIn: string,
-  checkOut: string
+  checkOut: string,
 ) => {
   try {
-    const resp = await api.post(`bookings/preview`, { roomId, checkIn, checkOut });
+    const resp = await api.post(`bookings/preview`, {
+      roomId,
+      checkIn,
+      checkOut,
+    });
     return resp.data?.data || {};
   } catch (error) {
     console.error("Check room preview error:", error);
@@ -123,7 +95,7 @@ export const room_preview = async (
 export const get_review = async (
   roomId: number | string,
   page = 1,
-  pageSize = 3
+  pageSize = 3,
 ) => {
   try {
     const resp = await api.get(`review/rooms/${roomId}`, {

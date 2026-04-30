@@ -1,27 +1,26 @@
 "use client";
 
+import { CancellationPolicy } from "@/_components/CancellationPolicy";
 import { Button } from "@/_components/ui/button";
 import { Card } from "@/_components/ui/card";
+import { useCalendarPricing } from "@/_hooks/useCalendarPricing";
 import { getAmenityIcon } from "@/constants/amenity-icons";
-import { mockRooms } from "@/constants/la-lo";
 import { useAuth } from "@/context/auth-context";
 import { useLang } from "@/context/lang-context";
 import { Room } from "@/models/Room";
-import { get_unavailable_dates } from "@/services/bookingApi";
 import { room_available, room_detail, room_preview } from "@/services/roomApi";
-import { format, parse } from "date-fns";
+import { addMonths, format, parse } from "date-fns";
 import { Loader2, Mail, MapPin, Phone, Star, Users } from "lucide-react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import GuestPicker from "../../../../_components/GuestPicker";
 import Header from "../../../../_components/Header";
-import MapRooms from "../../../../_components/MapMarker";
+import { MapMarker } from "../../../../_components/map/MapMarker";
 import { PhotoGalleryModal } from "../../../../_components/PhotoGalleryModal";
 import DateRangePicker from "../../../../_components/ui/date-range-picker";
 import { ReviewList } from "../_component/ReviewList";
-import { CancellationPolicy } from "@/_components/CancellationPolicy";
 
 interface RoomDetailClientProps {
   roomId: number;
@@ -42,19 +41,17 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
   const [children, setChildren] = useState(0);
   const [showAllAmenities, setShowAllAmenities] = useState(false);
   const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
-  const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [showFullOverview, setShowFullOverview] = useState(false);
-  const [soldOutDates, setSoldOutDates] = useState<Date[]>([]);
   const [highlightDatePicker, setHighlightDatePicker] = useState(false);
-  const [roomPrices, setRoomPrices] = useState<{ date: string; price: number }[]>([]);
-  const [roomPreview, setRoomPreview] = useState<{ priceSummary: { totalPrice: number, rawTotal: number, discountPercent: number } } | null>(null);
-  const mockRoomPrices = [
-    { date: "2026-04-01", price: 500000 },
-    { date: "2026-04-02", price: 520000 },
-    { date: "2026-04-10", price: 850000 },
-    { date: "2026-04-04", price: 700000 },
-    { date: "2026-04-05", price: 700000 },
-  ];
+  const [roomPreview, setRoomPreview] = useState<{
+    priceSummary: {
+      totalPrice: number;
+      rawTotal: number;
+      discountPercent: number;
+    };
+  } | null>(null);
+  const [currentMonth, setCurrentMonth] = useState(new Date());
 
   // fetch data
   useEffect(() => {
@@ -62,13 +59,7 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
       try {
         setLoading(true);
         const dataRoom = await room_detail(roomId);
-        const dataDate = await get_unavailable_dates(roomId);
         setRoom(dataRoom);
-        setRoomPrices(mockRoomPrices);
-        const parsedDates = dataDate.map(
-          (d: string) => new Date(d + "T00:00:00")
-        );
-        setSoldOutDates(dataDate);
 
         // enforce selected guests to room limits
         if (dataRoom.adultCapacity && adults > dataRoom.adultCapacity) {
@@ -85,6 +76,24 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
       }
     })();
   }, [roomId]);
+
+  const current = currentMonth;
+  const next = addMonths(current, 1);
+  const months = useMemo(() => {
+    const current = currentMonth;
+    const next = addMonths(current, 1);
+
+    return [
+      { month: current.getMonth() + 1, year: current.getFullYear() },
+      { month: next.getMonth() + 1, year: next.getFullYear() },
+    ];
+  }, [currentMonth]);
+
+  const { statusMap, getPrice } = useCalendarPricing({
+    roomId,
+    defaultPrice: room?.price ?? 0,
+    months,
+  });
 
   // Load params from URL
   useEffect(() => {
@@ -119,13 +128,13 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
       `/room/${roomId}?${new URLSearchParams(params).toString()}`,
       {
         scroll: false,
-      }
+      },
     );
   };
 
   const amenitiesToDisplay = showAllAmenities
-    ? room?.amenities ?? []
-    : room?.amenities?.slice(0, 5) ?? [];
+    ? (room?.amenities ?? [])
+    : (room?.amenities?.slice(0, 5) ?? []);
 
   const checkRoomPreview = async (inDate?: Date, outDate?: Date) => {
     const checkInDate = inDate || checkIn;
@@ -138,7 +147,7 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
       const data = await room_preview(
         Number(roomId),
         format(checkInDate, "yyyy-MM-dd"),
-        format(checkOutDate, "yyyy-MM-dd")
+        format(checkOutDate, "yyyy-MM-dd"),
       );
       setRoomPreview(data);
 
@@ -151,7 +160,7 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
       console.log("Room preview:", data);
       if (!data.available)
         toast.error(
-          "This room is not available for the selected dates. Please choose different dates."
+          "This room is not available for the selected dates. Please choose different dates.",
         );
 
       updateURL({
@@ -192,12 +201,12 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
       const data = await room_available(
         roomId,
         format(checkIn, "yyyy-MM-dd"),
-        format(checkOut, "yyyy-MM-dd")
+        format(checkOut, "yyyy-MM-dd"),
       );
       setAvailable(data.available);
       if (!data.available) {
         toast.error(
-          "This room is not available for the selected dates. Please choose different dates."
+          "This room is not available for the selected dates. Please choose different dates.",
         );
         return;
       }
@@ -209,13 +218,25 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
           ...(checkOut ? { checkOut: format(checkOut, "yyyy-MM-dd") } : {}),
           adults: String(adults),
           children: String(children),
-        })}`
+        })}`,
       );
     } catch (error) {
       console.error(error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleMonthChange = (date: Date) => {
+    setCurrentMonth((prev) => {
+      if (
+        prev.getMonth() === date.getMonth() &&
+        prev.getFullYear() === date.getFullYear()
+      ) {
+        return prev;
+      }
+      return date;
+    });
   };
 
   if (loading)
@@ -245,35 +266,35 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
                   <img
                     src={room.images?.main || "/default.jpg"}
                     alt="room image"
-                    className="w-full h-full object-cover" // scale vừa container
+                    className="w-full h-full object-cover cursor-pointer hover:scale-105 transition" // scale vừa container
+                    onClick={() => {
+                      setSelectedImage(room.images?.main || null);
+                      setIsPhotoModalOpen(true);
+                    }}
                   />
                 </div>
                 {room.images?.gallery
-                  .filter((img) => !img.isMain)
+                  ?.filter((img) => !img.isMain)
                   .slice(0, 4)
-                  .map((img) => (
-                    <div key={img.id} className="overflow-hidden rounded">
+                  .map((img, index) => (
+                    <div key={img.id} className="overflow-hidden rounded ">
                       <img
                         src={img.url || "/placeholder.svg"}
                         alt={`Room ${img.id}`}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover cursor-pointer hover:scale-105 transition"
+                        onClick={() => {
+                          setSelectedImage(img.url || null);
+                          setIsPhotoModalOpen(true);
+                        }}
                       />
                     </div>
                   ))}
               </div>
 
-              <Button
-                onClick={() => setIsPhotoModalOpen(true)}
-                variant="secondary"
-                className="absolute bottom-4 right-4 bg-background hover:cursor-pointer rounded-xl"
-              >
-                {t("More photos")}
-              </Button>
-
               {room?.images?.gallery && (
                 <PhotoGalleryModal
                   images={room.images.gallery}
-                  initialIndex={currentPhotoIndex}
+                  selectedUrl={selectedImage}
                   isOpen={isPhotoModalOpen}
                   onClose={() => setIsPhotoModalOpen(false)}
                 />
@@ -406,7 +427,9 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
               <div className="mb-4">
                 <div className="flex items-baseline mb-1 gap-2">
                   <span className="text-3xl elegant-sans text-secondary-foreground">
-                    {roomPreview?.priceSummary?.totalPrice?.toLocaleString() || room.price.toLocaleString()} VND
+                    {roomPreview?.priceSummary?.totalPrice?.toLocaleString() ||
+                      room.price.toLocaleString()}{" "}
+                    VND
                   </span>
                   {roomPreview?.priceSummary?.discountPercent ? (
                     <span className="text-sm elegant-sans text-green-600 align-top">
@@ -415,9 +438,11 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
                   ) : null}
                 </div>
                 <div className="flex items-baseline gap-2 mb-1">
-                  {roomPreview?.priceSummary?.discountPercent !== undefined && roomPreview?.priceSummary?.discountPercent !== 0 ? (
+                  {roomPreview?.priceSummary?.discountPercent !== undefined &&
+                  roomPreview?.priceSummary?.discountPercent !== 0 ? (
                     <span className="text-xl elegant-subheading text-muted line-through">
-                      {roomPreview?.priceSummary?.rawTotal?.toLocaleString()} VND
+                      {roomPreview?.priceSummary?.rawTotal?.toLocaleString()}{" "}
+                      VND
                     </span>
                   ) : null}
                 </div>
@@ -461,9 +486,9 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
                         ? { from: checkIn, to: checkOut }
                         : undefined
                     }
-                    soldOutDates={soldOutDates}
+                    statusMap={statusMap}
                     defaultPrice={room?.price}
-                    roomPriceDates={roomPrices}
+                    getPrice={getPrice}
                     onChange={(range) => {
                       setCheckIn(range?.from ?? null);
                       setCheckOut(range?.to ?? null);
@@ -471,6 +496,7 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
                         checkRoomPreview(range.from, range.to);
                       }
                     }}
+                    onMonthChange={handleMonthChange}
                   />
                 </div>
                 <div className="relative md:col-span-3">
@@ -486,10 +512,9 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
                     maxAdults={room.adultCapacity}
                     maxChildren={room.childCapacity ?? 0}
                     onLimitReached={(type, limit) => {
-                      const label = type === "adults" ? t("adults") : t("children");
-                      toast.error(
-                        "Đã đạt tối đa " + limit + " " + label
-                      );
+                      const label =
+                        type === "adults" ? t("adults") : t("children");
+                      toast.error("Đã đạt tối đa " + limit + " " + label);
                     }}
                   />
                 </div>
@@ -500,7 +525,7 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
                 onClick={() => {
                   if (available === false) {
                     toast.error(
-                      "This room is sold out. Please choose other dates."
+                      "This room is sold out. Please choose other dates.",
                     );
                     return;
                   }
@@ -511,10 +536,11 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
                   }
                 }}
                 disabled={available === false}
-                className={`w-full h-10 rounded-3xl mb-6 hover:bg-primary/80 ${available === false
-                  ? "bg-muted cursor-not-allowed hover:bg-muted"
-                  : ""
-                  }`}
+                className={`w-full h-10 rounded-3xl mb-6 hover:bg-primary/80 ${
+                  available === false
+                    ? "bg-muted cursor-not-allowed hover:bg-muted"
+                    : ""
+                }`}
               >
                 {available === false ? t("sold out") : t("Select")}
               </Button>
@@ -538,7 +564,9 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
               </div>
 
               {/* Map */}
-              <MapRooms rooms={mockRooms[Number(roomId)]} height="h-[30vh]" />
+              <div className="h-[30vh] rounded-lg shadow-md">
+                <MapMarker rooms={[room]} />
+              </div>
 
               {/* Policy */}
               <div className="p-4 border-t">

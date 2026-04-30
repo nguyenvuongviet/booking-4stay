@@ -87,7 +87,7 @@ INSERT IGNORE INTO `room_amenities` (`roomId`, `amenityId`) VALUES
 -- 12. Room Images
 INSERT IGNORE INTO `room_images` (`id`, `roomId`, `imageUrl`, `isMain`, `position`, `createdAt`, `updatedAt`) VALUES
 (1, 1, '4stay/rooms/4Stay Central Saigon/bequ4bfvubsiki7zredc', 1, 1, '2025-10-26 00:42:49', '2025-10-26 00:42:49'),
-(2, 1, '4stay/rooms/4Stay Central Saigon/il7dpms6maysv6ffx9cw', 0, 2, '2025-10-26 00:42:49', '2025-10-26 00:42:49'),
+(2, 1, '4stay/rooms/4Stay Central Saigon/xszxsgwtktrh2iw0abax', 0, 2, '2025-10-26 00:42:49', '2025-10-26 00:42:49'),
 (3, 4, '4stay/rooms/Saigon Luxury Loft/rc7m8hcphjma2nenxdno', 1, 1, '2025-11-29 12:48:35', '2025-11-29 12:48:35'),
 (4, 4, '4stay/rooms/Saigon Luxury Loft/jroulxfxuyqlmz1ocnbe', 0, 2, '2025-11-29 12:48:35', '2025-11-29 12:48:35'),
 (5, 4, '4stay/rooms/Saigon Luxury Loft/a2fkpib2cjjii7rg0bmj', 0, 3, '2025-11-29 12:48:35', '2025-11-29 12:48:35'),

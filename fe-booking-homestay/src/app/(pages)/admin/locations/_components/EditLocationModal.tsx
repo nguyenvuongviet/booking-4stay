@@ -20,9 +20,7 @@ const MapPicker = dynamic(
   () => import("../../_components/MapPicker").then((m) => m.MapPicker),
   {
     ssr: false,
-    loading: () => (
-      <div className="h-[200px] bg-muted rounded-lg animate-pulse" />
-    ),
+    loading: () => <div className="h-50 bg-muted rounded-lg animate-pulse" />,
   },
 );
 
@@ -108,8 +106,7 @@ export function EditLocationModal({
 
     const payload: any = {
       name,
-      existingParentId:
-        item?.countryId || item?.provinceId || null,
+      existingParentId: item?.countryId || item?.provinceId || null,
     };
 
     if (isCountry) payload.code = code;

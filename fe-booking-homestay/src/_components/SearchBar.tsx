@@ -2,10 +2,10 @@
 
 import { Button } from "@/_components/ui/button";
 import { Input } from "@/_components/ui/input";
+import { useLang } from "@/context/lang-context";
 import { Location } from "@/models/Location";
-import { location, search_location } from "@/services/roomApi";
+import { get_location, search_location } from "@/services/locationApi";
 import { format } from "date-fns";
-import { useTransform, useViewportScroll } from "framer-motion";
 import { MapPin, Search, Users } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -13,7 +13,6 @@ import "react-datepicker/dist/react-datepicker.css";
 import GuestPicker from "./GuestPicker";
 import LocationSuggestions from "./LocationSuggestions";
 import DateRangePicker from "./ui/date-range-picker";
-import { useLang } from "@/context/lang-context";
 
 interface SearchBarProps {
   compact?: boolean; // nếu true: mini bar
@@ -31,16 +30,16 @@ export function SearchBar({ compact = false }: SearchBarProps) {
   const [error, setError] = useState("");
   const ci = searchParams.get("checkIn");
   const co = searchParams.get("checkOut");
-  const {t} = useLang();
+  const { t } = useLang();
 
   const [checkIn, setCheckIn] = useState<Date | null>(
-    ci ? new Date(ci + "T00:00") : null
+    ci ? new Date(ci + "T00:00") : null,
   );
   const [checkOut, setCheckOut] = useState<Date | null>(
-    co ? new Date(co + "T00:00") : null
+    co ? new Date(co + "T00:00") : null,
   );
-  // scroll smooth animation
-  const { scrollY } = useViewportScroll();
+
+  const [activeIndex, setActiveIndex] = useState(-1);
 
   useEffect(() => {
     const loc = searchParams.get("location");
@@ -61,17 +60,17 @@ export function SearchBar({ compact = false }: SearchBarProps) {
   const fetchLocationSuggestions = useCallback(async (query: string) => {
     if (!query.trim()) {
       //input rỗng
-      const res = await location();
-      const allData = res?.data?.data || [];
+      const res = await get_location(1);
+      const allData = res || [];
       setLocations(allData);
-      setShowSuggestions(allData.length > 0);
+      setShowSuggestions(true);
     } else {
       //có text
       const res = await search_location(query);
       const data = res.data?.data || [];
       setLocations(data);
       setError("");
-      setShowSuggestions(data.length > 0);
+      setShowSuggestions(true);
     }
   }, []);
 
@@ -86,12 +85,14 @@ export function SearchBar({ compact = false }: SearchBarProps) {
 
   const handleFocusLocation = () => {
     setShowSuggestions(true);
+    setActiveIndex(-1);
     fetchLocationSuggestions(locationInput);
   };
 
   const handleSelectLocation = (loc: Location) => {
     setLocationInput(loc.name || "");
-    setShowSuggestions(false);
+    setTimeout(() => setShowSuggestions(true), 0);
+    handleSearch(loc.name);
   };
 
   useEffect(() => {
@@ -100,33 +101,34 @@ export function SearchBar({ compact = false }: SearchBarProps) {
     return () => window.removeEventListener("click", handleClickOutside);
   }, []);
 
-  const handleSearch = async () => {
-    setLoading(true);
-    try {
-      if (!locationInput || locationInput.trim() === "") {
-        // setError("Please enter a location.");
-        setShowSuggestions(false);
-        locationInputRef.current?.focus();
+  const handleSearch = (customLocation?: string) => {
+    const loc = customLocation || locationInput;
 
-        return;
-      }
-      const query = new URLSearchParams({
-        location: locationInput,
-        ...(checkIn ? { checkIn: format(checkIn, "yyyy-MM-dd") } : {}),
-        ...(checkOut ? { checkOut: format(checkOut, "yyyy-MM-dd") } : {}),
-        adults: adults.toString(),
-        children: children.toString(),
-      }).toString();
-
-      setTimeout(() => {
-        router.push(`/room?${query}`);
-      }, 300);
-    } catch (error) {
-      console.error("search room error: ", error);
-    } finally {
-      setLoading(false);
+    if (!loc.trim()) {
+      locationInputRef.current?.focus();
+      return;
     }
+
+    const query = new URLSearchParams({
+      location: loc,
+      ...(checkIn ? { checkIn: format(checkIn, "yyyy-MM-dd") } : {}),
+      ...(checkOut ? { checkOut: format(checkOut, "yyyy-MM-dd") } : {}),
+      adults: adults.toString(),
+      children: children.toString(),
+    }).toString();
+
+    router.push(`/room?${query}`);
+    router.refresh();
   };
+
+  useEffect(() => {
+    const el = document.getElementById(`loc-${activeIndex}`);
+    el?.scrollIntoView({ block: "nearest" });
+  }, [activeIndex]);
+
+  useEffect(() => {
+    setActiveIndex(-1);
+  }, [locations]);
 
   return (
     <div
@@ -149,9 +151,47 @@ export function SearchBar({ compact = false }: SearchBarProps) {
           <Input
             ref={locationInputRef}
             value={locationInput}
-            onChange={(e) => setLocationInput(e.target.value)}
+            onChange={(e) => {
+              setLocationInput(e.target.value);
+              setActiveIndex(-1);
+              setError("");
+              if (e.target.value.trim() === "") {
+                setShowSuggestions(true);
+                fetchLocationSuggestions("");
+              }
+            }}
             onFocus={handleFocusLocation}
             onClick={(e) => e.stopPropagation()}
+            onKeyDown={(e) => {
+              if (!showSuggestions) return;
+
+              if (e.key === "ArrowDown") {
+                e.preventDefault();
+                setActiveIndex((prev) =>
+                  prev < locations.length - 1 ? prev + 1 : 0,
+                );
+              }
+
+              if (e.key === "ArrowUp") {
+                e.preventDefault();
+                setActiveIndex((prev) =>
+                  prev > 0 ? prev - 1 : locations.length - 1,
+                );
+              }
+
+              if (e.key === "Enter") {
+                e.preventDefault();
+
+                if (locations.length > 0) {
+                  const selected =
+                    activeIndex >= 0 ? locations[activeIndex] : locations[0];
+
+                  handleSelectLocation(selected);
+                } else {
+                  handleSearch(locationInput);
+                }
+              }
+            }}
             placeholder={t("Where are you going?")}
             className="pl-10 h-12 bg-card elegant-subheading rounded-4xl placeholder:text-muted border border-border text-[15px]"
           />
@@ -161,6 +201,7 @@ export function SearchBar({ compact = false }: SearchBarProps) {
             locations={locations}
             showSuggestions={showSuggestions}
             onSelect={handleSelectLocation}
+            activeIndex={activeIndex}
           />
         </div>
 
@@ -190,12 +231,13 @@ export function SearchBar({ compact = false }: SearchBarProps) {
           />
         </div>
         <Button
-          onClick={handleSearch}
-          className={`h-12 rounded-3xl bg-primary hover:bg-primary/80 ${
-            compact
-              ? "w-12 p-0 flex justify-center items-center"
-              : "elegant-subheading text-base"
-          }`}
+          onClick={() => handleSearch(locationInput)}
+          className={`h-12 rounded-3xl bg-primary hover:bg-primary/80 
+            ${
+              compact
+                ? "w-12 p-0 flex justify-center items-center"
+                : "elegant-subheading text-base"
+            }`}
         >
           <Search size={20} />
           {!compact && <span>{t("search")}</span>}

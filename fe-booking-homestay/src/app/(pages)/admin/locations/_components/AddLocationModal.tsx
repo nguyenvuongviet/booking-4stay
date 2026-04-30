@@ -20,9 +20,7 @@ const MapPicker = dynamic(
   () => import("../../_components/MapPicker").then((m) => m.MapPicker),
   {
     ssr: false,
-    loading: () => (
-      <div className="h-[200px] bg-muted rounded-lg animate-pulse" />
-    ),
+    loading: () => <div className="h-50 bg-muted rounded-lg animate-pulse" />,
   },
 );
 

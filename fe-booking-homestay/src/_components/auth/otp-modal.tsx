@@ -3,7 +3,7 @@
 import { Button } from "@/_components/ui/button";
 import { useAuth } from "@/context/auth-context";
 import { useLang } from "@/context/lang-context";
-import { active_account, forgot_password, verify_otp } from "@/services/authApi";
+import { active_account, forgot_password } from "@/services/authApi";
 import { X } from "lucide-react";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
@@ -56,10 +56,9 @@ export default function OTPModals({
 
     try {
       await verifySignup();
-
-      toast.success("Xác thực OTP thành công!");
-
+      onSuccess(otpCode);
       setShow(false);
+      toast.success("Đăng ký thành công!");
     } catch (err: any) {
       setApiError(err?.response?.data?.message || "Mã OTP không hợp lệ!");
       setOtpValues(Array(6).fill(""));
@@ -68,14 +67,14 @@ export default function OTPModals({
   };
 
   const handleSendOtp = async (e: React.FormEvent) => {
-      e.preventDefault();
-      setApiError("");
-      try {
-        await forgot_password({ email: email.trim() });
-      } catch (error: any) {
-        setApiError(error.response?.data?.message || "Failed to send OTP!");
-      }
-    };
+    e.preventDefault();
+    setApiError("");
+    try {
+      await forgot_password({ email: email.trim() });
+    } catch (error: any) {
+      setApiError(error.response?.data?.message || "Failed to send OTP!");
+    }
+  };
 
   const handleOtpChange = (index: number, value: string) => {
     if (!/^\d?$/.test(value)) return;
@@ -89,7 +88,6 @@ export default function OTPModals({
     }
   };
 
-
   const handleOtpPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
     e.preventDefault();
     const pasteData = e.clipboardData.getData("Text").trim();
@@ -99,14 +97,16 @@ export default function OTPModals({
     const newOtpValues = [...otpValues];
     for (let i = 0; i < 6; i++) {
       newOtpValues[i] = pasteData[i] || "";
-      const input = document.getElementById(`otp-${i}`) as HTMLInputElement | null;
+      const input = document.getElementById(
+        `otp-${i}`,
+      ) as HTMLInputElement | null;
       if (input) input.value = newOtpValues[i];
     }
 
     setOtpValues(newOtpValues);
 
     // focus ô trống đầu tiên
-    const firstEmptyIndex = newOtpValues.findIndex(v => !v);
+    const firstEmptyIndex = newOtpValues.findIndex((v) => !v);
     if (firstEmptyIndex !== -1) {
       const nextInput = document.getElementById(`otp-${firstEmptyIndex}`);
       nextInput?.focus();
@@ -121,10 +121,7 @@ export default function OTPModals({
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
       <div className="bg-white rounded-xl p-8 shadow-xl w-full max-w-md">
         <div className="flex items-center justify-center mb-4 relative">
-          <button
-            className="absolute right-0"
-            onClick={() => setShow(false)}
-          >
+          <button className="absolute right-0" onClick={() => setShow(false)}>
             <X size={24} />
           </button>
           <h2 className="text-3xl elegant-heading text-primary text-center">
@@ -168,9 +165,7 @@ export default function OTPModals({
         </Button>
 
         <div className="text-center">
-          <span className="text-muted-foreground text-sm">
-            {t("no_code")}
-          </span>
+          <span className="text-muted-foreground text-sm">{t("no_code")}</span>
           <button
             type="button"
             className="text-primary text-sm elegant-sans hover:underline"
@@ -180,6 +175,6 @@ export default function OTPModals({
           </button>
         </div>
       </div>
-    </div >
+    </div>
   );
 }

@@ -8,6 +8,7 @@ import { ArrowLeft, Calendar, Pencil, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { use, useState } from "react";
+import CalendarGrid from "../../_components/calendar/CalendarGrid";
 import { RefreshButton } from "../../_components/RefreshButton";
 import { RoomFormModal } from "../_components/RoomFormModal";
 import { UpdateAmenitiesModal } from "./_components/UpdateAmenitiesModal";
@@ -18,18 +19,25 @@ import RoomBookingsTab from "./room-tabs/RoomBookingsTab";
 import RoomImagesTab from "./room-tabs/RoomImagesTab";
 import RoomInfoTab from "./room-tabs/RoomInfoTab";
 import RoomReviewsTab from "./room-tabs/RoomReviewsTab";
-import CalendarGrid from "../../_components/calendar/CalendarGrid";
 
 export default function RoomDetailPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ id: number | string }>;
 }) {
   const { id } = use(params);
   const router = useRouter();
 
-  const { room, bookings, reviews, soldOutDates, roomPrices, loading, reload, handleDelete } =
-    useRoomDetail(Number(id), () => router.push("/admin/rooms"));
+  const {
+    room,
+    bookings,
+    reviews,
+    soldOutDates,
+    roomPrices,
+    loading,
+    reload,
+    handleDelete,
+  } = useRoomDetail(Number(id), () => router.push("/admin/rooms"));
 
   const extras = useRoomExtrasForm(Number(id));
 
@@ -121,15 +129,10 @@ export default function RoomDetailPage({
 
       <details className="shadow rounded-2xl p-3 bg-card px-6">
         <summary className="cursor-pointer font-semibold">
-          <Calendar className="w-6 h-6 inline-block mx-2" /> Lịch phòng 
+          <Calendar className="w-6 h-6 inline-block mx-2" /> Lịch phòng
         </summary>
         <div className="mt-4">
-          <CalendarGrid 
-            soldOutDates={soldOutDates} 
-            defaultPrice={defaultPrice} 
-            roomPriceDates={roomPrices} 
-            bookings={bookings}
-          />
+          <CalendarGrid roomId={id} defaultPrice={defaultPrice} />
         </div>
       </details>
 

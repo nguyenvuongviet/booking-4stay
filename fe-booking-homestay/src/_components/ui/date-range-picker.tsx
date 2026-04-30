@@ -8,6 +8,7 @@ import {
   PopoverTrigger,
 } from "@/_components/ui/popover";
 import { useLang } from "@/context/lang-context";
+import { toDateKey } from "@/lib/utils/calendar";
 import { addMonths, format } from "date-fns";
 import { Calendar as CalendarIcon } from "lucide-react";
 import * as React from "react";
@@ -17,20 +18,22 @@ import toast from "react-hot-toast";
 interface DateRangePickerProps {
   id?: number | string;
   value?: DateRange;
-  soldOutDates?: Date[];
+  statusMap?: Map<number, "AVAILABLE" | "BOOKED" | "BLOCKED" >;
   defaultPrice?: number;
-  roomPriceDates?: { date: string; price: number }[];
+  getPrice?: (date: Date) => number;
   onChange?: (range: DateRange | undefined) => void;
+  onMonthChange?: (date: Date) => void;
   autoClose?: boolean;
 }
 
 export default function DateRangePicker({
   id,
   value,
-  soldOutDates,
+  statusMap,
   defaultPrice,
-  roomPriceDates,
+  getPrice,
   onChange,
+  onMonthChange,
   autoClose = true,
 }: DateRangePickerProps) {
   const [open, setOpen] = React.useState(false);
@@ -41,35 +44,19 @@ export default function DateRangePicker({
   const { t } = useLang();
 
   const formatLabel = (date?: Date) =>
-    date ? format(date, "dd/MM/yyyy") : "";
-  const parsedSoldOutDates = React.useMemo(
-    () =>
-      (soldOutDates || []).map(
-        (d) => (d instanceof Date ? d : new Date(d + "T00:00:00"))
-      ),
-    [soldOutDates]
-  );
+    date ? format(date, "MMM dd, yyyy") : "";
 
-  const priceMap = React.useMemo(() => {
-    const map = new Map<string, number>();
-
-    roomPriceDates?.forEach((item) => {
-      const key = new Date(item.date).toDateString();
-      map.set(key, item.price);
-    });
-
-    return map;
-  }, [roomPriceDates]);
-
-  const getPrice = (date: Date) => {
-    return priceMap.get(date.toDateString()) ?? defaultPrice ?? 0;
+  const isSoldOut = (date: Date) => {
+    if (!statusMap) return false;
+    const status = statusMap.get(toDateKey(date));
+    return status === "BOOKED"|| status === "BLOCKED" ;
   };
 
   const isRangeValid = (from: Date, to: Date) => {
     let d = new Date(from);
-    // Kiểm tra từ from đến to-1 (vì to là checkout date, không lưu trú ngày đó)
+
     while (d < to) {
-      if (soldOutDates?.some((date) => format(date, "MMM dd, yyyy") === formatLabel(d))) return false;
+      if (isSoldOut(d)) return false;
       d.setDate(d.getDate() + 1);
     }
 
@@ -107,7 +94,7 @@ export default function DateRangePicker({
       if (autoClose && newRange.from && newRange.to)
         setOpen(false);
     },
-    [selectedRange, onChange, autoClose, soldOutDates]
+    [selectedRange, onChange, autoClose, statusMap]
   );
 
   return (
@@ -115,7 +102,7 @@ export default function DateRangePicker({
       <PopoverTrigger asChild>
         <Button
           variant="outline"
-          className="relative w-full h-12 px-4 bg-transparent border border-border rounded-3xl hover:border-ring focus:border-ring focus:ring-2 focus:ring-accent hover:bg-transparent text-left flex items-center justify-between"
+          className="w-full h-12 px-4 bg-transparent border border-border rounded-3xl hover:border-ring focus:border-ring focus:ring-2 focus:ring-accent hover:bg-transparent text-left flex items-center justify-between"
         >
           <CalendarIcon
             className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground"
@@ -148,17 +135,20 @@ export default function DateRangePicker({
               onSelect={(range) => handlePick(undefined, range)}
               month={i === 0 ? currentMonth : addMonths(currentMonth, 1)}
               onMonthChange={
-                (date) =>
-                  i === 0
-                    ? setCurrentMonth(date) // prev bên trái
-                    : setCurrentMonth(addMonths(date, -1)) // next bên phải
+                (date) => {
+                  if (i === 0) {
+                    setCurrentMonth(date);
+                    onMonthChange?.(date); 
+                  } else {
+                    const prevMonth = addMonths(date, -1);
+                    setCurrentMonth(prevMonth);
+                    onMonthChange?.(prevMonth); 
+                  }
+                }
               }
               disabled={[{ before: new Date() }]}
               modifiers={{
-                soldOut: (date) =>
-                  parsedSoldOutDates.some(
-                    (d) => d.toDateString() === date.toDateString()
-                  ),
+                soldOut: (date) => isSoldOut(date),
               }}
               modifiersClassNames={{
                 soldOut: "sold-out-day",

@@ -83,7 +83,14 @@ function DraggableMarker({
 const DEFAULT_CENTER: [number, number] = [16.0, 108.0];
 const DEFAULT_ZOOM = 6;
 
-export function MapPicker({ lat, lng, address, wardName, provinceName, onChange }: Props) {
+export function MapPicker({
+  lat,
+  lng,
+  address,
+  wardName,
+  provinceName,
+  onChange,
+}: Props) {
   const hasCoords = lat !== null && lng !== null;
   const [geocoding, setGeocoding] = useState(false);
   const [geocodeError, setGeocodeError] = useState<string | null>(null);

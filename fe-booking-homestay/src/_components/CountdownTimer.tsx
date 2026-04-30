@@ -3,14 +3,18 @@ import { useEffect, useState } from "react";
 interface CountdownTimerProps {
   createdAt: string;
   expiryMinutes?: number;
-  onFinish?: () => void; 
+  onFinish?: () => void;
 }
-export default function CountdownTimer({ createdAt, expiryMinutes = 15, onFinish }: CountdownTimerProps) {
+export default function CountdownTimer({
+  createdAt,
+  expiryMinutes = 15,
+  onFinish,
+}: CountdownTimerProps) {
   const [timeLeft, setTimeLeft] = useState<string>("");
 
   useEffect(() => {
-    const startTime = new Date(createdAt).getTime();         // thời điểm đặt phòng
-    const deadline = startTime + expiryMinutes * 60 * 1000;  // theo cấu hình AppConfig
+    const startTime = new Date(createdAt).getTime(); // thời điểm đặt phòng
+    const deadline = startTime + expiryMinutes * 60 * 1000; // theo cấu hình AppConfig
 
     const timer = setInterval(() => {
       const now = Date.now();
@@ -27,14 +31,12 @@ export default function CountdownTimer({ createdAt, expiryMinutes = 15, onFinish
       const seconds = Math.floor((difference % (1000 * 60)) / 1000);
 
       setTimeLeft(
-        `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`
+        `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`,
       );
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [createdAt,onFinish]);
+  }, [createdAt, onFinish]);
 
-  return (
-    <span className="tabular-nums">{timeLeft}</span>
-  );
+  return <span className="tabular-nums">{timeLeft}</span>;
 }

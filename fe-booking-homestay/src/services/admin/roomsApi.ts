@@ -55,7 +55,7 @@ export async function getRoomById(id: number): Promise<Room> {
 
 export async function updateRoom(
   id: number,
-  dto: UpdateRoomDto
+  dto: UpdateRoomDto,
 ): Promise<Room> {
   try {
     const res = await api.patch(`/room/admin/${id}`, dto);
@@ -162,6 +162,39 @@ export async function updateOrder(id: number, order: number[]) {
   try {
     const res = await api.patch(`/room/${id}/images/order`, { order });
     return res.data.data;
+  } catch (error) {
+    console.error("Set main image error:", error);
+    throw error;
+  }
+}
+
+export async function roomCalendar(
+  id: number | string,
+  month: number,
+  year: number,
+) {
+  try {
+    const resp = await api.get(`/room/${id}/calendar`, {
+      params: { month, year },
+    });
+    return resp.data.data;
+  } catch (error) {
+    console.error("Set main image error:", error);
+    throw error;
+  }
+}
+
+export async function updateRoomCalendar(
+  id: number | string,
+  updates: {
+    date: string;
+    price: number;
+    isAvailable: boolean;
+  }[],
+) {
+  try {
+    const resp = await api.put(`/room/${id}/calendar`, { updates });
+    return resp.data.data;
   } catch (error) {
     console.error("Set main image error:", error);
     throw error;

@@ -21,9 +21,7 @@ const MapPicker = dynamic(
   () => import("../../_components/MapPicker").then((m) => m.MapPicker),
   {
     ssr: false,
-    loading: () => (
-      <div className="h-[280px] bg-muted rounded-lg animate-pulse" />
-    ),
+    loading: () => <div className="h-70 bg-muted rounded-lg animate-pulse" />,
   },
 );
 
@@ -48,7 +46,10 @@ export function RoomFormModal({
     isEditMode,
   });
 
-  const [locationNames, setLocationNames] = useState({ provinceName: "", wardName: "" });
+  const [locationNames, setLocationNames] = useState({
+    provinceName: "",
+    wardName: "",
+  });
 
   useEffect(() => {
     if (!open) return;

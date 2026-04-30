@@ -1,13 +1,13 @@
 "use client";
 
+import { Card } from "@/_components/ui/card";
+import { useLang } from "@/context/lang-context";
+import { Location } from "@/models/Location";
 import BlurInScroll from "@/styles/animations/BlurInScroll";
 import HoverScale from "@/styles/animations/HoverScale";
-import { Location } from "@/models/Location";
-import { Card } from "@/_components/ui/card";
 import ScrollFade from "@/styles/animations/ScrollFade";
 import ScrollScale from "@/styles/animations/ScrollScale";
 import { useRouter } from "next/navigation";
-import { useLang } from "@/context/lang-context";
 
 export default function PopularDestinations({
   locations,
@@ -15,7 +15,7 @@ export default function PopularDestinations({
   locations: Location[];
 }) {
   const router = useRouter();
-  const {t} = useLang();
+  const { t } = useLang();
 
   return (
     <section className="py-24 bg-card">
@@ -31,13 +31,13 @@ export default function PopularDestinations({
 
         {locations.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {locations.map((loc, index) => (
+            {locations.slice(0, 3).map((loc, index) => (
               <BlurInScroll key={loc.id} delay={index * 120}>
                 <HoverScale>
                   <Card
                     onClick={() =>
                       router.push(
-                        `/room?location=${encodeURIComponent(loc.name)}`
+                        `/room?location=${encodeURIComponent(loc.name)}`,
                       )
                     }
                     className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"

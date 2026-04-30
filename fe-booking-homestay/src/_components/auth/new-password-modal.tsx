@@ -4,7 +4,11 @@ import { Button } from "@/_components/ui/button";
 import { Input } from "@/_components/ui/input";
 import { Label } from "@/_components/ui/label";
 import { useLang } from "@/context/lang-context";
-import { forgot_password, reset_password, verify_otp } from "@/services/authApi";
+import {
+  forgot_password,
+  reset_password,
+  verify_otp,
+} from "@/services/authApi";
 import { Eye, EyeOff, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
@@ -14,7 +18,10 @@ interface NewPasswordModalProps {
   setShow: (show: boolean) => void;
 }
 
-export default function NewPasswordModal({ show, setShow }: NewPasswordModalProps) {
+export default function NewPasswordModal({
+  show,
+  setShow,
+}: NewPasswordModalProps) {
   const { t } = useLang();
   const [step, setStep] = useState(1); // 1: email, 2: otp, 3: password
   const [showPassword, setShowPassword] = useState(false);
@@ -102,14 +109,16 @@ export default function NewPasswordModal({ show, setShow }: NewPasswordModalProp
     const newOtpValues = [...otpValues];
     for (let i = 0; i < 6; i++) {
       newOtpValues[i] = pasteData[i] || "";
-      const input = document.getElementById(`otp-${i}`) as HTMLInputElement | null;
+      const input = document.getElementById(
+        `otp-${i}`,
+      ) as HTMLInputElement | null;
       if (input) input.value = newOtpValues[i];
     }
 
     setOtpValues(newOtpValues);
 
     // focus ô trống đầu tiên
-    const firstEmptyIndex = newOtpValues.findIndex(v => !v);
+    const firstEmptyIndex = newOtpValues.findIndex((v) => !v);
     if (firstEmptyIndex !== -1) {
       const nextInput = document.getElementById(`otp-${firstEmptyIndex}`);
       nextInput?.focus();
@@ -119,7 +128,6 @@ export default function NewPasswordModal({ show, setShow }: NewPasswordModalProp
       lastInput?.focus();
     }
   };
-
 
   // === STEP 3: RESET PASSWORD ===
   const handleCreatePassword = async (e: React.FormEvent) => {
@@ -156,10 +164,7 @@ export default function NewPasswordModal({ show, setShow }: NewPasswordModalProp
     <div className="fixed inset-0 bg-foreground/50 flex items-center justify-center z-50">
       <div className="bg-card rounded-lg p-8 w-full max-w-md shadow-2xl">
         <div className="flex items-center justify-center mb-6 relative">
-          <button
-            className="absolute right-0"
-            onClick={() => setShow(false)}
-          >
+          <button className="absolute right-0" onClick={() => setShow(false)}>
             <X size={24} />
           </button>
           <h2 className="text-3xl elegant-heading text-primary text-center">
@@ -168,7 +173,9 @@ export default function NewPasswordModal({ show, setShow }: NewPasswordModalProp
             {step === 3 && "Create new password"}
           </h2>
         </div>
-        {apiError && <p className="text-destructive text-sm mb-4 text-center">{apiError}</p>}
+        {apiError && (
+          <p className="text-destructive text-sm mb-4">{apiError}</p>
+        )}
 
         {/* STEP 1: EMAIL */}
         {step === 1 && (
@@ -211,8 +218,14 @@ export default function NewPasswordModal({ show, setShow }: NewPasswordModalProp
                   className="w-12 h-12 text-center text-xl border border-border rounded-lg focus:outline-none"
                   onKeyDown={(e) => {
                     if (e.key === "Enter") handleVerify();
-                    if (e.key === "Backspace" && !otpValues[index] && index > 0) {
-                      const prevInput = document.getElementById(`otp-${index - 1}`);
+                    if (
+                      e.key === "Backspace" &&
+                      !otpValues[index] &&
+                      index > 0
+                    ) {
+                      const prevInput = document.getElementById(
+                        `otp-${index - 1}`,
+                      );
                       prevInput?.focus();
                     }
                   }}
@@ -271,11 +284,15 @@ export default function NewPasswordModal({ show, setShow }: NewPasswordModalProp
                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
-              {passwordError && <p className="text-destructive text-sm">{passwordError}</p>}
+              {passwordError && (
+                <p className="text-destructive text-sm">{passwordError}</p>
+              )}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword">{t("Confirm your password")}</Label>
+              <Label htmlFor="confirmPassword">
+                {t("Confirm your password")}
+              </Label>
               <Input
                 id="confirmPassword"
                 type="password"
@@ -287,7 +304,9 @@ export default function NewPasswordModal({ show, setShow }: NewPasswordModalProp
                 }}
               />
               {confirmPasswordError && (
-                <p className="text-destructive text-sm">{confirmPasswordError}</p>
+                <p className="text-destructive text-sm">
+                  {confirmPasswordError}
+                </p>
               )}
             </div>
 

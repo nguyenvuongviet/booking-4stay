@@ -8,7 +8,8 @@ import PopularDestinations from "@/_components/home/PopularDestinations";
 import RoomSection from "@/_components/home/RoomSection";
 import { Location } from "@/models/Location";
 import { Room } from "@/models/Room";
-import { location, room_all, search_location } from "@/services/roomApi";
+import { get_location, search_location } from "@/services/locationApi";
+import { room_all } from "@/services/roomApi";
 import { format } from "date-fns";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -29,6 +30,7 @@ export default function HomePage() {
   const locationInputRef = useRef<HTMLInputElement>(null);
   const [search, setSearch] = useState("");
   const router = useRouter();
+  const [activeIndex, setActiveIndex] = useState(-1);
 
   const loadRooms = useCallback(
     async (reset = false) => {
@@ -61,15 +63,15 @@ export default function HomePage() {
         setLoading(false);
       }
     },
-    [page, search, adults, children, loading]
+    [page, search, adults, children, loading],
   );
 
   useEffect(() => {
     const fetchLocations = async () => {
       try {
-        const resp = await location();
+        const resp = await get_location(1);
         console.log("Location API response:", resp);
-        setLocations(resp?.data?.data || []);
+        setLocations(resp);
       } catch (error) {
         console.error("Error fetching checkout resp:", error);
       } finally {
@@ -83,8 +85,8 @@ export default function HomePage() {
   const fetchLocationSuggestions = useCallback(async (query: string) => {
     if (!query.trim()) {
       //input rỗng
-      const res = await location();
-      const allData = res?.data?.data || [];
+      const resp = await get_location(1);
+      const allData = resp || [];
       setLocations(allData);
       setShowSuggestions(allData.length > 0);
     } else {
@@ -170,11 +172,14 @@ export default function HomePage() {
         setLocationInput={setLocationInput}
         locations={locations}
         showSuggestions={showSuggestions}
+        setShowSuggestions={setShowSuggestions}
         error={error}
         onSearch={handleSearch}
         onFocusLocation={handleFocusLocation}
         onSelectLocation={handleSelectLocation}
         locationInputRef={locationInputRef}
+        activeIndex={activeIndex}
+        setActiveIndex={setActiveIndex}
       />
 
       {/* Featured Rooms */}
