@@ -18,11 +18,11 @@ import { LocationSelector } from "../../_components/location-selector";
 import { useRoomForm } from "../_hooks/useRoomForm";
 
 const MapPicker = dynamic(
-  () => import("../../_components/MapPickerInner").then((m) => m.MapPicker),
+  () => import("../../_components/MapPicker").then((m) => m.MapPicker),
   {
     ssr: false,
     loading: () => (
-      <div className="h-[280px] bg-muted rounded-lg animate-pulse" />
+      <div className="h-70 bg-muted rounded-lg animate-pulse" />
     ),
   },
 );

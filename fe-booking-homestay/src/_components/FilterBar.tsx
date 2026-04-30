@@ -4,16 +4,16 @@ import type React from "react";
 
 import { Button } from "@/_components/ui/button";
 import { Checkbox } from "@/_components/ui/checkbox";
-import { RadioGroup, RadioGroupItem } from "@/_components/ui/radio-group";
 import { Label } from "@/_components/ui/label";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/_components/ui/popover";
-import { ArrowUpDown, Check, ChevronDown, Star, Filter } from "lucide-react";
-import { useState } from "react";
+import { RadioGroup, RadioGroupItem } from "@/_components/ui/radio-group";
 import { useLang } from "@/context/lang-context";
+import { ArrowUpDown, Check, ChevronDown, Filter, Star } from "lucide-react";
+import { useState } from "react";
 
 function CheckboxPopup({
   title,
@@ -34,7 +34,7 @@ function CheckboxPopup({
   onOpenChange: (open: boolean) => void;
   children?: React.ReactNode;
 }) {
-  const {t} = useLang();
+  const { t } = useLang();
   return (
     <Popover open={open} onOpenChange={onOpenChange}>
       <PopoverTrigger asChild>{children}</PopoverTrigger>
@@ -99,6 +99,7 @@ function CombinedFilterPopup({
   children,
   priceRanges,
   starOptions,
+  cleanFilter,
 }: {
   selectedPriceRanges: string[];
   onTogglePrice: (value: string) => void;
@@ -110,8 +111,9 @@ function CombinedFilterPopup({
   children?: React.ReactNode;
   priceRanges: { label: string; value: string }[];
   starOptions: { label: string; value: number }[];
+  cleanFilter: () => void;
 }) {
-  const {t} = useLang();
+  const { t } = useLang();
 
   return (
     <Popover open={open} onOpenChange={onOpenChange}>
@@ -195,10 +197,13 @@ function CombinedFilterPopup({
           <div className="flex gap-3 pt-2">
             <Button
               variant="outline"
-              onClick={() => onOpenChange(false)}
+              onClick={() => {
+                cleanFilter();
+                onOpenChange(false);
+              }}
               className="flex-1 rounded-full h-10 text-sm elegant-sans"
             >
-              {t("close")}
+              Xóa bộ lọc
             </Button>
             <Button
               onClick={() => {
@@ -231,7 +236,7 @@ function OptionsPopup({
   onOpenChange: (open: boolean) => void;
   children: React.ReactNode;
 }) {
-  
+
   return (
     <Popover open={open} onOpenChange={onOpenChange}>
       <PopoverTrigger asChild>{children}</PopoverTrigger>
@@ -268,6 +273,7 @@ function OptionsPopup({
 
 export function FilterBar({
   onFilterChange,
+  cleanFilter,
 }: {
   onFilterChange: (filters: {
     minPrice?: number;
@@ -275,13 +281,14 @@ export function FilterBar({
     minRating?: number;
     sortOrder?: "asc" | "desc";
   }) => void;
+  cleanFilter: () => void;
 }) {
   const [filterOpen, setFilterOpen] = useState(false);
   const [selectedStars, setSelectedStars] = useState<number | null>(null);
   const [selectedPriceRanges, setSelectedPriceRanges] = useState<string[]>([]);
   const [sortOpen, setSortOpen] = useState(false);
   const [selectedSort, setSelectedSort] = useState<string>("");
-  const {t} = useLang();
+  const { t } = useLang();
 
   const handleApplyFilters = (overrideSort?: string) => {
     let minPrice: number | undefined;
@@ -328,8 +335,8 @@ export function FilterBar({
         overrideSort === "asc" || overrideSort === "desc"
           ? (overrideSort as "asc" | "desc")
           : selectedSort === "asc" || selectedSort === "desc"
-          ? (selectedSort as "asc" | "desc")
-          : undefined,
+            ? (selectedSort as "asc" | "desc")
+            : undefined,
     });
   };
 
@@ -389,6 +396,7 @@ export function FilterBar({
             setSelectedStars(selectedStars === value ? null : value)
           }
           onApplyFilters={handleApplyFilters}
+          cleanFilter={cleanFilter}
           open={filterOpen}
           onOpenChange={setFilterOpen}
           priceRanges={priceRanges}

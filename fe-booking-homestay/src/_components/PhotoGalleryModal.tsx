@@ -1,10 +1,9 @@
 // ~/components/PhotoGalleryModal.tsx
 "use client";
 
+import { ChevronLeft, ChevronRight, Eye, X } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
-import { X, ChevronLeft, ChevronRight, Eye } from "lucide-react";
 import { Photo360Viewer } from "./Photo360Viewer";
-import { Viewer } from "@photo-sphere-viewer/core";
 import { Button } from "./ui/button";
 
 interface Photo {
@@ -15,18 +14,18 @@ interface Photo {
 
 interface PhotoGalleryModalProps {
   images: Photo[];
-  initialIndex?: number;
+  selectedUrl?: string | null;
   isOpen: boolean;
   onClose: () => void;
 }
 
 export const PhotoGalleryModal: React.FC<PhotoGalleryModalProps> = ({
   images,
-  initialIndex = 0,
+  selectedUrl,
   isOpen,
   onClose,
 }) => {
-  const [currentIndex, setCurrentIndex] = useState(initialIndex);
+  const [currentIndex, setCurrentIndex] = useState(0);
   const [activeTab, setActiveTab] = useState<"image" | "360">("image");
   const [images360, setImages360] = useState<Photo[]>([]);
   const [normalImages, setNormalImages] = useState<Photo[]>([]);
@@ -104,6 +103,25 @@ export const PhotoGalleryModal: React.FC<PhotoGalleryModalProps> = ({
     }
   };
 
+  useEffect(() => {
+    if (!isOpen || !selectedUrl) return;
+
+    // check ảnh 360 hay thường
+    const is360 = images360.some((img) => img.url === selectedUrl);
+
+    if (is360) {
+      setActiveTab("360");
+
+      const index = images360.findIndex((img) => img.url === selectedUrl);
+      setCurrentIndex(index >= 0 ? index : 0);
+    } else {
+      setActiveTab("image");
+
+      const index = normalImages.findIndex((img) => img.url === selectedUrl);
+      setCurrentIndex(index >= 0 ? index : 0);
+    }
+  }, [selectedUrl, isOpen, images360, normalImages]);
+
   if (!isOpen) return null;
 
   return (
@@ -116,9 +134,14 @@ export const PhotoGalleryModal: React.FC<PhotoGalleryModalProps> = ({
             {normalImages.length > 0 && (
               <Button
                 onClick={() => setActiveTab("image")}
+                className={`px-4 transition
+                    ${activeTab === "image"
+                    ? "bg-accent shadow"
+                    : ""}`}
                 variant="ghost"
-                size="sm"              >
-                Photos ({normalImages.length})
+                size="sm"
+              >
+                Hình ảnh ({normalImages.length})
               </Button>
             )}
 
@@ -126,10 +149,14 @@ export const PhotoGalleryModal: React.FC<PhotoGalleryModalProps> = ({
             {images360.length > 0 && (
               <Button
                 onClick={() => setActiveTab("360")}
+                className={`px-4 transition
+                    ${activeTab === "360"
+                    ? "bg-accent shadow"
+                    : ""}`}
                 variant="ghost"
                 size="sm"
               >
-                360° photos ({images360.length})
+                Ảnh 360° ({images360.length})
               </Button>
             )}
           </div>

@@ -16,7 +16,7 @@ import { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import GuestPicker from "../../../../_components/GuestPicker";
 import Header from "../../../../_components/Header";
-import MapMarker from "../../../../_components/MapMarker";
+import { MapMarker } from "../../../../_components/map/MapMarkerInner";
 import { PhotoGalleryModal } from "../../../../_components/PhotoGalleryModal";
 import DateRangePicker from "../../../../_components/ui/date-range-picker";
 import { ReviewList } from "../_component/ReviewList";
@@ -40,7 +40,7 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
   const [children, setChildren] = useState(0);
   const [showAllAmenities, setShowAllAmenities] = useState(false);
   const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
-  const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null); 
   const [showFullOverview, setShowFullOverview] = useState(false);
   const [highlightDatePicker, setHighlightDatePicker] = useState(false);
   const [roomPreview, setRoomPreview] = useState<{ priceSummary: { totalPrice: number, rawTotal: number, discountPercent: number } } | null>(null);
@@ -226,7 +226,7 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
         prev.getMonth() === date.getMonth() &&
         prev.getFullYear() === date.getFullYear()
       ) {
-        return prev; 
+        return prev;
       }
       return date;
     });
@@ -259,21 +259,26 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
                   <img
                     src={room.images?.main || "/default.jpg"}
                     alt="room image"
-                    className="w-full h-full object-cover" // scale vừa container
+                    className="w-full h-full object-cover cursor-pointer hover:scale-105 transition" // scale vừa container
+                    onClick={() => {
+                      setSelectedImage(room.images?.main || null);
+                      setIsPhotoModalOpen(true);
+                    }}
                   />
                 </div>
-                {room.images?.gallery
-                  .filter((img) => !img.isMain)
-                  .slice(0, 4)
-                  .map((img) => (
-                    <div key={img.id} className="overflow-hidden rounded">
-                      <img
-                        src={img.url || "/placeholder.svg"}
-                        alt={`Room ${img.id}`}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                  ))}
+                {room.images?.gallery?.filter((img) => !img.isMain ).slice(0, 4).map((img, index) => (
+                  <div key={img.id} className="overflow-hidden rounded ">
+                    <img
+                      src={img.url || "/placeholder.svg"}
+                      alt={`Room ${img.id}`}
+                      className="w-full h-full object-cover cursor-pointer hover:scale-105 transition"
+                      onClick={() => {
+                        setSelectedImage(img.url || null);
+                        setIsPhotoModalOpen(true);
+                      }}
+                    />
+                  </div>
+                ))}
               </div>
 
               <Button
@@ -287,7 +292,7 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
               {room?.images?.gallery && (
                 <PhotoGalleryModal
                   images={room.images.gallery}
-                  initialIndex={currentPhotoIndex}
+                  selectedUrl={selectedImage}
                   isOpen={isPhotoModalOpen}
                   onClose={() => setIsPhotoModalOpen(false)}
                 />
@@ -553,7 +558,9 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
               </div>
 
               {/* Map */}
-              <MapMarker rooms={[room]} />
+              <div className="h-[30vh] rounded-lg shadow-md">
+                <MapMarker rooms={[room]} />
+              </div>
 
               {/* Policy */}
               <div className="p-4">

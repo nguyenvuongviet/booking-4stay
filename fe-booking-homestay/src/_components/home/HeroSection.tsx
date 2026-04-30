@@ -11,6 +11,7 @@ import ScrollFade from "@/styles/animations/ScrollFade";
 import Typing from "@/styles/animations/Typing";
 import { motion } from "framer-motion";
 import { MapPin, Search, Users } from "lucide-react";
+import { useEffect } from "react";
 
 interface Props {
   checkIn: Date | null;
@@ -27,6 +28,7 @@ interface Props {
 
   locations: Location[];
   showSuggestions: boolean;
+  setShowSuggestions: (v: boolean) => void;
   error: string;
 
   onSearch: () => void;
@@ -34,6 +36,9 @@ interface Props {
   onSelectLocation: (loc: Location) => void;
 
   locationInputRef: any;
+
+  activeIndex: number;
+  setActiveIndex: React.Dispatch<React.SetStateAction<number>>;
 }
 
 export default function HeroSection({
@@ -49,13 +54,21 @@ export default function HeroSection({
   setLocationInput,
   locations,
   showSuggestions,
+  setShowSuggestions,
   error,
   onSearch,
   onFocusLocation,
   onSelectLocation,
   locationInputRef,
+  activeIndex,
+  setActiveIndex,
 }: Props) {
   const { lang, t } = useLang();
+
+  useEffect(() => {
+    const el = document.getElementById(`loc-${activeIndex}`);
+    el?.scrollIntoView({ block: "nearest" });
+  }, [activeIndex]);
 
   return (
     <section className="relative min-h-screen flex items-center justify-center z-0">
@@ -78,11 +91,10 @@ export default function HeroSection({
             deleteSpeed={60}
             pause={1000}
             loop={true}
-            className={`elegant-heading text-gradient ${
-              lang === "vi"
-                ? "md:text-7xl m-4 min-h-46"
-                : " md:text-8xl mb-4 min-h-55 "
-            }`}
+            className={`elegant-heading text-gradient ${lang === "vi"
+              ? "md:text-7xl m-4 min-h-46"
+              : " md:text-8xl mb-4 min-h-55 "
+              }`}
           />
 
           <ScrollFade
@@ -113,7 +125,48 @@ export default function HeroSection({
                   <Input
                     ref={locationInputRef}
                     value={locationInput}
-                    onChange={(e) => setLocationInput(e.target.value)}
+                    onChange={(e) => {
+                      setLocationInput(e.target.value);
+                      setActiveIndex(-1);
+                      setShowSuggestions(true);
+                    }}
+
+                    onKeyDown={(e) => {
+                      if (!showSuggestions || locations.length === 0) return;
+
+                      if (e.key === "ArrowDown") {
+                        e.preventDefault();
+                        setActiveIndex((prev) =>
+                          prev < locations.length - 1 ? prev + 1 : 0
+                        );
+                      }
+
+                      if (e.key === "ArrowUp") {
+                        e.preventDefault();
+                        setActiveIndex((prev) =>
+                          prev > 0 ? prev - 1 : locations.length - 1
+                        );
+                      }
+
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+
+                        const selected =
+                          activeIndex >= 0
+                            ? locations[activeIndex]
+                            : locations[0];
+
+                        if (selected) {
+                          onSelectLocation(selected);
+                        } else {
+                          onSearch();
+                        }
+                      }
+
+                      if (e.key === "Escape") {
+                        setShowSuggestions(false);
+                      }
+                    }}
                     onFocus={onFocusLocation}
                     onClick={(e) => e.stopPropagation()}
                     placeholder={t("Where are you going?")}
@@ -130,6 +183,7 @@ export default function HeroSection({
                     locations={locations}
                     showSuggestions={showSuggestions}
                     onSelect={onSelectLocation}
+                    activeIndex={activeIndex}
                   />
                 </div>
               </div>

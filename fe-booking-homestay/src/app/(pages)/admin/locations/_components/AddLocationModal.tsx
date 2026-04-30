@@ -17,17 +17,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/_components/ui/select";
-import { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
+import { useEffect, useRef, useState } from "react";
 
 import type { BaseLocation } from "@/services/admin/locationsApi";
 
 const MapPicker = dynamic(
-  () => import("../../_components/MapPickerInner").then((m) => m.MapPicker),
+  () => import("../../_components/MapPicker").then((m) => m.MapPicker),
   {
     ssr: false,
     loading: () => (
-      <div className="h-[200px] bg-muted rounded-lg animate-pulse" />
+      <div className="h-50 bg-muted rounded-lg animate-pulse" />
     ),
   }
 );

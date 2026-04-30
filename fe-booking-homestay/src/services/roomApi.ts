@@ -27,40 +27,6 @@ export const room_detail = async (id: number | string) => {
   }
 };
 
-export const location = async () => {
-  try {
-    const resp = await api.get(`/location/provinces/search`);
-    return resp.data;
-  } catch (error) {
-    console.error("list location error: ", error);
-    throw error;
-  }
-};
-
-export const search_location = async (keyword: string) => {
-  try {
-    if (!keyword.trim()) {
-      return { data: { data: [] } };
-    }
-
-    const resp = await api.get("/location/provinces/search", {
-      params: {
-        keyword: keyword.trim(),
-      },
-    });
-
-    return {
-      data: {
-        data: Array.isArray(resp.data?.data?.data)
-          ? resp.data.data.data
-          : resp.data?.data || [],
-      },
-    };
-  } catch (error) {
-    console.error("search location error:", error);
-    return { data: { data: [] } };
-  }
-};
 
 export const search_room = async (
   keyword: string,
@@ -81,7 +47,10 @@ export const search_room = async (
       total: mainData.total || 0,
       page: mainData.page || page,
     };
-  } catch (error) {
+  } catch (error:any) {
+    if (error.response?.status === 404) {
+      return { rooms: [], totalPages: 1, total: 0, page };
+    }
     console.error("Get list room error:", error);
     return { rooms: [], totalPages: 1, total: 0, page };
   }
