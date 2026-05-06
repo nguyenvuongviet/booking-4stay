@@ -44,7 +44,7 @@ export default function PopularDestinations({
                   >
                     <div className="relative">
                       <img
-                        src={loc.imageUrl || "/default.jpg"}
+                        src={loc.imageUrl || "/default-location.jpg"}
                         alt={loc.name}
                         className="w-full h-72 object-cover"
                       />

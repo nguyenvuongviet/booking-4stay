@@ -5,70 +5,54 @@ import LocationSuggestions from "@/_components/LocationSuggestions";
 import { Button } from "@/_components/ui/button";
 import DateRangePicker from "@/_components/ui/date-range-picker";
 import { Input } from "@/_components/ui/input";
+import { useSearchBar } from "@/_hooks/useSearchBar";
+import { useAuth } from "@/context/auth-context";
 import { useLang } from "@/context/lang-context";
-import { Location } from "@/models/Location";
 import ScrollFade from "@/styles/animations/ScrollFade";
 import Typing from "@/styles/animations/Typing";
 import { motion } from "framer-motion";
 import { MapPin, Search, Users } from "lucide-react";
 import { useEffect } from "react";
 
-interface Props {
-  checkIn: Date | null;
-  checkOut: Date | null;
-  setCheckIn: (v: Date | null) => void;
-  setCheckOut: (v: Date | null) => void;
-  adults: number;
-  children: number;
-  setAdults: (v: number) => void;
-  setChildren: (v: number) => void;
-
-  locationInput: string;
-  setLocationInput: (v: string) => void;
-
-  locations: Location[];
-  showSuggestions: boolean;
-  setShowSuggestions: (v: boolean) => void;
-  error: string;
-
-  onSearch: () => void;
-  onFocusLocation: () => void;
-  onSelectLocation: (loc: Location) => void;
-
-  locationInputRef: any;
-
-  activeIndex: number;
-  setActiveIndex: React.Dispatch<React.SetStateAction<number>>;
-}
-
-export default function HeroSection({
-  checkIn,
-  checkOut,
-  setCheckIn,
-  setCheckOut,
-  adults,
-  children,
-  setAdults,
-  setChildren,
-  locationInput,
-  setLocationInput,
-  locations,
-  showSuggestions,
-  setShowSuggestions,
-  error,
-  onSearch,
-  onFocusLocation,
-  onSelectLocation,
-  locationInputRef,
-  activeIndex,
-  setActiveIndex,
-}: Props) {
+export default function HeroSection() {
   const { lang, t } = useLang();
+  const { user } = useAuth();
+  const {
+    locationInput,
+    locations,
+    showSuggestions,
+    activeIndex,
+    checkIn,
+    checkOut,
+    adults,
+    children,
+    locationInputRef,
+    listRef,
+    error,
+    setCheckIn,
+    setCheckOut,
+    setAdults,
+    setChildren,
+    setShowSuggestions,
+    handleFocus,
+    handleChange,
+    handleSelect,
+    handleKeyDown,
+    handleSearch,
+  } = useSearchBar();
 
   useEffect(() => {
-    const el = document.getElementById(`loc-${activeIndex}`);
-    el?.scrollIntoView({ block: "nearest" });
-  }, [activeIndex]);
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        locationInputRef.current &&
+        !locationInputRef.current.contains(e.target as Node)
+      ) {
+        setShowSuggestions(false);
+      }
+    };
+    window.addEventListener("click", handleClickOutside);
+    return () => window.removeEventListener("click", handleClickOutside);
+  }, [locationInputRef, setShowSuggestions]);
 
   return (
     <section className="relative min-h-screen flex items-center justify-center z-0">
@@ -126,48 +110,9 @@ export default function HeroSection({
                   <Input
                     ref={locationInputRef}
                     value={locationInput}
-                    onChange={(e) => {
-                      setLocationInput(e.target.value);
-                      setActiveIndex(-1);
-                      setShowSuggestions(true);
-                    }}
-                    onKeyDown={(e) => {
-                      if (!showSuggestions || locations.length === 0) return;
-
-                      if (e.key === "ArrowDown") {
-                        e.preventDefault();
-                        setActiveIndex((prev) =>
-                          prev < locations.length - 1 ? prev + 1 : 0,
-                        );
-                      }
-
-                      if (e.key === "ArrowUp") {
-                        e.preventDefault();
-                        setActiveIndex((prev) =>
-                          prev > 0 ? prev - 1 : locations.length - 1,
-                        );
-                      }
-
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-
-                        const selected =
-                          activeIndex >= 0
-                            ? locations[activeIndex]
-                            : locations[0];
-
-                        if (selected) {
-                          onSelectLocation(selected);
-                        } else {
-                          onSearch();
-                        }
-                      }
-
-                      if (e.key === "Escape") {
-                        setShowSuggestions(false);
-                      }
-                    }}
-                    onFocus={onFocusLocation}
+                    onChange={(e) => handleChange(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    onFocus={handleFocus}
                     onClick={(e) => e.stopPropagation()}
                     placeholder={t("Where are you going?")}
                     className="pl-10 h-12 bg-card border-border focus:border-accent elegant-subheading rounded-3xl placeholder:text-muted"
@@ -182,8 +127,9 @@ export default function HeroSection({
                   <LocationSuggestions
                     locations={locations}
                     showSuggestions={showSuggestions}
-                    onSelect={onSelectLocation}
+                    onSelect={handleSelect}
                     activeIndex={activeIndex}
+                    listRef={listRef}
                   />
                 </div>
               </div>
@@ -232,7 +178,7 @@ export default function HeroSection({
 
             {/* SEARCH BUTTON */}
             <Button
-              onClick={onSearch}
+              onClick={() => handleSearch()}
               className="rounded-3xl w-full bg-primary hover:bg-primary/90 h-12 elegant-subheading text-md transition-all duration-300 hover:shadow-lg hover:scale-[1.02]"
             >
               <Search className="mr-2" size={20} />

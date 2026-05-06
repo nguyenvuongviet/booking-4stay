@@ -1,6 +1,7 @@
 "use client";
 
 import { CancellationPolicy } from "@/_components/CancellationPolicy";
+import { PhotoGalleryModal } from "@/_components/gallery/PhotoGalleryModal";
 import { Button } from "@/_components/ui/button";
 import { Card } from "@/_components/ui/card";
 import { useCalendarPricing } from "@/_hooks/useCalendarPricing";
@@ -8,13 +9,7 @@ import { getAmenityIcon } from "@/constants/amenity-icons";
 import { useAuth } from "@/context/auth-context";
 import { useLang } from "@/context/lang-context";
 import { Room } from "@/models/Room";
-import { get_unavailable_dates } from "@/services/bookingApi";
-import {
-  get_room_calendar,
-  room_available,
-  room_detail,
-  room_preview,
-} from "@/services/roomApi";
+import { room_available, room_detail, room_preview } from "@/services/roomApi";
 import { addMonths, format, parse } from "date-fns";
 import { Loader2, Mail, MapPin, Phone, Star, Users } from "lucide-react";
 import Image from "next/image";
@@ -24,7 +19,6 @@ import toast from "react-hot-toast";
 import GuestPicker from "../../../../_components/GuestPicker";
 import Header from "../../../../_components/Header";
 import { MapMarker } from "../../../../_components/map/MapMarker";
-import { PhotoGalleryModal } from "../../../../_components/PhotoGalleryModal";
 import DateRangePicker from "../../../../_components/ui/date-range-picker";
 import { ReviewList } from "../_component/ReviewList";
 
@@ -51,9 +45,7 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
   const [showFullOverview, setShowFullOverview] = useState(false);
   const [highlightDatePicker, setHighlightDatePicker] = useState(false);
   const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [roomPrices, setRoomPrices] = useState<
-    { date: string; price: number }[]
-  >([]);
+
   const [roomPreview, setRoomPreview] = useState<{
     priceSummary: {
       totalPrice: number;
@@ -306,7 +298,10 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
                   images={room.images.gallery}
                   selectedUrl={selectedImage}
                   isOpen={isPhotoModalOpen}
-                  onClose={() => setIsPhotoModalOpen(false)}
+                  onClose={() => {
+                    setIsPhotoModalOpen(false);
+                    setSelectedImage(null);
+                  }}
                 />
               )}
             </div>

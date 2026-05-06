@@ -1,39 +1,91 @@
+import { Location } from "@/models/Location";
 import api from "./api";
 
-export const get_location = async (countryId: number | string) => {
-  try {
-    const resp = await api.get(`/location/provinces`, {
-      params: { countryId },
-    });
+export interface Meta {
+  totalItems: number;
+  itemsPerPage: number;
+  totalPages: number;
+  currentPage: number;
+}
 
-    return resp.data?.data?.items || resp.data?.items || resp.data;
-  } catch (error) {
-    console.error("list location error: ", error);
-    throw error;
+export interface PaginatedResponse<T> {
+  message: string;
+  items: T[];
+  meta: Meta;
+}
+
+export interface LocationQueryParams {
+  page?: number;
+  pageSize?: number;
+  search?: string;
+  countryId?: number;
+  provinceId?: number;
+}
+
+export async function getLocation(
+  params?: LocationQueryParams,
+): Promise<PaginatedResponse<Location>> {
+  try {
+    const res = await api.get("/location/provinces", { params });
+    return res.data?.data;
+  } catch (err) {
+    console.error("Get Location error:", err);
+    throw err;
   }
-};
+}
 
-export const search_location = async (keyword: string) => {
+export async function search_location(
+  params?: LocationQueryParams,
+): Promise<PaginatedResponse<Location>> {
   try {
-    if (!keyword.trim()) {
-      return { data: { data: [] } };
+    const keyword = params?.search?.trim();
+
+    if (!keyword) {
+      return {
+        message: "",
+        items: [],
+        meta: {
+          currentPage: 1,
+          totalItems: 0,
+          totalPages: 1,
+          itemsPerPage: 10,
+        },
+      };
     }
 
-    const resp = await api.get("/location/provinces/search", {
+    const resp = await api.get("/location/provinces", {
       params: {
-        keyword: keyword.trim(),
+        search: keyword,
+        page: params?.page || 1,
+        pageSize: params?.pageSize || 10,
       },
     });
 
-    return {
-      data: {
-        data: Array.isArray(resp.data?.data?.data)
-          ? resp.data.data.data
-          : resp.data?.data || [],
-      },
-    };
+    return resp.data?.data;
   } catch (error) {
     console.error("search location error:", error);
-    return { data: { data: [] } };
+
+    return {
+      message: "",
+      items: [],
+      meta: {
+        currentPage: 1,
+        totalItems: 0,
+        totalPages: 1,
+        itemsPerPage: 10,
+      },
+    };
   }
-};
+}
+
+export async function searchProvince(keyword: string): Promise<any[]> {
+  try {
+    const resp = await api.get("/location/provinces/search", {
+      params: { keyword },
+    });
+    return resp.data?.data.data || [];
+  } catch (error) {
+    console.error("search province by keyword error:", error);
+    return [];
+  }
+}

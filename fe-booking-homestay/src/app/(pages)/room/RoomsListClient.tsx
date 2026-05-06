@@ -9,13 +9,8 @@ import WeatherBadge from "@/_components/WeatherBadge";
 import { RoomCard } from "@/app/(pages)/room/_component/RoomCard";
 import { useLang } from "@/context/lang-context";
 import { Room } from "@/models/Room";
-import { get_location } from "@/services/locationApi";
-import {
-  room_all,
-  room_available,
-  search_room,
-  sort_price,
-} from "@/services/roomApi";
+import { searchProvince } from "@/services/locationApi";
+import { getRooms, room_available } from "@/services/roomApi";
 import HoverScale from "@/styles/animations/HoverScale";
 import StaggerItem from "@/styles/animations/StaggerItem";
 import { motion, useSpring } from "framer-motion";
@@ -24,6 +19,7 @@ import { useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 export default function RoomsListPage() {
+  const [rawRooms, setRawRooms] = useState<Room[]>([]);
   const [rooms, setRooms] = useState<Room[]>([]);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
@@ -36,70 +32,37 @@ export default function RoomsListPage() {
   const checkIn = searchParams.get("checkIn") || "";
   const checkOut = searchParams.get("checkOut") || "";
   const [filters, setFilters] = useState<{
-    minPrice?: number;
-    maxPrice?: number;
+    priceRanges?: string[];
     minRating?: number;
     sortOrder?: "asc" | "desc";
   }>({});
   const y = useSpring(scrolled ? -20 : 0, { stiffness: 120, damping: 25 });
   const scale = useSpring(scrolled ? 0.9 : 1, { stiffness: 120, damping: 25 });
 
-  const [filterKey, setFilterKey] = useState(0);
-
-  const { t } = useLang();
-
-  const handleFilterChange = (newFilters: {
-    minPrice?: number;
-    maxPrice?: number;
-    minRating?: number;
-  }) => {
-    // 1. Reset state trước khi load
-    setRooms([]);
-    setPage(1);
-    setHasMore(true);
-
-    // 2. Set filter mới
-    setFilters(newFilters);
-  };
-
-  const handleClearFilters = () => {
-    setRooms([]);
-    setPage(1);
-    setHasMore(true);
-
-    setFilters({});
-    setFilterKey((prev) => prev + 1);
-  };
-
-  const handleSort = (order: "asc" | "desc") => {
-    const newFilters = { ...filters, sortOrder: order };
-    setFilters(newFilters);
-    setPage(1);
-    loadRooms(1, false, newFilters);
-  };
-
-  const getRoomImage = (url?: string) => url;
-
   const [fallbackCenter, setFallbackCenter] = useState<[number, number] | null>(
     null,
   );
-
-  // Reset lại rooms khi thay đổi search params
-  useEffect(() => {
-    setRooms([]);
-    setPage(1);
-    setHasMore(true);
-  }, [location, adults, children]);
+  const buildParams = (pageParam: number) => {
+    return {
+      search: location || undefined,
+      adults,
+      children,
+      page: pageParam,
+      pageSize: 6,
+    };
+  };
 
   const latestRequestRef = useRef(0);
+  const { t } = useLang();
 
-  const loadRooms = async (
-    pageParam = 1,
-    append = false,
-    appliedFilters = filters,
-  ) => {
+  const isFetchingRef = useRef(false);
+
+  const loadRooms = async (pageParam = 1) => {
+    if (isFetchingRef.current) return;
+
     const requestId = Date.now();
     latestRequestRef.current = requestId;
+    isFetchingRef.current = true;
 
     try {
       setLoading(true);
@@ -107,38 +70,9 @@ export default function RoomsListPage() {
       let roomsData: any[] = [];
       let totalPages = 1;
 
-      if (location) {
-        const result = await search_room(
-          location,
-          adults,
-          children,
-          pageParam,
-          6,
-        );
-        roomsData = result?.rooms || [];
-        totalPages = Math.ceil((result?.total || 0) / 6);
-      } else if (
-        appliedFilters &&
-        (appliedFilters.sortOrder ||
-          appliedFilters.minPrice ||
-          appliedFilters.minRating)
-      ) {
-        const result = await sort_price({
-          sortOrder: appliedFilters.sortOrder,
-          minPrice: appliedFilters.minPrice,
-          maxPrice: appliedFilters.maxPrice,
-          minRating: appliedFilters.minRating,
-          page: pageParam,
-          pageSize: 6,
-        });
-
-        roomsData = result?.data?.items || result?.items || [];
-        totalPages = Math.ceil((result?.data?.total || result?.total || 0) / 6);
-      } else {
-        const result = await room_all({ page: pageParam, pageSize: 6 });
-        roomsData = result?.rooms || [];
-        totalPages = Math.ceil((result?.total || 0) / 6);
-      }
+      const result = await getRooms(buildParams(pageParam));
+      roomsData = result?.rooms || [];
+      totalPages = Math.ceil((result?.total || 0) / 6);
 
       if (latestRequestRef.current !== requestId) return;
 
@@ -148,8 +82,8 @@ export default function RoomsListPage() {
         return;
       }
 
-      // Map dữ liệu cơ bản
-      let mappedRooms: Room[] = roomsData.map((room: any) => ({
+      //map data từ API về đúng format của Room, đồng thời check availability nếu có checkIn/checkOut
+      const mappedRooms: Room[] = roomsData.map((room: any) => ({
         id: room.id,
         name: room.name,
         description: room.description,
@@ -165,39 +99,11 @@ export default function RoomsListPage() {
         },
         rating: room.rating || 0,
         reviewCount: room.reviewCount || 0,
-        image: getRoomImage(room.images?.main),
+        image: room.images?.main || "/default.jpg",
         images: room.images,
         amenities: room.amenities?.map((a: any) => a.name) || [],
         status: "Available",
       }));
-
-      if (location && appliedFilters) {
-        if (appliedFilters.minPrice) {
-          mappedRooms = mappedRooms.filter(
-            (r) => r.price >= appliedFilters.minPrice!,
-          );
-        }
-
-        if (appliedFilters.maxPrice) {
-          mappedRooms = mappedRooms.filter(
-            (r) => r.price <= appliedFilters.maxPrice!,
-          );
-        }
-
-        if (appliedFilters.minRating) {
-          mappedRooms = mappedRooms.filter(
-            (r) => r.rating && r.rating >= appliedFilters.minRating!,
-          );
-        }
-
-        if (appliedFilters.sortOrder) {
-          mappedRooms = mappedRooms.sort((a, b) =>
-            appliedFilters.sortOrder === "asc"
-              ? a.price - b.price
-              : b.price - a.price,
-          );
-        }
-      }
 
       let finalRooms = mappedRooms;
 
@@ -214,8 +120,6 @@ export default function RoomsListPage() {
           ),
         );
 
-        if (latestRequestRef.current !== requestId) return;
-
         finalRooms = mappedRooms.map((room) => {
           const found = availabilityResults.find((r) => r.id === room.id);
           return {
@@ -225,9 +129,13 @@ export default function RoomsListPage() {
         });
       }
 
-      setRooms((prev) =>
-        pageParam === 1 ? finalRooms : [...prev, ...finalRooms],
-      );
+      setRawRooms((prev) => {
+        const merged = pageParam === 1 ? finalRooms : [...prev, ...finalRooms];
+
+        return merged.filter(
+          (r, i, arr) => i === arr.findIndex((x) => x.id === r.id),
+        );
+      });
 
       setHasMore(pageParam < totalPages);
     } catch (err) {
@@ -235,24 +143,61 @@ export default function RoomsListPage() {
     } finally {
       if (latestRequestRef.current === requestId) {
         setLoading(false);
+        isFetchingRef.current = false;
       }
     }
   };
 
   useEffect(() => {
-    loadRooms(page, page > 1);
-  }, [page, location, adults, children, filters]);
+    let result = [...rawRooms];
+
+    if (filters.priceRanges?.length) {
+      result = result.filter((room) =>
+        filters.priceRanges!.some((range) => {
+          if (range.includes("+")) {
+            const min = Number(range.replace("+", ""));
+            return room.price >= min;
+          }
+
+          const [min, max] = range.split("-").map(Number);
+          return room.price >= min && room.price <= max;
+        }),
+      );
+    }
+
+    if (filters.minRating) {
+      result = result.filter((r) => (r.rating ?? 0) >= filters.minRating!);
+    }
+
+    if (filters.sortOrder) {
+      result = [...result].sort((a, b) =>
+        filters.sortOrder === "asc" ? a.price - b.price : b.price - a.price,
+      );
+    }
+
+    setRooms(result);
+  }, [rawRooms, filters]);
+
+  useEffect(() => {
+    loadRooms(page);
+  }, [page, location, adults, children]);
+
+  useEffect(() => {
+    setRooms([]);
+    setPage(1);
+    setHasMore(true);
+    loadRooms(1);
+  }, [location, adults, children, filters, checkIn ?? null, checkOut ?? null]);
 
   useEffect(() => {
     const handleScroll = () => {
-      if (loading || !hasMore) return;
+      if (loading || !hasMore || isFetchingRef.current) return;
 
       const scrollTop = window.scrollY;
       const scrollHeight = document.documentElement.scrollHeight;
       const clientHeight = window.innerHeight;
 
-      // Khi gần chạm đáy, gọi thêm trang mới
-      if (scrollTop + clientHeight >= scrollHeight - 1000) {
+      if (scrollTop + clientHeight >= scrollHeight - 1500) {
         setPage((prev) => prev + 1);
       }
     };
@@ -282,45 +227,14 @@ export default function RoomsListPage() {
     return () => window.removeEventListener("scroll", onScroll);
   }, [y, scale]);
 
-  const normalize = (str: string) =>
-    str
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "");
-
-  const findProvinceCoords = (
-    provinces: any[],
-    location: string,
-  ): [number, number] | null => {
-    const found = provinces.find((p) =>
-      normalize(p.name).includes(normalize(location)),
-    );
-
-    if (found?.latitude && found?.longitude) {
-      return [Number(found.latitude), Number(found.longitude)];
-    }
-
-    return [10.762622, 106.660172];
-  };
-
   useEffect(() => {
     if (!location) return;
 
-    const fetchProvinceCoords = async () => {
-      try {
-        const resp = await get_location(1); // API của bạn
-        const provinces = resp || [];
-        const coords = findProvinceCoords(provinces, location);
-
-        if (coords) {
-          setFallbackCenter(coords);
-        }
-      } catch (err) {
-        console.error("Error fetching provinces:", err);
+    searchProvince(location).then((res) => {
+      if (res?.length) {
+        setFallbackCenter([Number(res[0].latitude), Number(res[0].longitude)]);
       }
-    };
-
-    fetchProvinceCoords();
+    });
   }, [location]);
 
   return (
@@ -339,11 +253,7 @@ export default function RoomsListPage() {
         >
           <SearchBar compact={scrolled} />
         </motion.div>
-        <FilterBar
-          key={filterKey}
-          onFilterChange={handleFilterChange}
-          cleanFilter={handleClearFilters}
-        />
+        <FilterBar onFilterChange={setFilters} />
         <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
           {/* Map */}
           <div className="w-full lg:w-1/4 sticky lg:top-18 self-start">

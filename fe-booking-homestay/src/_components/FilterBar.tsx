@@ -15,103 +15,26 @@ import { useLang } from "@/context/lang-context";
 import { ArrowUpDown, Check, ChevronDown, Filter, Star } from "lucide-react";
 import { useState } from "react";
 
-function CheckboxPopup({
-  title,
-  options,
-  selectedValues,
-  onToggle,
-  onSeeResult,
-  open,
-  onOpenChange,
-  children,
-}: {
-  title: string;
-  options: { label: string; value: string | number }[];
-  selectedValues: (string | number)[];
-  onToggle: (value: string | number) => void;
-  onSeeResult: () => void;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  children?: React.ReactNode;
-}) {
-  const { t } = useLang();
-  return (
-    <Popover open={open} onOpenChange={onOpenChange}>
-      <PopoverTrigger asChild>{children}</PopoverTrigger>
-      <PopoverContent
-        className="w-76 p-0 shadow-lg rounded-xl "
-        align="start"
-        sideOffset={4}
-      >
-        <div className="absolute inset-0 -z-10 bg-black/20 backdrop-blur-sm rounded-xl" />
-        <div className="bg-card rounded-xl p-6">
-          <h3 className="text-xl font-semibold mb-4">{title}</h3>
-          <div className="space-y-4 mb-6 ">
-            {options.map((option) => (
-              <div key={option.value} className=" flex items-center space-x-3">
-                <Checkbox
-                  id={`${title}-${option.value}`}
-                  checked={selectedValues.includes(option.value)}
-                  onCheckedChange={() => onToggle(option.value)}
-                  className="w-5 h-5"
-                />
-                <Label
-                  htmlFor={`${title}-${option.value}`}
-                  className="text-sm font-normal cursor-pointer "
-                >
-                  {option.label}
-                </Label>
-              </div>
-            ))}
-          </div>
-          <div className="flex gap-3">
-            <Button
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              className="flex-1 rounded-full h-10 w-24 text-sm font-medium hover:bg-secondary/50"
-            >
-              {t("close")}
-            </Button>
-            <Button
-              onClick={() => {
-                onSeeResult();
-                onOpenChange(false);
-              }}
-              className="flex-1 rounded-full h-10 w-24 text-sm font-medium bg-primary hover:bg-primary/80 text-white"
-            >
-              {t("apply")}
-            </Button>
-          </div>
-        </div>
-      </PopoverContent>
-    </Popover>
-  );
-}
-
 function CombinedFilterPopup({
   selectedPriceRanges,
   onTogglePrice,
   selectedStars,
   onToggleStar,
-  onApplyFilters,
   open,
   onOpenChange,
   children,
   priceRanges,
   starOptions,
-  cleanFilter,
 }: {
   selectedPriceRanges: string[];
   onTogglePrice: (value: string) => void;
   selectedStars: number[];
   onToggleStar: (value: number) => void;
-  onApplyFilters: () => void;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   children?: React.ReactNode;
   priceRanges: { label: string; value: string }[];
   starOptions: { label: string; value: number }[];
-  cleanFilter: () => void;
 }) {
   const { t } = useLang();
 
@@ -192,29 +115,6 @@ function CombinedFilterPopup({
               ))}
             </div>
           </div>
-
-          {/* Action Buttons */}
-          <div className="flex gap-3 pt-2">
-            <Button
-              variant="outline"
-              onClick={() => {
-                cleanFilter();
-                onOpenChange(false);
-              }}
-              className="flex-1 rounded-full h-10 text-sm elegant-sans"
-            >
-              Xóa bộ lọc
-            </Button>
-            <Button
-              onClick={() => {
-                onApplyFilters();
-                onOpenChange(false);
-              }}
-              className="flex-1 rounded-full h-10 text-sm elegant-sans bg-primary hover:bg-primary/80"
-            >
-              {t("apply")}
-            </Button>
-          </div>
         </div>
       </PopoverContent>
     </Popover>
@@ -272,77 +172,58 @@ function OptionsPopup({
 
 export function FilterBar({
   onFilterChange,
-  cleanFilter,
 }: {
   onFilterChange: (filters: {
-    minPrice?: number;
-    maxPrice?: number;
+    priceRanges?: string[];
     minRating?: number;
     sortOrder?: "asc" | "desc";
   }) => void;
-  cleanFilter: () => void;
 }) {
   const [filterOpen, setFilterOpen] = useState(false);
   const [selectedStars, setSelectedStars] = useState<number | null>(null);
   const [selectedPriceRanges, setSelectedPriceRanges] = useState<string[]>([]);
   const [sortOpen, setSortOpen] = useState(false);
   const [selectedSort, setSelectedSort] = useState<string>("");
+  const activeFilterCount =
+    (selectedStars ? 1 : 0) +
+    (selectedPriceRanges.length ? 1 : 0) +
+    (selectedSort ? 1 : 0);
+
   const { t } = useLang();
 
-  const handleApplyFilters = (overrideSort?: string) => {
-    let minPrice: number | undefined;
-    let maxPrice: number | undefined;
-    let minRating: number | undefined;
-
-    if (selectedPriceRanges.length > 0) {
-      // Mảng chứa tất cả min và max tạm thời
-      const minList: number[] = [];
-      const maxList: number[] = [];
-
-      selectedPriceRanges.forEach((range) => {
-        if (range.includes("+")) {
-          const min = Number.parseInt(range.replace("+", ""));
-          minList.push(min);
-        } else {
-          const [min, max] = range.split("-").map(Number);
-          minList.push(min);
-          maxList.push(max);
-        }
-      });
-
-      // Lấy min nhỏ nhất và max lớn nhất
-      minPrice = Math.min(...minList);
-      if (maxList.length > 0) {
-        maxPrice = Math.max(...maxList);
-      }
-
-      // Nếu có dấu "+" là không có giới hạn trên
-      if (selectedPriceRanges.some((r) => r.includes("+"))) {
-        maxPrice = undefined;
-      }
-    }
-
-    if (selectedStars) {
-      minRating = selectedStars;
-    }
-
+  const applyFilters = (
+    stars: number | null,
+    prices: string[],
+    sort: string,
+  ) => {
     onFilterChange({
-      minPrice,
-      maxPrice,
-      minRating,
+      priceRanges: prices,
+      minRating: stars || undefined,
       sortOrder:
-        overrideSort === "asc" || overrideSort === "desc"
-          ? (overrideSort as "asc" | "desc")
-          : selectedSort === "asc" || selectedSort === "desc"
-            ? (selectedSort as "asc" | "desc")
-            : undefined,
+        sort === "asc" || sort === "desc"
+          ? (sort as "asc" | "desc")
+          : undefined,
     });
   };
 
   const handleSelectSort = (value: string) => {
-    setSelectedSort(value);
-    setSortOpen(false);
-    handleApplyFilters(value);
+    const newSort = selectedSort === value ? "" : value;
+    setSelectedSort(newSort);
+    applyFilters(selectedStars, selectedPriceRanges, newSort);
+  };
+
+  const handleToggleStar = (value: number) => {
+    const newValue = selectedStars === value ? null : value;
+    setSelectedStars(newValue);
+    applyFilters(newValue, selectedPriceRanges, selectedSort);
+  };
+
+  const handleTogglePrice = (value: string) => {
+    const newValues = selectedPriceRanges.includes(value)
+      ? selectedPriceRanges.filter((v) => v !== value) // bỏ chọn
+      : [...selectedPriceRanges, value]; // chọn thêm
+    setSelectedPriceRanges(newValues);
+    applyFilters(selectedStars, newValues, selectedSort);
   };
 
   const sortOptions = [
@@ -353,18 +234,6 @@ export function FilterBar({
   const getSortLabel = () => {
     const option = sortOptions.find((opt) => opt.value === selectedSort);
     return option?.label || t("sort by price");
-  };
-
-  const handleToggle = <T,>(
-    value: T,
-    selectedValues: T[],
-    setSelectedValues: (values: T[]) => void,
-  ) => {
-    setSelectedValues(
-      selectedValues.includes(value)
-        ? selectedValues.filter((v) => v !== value)
-        : [...selectedValues, value],
-    );
   };
 
   const starOptions = [
@@ -383,55 +252,53 @@ export function FilterBar({
   ];
 
   return (
-    <>
-      <div className="flex items-center gap-4 mb-6">
-        <CombinedFilterPopup
-          selectedPriceRanges={selectedPriceRanges}
-          onTogglePrice={(value) =>
-            handleToggle(value, selectedPriceRanges, setSelectedPriceRanges)
-          }
-          selectedStars={selectedStars ? [selectedStars] : []}
-          onToggleStar={(value) =>
-            setSelectedStars(selectedStars === value ? null : value)
-          }
-          onApplyFilters={handleApplyFilters}
-          cleanFilter={cleanFilter}
-          open={filterOpen}
-          onOpenChange={setFilterOpen}
-          priceRanges={priceRanges}
-          starOptions={starOptions}
+    <div className="flex items-center gap-4 mb-6">
+      <CombinedFilterPopup
+        selectedPriceRanges={selectedPriceRanges}
+        onTogglePrice={handleTogglePrice}
+        selectedStars={selectedStars ? [selectedStars] : []}
+        onToggleStar={handleToggleStar}
+        open={filterOpen}
+        onOpenChange={setFilterOpen}
+        priceRanges={priceRanges}
+        starOptions={starOptions}
+      >
+        <Button
+          variant="outline"
+          size="lg"
+          className="shadow-sm text-foreground elegant-subheading"
+        >
+          {" "}
+          <Filter className="h-4 w-4 text-muted-foreground" />
+          <span>{t("filter")}</span>
+          {activeFilterCount > 0 && (
+            <span className="text-xs font-semibold text-primary">
+              ({activeFilterCount})
+            </span>
+          )}
+          <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
+        </Button>
+      </CombinedFilterPopup>
+
+      <div className="ml-auto">
+        <OptionsPopup
+          options={sortOptions}
+          selectedValue={selectedSort}
+          onSelect={handleSelectSort}
+          open={sortOpen}
+          onOpenChange={setSortOpen}
         >
           <Button
             variant="outline"
             size="lg"
             className="shadow-sm text-foreground elegant-subheading"
           >
-            <Filter className="h-4 w-4 text-muted-foreground" />
-            <span>{t("filter")}</span>
+            <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
+            {getSortLabel()}
             <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
           </Button>
-        </CombinedFilterPopup>
-
-        <div className="ml-auto">
-          <OptionsPopup
-            options={sortOptions}
-            selectedValue={selectedSort}
-            onSelect={handleSelectSort}
-            open={sortOpen}
-            onOpenChange={setSortOpen}
-          >
-            <Button
-              variant="outline"
-              size="lg"
-              className="shadow-sm text-foreground elegant-subheading"
-            >
-              <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
-              {getSortLabel()}
-              <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
-            </Button>
-          </OptionsPopup>
-        </div>
+        </OptionsPopup>
       </div>
-    </>
+    </div>
   );
 }

@@ -20,24 +20,31 @@ const RedIcon = L.icon({
   shadowSize: [41, 41],
 });
 
-function MapAutoFit({ roomsArray }: { roomsArray: Room[] }) {
+function MapAutoFit({
+  roomsArray,
+  fallbackCenter,
+}: {
+  roomsArray: Room[];
+  fallbackCenter?: [number, number];
+}) {
   const map = useMap();
+
   useEffect(() => {
-    if (!roomsArray.length) return;
+    // if (!roomsArray.length) return;
+    const validCoords = roomsArray
+      .filter((r) => r.location?.latitude && r.location?.longitude)
+      .map((r): [number, number] => [
+        Number(r.location.latitude),
+        Number(r.location.longitude),
+      ]);
 
-    const bounds = L.latLngBounds(
-      roomsArray
-        .filter((r) => r.location?.latitude && r.location?.longitude)
-        .map((r) => [
-          Number(r.location.latitude),
-          Number(r.location.longitude),
-        ]),
-    );
-
-    if (bounds.isValid()) {
+    if (validCoords.length > 0) {
+      const bounds = L.latLngBounds(validCoords);
       map.fitBounds(bounds, { padding: [50, 50] });
+    } else if (fallbackCenter) {
+      map.setView(fallbackCenter, 12);
     }
-  }, [roomsArray, map]);
+  }, [roomsArray, fallbackCenter, map]);
 
   return null;
 }
@@ -109,14 +116,13 @@ export function MapMarker({
         </Marker>
       ))}
 
-      {validRooms.length <= 0 && fallbackCenter && (
+      {validRooms.length === 0 && fallbackCenter && (
         <Marker position={fallbackCenter} icon={RedIcon}>
           <Popup>Khu vực bạn tìm kiếm</Popup>
         </Marker>
       )}
 
-      {roomsArray.length > 0 && <MapAutoFit roomsArray={roomsArray} />}
-      {!(roomsArray.length > 0) && <MapAutoFit roomsArray={roomsArray} />}
+      <MapAutoFit roomsArray={roomsArray} fallbackCenter={fallbackCenter} />
     </MapContainer>
   );
 }
