@@ -74,5 +74,40 @@ export class UpdateBookingDto {
   @IsOptional()
   @IsString()
   specialRequest?: string;
-}
 
+  @ApiProperty({
+    example: true,
+    description:
+      'Admin miễn phụ phí chênh lệch khi đổi sang ngày đắt hơn (chỉ Admin dùng)',
+    required: false,
+  })
+  @IsOptional()
+  waiveFee?: boolean;
+
+  @ApiProperty({
+    example: 'Vietcombank',
+    description: 'Tên ngân hàng nhận hoàn tiền (khi tổng mới < đã trả)',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  bankName?: string;
+
+  @ApiProperty({
+    example: '123456789',
+    description: 'Số tài khoản nhận hoàn tiền',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  bankAccountNumber?: string;
+
+  @ApiProperty({
+    example: 'NGUYEN VAN A',
+    description: 'Chủ tài khoản nhận hoàn tiền',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  bankAccountName?: string;
+}

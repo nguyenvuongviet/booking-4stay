@@ -96,7 +96,7 @@ export default function RoomInfoTab({
             {room.amenities?.length ? (
               <div className="space-y-4">
                 {Object.entries(
-                  Object.groupBy(room.amenities, (a) => a.category)
+                  Object.groupBy(room.amenities, (a) => a.category),
                 ).map(([cat, list]) => (
                   <div key={cat}>
                     <h4 className="text-sm font-semibold text-primary uppercase mb-2">

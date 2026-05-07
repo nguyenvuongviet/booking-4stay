@@ -13,7 +13,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   getStatusColorClasses,
   translateStatus,
-} from "../../../_utils/color-utils";
+} from "@/constants/booking-status";
 
 export default function UserReviewsTab({
   userId,
@@ -93,7 +93,7 @@ export default function UserReviewsTab({
 
                     <Badge
                       className={`${getStatusColorClasses(
-                        b.status
+                        b.status,
                       )} px-3 py-1 text-sm font-semibold rounded-full`}
                     >
                       {translateStatus(b.status)}

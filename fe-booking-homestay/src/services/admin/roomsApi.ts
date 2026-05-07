@@ -138,16 +138,6 @@ export async function deleteRoomImages(id: number, imageIds: number[]) {
   }
 }
 
-// export async function getRoomImages(id: number) {
-//   try {
-//     const res = await api.get(`/room/${id}/images`);
-//     return res.data.data;
-//   } catch (error) {
-//     console.error("Get room images error:", error);
-//     throw error;
-//   }
-// }
-
 export async function setMainImage(id: number, imageId: number) {
   try {
     const res = await api.patch(`/room/${id}/images/main`, { imageId });
@@ -168,35 +158,56 @@ export async function updateOrder(id: number, order: number[]) {
   }
 }
 
-export async function roomCalendar(
-  id: number | string,
-  month: number,
-  year: number,
-) {
+// ──────────────────────────────────────────
+// Room Calendar (Pricing & Availability)
+// ──────────────────────────────────────────
+
+export interface CalendarDay {
+  date: string;
+  price: number;
+  status: "AVAILABLE" | "BLOCKED" | "BOOKED";
+  bookingDetails: { guestName: string } | null;
+}
+
+export interface RoomCalendarResponse {
+  roomId: number;
+  roomName: string;
+  month: number;
+  year: number;
+  calendar: CalendarDay[];
+}
+
+export interface CalendarUpdateItem {
+  date: string;
+  price?: number;
+  isAvailable?: boolean;
+}
+
+export async function getRoomCalendar(
+  roomId: number,
+  month?: number,
+  year?: number
+): Promise<RoomCalendarResponse> {
   try {
-    const resp = await api.get(`/room/${id}/calendar`, {
+    const res = await api.get(`/room/${roomId}/calendar`, {
       params: { month, year },
     });
-    return resp.data.data;
+    return res.data.data;
   } catch (error) {
-    console.error("Set main image error:", error);
+    console.error("Get room calendar error:", error);
     throw error;
   }
 }
 
 export async function updateRoomCalendar(
-  id: number | string,
-  updates: {
-    date: string;
-    price: number;
-    isAvailable: boolean;
-  }[],
-) {
+  roomId: number,
+  updates: CalendarUpdateItem[]
+): Promise<{ message: string; updatedPrices: number; updatedAvailability: number }> {
   try {
-    const resp = await api.put(`/room/${id}/calendar`, { updates });
-    return resp.data.data;
+    const res = await api.put(`/room/${roomId}/calendar`, { updates });
+    return res.data.data;
   } catch (error) {
-    console.error("Set main image error:", error);
+    console.error("Update room calendar error:", error);
     throw error;
   }
 }

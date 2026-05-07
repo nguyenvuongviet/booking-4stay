@@ -8,7 +8,7 @@ import {
   PopoverTrigger,
 } from "@/_components/ui/popover";
 import { useLang } from "@/context/lang-context";
-import { toDateKey } from "@/lib/utils/calendar";
+import { toDateKey } from "@/app/(pages)/admin/_utils/calendar";
 import { addMonths, format } from "date-fns";
 import { Calendar as CalendarIcon } from "lucide-react";
 import * as React from "react";
@@ -18,7 +18,7 @@ import toast from "react-hot-toast";
 interface DateRangePickerProps {
   id?: number | string;
   value?: DateRange;
-  statusMap?: Map<number, "AVAILABLE" | "BOOKED" | "BLOCKED" >;
+  statusMap?: Map<number, "AVAILABLE" | "BOOKED" | "BLOCKED">;
   defaultPrice?: number;
   getPrice?: (date: Date) => number;
   onChange?: (range: DateRange | undefined) => void;
@@ -49,7 +49,7 @@ export default function DateRangePicker({
   const isSoldOut = (date: Date) => {
     if (!statusMap) return false;
     const status = statusMap.get(toDateKey(date));
-    return status === "BOOKED"|| status === "BLOCKED" ;
+    return status === "BOOKED" || status === "BLOCKED";
   };
 
   const isRangeValid = (from: Date, to: Date) => {
@@ -76,10 +76,12 @@ export default function DateRangePicker({
 
       const from = selectedRange.from!;
       const isSameDay = from.getTime() === day.getTime();
-      //click cùng ngày -> reset to 
+      //click cùng ngày -> reset to
       let newRange: DateRange = isSameDay
-        ? { from, to: undefined } : day < from
-          ? { from: day, to: from } : { from, to: day };
+        ? { from, to: undefined }
+        : day < from
+          ? { from: day, to: from }
+          : { from, to: day };
 
       if (newRange.from && newRange.to) {
         if (!isRangeValid(newRange.from, newRange.to)) {
@@ -91,10 +93,9 @@ export default function DateRangePicker({
       setSelectedRange(newRange);
       onChange?.(newRange);
 
-      if (autoClose && newRange.from && newRange.to)
-        setOpen(false);
+      if (autoClose && newRange.from && newRange.to) setOpen(false);
     },
-    [selectedRange, onChange, autoClose, statusMap]
+    [selectedRange, onChange, autoClose, statusMap],
   );
 
   return (
@@ -102,7 +103,7 @@ export default function DateRangePicker({
       <PopoverTrigger asChild>
         <Button
           variant="outline"
-          className="w-full h-12 px-4 bg-transparent border border-border rounded-3xl hover:border-ring focus:border-ring focus:ring-2 focus:ring-accent hover:bg-transparent text-left flex items-center justify-between"
+          className="relative w-full h-12 px-4 bg-transparent border border-border rounded-3xl hover:border-ring focus:border-ring focus:ring-2 focus:ring-accent hover:bg-transparent text-left flex items-center justify-between"
         >
           <CalendarIcon
             className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground"
@@ -134,18 +135,16 @@ export default function DateRangePicker({
               onDayClick={(day) => handlePick(day)}
               onSelect={(range) => handlePick(undefined, range)}
               month={i === 0 ? currentMonth : addMonths(currentMonth, 1)}
-              onMonthChange={
-                (date) => {
-                  if (i === 0) {
-                    setCurrentMonth(date);
-                    onMonthChange?.(date); 
-                  } else {
-                    const prevMonth = addMonths(date, -1);
-                    setCurrentMonth(prevMonth);
-                    onMonthChange?.(prevMonth); 
-                  }
+              onMonthChange={(date) => {
+                if (i === 0) {
+                  setCurrentMonth(date);
+                  onMonthChange?.(date);
+                } else {
+                  const prevMonth = addMonths(date, -1);
+                  setCurrentMonth(prevMonth);
+                  onMonthChange?.(prevMonth);
                 }
-              }
+              }}
               disabled={[{ before: new Date() }]}
               modifiers={{
                 soldOut: (date) => isSoldOut(date),

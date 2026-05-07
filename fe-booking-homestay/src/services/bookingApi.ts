@@ -143,6 +143,9 @@ export const update_booking = async (
     checkOut?: string;
     adults?: number;
     children?: number;
+    bankName?: string;
+    bankAccountNumber?: string;
+    bankAccountName?: string;
   },
 ) => {
   try {

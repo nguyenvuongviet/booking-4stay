@@ -2,15 +2,11 @@
 
 import { usePayment } from "@/_hooks/usePayment";
 import { BookingCancelSection } from "@/app/(pages)/booking/_component/BookingCancelSection";
-import { BookingStatus } from "@/constants/app.constant";
 import { useLang } from "@/context/lang-context";
 import { parseAbsoluteDate } from "@/lib/utils";
 import { Booking } from "@/models/Booking";
-import {
-  cancel_booking,
-  post_review,
-  update_booking,
-} from "@/services/bookingApi";
+import { cancel_booking, post_review } from "@/services/bookingApi";
+import { BookingStatus } from "@/types/booking";
 import { differenceInDays, format } from "date-fns";
 import { vi } from "date-fns/locale";
 import {
@@ -30,6 +26,7 @@ import { useState } from "react";
 import toast from "react-hot-toast";
 import CountdownTimer from "../../../../_components/CountdownTimer";
 import { Button } from "../../../../_components/ui/button";
+import { translateStatus } from "../../admin/_utils/bookingStatus";
 import PaymentModal from "../../checkout/_component/PaymentModal";
 import { BookingStatusBadge } from "./BookingStatusBadge";
 import { ReviewSection } from "./ReviewSection";
@@ -47,6 +44,9 @@ export const BookingDetail = ({
     refundAmount: number | null;
   } | null>(null);
   const [isUpdateOpen, setIsUpdateOpen] = useState(false);
+  const [updateModalStep, setUpdateModalStep] = useState<"edit" | "bank-info">(
+    "edit",
+  );
 
   if (!booking || !booking.checkIn || !booking.checkOut) {
     return null;
@@ -175,30 +175,23 @@ export const BookingDetail = ({
     }
   };
 
-  const handleUpdateBooking = async (data: any) => {
-    try {
-      const resp = await update_booking(booking.id, data);
-      const newBooking = resp.data?.booking;
-      const message = resp.data?.message;
-
-      if (newBooking) {
-        setBooking(newBooking);
-        setIsUpdateOpen(false);
-        toast.success(message || "Cập nhật thành công!");
-      }
-    } catch (error: any) {
-      const msg =
-        error?.response?.data?.message ||
-        "Không thể cập nhật. Vui lòng thử lại.";
-      toast.error(msg);
+  const handleUpdateBooking = (newBooking: any, message: string) => {
+    if (newBooking) {
+      setBooking(newBooking);
+      toast.success(message);
     }
   };
 
-  const isEditable =
-    [BookingStatus.PENDING, BookingStatus.CONFIRMED].includes(booking.status) ||
-    (booking.status === BookingStatus.PARTIALLY_PAID &&
-      paid < total &&
-      paid === 0);
+  const modifiedCount = Number(booking.modifiedCount || 0);
+  const showActions = [
+    BookingStatus.PENDING,
+    BookingStatus.CONFIRMED,
+    BookingStatus.PARTIALLY_PAID,
+    BookingStatus.CHECKED_IN,
+  ].includes(booking.status as BookingStatus);
+
+  const canEdit = modifiedCount < 3;
+  const canCancel = true; // Luôn cho phép huỷ nếu đơn đang active
 
   let freeCancelDays = 3;
   if (booking.cancellationPolicy && booking.cancellationPolicy.length > 0) {
@@ -215,7 +208,7 @@ export const BookingDetail = ({
   );
   const canReschedule =
     daysLeft >= freeCancelDays && (booking.modifiedCount || 0) < 3;
-  const disableEdit = !isEditable || !canReschedule;
+  const disableEdit = !showActions || !canReschedule;
 
   return (
     <div className="max-w-[1200px] mx-auto px-4 py-8">
@@ -407,7 +400,7 @@ export const BookingDetail = ({
               </div>
 
               {/* Action Buttons */}
-              {isEditable && (
+              {showActions && (
                 <div className="mt-6 pt-5 border-t border-gray-100 space-y-3">
                   <div className="flex items-center justify-between">
                     <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
@@ -421,8 +414,11 @@ export const BookingDetail = ({
                   <Button
                     variant="outline"
                     disabled={disableEdit}
-                    onClick={() => setIsUpdateOpen(true)}
-                    className="w-full justify-start h-16 px-6 sm:px-8 rounded-3xl border-2 border-gray-100 shadow-sm hover:shadow-md hover:border-primary/20 hover:bg-primary/5 flex items-center gap-4 group transition-all duration-300"
+                    onClick={() => {
+                      setUpdateModalStep("edit");
+                      setIsUpdateOpen(true);
+                    }}
+                    className="w-full justify-center h-16 px-6 sm:px-8 rounded-3xl border-2 border-gray-100 shadow-sm hover:shadow-md hover:border-primary/20 hover:bg-primary/5 flex items-center gap-4 group transition-all duration-300"
                   >
                     <div className="p-2 bg-gray-50 rounded-xl group-hover:bg-primary/10 transition-colors">
                       <Pencil className="w-5 h-5 text-gray-600 group-hover:text-primary transition-colors" />
@@ -514,17 +510,19 @@ export const BookingDetail = ({
                         <p className="text-xs font-black text-gray-700 uppercase tracking-tight">
                           {log.action === "RESCHEDULE"
                             ? "Đổi ngày lưu trú"
-                            : log.action === "UPDATE_OCCUPANCY"
-                              ? "Cập nhật số khách"
-                              : log.action === "UPDATE_INFO"
-                                ? "Cập nhật thông tin"
-                                : log.action === "CANCEL"
-                                  ? "Hủy đặt phòng"
-                                  : log.action === "REFUND_CONFIRMED"
-                                    ? "Xác nhận hoàn tiền"
-                                    : log.action === "CREATE"
-                                      ? "Tạo đơn đặt"
-                                      : log.action}
+                            : log.action === "REFUND_DIFFERENCE_CONFIRMED"
+                              ? "Xác nhận hoàn tiền chênh lệch"
+                              : log.action === "UPDATE_OCCUPANCY"
+                                ? "Cập nhật số khách"
+                                : log.action === "UPDATE_INFO"
+                                  ? "Cập nhật thông tin"
+                                  : log.action === "CANCEL"
+                                    ? "Hủy đặt phòng"
+                                    : log.action === "REFUND_CONFIRMED"
+                                      ? "Xác nhận hoàn tiền"
+                                      : log.action === "CREATE"
+                                        ? "Tạo đơn đặt"
+                                        : log.action}
                         </p>
                       </div>
                       <time className="text-[10px] text-gray-400 font-medium">
@@ -533,10 +531,14 @@ export const BookingDetail = ({
                     </div>
                     <div className="sm:w-3/4 text-sm">
                       <p className="text-gray-600 leading-relaxed mb-3 font-medium">
-                        {log.note
-                          ?.replace(BookingStatus.CANCELLED, "Đã hủy")
-                          ?.replace(BookingStatus.CONFIRMED, "Đã xác nhận")
-                          ?.replace(BookingStatus.PENDING, "Chờ thanh toán")}
+                        {Object.keys(BookingStatus).reduce(
+                          (note, key) =>
+                            note?.replace(
+                              new RegExp(key, "g"),
+                              translateStatus(key),
+                            ),
+                          log.note,
+                        )}
                       </p>
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -613,11 +615,11 @@ export const BookingDetail = ({
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-gray-500">Phí dịch vụ</span>
-                <span className="font-medium text-gray-900">0 VND</span>
+                <span className="font-medium text-gray-900">Miễn phí</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-gray-500">Thuế (10%)</span>
-                <span className="font-medium text-gray-900">0 VND</span>
+                <span className="font-medium text-gray-900">Đã bao gồm</span>
               </div>
             </div>
 
@@ -647,6 +649,19 @@ export const BookingDetail = ({
                 </div>
               )}
 
+              {booking.logs?.some(
+                (l: any) => l.action === "REFUND_DIFFERENCE_CONFIRMED",
+              ) && (
+                <div className="flex justify-between items-center text-sm px-2 mt-1">
+                  <span className="text-amber-600 font-medium">
+                    Đã hoàn trả chênh lệch
+                  </span>
+                  <span className="font-bold text-amber-600">
+                    +{formatPrice(paid - total)} VND
+                  </span>
+                </div>
+              )}
+
               {remaining > 0 &&
                 ![
                   BookingStatus.CANCELLED,
@@ -662,6 +677,50 @@ export const BookingDetail = ({
                         {formatPrice(remaining)} VND
                       </span>
                     </div>
+                  </div>
+                )}
+
+              {/* Thông báo hoàn tiền chênh lệch */}
+              {refund > 0 &&
+                remaining <= 0 &&
+                ![
+                  BookingStatus.CANCELLED,
+                  BookingStatus.WAITING_REFUND,
+                  BookingStatus.REFUNDED,
+                ].includes(booking.status) && (
+                  <div className="bg-amber-50/80 rounded-2xl p-4 border border-amber-200 mt-2 space-y-2">
+                    <div className="flex flex-col gap-1">
+                      <span className="font-bold text-amber-600 text-[10px] uppercase tracking-widest">
+                        Hoàn tiền chênh lệch
+                      </span>
+                      <span className="font-black text-amber-700 text-xl">
+                        {formatPrice(refund)} VND
+                      </span>
+                    </div>
+                    {booking.bankInfo?.bankAccountNumber ? (
+                      <div className="text-xs text-amber-700 bg-amber-100/50 rounded-lg p-2 space-y-0.5">
+                        <p className="font-bold">Thông tin nhận tiền:</p>
+                        <p>
+                          {booking.bankInfo.bankName} —{" "}
+                          {booking.bankInfo.bankAccountNumber}
+                        </p>
+                        <p>CTK: {booking.bankInfo.bankAccountName}</p>
+                      </div>
+                    ) : (
+                      <Button
+                        size="sm"
+                        onClick={() => {
+                          setUpdateModalStep("bank-info");
+                          setIsUpdateOpen(true);
+                        }}
+                        className="w-full bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold"
+                      >
+                        Cung cấp thông tin ngân hàng
+                      </Button>
+                    )}
+                    <p className="text-[10px] text-amber-600 italic">
+                      Quản trị viên sẽ hoàn tiền sau khi xác nhận thông tin.
+                    </p>
                   </div>
                 )}
             </div>
@@ -690,14 +749,114 @@ export const BookingDetail = ({
               booking.status,
             ) && (
               <div
-                className={`p-4 rounded-xl flex items-start gap-3 ${booking.status === BookingStatus.REFUNDED ? "bg-green-50/80 border border-green-100 text-green-800" : "bg-blue-50/80 border border-blue-100 text-blue-800"}`}
+                className={`p-4 rounded-2xl border space-y-3 mt-2 ${
+                  booking.status === BookingStatus.REFUNDED
+                    ? "bg-green-50/80 border-green-200 text-green-800"
+                    : "bg-amber-50/80 border-amber-200 text-amber-800"
+                }`}
               >
-                <Info className="w-5 h-5 shrink-0 mt-0.5" />
-                <div className="text-xs leading-relaxed">
-                  {booking.status === BookingStatus.REFUNDED
-                    ? `Đã hoàn tiền ${formatPrice(refund)} VND vào ngày ${format(new Date(booking.refundInfo?.refundedAt || new Date()), "dd/MM/yyyy")}.`
-                    : `Hệ thống đang chuẩn bị hoàn lại số tiền ${formatPrice(refund)} VND cho bạn.`}
+                <div className="flex flex-col gap-1">
+                  <span
+                    className={`font-bold text-[10px] uppercase tracking-widest ${
+                      booking.status === BookingStatus.REFUNDED
+                        ? "text-green-600"
+                        : "text-amber-600"
+                    }`}
+                  >
+                    {booking.status === BookingStatus.REFUNDED
+                      ? "Đã hoàn tất"
+                      : "Hoàn tiền cho khách"}
+                  </span>
+                  <span
+                    className={`font-black text-xl tracking-tight ${
+                      booking.status === BookingStatus.REFUNDED
+                        ? "text-green-700"
+                        : "text-amber-700"
+                    }`}
+                  >
+                    {formatPrice(refund || paid)} VND
+                  </span>
                 </div>
+
+                <div className="flex items-start gap-2.5">
+                  <Info
+                    className={`w-4 h-4 shrink-0 mt-0.5 ${
+                      booking.status === BookingStatus.REFUNDED
+                        ? "text-green-600"
+                        : "text-amber-600"
+                    }`}
+                  />
+                  <div className="text-[11px] leading-relaxed font-medium">
+                    {booking.status === BookingStatus.REFUNDED
+                      ? `Đã hoàn tiền vào ngày ${format(new Date(booking.refundInfo?.refundedAt || new Date()), "dd/MM/yyyy")}.`
+                      : `Hệ thống đang chuẩn bị hoàn lại số tiền này cho bạn.`}
+                  </div>
+                </div>
+
+                {booking.status === BookingStatus.WAITING_REFUND && (
+                  <div className="pt-1">
+                    {booking.bankInfo?.bankAccountNumber ? (
+                      <div className="bg-white/60 rounded-xl p-3.5 text-xs space-y-2.5 border border-amber-200/50 shadow-sm">
+                        <div className="flex items-center justify-between">
+                          <p className="font-black text-amber-900 uppercase tracking-tighter">
+                            Thông tin nhận tiền
+                          </p>
+                          <div className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                        </div>
+                        <div className="space-y-1.5 text-[11px]">
+                          <div className="flex justify-between items-center">
+                            <span className="text-amber-600/70 font-medium">
+                              Ngân hàng:
+                            </span>
+                            <span className="font-bold text-amber-900">
+                              {booking.bankInfo.bankName}
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-amber-600/70 font-medium">
+                              Số tài khoản:
+                            </span>
+                            <span className="font-bold text-amber-900 tracking-wider">
+                              {booking.bankInfo.bankAccountNumber}
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-amber-600/70 font-medium">
+                              Chủ tài khoản:
+                            </span>
+                            <span className="font-bold text-amber-900 uppercase">
+                              {booking.bankInfo.bankAccountName}
+                            </span>
+                          </div>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setUpdateModalStep("bank-info");
+                            setIsUpdateOpen(true);
+                          }}
+                          className="w-full h-8 mt-1 rounded-lg text-[10px] font-black uppercase tracking-widest text-amber-600 hover:bg-amber-100 hover:text-amber-700 transition-all border border-amber-100"
+                        >
+                          Thay đổi thông tin →
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button
+                        onClick={() => {
+                          setUpdateModalStep("bank-info");
+                          setIsUpdateOpen(true);
+                        }}
+                        className="w-full h-11 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-sm shadow-lg shadow-amber-200/50 transition-all flex items-center justify-center gap-2"
+                      >
+                        Cung cấp thông tin ngân hàng
+                      </Button>
+                    )}
+                    <p className="text-[10px] text-amber-600 italic mt-3 text-center leading-tight">
+                      Quản trị viên sẽ hoàn tiền sau khi xác nhận thông tin.
+                    </p>
+                  </div>
+                )}
               </div>
             )}
 
@@ -717,22 +876,30 @@ export const BookingDetail = ({
               </div>
             )}
 
-            {/* Action Buttons Mua hàng */}
-            {booking.status === BookingStatus.PENDING && (
+            {/* Action Buttons Thanh toán */}
+            {(booking.status === BookingStatus.PENDING ||
+              ((booking.status === BookingStatus.PARTIALLY_PAID ||
+                booking.status === BookingStatus.CONFIRMED ||
+                booking.status === BookingStatus.CHECKED_IN) &&
+                remaining > 0)) && (
               <div className="space-y-3 pt-4 border-t border-gray-100">
                 <Button
-                  onClick={() => handleConfirmBooking("CASH")}
+                  onClick={() => handleConfirmBooking("BANK_TRANSFER")}
                   className="w-full h-14 rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold shadow-lg shadow-primary/20 text-[15px] transition-all"
                 >
-                  Cọc tiền ngay
+                  {remaining === total
+                    ? "Thanh toán ngay"
+                    : "Thanh toán số tiền còn lại"}
                 </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => handleConfirmBooking("BANK_TRANSFER")}
-                  className="w-full h-14 rounded-2xl font-bold border-2 border-gray-200 hover:border-gray-300 hover:bg-gray-50 text-gray-700 text-[15px] transition-all"
-                >
-                  Thanh toán toàn bộ
-                </Button>
+                {booking.status === BookingStatus.PENDING && (
+                  <Button
+                    variant="outline"
+                    onClick={() => handleConfirmBooking("CASH")}
+                    className="w-full h-14 rounded-2xl font-bold border-2 border-gray-200 hover:border-gray-300 hover:bg-gray-50 text-gray-700 text-[15px] transition-all"
+                  >
+                    Thanh toán tại chỗ
+                  </Button>
+                )}
               </div>
             )}
           </div>
@@ -741,9 +908,10 @@ export const BookingDetail = ({
 
       <UnifiedUpdateDialog
         open={isUpdateOpen}
+        initialStep={updateModalStep}
         onClose={() => setIsUpdateOpen(false)}
         booking={booking}
-        onConfirm={handleUpdateBooking}
+        onUpdated={handleUpdateBooking}
       />
 
       <PaymentModal
@@ -752,6 +920,7 @@ export const BookingDetail = ({
         type={modalType!}
         onDepositNow={confirmNow}
         onDepositLater={confirmLater}
+        isRemaining={remaining > 0 && booking.status !== BookingStatus.PENDING}
       />
     </div>
   );

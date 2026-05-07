@@ -95,6 +95,7 @@ export class MailService {
       | 'BOOKING_PENDING'
       | 'BOOKING_CONFIRMED'
       | 'BOOKING_CANCELLED'
+      | 'BOOKING_CANCELLED_BY_ADMIN'
       | 'BOOKING_PARTIALLY_PAID'
       | 'BOOKING_REFUNDED'
       | 'BOOKING_CHECKED_IN'
@@ -163,6 +164,16 @@ export class MailService {
         <p style="color:red;"><b>Trạng thái:</b> CANCELLED</p>
         <p><b>Lý do hủy:</b></p>
         <p><i>${booking.cancelReason ?? 'Không có lý do'}</i></p>
+      `;
+        break;
+
+      case 'BOOKING_CANCELLED_BY_ADMIN':
+        subject = 'Booking đã bị hủy bởi Admin';
+        body = `
+        ${info}
+        <p style="color:red;"><b>Trạng thái:</b> CANCELLED_BY_ADMIN</p>
+        <p><b>Lý do hủy:</b></p>
+        <p><i>${booking.cancelReason ?? 'Admin chủ động huỷ đơn'}</i></p>
       `;
         break;
 

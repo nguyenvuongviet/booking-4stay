@@ -10,18 +10,16 @@ import { toast } from "@/_components/ui/use-toast";
 import { STORAGE_KEYS } from "@/constants";
 import { cn } from "@/lib/utils";
 import {
-  BarChart3,
   Calendar,
   ChevronLeft,
   DoorOpen,
   Gift,
-  Home,
   LayoutDashboard,
   LogOut,
   MapPin,
+  Plus,
   Settings,
   Star,
-  TrendingUp,
   Users,
 } from "lucide-react";
 import Image from "next/image";
@@ -65,14 +63,14 @@ export function AdminSidebar({ isCollapsed, onToggle }: AdminSidebarProps) {
     <aside
       className={cn(
         "fixed left-0 top-0 h-screen bg-sidebar border-r border-sidebar-border flex flex-col transition-all duration-300",
-        isCollapsed ? "w-20" : "w-64"
+        isCollapsed ? "w-20" : "w-64",
       )}
     >
       <button
         onClick={onToggle}
         className={cn(
           "absolute -right-3 top-1/3 p-1 rounded-full border border-sidebar-border bg-sidebar text-sidebar-foreground shadow-md transition-colors hover:bg-sidebar-accent z-50 cursor-pointer",
-          isCollapsed ? "rotate-180" : ""
+          isCollapsed ? "rotate-180" : "",
         )}
       >
         <ChevronLeft className="w-4 h-4 transition-transform duration-300" />
@@ -97,6 +95,30 @@ export function AdminSidebar({ isCollapsed, onToggle }: AdminSidebarProps) {
       </div>
 
       <TooltipProvider>
+        <div className="px-4 py-2 border-b border-sidebar-border mb-2">
+          {isCollapsed ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Link
+                  href="/admin/offline-booking"
+                  className="flex items-center justify-center w-full bg-primary hover:bg-primary/90 text-primary-foreground p-3 rounded-lg transition-colors shadow-sm"
+                >
+                  <Plus className="w-5 h-5" />
+                </Link>
+              </TooltipTrigger>
+              <TooltipContent side="right">Đặt phòng nhanh</TooltipContent>
+            </Tooltip>
+          ) : (
+            <Link
+              href="/admin/offline-booking"
+              className="flex items-center justify-center gap-2 w-full bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-3 rounded-lg font-bold transition-all shadow-sm active:scale-[0.98]"
+            >
+              <Plus className="w-5 h-5" />
+              Đặt phòng nhanh
+            </Link>
+          )}
+        </div>
+
         <nav className="flex-1 overflow-y-auto p-1 space-y-2">
           {menuItems.map((item) => {
             const Icon = item.icon;
@@ -111,7 +133,7 @@ export function AdminSidebar({ isCollapsed, onToggle }: AdminSidebarProps) {
                   isActive
                     ? "bg-sidebar-primary text-sidebar-primary-foreground"
                     : "text-sidebar-foreground hover:bg-sidebar-accent",
-                  isCollapsed ? "justify-center" : "justify-start"
+                  isCollapsed ? "justify-center" : "justify-start",
                 )}
               >
                 <Icon className="w-5 h-5" />
@@ -144,7 +166,7 @@ export function AdminSidebar({ isCollapsed, onToggle }: AdminSidebarProps) {
                   onClick={handleLogout}
                   className={cn(
                     "w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent transition-colors cursor-pointer",
-                    "justify-center"
+                    "justify-center",
                   )}
                 >
                   <LogOut className="w-5 h-5" />
@@ -157,7 +179,7 @@ export function AdminSidebar({ isCollapsed, onToggle }: AdminSidebarProps) {
               onClick={handleLogout}
               className={cn(
                 "w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent transition-colors cursor-pointer",
-                "justify-start"
+                "justify-start",
               )}
             >
               <LogOut className="w-5 h-5" />

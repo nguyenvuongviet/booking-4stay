@@ -5,8 +5,12 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { bookings_status } from '@prisma/client';
-import { ADMIN_EMAIL } from 'src/common/constant/app.constant';
+import {
+  ADMIN_EMAIL,
+  WALK_IN_GUEST_ID,
+} from 'src/common/constant/app.constant';
 import { AvailabilityHelper } from 'src/helpers/availability.helper';
+import { LoyaltyProgram } from 'src/helpers/loyalty.helper';
 import { PricingHelper } from 'src/helpers/pricing.helper';
 import { ensureDateRange, nightsBetween } from 'src/utils/date.util';
 import { sanitizeBooking } from 'src/utils/sanitize/booking.sanitize';
@@ -23,6 +27,7 @@ import {
   sortPolicyDesc,
 } from './booking.constants';
 import { CreateBookingDto } from './dto/create-booking.dto';
+import { CreateManualBookingDto } from './dto/create-manual-booking.dto';
 import { PreCheckDto } from './dto/preCheck-booking.dto';
 import { UpdateBookingDto } from './dto/update-booking.dto';
 
@@ -35,9 +40,10 @@ export class BookingService {
     private readonly mailService: MailService,
     private readonly appConfigsService: AppConfigsService,
     private readonly lifecycleService: BookingLifecycleService,
+    private readonly loyalty: LoyaltyProgram,
   ) {}
 
-  /**
+  /**˚
    * Xem trước thông tin đặt phòng (Pre-check).
    * Kiểm tra phòng trống, tính toán giá tiền, áp dụng ưu đãi hạng thành viên (Loyalty).
    */
@@ -146,8 +152,10 @@ export class BookingService {
     const booking = await this.prisma.$transaction(async (tx) => {
       await tx.$queryRaw`SELECT id FROM rooms WHERE id = ${roomId} FOR UPDATE`;
 
-      await this.assertNoOverlap(tx, roomId, inDate, outDate, userId);
-      await this.assertNotBlocked(tx, roomId, inDate, outDate);
+      await this.availability.assertAvailability(roomId, inDate, outDate, {
+        tx,
+        userId,
+      });
 
       return tx.bookings.create({
         data: {
@@ -188,19 +196,242 @@ export class BookingService {
   }
 
   /**
-   * Admin duyệt đơn đặt phòng thủ công.
-   * Chuyển trạng thái booking sang CONFIRMED và cập nhật số tiền đã thanh toán.
+   * Admin tạo đơn đặt phòng thủ công (Manual Booking).
+   * Dùng cho khách đã chốt đơn qua điện thoại, email, Zalo...
+   * - createAccount = true -> Tạo tài khoản mới cho khách (tích điểm Loyalty ngay)
+   * - createAccount = false -> Gán userId = WALK_IN_GUEST_ID (khách vãng lai)
+   * - Vẫn đi qua Pessimistic Lock + assertNoOverlap + assertNotBlocked
    */
-  async adminAcceptBooking(bookingId: number, dto: { paidAmount: number }) {
-    const updated = await this.lifecycleService.changeBookingStatus(
-      bookingId,
-      bookings_status.CONFIRMED,
-      { allowOverride: true, paidAmount: dto.paidAmount },
+  async adminCreateManualBooking(adminId: number, dto: CreateManualBookingDto) {
+    const {
+      roomId,
+      checkIn,
+      checkOut,
+      adults = 1,
+      children = 0,
+      guestFullName,
+      guestEmail,
+      guestPhoneNumber,
+      specialRequest,
+      paymentMethod = 'CASH' as any,
+      paidAmount = 0,
+      note,
+      createAccount = false,
+    } = dto;
+
+    const { inDate, outDate } = ensureDateRange(checkIn, checkOut);
+
+    const [room, policyConfig] = await Promise.all([
+      this.prisma.rooms.findFirst({
+        where: { id: roomId, isDeleted: false },
+        select: {
+          id: true,
+          price: true,
+          adultCapacity: true,
+          childCapacity: true,
+        },
+      }),
+      this.prisma.app_configs.findUnique({
+        where: { key: AppConfigKey.CANCELLATION_POLICY },
+      }),
+    ]);
+    if (!room) throw new BadRequestException('Phòng không tồn tại');
+
+    this.validateCapacity(room, adults, children);
+
+    const rawTotal = await this.pricing.priceForRange(
+      roomId,
+      Number(room.price),
+      inDate,
+      outDate,
     );
+
+    const status = this.resolveManualStatus(paidAmount, rawTotal);
+
+    const booking = await this.prisma.$transaction(async (tx) => {
+      // --- Bước 1: Xác định userId ---
+      let userId = WALK_IN_GUEST_ID;
+      let accountCreated = false;
+      let accountReused = false;
+
+      if (createAccount) {
+        const result = await this.findOrCreateGuestAccount(tx, {
+          guestFullName,
+          guestEmail,
+          guestPhoneNumber,
+        });
+        userId = result.userId;
+        if (userId !== WALK_IN_GUEST_ID) {
+          if (result.isNew) accountCreated = true;
+          else accountReused = true;
+        }
+      }
+
+      // --- Bước 2: Pessimistic Lock + Kiểm tra trùng lặp ---
+      await tx.$queryRaw`SELECT id FROM rooms WHERE id = ${roomId} FOR UPDATE`;
+      await this.availability.assertAvailability(roomId, inDate, outDate, {
+        tx,
+        userId,
+      });
+
+      // --- Bước 3: Tính toán giảm giá Loyalty ---
+      const { totalPrice, discountAmount } =
+        userId !== WALK_IN_GUEST_ID
+          ? await this.pricing.applyLoyaltyDiscount(userId, rawTotal, { tx })
+          : { totalPrice: rawTotal, discountAmount: 0 };
+
+      // --- Bước 4: Tạo booking ---
+      const created = await tx.bookings.create({
+        data: {
+          userId,
+          roomId,
+          guestFullName,
+          guestEmail: guestEmail || '',
+          guestPhoneNumber,
+          specialRequest: specialRequest ?? null,
+          checkIn: inDate,
+          checkOut: outDate,
+          adults,
+          children,
+          rawTotalPrice: rawTotal,
+          discountAmount,
+          totalPrice,
+          status,
+          paymentMethod,
+          paidAmount,
+          cancellationPolicy: policyConfig?.value || [],
+          policyUpdatedAt: policyConfig?.updatedAt || new Date(),
+        },
+        include: { rooms: { include: { room_images: true } } },
+      });
+
+      // --- Bước 4: Ghi log ---
+      const logParts = [
+        `[Manual] Admin tạo đơn thủ công cho ${guestFullName} (${guestPhoneNumber})`,
+      ];
+      if (accountCreated)
+        logParts.push(`[Đã tạo tài khoản mới userId=${userId}]`);
+      else if (accountReused)
+        logParts.push(`[Sử dụng tài khoản có sẵn userId=${userId}]`);
+      if (note) logParts.unshift(`[Manual] ${note}`);
+
+      await (tx as any).booking_logs.create({
+        data: {
+          bookingId: created.id,
+          action: 'MANUAL_CREATE',
+          newCheckIn: inDate,
+          newCheckOut: outDate,
+          newTotal: rawTotal,
+          performedBy: adminId,
+          note: note ? `[Manual] ${note}` : logParts.join(' | '),
+        },
+      });
+
+      return { ...created, accountCreated, guestUserId: userId };
+    });
+
+    // Gửi email thông báo
+    const mailType = 'BOOKING_CONFIRMED';
+    if (guestEmail) {
+      this.mailService
+        .sendBookingMail(guestEmail, mailType, booking)
+        .catch((e) => console.error('Mail Error:', e));
+    }
+    this.mailService
+      .sendBookingMail(ADMIN_EMAIL, mailType, booking)
+      .catch((e) => console.error('Admin Mail Error:', e));
+
     return {
-      message: 'Admin đã duyệt đơn',
-      booking: sanitizeBooking(updated),
+      message: booking.accountCreated
+        ? 'Tạo đơn đặt phòng thành công & đã tạo tài khoản cho khách'
+        : 'Tạo đơn đặt phòng thủ công thành công',
+      accountCreated: booking.accountCreated,
+      guestUserId: booking.guestUserId,
+      booking: sanitizeBooking(booking),
     };
+  }
+
+  /**
+   * Tìm hoặc tạo tài khoản cho khách vãng lai.
+   * - Ưu tiên tìm theo SĐT (luôn có) hoặc Email (nếu có), bao gồm cả khách đã bị xóa.
+   * - Nếu tìm thấy khách cũ bị xóa -> Khôi phục lại (undelete).
+   * - Mật khẩu mặc định = SĐT.
+   */
+  private async findOrCreateGuestAccount(
+    tx: any,
+    guest: {
+      guestFullName: string;
+      guestEmail?: string;
+      guestPhoneNumber: string;
+    },
+  ): Promise<{ userId: number; isNew: boolean }> {
+    const email = guest.guestEmail || `${guest.guestPhoneNumber}@4stay.local`;
+
+    // 1. Tìm user hiện có (theo SĐT hoặc Email)
+    const existingUser = await tx.users.findFirst({
+      where: {
+        OR: [{ phoneNumber: guest.guestPhoneNumber }, { email: email }],
+      },
+      select: { id: true, isDeleted: true },
+    });
+
+    let userId: number;
+    let isNew = false;
+
+    if (existingUser) {
+      userId = existingUser.id;
+      // Nếu user đã bị xóa -> Khôi phục lại
+      if (existingUser.isDeleted) {
+        await tx.users.update({
+          where: { id: userId },
+          data: { isDeleted: false, deletedAt: null, isActive: true },
+        });
+      }
+    } else {
+      // 2. Chưa có -> Tạo mới
+      isNew = true;
+      const nameParts = guest.guestFullName.trim().split(/\s+/);
+      const lastName = nameParts.pop() || '';
+      const firstName = nameParts.join(' ') || lastName;
+
+      const bcrypt = await import('bcrypt');
+      const hashedPassword = await bcrypt.hash(guest.guestPhoneNumber, 10);
+
+      const userRole = await tx.roles.findUnique({ where: { name: 'USER' } });
+      if (!userRole) return { userId: WALK_IN_GUEST_ID, isNew: false };
+
+      const newUser = await tx.users.create({
+        data: {
+          email,
+          password: hashedPassword,
+          firstName,
+          lastName,
+          phoneNumber: guest.guestPhoneNumber,
+          country: 'Việt Nam',
+          isVerified: true,
+          isActive: true,
+          user_roles: { create: { roleId: userRole.id } },
+        },
+      });
+      userId = newUser.id;
+    }
+
+    // 3. Đảm bảo có Loyalty Program (Dùng helper đã có)
+    await this.loyalty.createLoyaltyProgram(userId, { tx });
+
+    return { userId, isNew };
+  }
+
+  /**
+   * Xác định trạng thái booking dựa trên số tiền Admin đã thu.
+   */
+  private resolveManualStatus(
+    paidAmount: number,
+    totalPrice: number,
+  ): bookings_status {
+    if (paidAmount >= totalPrice) return bookings_status.CONFIRMED;
+    if (paidAmount > 0) return bookings_status.PARTIALLY_PAID;
+    return bookings_status.PENDING;
   }
 
   /**
@@ -222,6 +453,10 @@ export class BookingService {
       guestEmail,
       guestPhoneNumber,
       specialRequest,
+      waiveFee,
+      bankName,
+      bankAccountNumber,
+      bankAccountName,
     } = dto;
 
     return await this.prisma.$transaction(async (tx) => {
@@ -253,7 +488,19 @@ export class BookingService {
         (specialRequest !== undefined &&
           specialRequest !== booking.specialRequest);
 
-      if (!isDateChanged && !isOccupancyChanged && !isInfoChanged) {
+      const isBankInfoChanged =
+        (bankName !== undefined && bankName !== booking.bankName) ||
+        (bankAccountNumber !== undefined &&
+          bankAccountNumber !== booking.bankAccountNumber) ||
+        (bankAccountName !== undefined &&
+          bankAccountName !== booking.bankAccountName);
+
+      if (
+        !isDateChanged &&
+        !isOccupancyChanged &&
+        !isInfoChanged &&
+        !isBankInfoChanged
+      ) {
         return {
           message: 'Không có thay đổi nào được thực hiện',
           booking: sanitizeBooking(booking),
@@ -281,21 +528,12 @@ export class BookingService {
 
         await tx.$queryRaw`SELECT id FROM rooms WHERE id = ${booking.roomId} FOR UPDATE`;
 
-        const overlap = await tx.bookings.findFirst({
-          where: {
-            roomId: booking.roomId,
-            isDeleted: false,
-            status: { in: ACTIVE_BOOKING_STATUSES },
-            id: { not: id },
-            checkIn: { lt: outDate },
-            checkOut: { gt: inDate },
-          },
-        });
-        if (overlap) {
-          throw new BadRequestException(
-            `Phòng đã bị đặt trong khoảng thời gian này (ID: ${overlap.id})`,
-          );
-        }
+        await this.availability.assertAvailability(
+          booking.roomId,
+          inDate,
+          outDate,
+          { tx, excludeBookingId: id },
+        );
 
         const rawTotal = await this.pricing.priceForRange(
           booking.roomId,
@@ -306,20 +544,32 @@ export class BookingService {
         const { totalPrice, discountAmount } =
           await this.pricing.applyLoyaltyDiscount(booking.userId, rawTotal);
 
+        // Admin "Miễn phụ phí": giữ nguyên giá cũ nếu giá mới đắt hơn
+        const finalPrice =
+          waiveFee && role === Role.ADMIN && totalPrice > oldTotal
+            ? oldTotal
+            : totalPrice;
+        const finalDiscount =
+          waiveFee && role === Role.ADMIN && totalPrice > oldTotal
+            ? Number(booking.discountAmount)
+            : discountAmount;
+
         const { newStatus, refundAmount, diff } = this.resolveRescheduleStatus(
           booking,
-          totalPrice,
+          finalPrice,
         );
         rescheduleResult = { diff, refundAmount };
 
         updateData.checkIn = inDate;
         updateData.checkOut = outDate;
         updateData.rawTotalPrice = rawTotal;
-        updateData.discountAmount = discountAmount;
-        updateData.totalPrice = totalPrice;
+        updateData.discountAmount = finalDiscount;
+        updateData.totalPrice = finalPrice;
         updateData.status = newStatus;
         updateData.refundAmount = refundAmount;
+
         logAction = 'RESCHEDULE';
+        if (waiveFee && role === Role.ADMIN) logNote += '[Miễn phụ phí] ';
         logNote += `Đổi ngày: ${nights} đêm (${oldTotal.toLocaleString()} -> ${totalPrice.toLocaleString()} VND). `;
       }
 
@@ -363,7 +613,24 @@ export class BookingService {
         logNote += 'Cập nhật thông tin khách hàng/yêu cầu đặc biệt. ';
       }
 
-      if (!updateData.modifiedCount) {
+      // 4.5 Xử lý thông tin ngân hàng
+      if (isBankInfoChanged) {
+        if (bankName) updateData.bankName = bankName;
+        if (bankAccountNumber)
+          updateData.bankAccountNumber = bankAccountNumber;
+        if (bankAccountName) updateData.bankAccountName = bankAccountName;
+
+        if (logAction === 'UPDATE') {
+          logAction = 'UPDATE_BANK_INFO';
+        }
+        logNote += 'Cập nhật thông tin nhận tiền hoàn. ';
+      }
+
+      if (
+        role !== Role.ADMIN &&
+        !updateData.modifiedCount &&
+        (isDateChanged || isOccupancyChanged || isInfoChanged)
+      ) {
         updateData.modifiedCount = { increment: 1 };
       }
 
@@ -442,59 +709,6 @@ export class BookingService {
           'Chính sách hủy phòng đã được cập nhật. Vui lòng kiểm tra lại thông tin trước khi xác nhận đặt phòng.',
         );
       }
-    }
-  }
-
-  /**
-   * Đảm bảo khoảng ngày đặt không bị trùng với bất kỳ đơn đặt phòng nào khác đang hoạt động.
-   * Hỗ trợ chống click đúp (Double-click protection) trong vòng 5 phút cùng 1 user.
-   */
-  private async assertNoOverlap(
-    tx: any,
-    roomId: number,
-    inDate: Date,
-    outDate: Date,
-    userId: number,
-  ) {
-    const overlap = await tx.bookings.findFirst({
-      where: {
-        roomId,
-        isDeleted: false,
-        status: { in: ACTIVE_BOOKING_STATUSES },
-        checkIn: { lt: outDate },
-        checkOut: { gt: inDate },
-      },
-    });
-
-    if (overlap) {
-      if (overlap.userId === userId) {
-        const timeDiff =
-          new Date().getTime() - new Date(overlap.createdAt).getTime();
-        if (timeDiff < 5 * 60 * 1000) return overlap;
-      }
-      throw new BadRequestException('Khoảng ngày đã có người giữ hoặc bị khóa');
-    }
-    return null;
-  }
-
-  /**
-   * Đảm bảo khoảng ngày đặt không nằm trong những ngày Host đã chủ động khóa (Đóng phòng).
-   */
-  private async assertNotBlocked(
-    tx: any,
-    roomId: number,
-    inDate: Date,
-    outDate: Date,
-  ) {
-    const blockedDate = await tx.room_availability.findFirst({
-      where: {
-        roomId,
-        isAvailable: false,
-        date: { gte: inDate, lt: outDate },
-      },
-    });
-    if (blockedDate) {
-      throw new BadRequestException('Khoảng ngày này đã bị khóa bởi Host');
     }
   }
 

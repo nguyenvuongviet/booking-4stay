@@ -120,13 +120,17 @@ export default function AdminDashboardPage() {
     loadStatus(statusYear, statusMonth);
   }, [statusYear, statusMonth]);
 
-  if (loading) return <div className="p-10 text-center animate-pulse">Đang tải dữ liệu...</div>;
-  if (error || !stats) return (
-    <div className="p-10 text-center">
-      <p className="text-red-500 mb-4">Lỗi tải dữ liệu Dashboard</p>
-      <Button onClick={load}>Thử lại</Button>
-    </div>
-  );
+  if (loading)
+    return (
+      <div className="p-10 text-center animate-pulse">Đang tải dữ liệu...</div>
+    );
+  if (error || !stats)
+    return (
+      <div className="p-10 text-center">
+        <p className="text-red-500 mb-4">Lỗi tải dữ liệu Dashboard</p>
+        <Button onClick={load}>Thử lại</Button>
+      </div>
+    );
 
   const chartData = revenue.map((m) => ({
     month: m.month,
@@ -291,7 +295,7 @@ export default function AdminDashboardPage() {
                   value={statusMonth}
                   onChange={(e) =>
                     setStatusMonth(
-                      e.target.value === "all" ? "all" : Number(e.target.value)
+                      e.target.value === "all" ? "all" : Number(e.target.value),
                     )
                   }
                 >

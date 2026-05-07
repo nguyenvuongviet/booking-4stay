@@ -13,8 +13,8 @@ export default function CountdownTimer({
   const [timeLeft, setTimeLeft] = useState<string>("");
 
   useEffect(() => {
-    const startTime = new Date(createdAt).getTime(); // thời điểm đặt phòng
-    const deadline = startTime + expiryMinutes * 60 * 1000; // theo cấu hình AppConfig
+    const startTime = new Date(createdAt).getTime();
+    const deadline = startTime + expiryMinutes * 60 * 1000;
 
     const timer = setInterval(() => {
       const now = Date.now();

@@ -6,6 +6,7 @@ import { UserAvatar } from "@/_components/UserAvatar";
 import { parseAbsoluteDate } from "@/lib/utils";
 import { formatDate } from "@/lib/utils/date";
 import { getBookingById } from "@/services/admin/bookingsApi";
+import api from "@/services/api";
 import { format } from "date-fns";
 import { vi } from "date-fns/locale";
 import {
@@ -22,38 +23,52 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import toast from "react-hot-toast";
 import { RefreshButton } from "../../_components/RefreshButton";
 import { StarRating } from "../../_components/StarRating";
 import {
   getStatusColorClasses,
   translateStatus,
-} from "../../_utils/color-utils";
+} from "../../_utils/bookingStatus";
+import { AdminBookingUpdateDialog } from "../_components/AdminBookingUpdateDialog";
 import { BookingActionButtons } from "../_components/BookingActionButtons";
-import { BookingActionDialog } from "../_components/BookingActionDialog";
-import { useBookingActions } from "../_hooks/useBookingActions";
+import { RefundDialog } from "../_components/RefundDialog";
+import { SmartCancelDialog } from "../_components/SmartCancelDialog";
 
 function InfoItem({
   label,
   value,
   icon,
   className = "",
+  valueClassName = "",
 }: {
   label: string;
   value: any;
   icon: React.ReactNode;
   className?: string;
+  valueClassName?: string;
 }) {
   return (
     <div
-      className={`flex items-start gap-4 bg-gray-50 p-4 rounded-lg border border-gray-100 ${className}`}
+      className={`flex items-start gap-3 bg-white p-4 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 ${className}`}
     >
-      <div className="text-primary mt-0.5 shrink-0">{icon}</div>
+      <div className="text-primary mt-0.5 shrink-0 bg-primary/5 p-2 rounded-xl">
+        {React.isValidElement(icon)
+          ? React.cloneElement(icon as React.ReactElement<any>, {
+              className: "w-4 h-4",
+            })
+          : icon}
+      </div>
       <div>
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-0.5">
+        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">
           {label}
         </p>
-        <p className="font-bold text-gray-800 leading-snug">{value}</p>
+        <p
+          className={`font-bold text-gray-800 leading-tight ${valueClassName}`}
+        >
+          {value}
+        </p>
       </div>
     </div>
   );
@@ -66,6 +81,10 @@ export default function BookingDetailPage() {
 
   const [loading, setLoading] = useState(true);
   const [booking, setBooking] = useState<any>(null);
+  const [cancelBookingId, setCancelBookingId] = useState<number | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [showAllLogs, setShowAllLogs] = useState(false);
+  const [refundBookingData, setRefundBookingData] = useState<any>(null);
 
   async function load() {
     try {
@@ -79,16 +98,6 @@ export default function BookingDetailPage() {
   useEffect(() => {
     load();
   }, [bookingId]);
-
-  const {
-    dialog,
-    openAccept,
-    openReject,
-    openRefund,
-    openAdminCancel,
-    closeDialog,
-    handleConfirm,
-  } = useBookingActions(load);
 
   if (loading) {
     return (
@@ -124,321 +133,498 @@ export default function BookingDetailPage() {
   const isRefunded = booking.status === "REFUNDED";
 
   return (
-    <div className="max-w-7xl mx-auto space-y-4 p-4 md:p-8">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b pb-2 border-gray-200">
-        <div className="flex items-center gap-2">
+    <div className="max-w-7xl mx-auto space-y-6 p-4 md:p-8 bg-[#f8fafc]">
+      {/* 1. NEW PREMIUM HEADER */}
+      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-2">
+        <div className="space-y-1">
           <Button
-            variant="ghost"
+            variant="outline"
             size="icon"
             onClick={() => router.push("/admin/bookings")}
-            className="shrink-0 text-gray-600 hover:bg-gray-100"
+            className="rounded-xl border-gray-200 hover:border-primary hover:text-primary transition-all shadow-sm"
           >
-            <ArrowLeft className="w-5 h-5" />
+            <ArrowLeft className="w-4 h-4" />
           </Button>
-
-          <div>
-            <p className="text-xl font-semibold text-gray-500">
-              Chi tiết Booking
-            </p>
-            <h1 className="text-4xl font-extrabold text-gray-800">
-              #{booking.id}
-            </h1>
-          </div>
+          <h1 className="text-5xl font-black text-gray-900 tracking-tighter flex items-center gap-4">
+            #{booking.id}
+            <span
+              className={`text-xs px-4 py-1.5 rounded-full font-black uppercase tracking-widest shadow-sm border 
+              ${getStatusColorClasses(booking.status)}`}
+            >
+              {statusLabel}
+            </span>
+          </h1>
+          <p className="text-gray-500 font-medium flex items-center gap-2">
+            Đã tạo vào lúc{" "}
+            <span className="text-gray-900 font-bold">
+              {format(new Date(booking.createdAt), "dd/MM/yyyy HH:mm", {
+                locale: vi,
+              })}
+            </span>
+          </p>
         </div>
 
-        <span
-          className={`px-4 py-2 text-sm rounded-full font-extrabold uppercase tracking-wider shadow-sm 
-          ${getStatusColorClasses(booking.status)}`}
-        >
-          {statusLabel}
-        </span>
-      </div>
-
-      <div className="flex justify-end">
-        <BookingActionButtons
-          className="mr-2"
-          id={Number(booking.id)}
-          status={booking.status}
-          paidAmount={Number(booking.paidAmount)}
-          onAccept={openAccept}
-          onReject={openReject}
-          onRefund={openRefund}
-          onCancel={openAdminCancel}
-        />
-
-        <RefreshButton onRefresh={load} />
+        <div className="flex items-center gap-3">
+          <BookingActionButtons
+            id={Number(booking.id)}
+            status={booking.status}
+            booking={booking}
+            onEdit={() => setIsEditing(true)}
+            onCancel={(id) => setCancelBookingId(id)}
+            onRefund={(bk) => setRefundBookingData(bk)}
+          />
+          <RefreshButton onRefresh={load} />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-8">
-          <Card className="p-6 rounded-xl shadow-lg border border-gray-100">
-            <h2 className="text-2xl font-bold mb-4 pb-3 border-b text-gray-700">
-              Phòng đã đặt
-            </h2>
-
-            <div className="flex items-start gap-6">
-              <div className="shrink-0 relative w-36 h-28 sm:w-48 sm:h-36">
-                {room?.images?.main ? (
-                  <Image
-                    src={room.images.main}
-                    fill
-                    alt={room.name}
-                    className="rounded-xl border object-cover shadow-md"
-                  />
-                ) : (
-                  <div className="w-full h-full rounded-xl border flex items-center justify-center bg-gray-100 text-gray-400">
-                    <ImageIcon className="w-10 h-10 opacity-60" />
-                  </div>
-                )}
+          <Card className="p-0 overflow-hidden rounded-3xl shadow-xl border-none ring-1 ring-gray-100 bg-white group hover:ring-primary transition-all duration-300">
+            <Link href={`/admin/rooms/${room?.id}`}>
+              <div className="bg-gray-50 border-b p-6 flex justify-between items-center group-hover:bg-primary/5 transition-colors">
+                <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                  <MapPin className="w-5 h-5 text-gray-400 group-hover:text-primary" />
+                  Thông tin phòng
+                </h2>
+                <span className="text-[10px] font-black text-primary uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-all flex items-center gap-1">
+                  Xem chi tiết phòng{" "}
+                  <ArrowLeft className="w-3 h-3 rotate-180" />
+                </span>
               </div>
 
-              <div className="flex flex-col justify-between flex-1">
-                <p className="font-extrabold text-3xl text-foreground mb-1">
-                  {room?.name}
-                </p>
-                <p className="text-sm text-gray-600 flex items-center gap-1">
-                  <MapPin className="w-4 h-4 text-primary" />
-                  {room?.location.fullAddress}
-                </p>
+              <div className="p-6 flex flex-col md:flex-row gap-6">
+                <div className="shrink-0 relative w-full md:w-56 h-40">
+                  {room?.images?.main ? (
+                    <Image
+                      src={room.images.main}
+                      fill
+                      sizes="(max-width: 768px) 100vw, 224px"
+                      alt={room.name || "Room Image"}
+                      className="rounded-2xl border object-cover shadow-md group-hover:scale-105 transition-transform duration-500"
+                    />
+                  ) : (
+                    <div className="w-full h-full rounded-2xl border flex items-center justify-center bg-gray-100 text-gray-400">
+                      <ImageIcon className="w-10 h-10 opacity-60" />
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex-1 flex flex-col justify-between py-1">
+                  <div>
+                    <h3 className="font-black text-2xl text-gray-900 mb-1 group-hover:text-primary transition-colors">
+                      {room?.name}
+                    </h3>
+                    <p className="text-sm text-gray-500 flex items-start gap-1 mb-4">
+                      <MapPin className="w-4 h-4 shrink-0 mt-0.5" />
+                      {room?.location?.fullAddress}
+                    </p>
+
+                    <div className="flex flex-wrap gap-4">
+                      <div className="flex items-center gap-2 text-xs font-bold text-gray-600 bg-gray-100 px-3 py-1.5 rounded-full">
+                        <Users className="w-3.5 h-3.5" />
+                        Tối đa {room?.adultCapacity} khách
+                      </div>
+                      <div className="flex items-center gap-2 text-xs font-bold text-gray-600 bg-gray-100 px-3 py-1.5 rounded-full">
+                        <StarRating value={room?.rating || 5} />
+                        <span className="text-gray-400">
+                          ({room?.reviewCount || 0})
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-6 flex items-baseline gap-2">
+                    <span className="text-[10px] font-black text-gray-400 uppercase">
+                      Giá mỗi đêm:
+                    </span>
+                    <span className="text-xl font-black text-gray-900">
+                      {(room?.price || 0).toLocaleString()} ₫
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </Link>
+          </Card>
+
+          <div className="grid sm:grid-cols-2 gap-4">
+            <InfoItem
+              label="Thời gian lưu trú"
+              value={`${formatDate(booking.checkIn)} - ${formatDate(booking.checkOut)}`}
+              icon={<Calendar />}
+              valueClassName="text-sm"
+              className="sm:col-span-2"
+            />
+            <InfoItem label="Số đêm" value={`${nights} đêm`} icon={<Moon />} />
+            <InfoItem
+              label="Số khách"
+              value={`${booking.adults} lớn, ${booking.children} bé`}
+              icon={<Users />}
+            />
+          </div>
+
+          {/* 3. PAYMENT SUMMARY - CLEANER TABLE STYLE */}
+          <Card className="p-6 rounded-3xl shadow-xl border-none ring-1 ring-gray-100 bg-white">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+                <CreditCard className="w-5 h-5 text-primary" />
+                Bản kê thanh toán
+              </h2>
+              <div className="flex flex-col items-end">
+                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                  Phương thức
+                </span>
+                <span className="font-bold text-gray-900">
+                  {booking.paymentMethod || "CASH"}
+                </span>
               </div>
             </div>
-          </Card>
 
-          <Card className="p-6 rounded-xl shadow-lg border border-gray-100">
-            <h2 className="text-2xl font-bold mb-4 pb-3 border-b text-gray-700">
-              Chi tiết thời gian & Khách
-            </h2>
+            <div className="space-y-6">
+              <div className="bg-gray-50/50 rounded-2xl p-6 border border-gray-100">
+                <table className="w-full text-sm">
+                  <tbody className="space-y-3 block">
+                    <tr className="flex justify-between items-center">
+                      <td className="text-gray-500 font-medium">
+                        Tiền phòng ({nights} đêm)
+                      </td>
+                      <td className="font-bold text-gray-900">
+                        {(Number(booking.rawTotalPrice) || 0).toLocaleString()}{" "}
+                        ₫
+                      </td>
+                    </tr>
+                    {Number(booking.discountAmount) > 0 && (
+                      <tr className="flex justify-between items-center">
+                        <td className="text-orange-500 font-bold italic">
+                          Giảm giá / Ưu đãi
+                        </td>
+                        <td className="font-bold text-orange-500">
+                          -{" "}
+                          {(
+                            Number(booking.discountAmount) || 0
+                          ).toLocaleString()}{" "}
+                          ₫
+                        </td>
+                      </tr>
+                    )}
+                    <tr className="block h-px bg-gray-200/50 my-4" />
+                    <tr className="flex justify-between items-center">
+                      <td className="text-base font-black text-gray-900 uppercase">
+                        Tổng cộng
+                      </td>
+                      <td className="text-2xl font-black text-primary tracking-tighter">
+                        {booking.totalAmount.toLocaleString()} ₫
+                      </td>
+                    </tr>
+                    <tr className="flex justify-between items-center mt-4 bg-green-600 text-white p-4 rounded-xl shadow-lg shadow-green-100">
+                      <td className="text-xs font-black uppercase opacity-90">
+                        Khách đã trả
+                      </td>
+                      <td className="text-xl font-black">
+                        {booking.paidAmount.toLocaleString()} ₫
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
 
-            <div className="grid sm:grid-cols-3 gap-4 mb-6">
-              <InfoItem
-                label="Ngày Check-in"
-                value={formatDate(booking.checkIn)}
-                icon={<Calendar className="w-5 h-5" />}
-              />
-              <InfoItem
-                label="Ngày Check-out"
-                value={formatDate(booking.checkOut)}
-                icon={<Calendar className="w-5 h-5" />}
-              />
-              <InfoItem
-                label="Số đêm lưu trú"
-                value={
-                  <span className="text-lg font-extrabold">{nights} đêm</span>
-                }
-                icon={<Moon className="w-5 h-5" />}
-              />
-            </div>
-
-            <div className="grid sm:grid-cols-2 gap-4 pt-4 border-t">
-              <InfoItem
-                label="Người lớn"
-                value={
-                  <span className="text-lg font-extrabold">
-                    {booking.adults} người
-                  </span>
-                }
-                icon={<Users className="w-5 h-5" />}
-              />
-              <InfoItem
-                label="Trẻ em"
-                value={
-                  <span className="text-lg font-extrabold">
-                    {booking.children} bé
-                  </span>
-                }
-                icon={<Baby className="w-5 h-5" />}
-              />
-            </div>
-          </Card>
-
-          <Card className="p-6 rounded-xl shadow-lg border border-gray-100">
-            <h2 className="text-2xl font-bold mb-4 pb-3 border-b text-gray-700">
-              Thông tin Thanh toán
-            </h2>
-
-            <div className="grid sm:grid-cols-3 gap-4">
-              <InfoItem
-                label="Tổng chi phí"
-                value={
-                  <span className="text-lg text-red-600 font-extrabold">
-                    {booking.totalAmount.toLocaleString()} ₫
-                  </span>
-                }
-                icon={<CreditCard className="w-5 h-5" />}
-              />
-
-              <InfoItem
-                label="Đã thanh toán"
-                value={
-                  <span className="text-lg text-green-600 font-extrabold">
-                    {booking.paidAmount.toLocaleString()} ₫
-                  </span>
-                }
-                icon={<Wallet className="w-5 h-5" />}
-              />
-
-              <InfoItem
-                label="Phương thức"
-                value={booking.paymentMethod || "N/A"}
-                icon={<CreditCard className="w-5 h-5" />}
-              />
-            </div>
-
-            {(Number(booking.cancellationFee) > 0 ||
-              Number(booking.refundAmount) > 0) && (
-              <div className="grid sm:grid-cols-2 gap-4 mt-4 pt-4 border-t border-dashed">
-                {Number(booking.cancellationFee) > 0 && (
-                  <div className="bg-red-50 p-3 rounded-lg border border-red-100">
-                    <p className="text-xs font-bold text-red-600 uppercase">
-                      Phí huỷ / Phạt
-                    </p>
-                    <p className="text-lg font-black text-red-700">
-                      {Number(booking.cancellationFee).toLocaleString()} ₫
-                    </p>
-                  </div>
-                )}
+              {/* DYNAMIC STATUS BANNERS */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {Number(booking.refundAmount) > 0 && (
-                  <div className="bg-amber-50 p-3 rounded-lg border border-amber-100">
-                    <p className="text-xs font-bold text-amber-600 uppercase">
-                      Tiền chờ hoàn khách
+                  <div className="bg-amber-50 p-4 rounded-2xl border border-amber-200 flex flex-col justify-center">
+                    <p className="text-[9px] font-black text-amber-600 uppercase mb-1">
+                      Cần hoàn trả
                     </p>
-                    <p className="text-lg font-black text-amber-700">
+                    <p className="text-xl font-black text-amber-700 tracking-tight">
                       {Number(booking.refundAmount).toLocaleString()} ₫
                     </p>
                   </div>
                 )}
+                {isRefunded && (
+                  <div className="bg-indigo-50 p-4 rounded-2xl border border-indigo-200 flex flex-col justify-center">
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                      <p className="text-[9px] font-black text-indigo-600 uppercase">
+                        Đã hoàn tất
+                      </p>
+                    </div>
+                    <p className="text-xl font-black text-indigo-700 tracking-tight">
+                      Đã hoàn {booking.paidAmount.toLocaleString()} ₫
+                    </p>
+                  </div>
+                )}
+                {booking.cancelReason && (
+                  <div className="bg-red-50 p-4 rounded-2xl border border-red-100 sm:col-span-2">
+                    <p className="text-[9px] font-black text-red-600 uppercase mb-1">
+                      Lý do hủy đơn
+                    </p>
+                    <p className="text-xs font-bold text-red-900 leading-relaxed italic">
+                      "{booking.cancelReason}"
+                    </p>
+                  </div>
+                )}
               </div>
-            )}
 
-            {isRefunded && (
-              <div className="pt-4 border-t mt-6 bg-blue-50 p-4 rounded-lg border-blue-200">
-                <p className="text-sm font-bold text-blue-700 mb-1">
-                  Đã hoàn tiền
-                </p>
-                <p className="text-blue-900 font-semibold">
-                  Số tiền hoàn: {booking.paidAmount.toLocaleString()} ₫
-                </p>
-                <p className="text-blue-800 text-sm mt-1">
-                  Thời gian hoàn:{" "}
-                  {booking.updatedAt
-                    ? format(new Date(booking.updatedAt), "dd/MM/yyyy HH:mm", {
-                        locale: vi,
-                      })
-                    : "N/A"}
-                </p>
-              </div>
-            )}
-
-            {booking.cancelReason && (
-              <div className="pt-4 border-t mt-6 bg-red-50 p-4 rounded-lg border-red-200">
-                <p className="text-sm font-bold text-red-700 mb-1">Lý do hủy</p>
-                <p className="font-medium italic text-red-800">
-                  {booking.cancelReason}
-                </p>
-              </div>
-            )}
+              {/* BANK INFO - PROMINENT STYLE */}
+              {booking.bankInfo?.bankAccountNumber && (
+                <div className="pt-6 border-t border-dashed">
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="w-1 h-1 rounded-full bg-primary" />
+                    <p className="text-xs font-black text-gray-400 uppercase tracking-widest">
+                      Thông tin hoàn tiền
+                    </p>
+                  </div>
+                  <div className="bg-gray-50 rounded-2xl p-5 border border-gray-100 grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                      <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">
+                        Ngân hàng
+                      </p>
+                      <p className="text-sm font-black text-gray-900">
+                        {booking.bankInfo.bankName}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">
+                        Số tài khoản
+                      </p>
+                      <p className="text-lg font-black text-primary tracking-tighter">
+                        {booking.bankInfo.bankAccountNumber}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">
+                        Chủ tài khoản
+                      </p>
+                      <p className="text-sm font-black text-gray-900 uppercase">
+                        {booking.bankInfo.bankAccountName}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           </Card>
 
-          <Card className="p-6 rounded-xl shadow-lg border border-gray-100">
-            <h2 className="text-2xl font-bold mb-4 pb-3 border-b text-gray-700">
-              Đánh giá của khách
-            </h2>
+          {/* 4. HISTORY LOGS - WITH COLLAPSIBLE FEATURE */}
+          <Card className="p-6 rounded-3xl shadow-xl border-none ring-1 ring-gray-100 bg-white">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+                <Calendar className="w-5 h-5 text-gray-400" />
+                Lịch sử vận hành
+              </h2>
+              <span className="text-[10px] font-black px-3 py-1 bg-gray-100 text-gray-500 rounded-full uppercase tracking-widest">
+                {booking.logs?.length || 0} Logs
+              </span>
+            </div>
 
-            {!booking.review ? (
-              <p className="text-gray-500 italic">
-                Khách chưa để lại đánh giá.
+            {!booking.logs?.length ? (
+              <p className="text-gray-400 italic text-sm text-center py-8">
+                Chưa có bản ghi lịch sử.
               </p>
             ) : (
-              <div className="space-y-6">
-                <div className="bg-white border rounded-xl p-5 shadow-md space-y-4">
-                  <div className="flex items-center justify-between border-b pb-3">
-                    <div className="flex items-center gap-2">
-                      <p className="text-4xl font-extrabold">
-                        {Number(booking.review.rating).toFixed(1)}
-                      </p>
-                      <span className="text-gray-500 text-base">/ 5 sao</span>
+              <div className="space-y-4">
+                {(showAllLogs ? booking.logs : booking.logs.slice(0, 3)).map(
+                  (log: any, idx: number) => (
+                    <div
+                      key={log.id || idx}
+                      className="relative pl-6 pb-6 last:pb-0 border-l border-gray-100"
+                    >
+                      <div className="absolute -left-[4.5px] top-1 w-2 h-2 rounded-full bg-primary shadow-[0_0_10px_rgba(var(--primary),0.5)]" />
+                      <div className="bg-gray-50/50 rounded-2xl p-4 border border-gray-100 hover:bg-white hover:shadow-lg transition-all duration-300 group">
+                        <div className="flex items-center justify-between gap-4 mb-2">
+                          <span className="text-[9px] font-black text-primary uppercase tracking-widest px-2 py-0.5 bg-primary/10 rounded-md">
+                            {log.action}
+                          </span>
+                          <span className="text-[10px] font-bold text-gray-400">
+                            {format(new Date(log.createdAt), "HH:mm, dd/MM")}
+                          </span>
+                        </div>
+                        <p className="text-xs text-gray-600 font-bold leading-relaxed mb-2">
+                          {log.note}
+                        </p>
+                        {(log.oldCheckIn || log.newCheckIn) && (
+                          <div className="mt-3 p-3 bg-white rounded-xl border border-gray-100 grid grid-cols-2 gap-4">
+                            <div>
+                              <p className="text-[8px] font-black text-gray-400 uppercase mb-1">
+                                Ngày thay đổi
+                              </p>
+                              <p className="text-[10px] font-bold text-gray-700">
+                                {log.oldCheckIn &&
+                                  format(
+                                    new Date(log.oldCheckIn),
+                                    "dd/MM",
+                                  )}{" "}
+                                →{" "}
+                                {log.newCheckIn &&
+                                  format(new Date(log.newCheckIn), "dd/MM")}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-[8px] font-black text-gray-400 uppercase mb-1">
+                                Dòng tiền
+                              </p>
+                              <p className="text-[10px] font-bold text-primary">
+                                {log.oldTotal?.toLocaleString()} →{" "}
+                                {log.newTotal?.toLocaleString()} ₫
+                              </p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                    <StarRating value={Number(booking.review.rating)} />
-                  </div>
+                  ),
+                )}
 
-                  <p className="text-base whitespace-pre-line">
-                    {booking.review.comment || "Không có bình luận chi tiết."}
-                  </p>
-                </div>
-
-                <p className="text-sm text-right text-gray-500">
-                  Đánh giá vào:&nbsp;
-                  <span className="font-bold">
-                    {formatDate(booking.review.createdAt)}
-                  </span>
-                </p>
+                {booking.logs.length > 3 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full text-xs font-bold text-gray-400 hover:text-primary mt-2 flex items-center gap-2"
+                    onClick={() => setShowAllLogs(!showAllLogs)}
+                  >
+                    {showAllLogs
+                      ? "Thu gọn lịch sử ↑"
+                      : `Xem thêm ${booking.logs.length - 3} bản ghi khác ↓`}
+                  </Button>
+                )}
               </div>
             )}
           </Card>
         </div>
 
-        <div className="space-y-8">
-          <Card className="p-6 rounded-xl shadow-lg border">
-            <h2 className="text-2xl font-bold mb-4 pb-3 border-b">
-              Người đặt phòng
-            </h2>
-            <div className="flex items-center gap-4">
-              <UserAvatar
-                avatarUrl={user?.avatar}
-                fullName={user?.name}
-                className="w-16 h-16"
-              />
+        {/* RIGHT COLUMN */}
+        <div className="space-y-6">
+          <Card className="p-0 overflow-hidden rounded-3xl shadow-xl border-none ring-1 ring-gray-100 bg-white">
+            <div className="bg-gray-50 border-b p-6">
+              <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                <Users className="w-5 h-5 text-gray-400" />
+                Hồ sơ khách hàng
+              </h2>
+            </div>
 
-              <div>
-                <p className="font-bold text-xl">{user?.name}</p>
-                <p className="text-gray-500 text-sm">{user?.email}</p>
-                <p className="text-gray-500 text-sm">{user?.phoneNumber}</p>
+            <div className="p-6 space-y-8">
+              {/* Người thanh toán */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-black text-primary uppercase tracking-widest px-2 py-0.5 bg-primary/10 rounded-md">
+                    Chủ đơn hàng
+                  </span>
+                </div>
+                <div className="flex items-center gap-4">
+                  <UserAvatar
+                    avatarUrl={user?.avatar}
+                    fullName={user?.name}
+                    className="w-14 h-14 border-2 border-white shadow-md ring-1 ring-gray-100"
+                  />
+                  <div>
+                    <p className="font-black text-lg text-gray-900 tracking-tighter">
+                      {user?.name}
+                    </p>
+                    <p className="text-gray-400 text-xs font-medium">
+                      {user?.email}
+                    </p>
+                    <p className="text-primary font-black text-xs mt-1">
+                      {user?.phoneNumber}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="h-px bg-gray-100" />
+
+              {/* Khách ở */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-2 py-0.5 bg-gray-100 rounded-md">
+                    Khách đại diện lưu trú
+                  </span>
+                </div>
+                <div className="space-y-2">
+                  <p className="font-bold text-gray-800">
+                    {guest?.fullName || user?.name}
+                  </p>
+                  <div className="space-y-1">
+                    <p className="text-xs text-gray-500 font-medium">
+                      Email: {guest?.email || "N/A"}
+                    </p>
+                    <p className="text-xs text-gray-500 font-medium">
+                      SĐT: {guest?.phoneNumber || "N/A"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Special Request */}
+              <div className="bg-amber-50 p-4 rounded-2xl border border-amber-100/50">
+                <div className="text-[9px] font-black text-amber-600 uppercase tracking-widest mb-2 flex items-center gap-2">
+                  <div className="w-1 h-1 rounded-full bg-amber-400" />
+                  Yêu cầu từ khách
+                </div>
+                <p className="text-sm font-bold italic text-amber-900 leading-relaxed">
+                  "
+                  {booking.specialRequest ||
+                    "Không có yêu cầu đặc biệt nào được ghi nhận."}
+                  "
+                </p>
               </div>
             </div>
 
             {user?.id && (
-              <div className="pt-4 border-t mt-4">
-                <Link href={`/admin/users/${user.id}`}>
-                  <Button
-                    variant="link"
-                    className="p-0 text-primary font-semibold text-sm"
-                  >
-                    Xem hồ sơ người dùng →
-                  </Button>
-                </Link>
-              </div>
+              <Link href={`/admin/users/${user.id}`}>
+                <div className="bg-gray-900 p-4 text-center hover:bg-black transition-colors cursor-pointer">
+                  <span className="text-[10px] font-black text-white uppercase tracking-widest">
+                    Quản lý hồ sơ người dùng →
+                  </span>
+                </div>
+              </Link>
             )}
           </Card>
 
-          <Card className="p-6 rounded-xl shadow-lg border">
-            <h2 className="text-2xl font-bold pb-3 border-b">Khách lưu trú</h2>
-
-            <div className="space-y-1">
-              <p className="font-bold text-lg">
-                {guest?.fullName || user?.name}
-              </p>
-              <p className="text-gray-500 text-sm">Email: {guest?.email}</p>
-              <p className="text-gray-500 text-sm">SĐT: {guest?.phoneNumber}</p>
-            </div>
-
-            <div className="pt-4 mt-4 border-t">
-              <p className="text-sm font-bold text-gray-700 mb-2">
-                Yêu cầu đặc biệt
-              </p>
-              <div className="bg-white p-3 rounded-lg border border-dashed">
-                <p className="italic text-sm">
-                  {booking.specialRequest || "Không có yêu cầu đặc biệt."}
-                </p>
+          {/* REVIEW (IF ANY) */}
+          {booking.review && (
+            <Card className="p-6 rounded-3xl shadow-xl border-none ring-1 ring-gray-100 bg-white">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-bold text-gray-800">
+                  Đánh giá của khách
+                </h2>
+                <StarRating value={Number(booking.review.rating)} />
               </div>
-            </div>
-          </Card>
+              <div className="bg-gray-50 p-4 rounded-2xl border border-dashed italic text-sm text-gray-600">
+                "{booking.review.comment}"
+              </div>
+            </Card>
+          )}
         </div>
       </div>
 
-      <BookingActionDialog
-        dialog={dialog}
-        onCancel={closeDialog}
-        onConfirm={handleConfirm}
+      {/* DIALOGS */}
+      <RefundDialog
+        open={refundBookingData !== null}
+        booking={refundBookingData}
+        onClose={() => setRefundBookingData(null)}
+        onSuccess={load}
+      />
+
+      <SmartCancelDialog
+        open={cancelBookingId !== null}
+        bookingId={cancelBookingId}
+        onClose={() => setCancelBookingId(null)}
+        onSuccess={load}
+      />
+
+      <AdminBookingUpdateDialog
+        open={isEditing}
+        onClose={() => setIsEditing(false)}
+        booking={booking}
+        onConfirm={async (data) => {
+          try {
+            await api.patch(`/bookings/${booking.id}`, data);
+            toast.success("Cập nhật thông tin thành công");
+            setIsEditing(false);
+            load();
+          } catch (err: any) {
+            toast.error(err.response?.data?.message || "Cập nhật thất bại");
+          }
+        }}
       />
     </div>
   );

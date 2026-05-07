@@ -8,7 +8,13 @@ import { getAmenityIcon } from "@/constants/amenity-icons";
 import { useAuth } from "@/context/auth-context";
 import { useLang } from "@/context/lang-context";
 import { Room } from "@/models/Room";
-import { room_available, room_detail, room_preview } from "@/services/roomApi";
+import { get_unavailable_dates } from "@/services/bookingApi";
+import {
+  get_room_calendar,
+  room_available,
+  room_detail,
+  room_preview,
+} from "@/services/roomApi";
 import { addMonths, format, parse } from "date-fns";
 import { Loader2, Mail, MapPin, Phone, Star, Users } from "lucide-react";
 import Image from "next/image";
@@ -44,6 +50,10 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [showFullOverview, setShowFullOverview] = useState(false);
   const [highlightDatePicker, setHighlightDatePicker] = useState(false);
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [roomPrices, setRoomPrices] = useState<
+    { date: string; price: number }[]
+  >([]);
   const [roomPreview, setRoomPreview] = useState<{
     priceSummary: {
       totalPrice: number;
@@ -51,17 +61,17 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
       discountPercent: number;
     };
   } | null>(null);
-  const [currentMonth, setCurrentMonth] = useState(new Date());
 
-  // fetch data
+  // Lấy dữ liệu phòng và lịch khi roomId thay đổi
   useEffect(() => {
     (async () => {
       try {
         setLoading(true);
+        // 1. Lấy thông tin chi tiết của phòng
         const dataRoom = await room_detail(roomId);
         setRoom(dataRoom);
 
-        // enforce selected guests to room limits
+        // Đảm bảo số lượng khách đã chọn không vượt quá sức chứa của phòng
         if (dataRoom.adultCapacity && adults > dataRoom.adultCapacity) {
           setAdults(dataRoom.adultCapacity);
         }
@@ -70,7 +80,7 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
           setChildren(maxChild);
         }
       } catch (error) {
-        console.error("Fetch room failed:", error);
+        console.error("Lỗi khi tải thông tin phòng:", error);
       } finally {
         setLoading(false);
       }

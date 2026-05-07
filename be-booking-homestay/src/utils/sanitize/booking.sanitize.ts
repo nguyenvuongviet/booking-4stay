@@ -19,6 +19,7 @@ function sanitize(booking: any) {
     discountAmount: Number(booking.discountAmount || 0),
     paidAmount: Number(booking.paidAmount),
     refundAmount: Number(booking.refundAmount || 0),
+    cancellationFee: Number(booking.cancellationFee || 0),
     modifiedCount: Number(booking.modifiedCount || 0),
     totalAmount: Number(booking.totalPrice),
     createdAt: toUTCISOString(booking.createdAt),

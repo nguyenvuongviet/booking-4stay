@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from 'src/modules/prisma/prisma.service';
 import { eachDayOfInterval, format, subDays } from 'date-fns';
+import { PrismaService } from 'src/modules/prisma/prisma.service';
 
 @Injectable()
 export class PricingHelper {
@@ -11,8 +11,10 @@ export class PricingHelper {
     basePrice: number,
     inDate: Date,
     outDate: Date,
+    options?: { tx?: any },
   ): Promise<number> {
-    const overrides = await this.prisma.room_prices.findMany({
+    const prisma = options?.tx || this.prisma;
+    const overrides = await prisma.room_prices.findMany({
       where: {
         roomId,
         date: { gte: inDate, lt: outDate },
@@ -36,8 +38,13 @@ export class PricingHelper {
     return total;
   }
 
-  async applyLoyaltyDiscount(userId: number, rawTotal: number) {
-    const loyalty = await this.prisma.loyalty_program.findFirst({
+  async applyLoyaltyDiscount(
+    userId: number,
+    rawTotal: number,
+    options?: { tx?: any },
+  ) {
+    const prisma = options?.tx || this.prisma;
+    const loyalty = await prisma.loyalty_program.findFirst({
       where: { userId },
       include: { levels: true },
     });
@@ -47,6 +54,7 @@ export class PricingHelper {
         totalPrice: rawTotal,
         discountAmount: 0,
         tierName: 'NONE',
+        discountPercent: 0,
       };
     }
 

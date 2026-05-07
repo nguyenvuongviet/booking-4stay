@@ -29,6 +29,8 @@ export const PAYOS_CHECKSUM_KEY = process.env.PAYOS_CHECKSUM_KEY || '';
 export const ADMIN_EMAIL = process.env.ADMIN_EMAIL || '';
 export const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:3000';
 
+export const WALK_IN_GUEST_ID = Number(process.env.WALK_IN_GUEST_ID) || 1;
+
 console.log({
   PORT,
   DATABASE_URL,

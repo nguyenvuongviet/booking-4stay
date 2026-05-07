@@ -45,7 +45,7 @@ export const getDashboardStats = async (): Promise<DashboardStats> => {
 };
 
 export const getDashboardRevenue = async (
-  year?: number
+  year?: number,
 ): Promise<RevenueByMonth[]> => {
   try {
     const resp = await api.get("/admin/dashboard/revenue", {
@@ -60,7 +60,7 @@ export const getDashboardRevenue = async (
 
 export const getBookingStatusSummary = async (
   year?: number,
-  month?: number
+  month?: number,
 ): Promise<BookingStatusSummary[]> => {
   try {
     const resp = await api.get("/admin/dashboard/bookings-status", {
@@ -74,7 +74,7 @@ export const getBookingStatusSummary = async (
 };
 
 export const getRecentDashboardBookings = async (
-  limit = 5
+  limit = 5,
 ): Promise<RecentBookingItem[]> => {
   try {
     const resp = await api.get("/admin/dashboard/recent-bookings", {
@@ -88,7 +88,7 @@ export const getRecentDashboardBookings = async (
 };
 
 export const getPopularRooms = async (
-  limit = 5
+  limit = 5,
 ): Promise<PopularRoomItem[]> => {
   try {
     const resp = await api.get("/admin/dashboard/popular-rooms", {

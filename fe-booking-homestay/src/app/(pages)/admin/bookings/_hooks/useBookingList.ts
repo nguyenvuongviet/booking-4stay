@@ -50,12 +50,16 @@ export function useBookingList() {
     return () => clearInterval(timer);
   }, [refresh]);
 
+  useEffect(() => {
+    setPage(1);
+  }, [searchTerm, statusFilter, dateRange]);
+
   const getNights = (ci: string, co: string) => {
     const ciDate = new Date(ci);
     const coDate = new Date(co);
     return Math.max(
       1,
-      Math.round((coDate.getTime() - ciDate.getTime()) / 86400000)
+      Math.round((coDate.getTime() - ciDate.getTime()) / 86400000),
     );
   };
 
@@ -68,7 +72,8 @@ export function useBookingList() {
       const g = b.guestInfo;
       const searchMatch =
         g.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        g.email.toLowerCase().includes(searchTerm.toLowerCase());
+        g.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (g.phoneNumber && g.phoneNumber.includes(searchTerm));
 
       const filterMatch =
         statusFilter === "ALL" ||
@@ -87,14 +92,14 @@ export function useBookingList() {
       data.sort((a, b) =>
         sortCheckIn === "asc"
           ? +new Date(a.checkIn) - +new Date(b.checkIn)
-          : +new Date(b.checkIn) - +new Date(a.checkIn)
+          : +new Date(b.checkIn) - +new Date(a.checkIn),
       );
     }
     if (sortTotal) {
       data.sort((a, b) =>
         sortTotal === "asc"
           ? (a.totalAmount ?? 0) - (b.totalAmount ?? 0)
-          : (b.totalAmount ?? 0) - (a.totalAmount ?? 0)
+          : (b.totalAmount ?? 0) - (a.totalAmount ?? 0),
       );
     }
 

@@ -6,8 +6,8 @@ import {
   getBookingsByRoomId,
   getReviewsByRoomId,
   getRoomById,
+  getRoomCalendar,
 } from "@/services/admin/roomsApi";
-import { get_unavailable_dates } from "@/services/bookingApi";
 import { Booking } from "@/types/booking";
 import { Review } from "@/types/review";
 import { Room } from "@/types/room";
@@ -25,18 +25,46 @@ export function useRoomDetail(id: number, onDeleted?: () => void) {
     { date: string; price: number }[]
   >([]);
 
+  // Hàm tải toàn bộ dữ liệu liên quan đến phòng
   const load = useCallback(async () => {
     try {
       setLoading(true);
 
+      // 1. Tải song song: Thông tin phòng, danh sách đặt phòng và đánh giá
       const [r, b, rv] = await Promise.all([
         getRoomById(id),
         getBookingsByRoomId(id),
         getReviewsByRoomId(id),
       ]);
-      const dataDate = await get_unavailable_dates(id);
 
-      setSoldOutDates(dataDate);
+      // 2. Tải dữ liệu lịch của tháng hiện tại
+      const now = new Date();
+      try {
+        const calendarData = await getRoomCalendar(
+          id,
+          now.getMonth() + 1,
+          now.getFullYear(),
+        );
+
+        // Trích xuất các mức giá tùy chỉnh (những ngày có giá khác với giá mặc định của phòng)
+        const prices = calendarData.calendar
+          .filter((day) => day.price !== Number(r.price))
+          .map((day) => ({ date: day.date, price: day.price }));
+
+        // Trích xuất danh sách các ngày đã bị khóa (Sold out/Blocked)
+        const blocked = calendarData.calendar
+          .filter((day) => day.status === "BLOCKED")
+          .map((day) => new Date(day.date));
+
+        setRoomPrices(prices);
+        setSoldOutDates(blocked);
+      } catch {
+        // Nếu API lịch lỗi (có thể do chưa có dữ liệu), mặc định là trống
+        setRoomPrices([]);
+        setSoldOutDates([]);
+      }
+
+      // Cập nhật các state chính
       setRoom(r);
       setBookings(b);
       setReviews(rv);

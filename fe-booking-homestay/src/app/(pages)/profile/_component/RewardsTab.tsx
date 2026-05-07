@@ -1,11 +1,11 @@
 import { Card } from "@/_components/ui/card";
 import { useLang } from "@/context/lang-context";
-import { Booking, BookingStatus } from "@/models/Booking";
+import { Booking } from "@/models/Booking";
 import { IUser } from "@/models/User";
+import { BookingStatus } from "@/types/booking";
 import { format } from "date-fns";
 import { CalendarX, DollarSign, Gift, TrendingUp } from "lucide-react";
 import { BookingStatusBadge } from "../../booking/_component/BookingStatusBadge";
-
 
 interface Props {
   user: IUser | null;
@@ -13,11 +13,7 @@ interface Props {
   getTierPoints: (point: number) => number;
 }
 
-export default function RewardsTab({
-  user,
-  bookings,
-  getTierPoints,
-}: Props) {
+export default function RewardsTab({ user, bookings, getTierPoints }: Props) {
   const { t } = useLang();
   if (!user) return null;
 
@@ -55,9 +51,7 @@ export default function RewardsTab({
               <p className="mt-3 text-4xl elegant-sans text-orange-700">
                 {getTierPoints(user?.loyalty_program.totalPoint || 0)}
               </p>
-              <p className="mt-2 text-xs text-muted">
-                Towards next tier
-              </p>
+              <p className="mt-2 text-xs text-muted">Towards next tier</p>
             </div>
           </div>
         </Card>
@@ -71,12 +65,8 @@ export default function RewardsTab({
               <h3 className="elegant-sans text-muted-foreground text-sm">
                 Cashback
               </h3>
-              <p className="mt-3 text-4xl elegant-sans text-green-700">
-                0 đ
-              </p>
-              <p className="mt-2 text-xs text-muted">
-                Available to redeem
-              </p>
+              <p className="mt-3 text-4xl elegant-sans text-green-700">0 đ</p>
+              <p className="mt-2 text-xs text-muted">Available to redeem</p>
             </div>
           </div>
         </Card>
@@ -110,17 +100,25 @@ export default function RewardsTab({
             </thead>
             <tbody className="divide-y divide-slate-200">
               {bookings.map((b) => (
-                <tr key={b.id} className="hover:bg-slate-50 transition-colors"
-                >
-                  <td className="px-6 py-4 text-sm text-muted-foreground">{format(b.createdAt, "dd/MM/yyyy")}</td>
-                  <td className="px-6 py-4 text-sm text-muted-foreground elegant-sans">{b.room?.name}</td>
+                <tr key={b.id} className="hover:bg-slate-50 transition-colors">
+                  <td className="px-6 py-4 text-sm text-muted-foreground">
+                    {format(b.createdAt, "dd/MM/yyyy")}
+                  </td>
+                  <td className="px-6 py-4 text-sm text-muted-foreground elegant-sans">
+                    {b.room?.name}
+                  </td>
                   <td className="px-6 py-4 text-sm elegant-sans">
                     <span
-                      className={`${b.totalAmount / 1000 > 0
-                        ? "text-blue-600"
-                        : "text-red-600"
-                        }`}
-                    >{b.totalAmount / 1000 > 0 ? "+" : ""}{b.totalAmount / 1000}</span></td>
+                      className={`${
+                        b.totalAmount / 1000 > 0
+                          ? "text-blue-600"
+                          : "text-red-600"
+                      }`}
+                    >
+                      {b.totalAmount / 1000 > 0 ? "+" : ""}
+                      {b.totalAmount / 1000}
+                    </span>
+                  </td>
                   <td className="p-4">
                     <BookingStatusBadge status={b.status as BookingStatus} />
                   </td>

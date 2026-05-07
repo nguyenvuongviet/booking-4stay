@@ -132,7 +132,13 @@ export default function RoomDetailPage({
           <Calendar className="w-6 h-6 inline-block mx-2" /> Lịch phòng
         </summary>
         <div className="mt-4">
-          <CalendarGrid roomId={id} defaultPrice={defaultPrice} />
+          <CalendarGrid
+            roomId={room.id}
+            soldOutDates={soldOutDates}
+            defaultPrice={defaultPrice}
+            roomPriceDates={roomPrices}
+            bookings={bookings}
+          />
         </div>
       </details>
 

@@ -106,52 +106,85 @@ export class BookingCancelRefundService {
   }
 
   /**
-   * Admin từ chối đơn đặt phòng (ví dụ do quá tải hoặc sự cố kỹ thuật).
-   * Kèm theo lý do từ chối và tự động tính toán tiền cần hoàn.
+   * Admin Force Cancel — Hủy đơn đặt phòng với quyền override hoàn tiền.
+   * - Hệ thống tính refund gợi ý theo policy, nhưng Admin có quyền sửa số tiền
+   * - Trạng thái chuyển sang CANCELLED_BY_ADMIN (phân biệt với khách tự hủy)
+   * - Ghi log chi tiết: ai hủy, lý do, số tiền hoàn ngoại lệ
    */
-  async adminRejectBooking(bookingId: number, dto: CancelBookingDto) {
-    const booking = await this.findBookingOrThrow(bookingId);
-    const { refundAmount } = await this.calculateRefundAmount(booking);
+  async adminForceCancel(
+    bookingId: number,
+    adminId: number,
+    dto: CancelBookingDto & { overrideRefundAmount?: number },
+  ) {
+    return await this.prisma.$transaction(async (tx) => {
+      const booking = await tx.bookings.findUnique({
+        where: { id: bookingId },
+        include: { rooms: true },
+      });
+      if (!booking) throw new NotFoundException('Không tìm thấy booking');
 
-    const { finalStatus, message } = this.determineFinalStatus(
-      booking.paidAmount.toNumber(),
-      refundAmount,
-    );
+      // Tính refund gợi ý theo policy
+      const { refundAmount: suggestedRefund, cancellationFee: suggestedFee } =
+        await this.calculateRefundAmount(booking);
 
-    const updated = await this.lifecycleService.changeBookingStatus(
-      bookingId,
-      finalStatus,
-      { reason: dto.reason },
-    );
+      // Admin override hoàn tiền
+      const paidAmount = Number(booking.paidAmount);
+      const finalRefund =
+        dto.overrideRefundAmount !== undefined
+          ? Math.min(dto.overrideRefundAmount, paidAmount) // Không hoàn hơn số đã trả
+          : suggestedRefund;
+      const finalFee = Math.max(0, paidAmount - finalRefund);
 
-    return { message, booking: sanitizeBooking(updated) };
-  }
+      // Xác định trạng thái
+      const finalStatus =
+        finalRefund > 0
+          ? bookings_status.WAITING_REFUND
+          : bookings_status.CANCELLED_BY_ADMIN;
 
-  /**
-   * Admin chủ động thao tác hủy đơn đặt phòng thay cho khách hàng.
-   */
-  async adminCancelBooking(bookingId: number, dto: CancelBookingDto) {
-    const booking = await this.findBookingOrThrow(bookingId);
-    const { refundAmount } = await this.calculateRefundAmount(booking);
+      const updated = await tx.bookings.update({
+        where: { id: bookingId },
+        data: {
+          status: finalStatus,
+          cancelReason: dto.reason || 'Admin chủ động huỷ đơn',
+          refundAmount: finalRefund,
+          cancellationFee: finalFee,
+          updatedAt: new Date(),
+        } as any,
+        include: { rooms: true },
+      });
 
-    const { finalStatus } = this.determineFinalStatus(
-      booking.paidAmount.toNumber(),
-      refundAmount,
-    );
+      // Ghi log chi tiết
+      const isOverride = dto.overrideRefundAmount !== undefined;
+      await (tx as any).booking_logs.create({
+        data: {
+          bookingId,
+          action: 'FORCE_CANCEL',
+          oldTotal: Number(booking.totalPrice),
+          performedBy: adminId,
+          note: [
+            `Admin huỷ đơn.`,
+            `Lý do: ${dto.reason || 'Không có lý do'}.`,
+            isOverride
+              ? `Hoàn tiền ngoại lệ: ${finalRefund.toLocaleString()}đ (gợi ý: ${suggestedRefund.toLocaleString()}đ).`
+              : `Hoàn tiền theo chính sách: ${finalRefund.toLocaleString()}đ.`,
+            `Phí phạt: ${finalFee.toLocaleString()}đ.`,
+            `Trạng thái: ${finalStatus}.`,
+          ].join(' '),
+        },
+      });
 
-    const updated = await this.lifecycleService.changeBookingStatus(
-      bookingId,
-      finalStatus,
-      {
-        reason: dto.reason || 'Admin chủ động huỷ đơn',
-        allowOverride: true,
-      },
-    );
+      this.lifecycleService.sendStatusMail(updated, finalStatus);
 
-    return {
-      message: 'Đã huỷ đơn thành công',
-      booking: sanitizeBooking(updated),
-    };
+      return {
+        message:
+          finalRefund > 0
+            ? `Đã huỷ đơn. Số tiền cần hoàn: ${finalRefund.toLocaleString()}đ`
+            : 'Đã huỷ đơn thành công',
+        suggestedRefund,
+        actualRefund: finalRefund,
+        booking: sanitizeBooking(updated),
+      };
+    });
   }
 
   /**
@@ -274,5 +307,102 @@ export class BookingCancelRefundService {
     });
     if (!booking) throw new NotFoundException('Không tìm thấy booking');
     return booking;
+  }
+
+  /**
+   * Preview kết quả huỷ đơn (không thực thi).
+   * Trả về thông tin chi tiết: số ngày còn lại, chính sách áp dụng,
+   * số tiền gợi ý hoàn, và phí phạt.
+   */
+  async previewCancellation(
+    bookingId: number,
+    requesterId?: number,
+    role?: string,
+  ) {
+    const booking = await this.prisma.bookings.findUnique({
+      where: { id: bookingId },
+      include: { rooms: true },
+    });
+    if (!booking) throw new NotFoundException('Không tìm thấy booking');
+
+    if (
+      role !== Role.ADMIN &&
+      requesterId !== undefined &&
+      booking.userId !== requesterId
+    ) {
+      throw new ForbiddenException('Bạn không có quyền xem thông tin này');
+    }
+
+    const { refundAmount, cancellationFee, appliedDaysBefore, refundPercent } =
+      await this.calculateRefundAmount(booking);
+
+    const paidAmount = Number(booking.paidAmount);
+    const totalPrice = Number(booking.totalPrice);
+
+    // Load chính sách hiện tại để hiển thị
+    let policy = booking.cancellationPolicy;
+    if (!policy || (Array.isArray(policy) && policy.length === 0)) {
+      const config = await this.prisma.app_configs.findUnique({
+        where: { key: AppConfigKey.CANCELLATION_POLICY },
+      });
+      policy = (config?.value as any[]) || [];
+    }
+
+    return {
+      bookingId,
+      guestName: booking.guestFullName,
+      checkIn: booking.checkIn,
+      checkOut: booking.checkOut,
+      roomName: booking.rooms?.name || 'N/A',
+      totalPrice,
+      paidAmount,
+      daysUntilCheckIn: appliedDaysBefore,
+      appliedRefundPercent: refundPercent,
+      suggestedRefundAmount: refundAmount,
+      suggestedCancellationFee: cancellationFee,
+      cancellationPolicy: policy,
+    };
+  }
+
+  /**
+   * Admin xác nhận đã hoàn tiền chênh lệch cho khách sau khi đổi ngày.
+   * Reset refundAmount về 0 và ghi log.
+   */
+  async confirmRefundDifference(bookingId: number, adminId: number) {
+    const booking = await this.findBookingOrThrow(bookingId);
+
+    const currentRefund = Number(booking.refundAmount || 0);
+    if (currentRefund <= 0) {
+      throw new BadRequestException(
+        'Đơn hàng này không có khoản hoàn tiền chênh lệch nào cần xác nhận',
+      );
+    }
+
+    const updated = await this.prisma.$transaction(async (tx) => {
+      const result = await tx.bookings.update({
+        where: { id: bookingId },
+        data: {
+          refundAmount: 0,
+          updatedAt: new Date(),
+        } as any,
+        include: { rooms: true },
+      });
+
+      await (tx as any).booking_logs.create({
+        data: {
+          bookingId,
+          action: 'REFUND_DIFFERENCE_CONFIRMED',
+          note: `Admin xác nhận đã hoàn tiền chênh lệch: ${currentRefund.toLocaleString()}đ.`,
+          performedBy: adminId,
+        },
+      });
+
+      return result;
+    });
+
+    return {
+      message: `Đã xác nhận hoàn tiền chênh lệch ${currentRefund.toLocaleString()}đ`,
+      booking: updated,
+    };
   }
 }

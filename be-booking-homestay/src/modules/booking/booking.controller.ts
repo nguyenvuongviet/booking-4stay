@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  ForbiddenException,
   Get,
   Param,
   ParseIntPipe,
@@ -18,6 +19,7 @@ import { BookingQueryService } from './booking-query.service';
 import { BookingService } from './booking.service';
 import { CancelBookingDto } from './dto/cancel-booking.dto';
 import { CreateBookingDto } from './dto/create-booking.dto';
+import { CreateManualBookingDto } from './dto/create-manual-booking.dto';
 import { ListBookingQuery } from './dto/list-booking.query';
 import { PreCheckDto } from './dto/preCheck-booking.dto';
 import { RoomAvailabilityDto } from './dto/room-availability.dto';
@@ -73,7 +75,9 @@ export class BookingController {
     @Req() req: Request,
   ) {
     const user = req['user'];
-    return this.cancelRefundService.cancel(id, +user.id, user.role, dto);
+    const roles = user.user_roles?.map((ur) => ur.roles?.name) || [];
+    const role = roles.includes(Role.ADMIN) ? Role.ADMIN : Role.USER;
+    return this.cancelRefundService.cancel(id, +user.id, role, dto);
   }
 
   @Patch('/:id')
@@ -84,7 +88,34 @@ export class BookingController {
     @Req() req: Request,
   ) {
     const user = req['user'];
-    return this.bookingService.update(id, +user.id, user.role, dto);
+    const roles = user.user_roles?.map((ur) => ur.roles?.name) || [];
+    const role = roles.includes(Role.ADMIN) ? Role.ADMIN : Role.USER;
+    return this.bookingService.update(id, +user.id, role, dto);
+  }
+
+  @Get('/:id/cancel-preview')
+  @ApiBearerAuth('AccessToken')
+  async cancelPreview(
+    @Param('id', ParseIntPipe) id: number,
+    @Req() req: Request,
+  ) {
+    const user = req['user'];
+    if (!user) throw new ForbiddenException('Bạn cần đăng nhập');
+    const roles = user.user_roles?.map((ur) => ur.roles?.name) || [];
+    const role = roles.includes(Role.ADMIN) ? Role.ADMIN : Role.USER;
+
+    return this.cancelRefundService.previewCancellation(id, +user.id, role);
+  }
+
+  @Patch('/:id/confirm-refund-difference')
+  @Roles(Role.ADMIN)
+  @ApiBearerAuth('AccessToken')
+  async confirmRefundDifference(
+    @Param('id', ParseIntPipe) id: number,
+    @Req() req: Request,
+  ) {
+    const user = req['user'];
+    return this.cancelRefundService.confirmRefundDifference(id, +user.id);
   }
 
   @Get('/:id')
@@ -104,6 +135,17 @@ export class BookingController {
   @ApiBearerAuth('AccessToken')
   async adminList(@Query() q: ListBookingQuery) {
     return this.queryService.listAll(q);
+  }
+
+  @Post('/admin/manual')
+  @Roles(Role.ADMIN)
+  @ApiBearerAuth('AccessToken')
+  async createManualBooking(
+    @Req() req: Request,
+    @Body() dto: CreateManualBookingDto,
+  ) {
+    const user = req['user'];
+    return this.bookingService.adminCreateManualBooking(+user.id, dto);
   }
 
   @Get('rooms/:id/availability')
@@ -129,34 +171,16 @@ export class BookingController {
     return this.queryService.listByUser(userId);
   }
 
-  @Patch('/:id/accept')
-  @Roles(Role.ADMIN)
-  @ApiBearerAuth('AccessToken')
-  async acceptBooking(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() dto: { paidAmount: number },
-  ) {
-    return this.bookingService.adminAcceptBooking(id, dto);
-  }
-
-  @Patch('/:id/reject')
-  @Roles(Role.ADMIN)
-  @ApiBearerAuth('AccessToken')
-  async rejectBooking(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() dto: CancelBookingDto,
-  ) {
-    return this.cancelRefundService.adminRejectBooking(id, dto);
-  }
-
   @Patch('/:id/admin-cancel')
   @Roles(Role.ADMIN)
   @ApiBearerAuth('AccessToken')
   async adminCancelBooking(
     @Param('id', ParseIntPipe) id: number,
-    @Body() dto: CancelBookingDto,
+    @Body() dto: CancelBookingDto & { overrideRefundAmount?: number },
+    @Req() req: Request,
   ) {
-    return this.cancelRefundService.adminCancelBooking(id, dto);
+    const user = req['user'];
+    return this.cancelRefundService.adminForceCancel(id, +user.id, dto);
   }
 
   @Patch('/:id/refund')

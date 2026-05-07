@@ -27,7 +27,7 @@ export const getMonthDays = (year: number, month: number) => {
     });
   }
 
-  while (days.length < 42) {
+  while (days.length % 7 !== 0) {
     const next: number = days.length - (startDay + daysInMonth) + 1;
     days.push({
       date: new Date(year, month + 1, next),

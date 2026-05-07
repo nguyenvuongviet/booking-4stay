@@ -11,13 +11,22 @@ import {
 import { Input } from "@/_components/ui/input";
 import { Label } from "@/_components/ui/label";
 import { Textarea } from "@/_components/ui/textarea";
-import { AppConfigKey } from "@/constants/app.constant";
 import { useLang } from "@/context/lang-context";
-import { parseAbsoluteDate } from "@/lib/utils";
 import { Booking } from "@/models/Booking";
-import { appConfigApi } from "@/services/admin/appConfigApi";
+import {
+  CancelPreviewResult,
+  getCancelPreview,
+} from "@/services/admin/bookingsApi";
 import { cancel_booking } from "@/services/bookingApi";
-import { Info, Loader2, XCircle } from "lucide-react";
+import {
+  Ban,
+  Calculator,
+  Clock,
+  Info,
+  Loader2,
+  Shield,
+  XCircle,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
@@ -36,79 +45,40 @@ export const BookingCancelSection = ({
   const [reason, setReason] = useState("");
   const [loading, setLoading] = useState(false);
   const [refundAmount, setRefundAmount] = useState<number | null>(null);
-  const [systemPolicy, setSystemPolicy] = useState<any[]>([]);
+  const [preview, setPreview] = useState<CancelPreviewResult | null>(null);
   const [bankName, setBankName] = useState("");
   const [bankAccountNumber, setBankAccountNumber] = useState("");
   const [bankAccountName, setBankAccountName] = useState("");
   const { t } = useLang();
 
   useEffect(() => {
-    const fetchGlobalPolicy = async () => {
-      try {
-        const configs = await appConfigApi.getAllConfigs();
-        const policy = configs.find(
-          (c) => c.key === AppConfigKey.CANCELLATION_POLICY,
-        )?.value;
-        if (policy) setSystemPolicy(policy);
-      } catch (err) {
-        console.error("Failed to fetch global policy", err);
-      }
-    };
-    if (
-      open &&
-      (!booking.cancellationPolicy ||
-        (booking.cancellationPolicy as any[]).length === 0)
-    ) {
-      fetchGlobalPolicy();
+    if (open && booking.id) {
+      setLoading(true);
+      getCancelPreview(Number(booking.id))
+        .then((data) => {
+          setPreview(data);
+          setRefundAmount(data.suggestedRefundAmount);
+        })
+        .catch((err) => {
+          console.error("Failed to fetch cancel preview", err);
+        })
+        .finally(() => setLoading(false));
     }
-  }, [open, booking.cancellationPolicy]);
+  }, [open, booking.id]);
 
-  const calculateRefund = () => {
-    const policy =
-      booking.cancellationPolicy?.length > 0
-        ? booking.cancellationPolicy
-        : systemPolicy;
+  const getRefundLabel = (percent: number) => {
+    if (percent >= 1) return "Hoàn 100%";
+    if (percent > 0) return `Hoàn ${Math.round(percent * 100)}%`;
+    return "Không hoàn tiền";
+  };
 
-    const now = new Date();
-    const vnTimeMs = now.getTime() + 7 * 60 * 60 * 1000;
-    const todayUtcMidnight = Math.floor(vnTimeMs / 86400000) * 86400000;
-
-    const rawCheckIn = booking.checkIn as any;
-    const checkInStr =
-      rawCheckIn instanceof Date
-        ? rawCheckIn.toISOString()
-        : String(rawCheckIn);
-
-    const checkInTime = Date.parse(checkInStr.substring(0, 10) + "T00:00:00Z");
-
-    if (todayUtcMidnight >= checkInTime) return 0;
-
-    const diffDays = (checkInTime - todayUtcMidnight) / 86400000;
-
-    let refundPercent = 0;
-    if (policy && policy.length > 0) {
-      const sorted = [...policy].sort((a, b) => b.daysBefore - a.daysBefore);
-      for (let i = 0; i < sorted.length; i++) {
-        if (diffDays >= sorted[i].daysBefore) {
-          const rawRate = sorted[i].refundPercent;
-          refundPercent = rawRate > 1 ? rawRate / 100 : rawRate;
-          break;
-        }
-      }
-    }
-
-    const total =
-      (booking as any).totalPrice || (booking as any).totalAmount || 0;
-    const paid = booking.paidAmount || 0;
-    const cancellationFee = total * (1 - refundPercent);
-
-    const refund = paid - cancellationFee;
-    return refund > 0 ? refund : 0;
+  const getPolicyDescription = (daysLeft: number) => {
+    if (daysLeft < 0) return "Đã quá ngày check-in";
+    if (daysLeft === 0) return "Ngày check-in hôm nay";
+    return `Còn ${daysLeft} ngày trước check-in`;
   };
 
   const handleCancelClick = () => {
-    const refund = calculateRefund();
-    setRefundAmount(refund);
     setOpen(true);
   };
 
@@ -166,7 +136,7 @@ export const BookingCancelSection = ({
     <>
       <Button
         variant="outline"
-        className="w-full justify-start h-16 px-6 sm:px-8 rounded-3xl border-2 border-red-50 shadow-sm hover:shadow-md hover:border-red-200 hover:bg-red-50 flex items-center gap-4 group transition-all duration-300"
+        className="w-full justify-center h-16 px-6 sm:px-8 rounded-3xl border-2 border-red-50 shadow-sm hover:shadow-md hover:border-red-200 hover:bg-red-50 flex items-center gap-4 group transition-all duration-300"
         onClick={handleCancelClick}
         disabled={loading}
       >
@@ -184,132 +154,187 @@ export const BookingCancelSection = ({
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto elegant-scrollbar">
           <DialogHeader>
-            <DialogTitle className="text-lg font-semibold text-red-600 uppercase tracking-wider">
+            <DialogTitle className="flex items-center gap-2 text-xl font-black text-gray-900">
+              <Ban className="w-5 h-5 text-red-500" />
               Xác nhận hủy đặt phòng
             </DialogTitle>
           </DialogHeader>
 
           <div className="space-y-6 py-2">
-            <div className="rounded-2xl bg-gray-50 p-5 border border-gray-100 text-sm">
-              <div className="flex items-center gap-2 font-black text-gray-900 mb-3 uppercase tracking-tighter">
-                <Info className="w-4 h-4 text-primary" />
-                Chính sách hoàn tiền áp dụng
-              </div>
-              <ul className="space-y-2">
-                {(() => {
-                  const policy =
-                    booking.cancellationPolicy &&
-                    (booking.cancellationPolicy as any[]).length > 0
-                      ? (booking.cancellationPolicy as any[])
-                      : systemPolicy;
-
-                  if (policy && policy.length > 0) {
-                    return [...policy]
-                      .sort((a, b) => b.daysBefore - a.daysBefore)
-                      .map((rule, idx) => (
-                        <li
-                          key={idx}
-                          className="flex justify-between items-center text-gray-600"
-                        >
-                          <span>Trước {rule.daysBefore} ngày:</span>
-                          <span className="font-bold text-gray-900 bg-white px-2 py-0.5 rounded border border-gray-100 shadow-sm">
-                            Hoàn {Number(rule.refundPercent) * 100}%
-                          </span>
-                        </li>
-                      ));
-                  }
-
-                  return (
-                    <li className="text-gray-400 italic">
-                      Đang tải hoặc không có thông tin chính sách hủy.
-                    </li>
-                  );
-                })()}
-              </ul>
-            </div>
-
-            <div className="space-y-3">
-              <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">
-                Lý do hủy phòng
-              </p>
-              <Textarea
-                placeholder="Vui lòng nhập lý do để chúng tôi cải thiện dịch vụ..."
-                value={reason}
-                onChange={(e) => setReason(e.target.value)}
-                className="w-full rounded-2xl min-h-[100px] border-gray-100 focus:ring-primary/20"
-              />
-            </div>
-
-            {refundAmount !== null && refundAmount > 0 && (
-              <div className="space-y-4 p-5 rounded-2xl bg-gray-50 border border-gray-100">
-                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
-                  <Info className="w-3 h-3" /> Thông tin nhận tiền hoàn
+            {loading && (
+              <div className="flex flex-col items-center justify-center py-12 gap-3">
+                <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+                <p className="text-sm text-gray-500 font-medium">
+                  Đang tính toán chính sách...
                 </p>
-                <div className="grid grid-cols-1 gap-3">
-                  <div className="space-y-1">
-                    <Label className="text-[11px] text-gray-500 ml-1">
-                      Tên ngân hàng
-                    </Label>
-                    <Input
-                      placeholder="Ví dụ: Vietcombank, Techcombank..."
-                      value={bankName}
-                      onChange={(e) => setBankName(e.target.value)}
-                      className="rounded-xl border-gray-200"
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1">
-                      <Label className="text-[11px] text-gray-500 ml-1">
-                        Số tài khoản
-                      </Label>
-                      <Input
-                        placeholder="Số tài khoản..."
-                        value={bankAccountNumber}
-                        onChange={(e) => setBankAccountNumber(e.target.value)}
-                        className="rounded-xl border-gray-200"
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <Label className="text-[11px] text-gray-500 ml-1">
-                        Chủ tài khoản
-                      </Label>
-                      <Input
-                        placeholder="Tên in trên thẻ..."
-                        value={bankAccountName}
-                        onChange={(e) =>
-                          setBankAccountName(e.target.value.toUpperCase())
-                        }
-                        className="rounded-xl border-gray-200 uppercase"
-                      />
-                    </div>
-                  </div>
-                </div>
               </div>
             )}
 
-            {refundAmount !== null && (
-              <div className="p-5 rounded-2xl bg-primary/5 border border-primary/10 text-sm">
-                <div className="flex justify-between items-center">
-                  <span className="font-bold text-gray-600">
-                    Số tiền ước tính hoàn trả:
-                  </span>
-                  {refundAmount > 0 ? (
-                    <span className="text-xl font-black text-primary">
-                      {refundAmount.toLocaleString()} VND
-                    </span>
-                  ) : (
-                    <span className="text-red-500 font-black">
-                      KHÔNG HOÀN TIỀN
-                    </span>
-                  )}
+            {preview && !loading && (
+              <>
+                {/* Policy Calculation */}
+                <div className="bg-slate-50/50 rounded-2xl p-5 border border-slate-200/60 space-y-4">
+                  <div className="flex items-center gap-2">
+                    <Calculator className="w-4 h-4 text-slate-400" />
+                    <h4 className="font-black text-slate-700 text-[11px] uppercase tracking-wider">
+                      Kết quả tính toán chính sách
+                    </h4>
+                  </div>
+
+                  <div className="space-y-2.5">
+                    <div className="flex items-center gap-2.5 text-sm">
+                      <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center border border-slate-100 shadow-sm">
+                        <Clock className="w-4 h-4 text-blue-500" />
+                      </div>
+                      <span className="text-slate-600 font-bold">
+                        {getPolicyDescription(preview.daysUntilCheckIn)}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2.5 text-sm">
+                      <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center border border-slate-100 shadow-sm">
+                        <Shield className="w-4 h-4 text-green-500" />
+                      </div>
+                      <span className="text-slate-600 font-medium">
+                        Quy tắc áp dụng:{" "}
+                        <strong className="text-slate-900">
+                          {getRefundLabel(preview.appliedRefundPercent)}
+                        </strong>
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Policy Rules Reference */}
+                  {preview.cancellationPolicy &&
+                    preview.cancellationPolicy.length > 0 && (
+                      <div className="bg-white rounded-xl p-4 mt-2 space-y-1.5 border border-slate-100 shadow-sm">
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                          <Info className="w-3 h-3" /> Chi tiết chính sách huỷ
+                        </p>
+                        {[...preview.cancellationPolicy]
+                          .sort((a, b) => b.daysBefore - a.daysBefore)
+                          .map((rule, i) => (
+                            <div
+                              key={i}
+                              className={`flex justify-between text-xs py-2 px-3 rounded-lg transition-all ${
+                                preview.daysUntilCheckIn >= rule.daysBefore &&
+                                (i === 0 ||
+                                  preview.daysUntilCheckIn <
+                                    preview.cancellationPolicy.sort(
+                                      (a, b) => b.daysBefore - a.daysBefore,
+                                    )[i - 1]?.daysBefore)
+                                  ? "bg-blue-50 text-blue-700 font-black ring-1 ring-blue-100 shadow-sm"
+                                  : "text-slate-500/70"
+                              }`}
+                            >
+                              <span>
+                                ≥ {rule.daysBefore} ngày trước check-in
+                              </span>
+                              <span>
+                                Hoàn {Math.round(rule.refundPercent * 100)}%
+                              </span>
+                            </div>
+                          ))}
+                      </div>
+                    )}
                 </div>
-                <p className="text-[10px] text-gray-400 mt-2 italic">
-                  * Phí phạt = Tổng đơn x (100% - % hoàn). Tiền hoàn = Đã đóng -
-                  Phí phạt.
-                </p>
-              </div>
+
+                {/* Refund Summary Result */}
+                <div className="bg-white rounded-2xl border-2 border-gray-100 p-5 space-y-4 shadow-sm">
+                  <div className="flex justify-between items-center pb-3 border-b border-gray-50">
+                    <span className="text-sm font-bold text-gray-500">
+                      Phí phạt huỷ đơn
+                    </span>
+                    <span className="text-base font-black text-red-500">
+                      {preview.suggestedCancellationFee.toLocaleString()}₫
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-black text-gray-800">
+                      Số tiền hoàn trả ước tính
+                    </span>
+                    {preview.suggestedRefundAmount > 0 ? (
+                      <span className="text-2xl font-black text-primary">
+                        {preview.suggestedRefundAmount.toLocaleString()}₫
+                      </span>
+                    ) : (
+                      <span className="text-lg font-black text-red-500 uppercase">
+                        Không hoàn tiền
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[10px] text-gray-400 italic leading-tight">
+                    * Phí phạt = Tổng đơn x (100% - % hoàn).
+                    <br />* Tiền hoàn = Số tiền đã thanh toán - Phí phạt.
+                  </p>
+                </div>
+
+                {/* Reason */}
+                <div className="space-y-3">
+                  <p className="text-[11px] font-black text-gray-400 uppercase tracking-widest ml-1">
+                    Lý do hủy phòng
+                  </p>
+                  <Textarea
+                    placeholder="Vui lòng nhập lý do để chúng tôi cải thiện dịch vụ..."
+                    value={reason}
+                    onChange={(e) => setReason(e.target.value)}
+                    className="w-full rounded-2xl min-h-[100px] border-gray-100 focus:ring-primary/20 bg-gray-50/50 transition-all focus:bg-white"
+                  />
+                </div>
+
+                {/* Bank Info if refund > 0 */}
+                {preview.suggestedRefundAmount > 0 && (
+                  <div className="space-y-4 p-5 rounded-2xl bg-primary/5 border border-primary/10 shadow-inner">
+                    <p className="text-[11px] font-black text-primary uppercase tracking-widest flex items-center gap-2">
+                      <Calculator className="w-3.5 h-3.5" /> Thông tin nhận tiền
+                      hoàn
+                    </p>
+                    <div className="grid grid-cols-1 gap-4">
+                      <div className="space-y-1.5">
+                        <Label className="text-[11px] font-bold text-gray-500 ml-1">
+                          Tên ngân hàng
+                        </Label>
+                        <Input
+                          placeholder="Ví dụ: Vietcombank, Techcombank..."
+                          value={bankName}
+                          onChange={(e) => setBankName(e.target.value)}
+                          className="rounded-xl border-gray-100 h-11 bg-white"
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                          <Label className="text-[11px] font-bold text-gray-500 ml-1">
+                            Số tài khoản
+                          </Label>
+                          <Input
+                            placeholder="Số tài khoản..."
+                            value={bankAccountNumber}
+                            onChange={(e) =>
+                              setBankAccountNumber(e.target.value)
+                            }
+                            className="rounded-xl border-gray-100 h-11 bg-white"
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label className="text-[11px] font-bold text-gray-500 ml-1">
+                            Chủ tài khoản
+                          </Label>
+                          <Input
+                            placeholder="Tên in trên thẻ..."
+                            value={bankAccountName}
+                            onChange={(e) =>
+                              setBankAccountName(e.target.value.toUpperCase())
+                            }
+                            className="rounded-xl border-gray-100 h-11 bg-white uppercase font-bold"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </>
             )}
           </div>
 

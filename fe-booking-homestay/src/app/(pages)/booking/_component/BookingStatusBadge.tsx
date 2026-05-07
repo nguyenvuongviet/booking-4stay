@@ -1,5 +1,5 @@
-import { BookingStatus } from "@/constants/app.constant";
 import { useLang } from "@/context/lang-context";
+import { BookingStatus } from "@/types/booking";
 import {
   CheckCircle2,
   Clock,
@@ -53,7 +53,7 @@ export const BookingStatusBadge: React.FC<BookingStatusBadgeProps> = ({
           text: "text-teal-700 font-semibold",
           label: "Đã cọc (30%)",
         };
-      case BookingStatus.CANCELLED:
+      case BookingStatus.CANCELLED || BookingStatus.CANCELLED_BY_ADMIN:
         return {
           icon: <XCircle className="w-4 h-4" />,
           bg: "bg-rose-50 border border-rose-200/60",
@@ -86,7 +86,7 @@ export const BookingStatusBadge: React.FC<BookingStatusBadgeProps> = ({
           icon: null,
           bg: "bg-gray-100 border border-gray-200",
           text: "text-gray-500 font-medium",
-          label: "Unknown",
+          label: "Trạng thái không xác định",
         };
     }
   };

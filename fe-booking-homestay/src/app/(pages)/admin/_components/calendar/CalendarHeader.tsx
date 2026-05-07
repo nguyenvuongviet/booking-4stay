@@ -6,10 +6,7 @@ type Props = {
   setCurrentDate: (d: Date) => void;
 };
 
-export default function CalendarHeader({
-  currentDate,
-  setCurrentDate,
-}: Props) {
+export default function CalendarHeader({ currentDate, setCurrentDate }: Props) {
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
 
@@ -20,19 +17,19 @@ export default function CalendarHeader({
       </h2>
 
       <div className="flex gap-2">
-        <button 
-            className="hover:color-accent cursor-pointer"
-            onClick={() => setCurrentDate(new Date(year, month - 1, 1))}>
-            <CircleChevronLeft /> 
+        <button
+          className="hover:color-accent cursor-pointer"
+          onClick={() => setCurrentDate(new Date(year, month - 1, 1))}
+        >
+          <CircleChevronLeft />
         </button>
 
-        <button onClick={() => setCurrentDate(new Date())}>
-          Hôm nay
-        </button>
+        <button onClick={() => setCurrentDate(new Date())}>Hôm nay</button>
 
-        <button 
-            className="hover:color-accent cursor-pointer"
-            onClick={() => setCurrentDate(new Date(year, month + 1, 1))}>
+        <button
+          className="hover:color-accent cursor-pointer"
+          onClick={() => setCurrentDate(new Date(year, month + 1, 1))}
+        >
           <CircleChevronRight />
         </button>
       </div>

@@ -16,6 +16,7 @@ interface PaymentModalProps {
   type: "BANK_TRANSFER" | "CASH";
   onDepositNow: () => void;
   onDepositLater: () => void;
+  isRemaining?: boolean;
 }
 
 export default function PaymentModal({
@@ -24,17 +25,29 @@ export default function PaymentModal({
   type,
   onDepositNow,
   onDepositLater,
+  isRemaining = false,
 }: PaymentModalProps) {
-  const title =
-    type === "BANK_TRANSFER" ? "Xác nhận thanh toán" : "Xác nhận đặt cọc";
-  const message =
-    type === "BANK_TRANSFER"
+  const isBankTransfer = type === "BANK_TRANSFER";
+
+  const title = isRemaining
+    ? "Xác nhận thanh toán"
+    : isBankTransfer
+      ? "Xác nhận thanh toán 100%"
+      : "Xác nhận đặt cọc 30%";
+
+  const message = isRemaining
+    ? "Bạn có muốn tiến hành thanh toán số tiền còn lại ngay bây giờ để hoàn tất đơn đặt phòng?"
+    : isBankTransfer
       ? "Để giữ phòng, bạn cần thanh toán 100%. Bạn muốn thanh toán ngay hay để sau?"
       : "Để giữ phòng, bạn cần thanh toán 30% tiền cọc. Bạn muốn thanh toán ngay hay để sau?";
 
+  const nowLabel = isRemaining
+    ? "Thanh toán ngay"
+    : isBankTransfer
+      ? "Thanh toán ngay"
+      : "Đặt cọc ngay";
+
   const laterLabel = "Để sau";
-  const nowLabel =
-    type === "BANK_TRANSFER" ? "Thanh toán ngay" : "Đặt cọc ngay";
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -48,10 +61,23 @@ export default function PaymentModal({
 
         <p className="text-sm text-gray-700 leading-relaxed">{message}</p>
 
-        <div className="border rounded-lg p-3 bg-gray-50 text-sm text-gray-600 mt-2">
-          <strong>Lưu ý:</strong> Phòng sẽ được giữ tạm thời trong 24h cho đến
-          khi thanh toán{" "}
-          {type === "BANK_TRANSFER" ? "đủ qua PayOS" : "tiền cọc qua tiền mặt"}.
+        <div className="border border-yellow-100 rounded-xl p-4 bg-yellow-50/50 text-[13px] text-gray-600 mt-2">
+          <strong>Lưu ý:</strong>{" "}
+          {isRemaining ? (
+            <span>
+              Hệ thống sẽ ghi nhận thanh toán và cập nhật trạng thái đơn hàng
+              ngay sau khi giao dịch qua PayOS hoàn tất thành công.
+            </span>
+          ) : (
+            <span>
+              Phòng sẽ được giữ tạm thời cho đến khi bạn hoàn tất thanh toán{" "}
+              <strong>
+                {type === "BANK_TRANSFER" ? "100%" : "30% tiền cọc"}
+              </strong>{" "}
+              qua PayOS. Sau thời gian quy định, đơn hàng sẽ tự động bị huỷ nếu
+              chưa nhận được thanh toán.
+            </span>
+          )}
         </div>
 
         <DialogFooter className="flex flex-col gap-3 sm:flex-row sm:justify-end pt-3">

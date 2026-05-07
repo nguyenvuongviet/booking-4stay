@@ -1,6 +1,5 @@
 "use client";
 
-import { Pagination } from "@/app/(pages)/admin/_components/Pagination";
 import { Button } from "@/_components/ui/button";
 import { Card } from "@/_components/ui/card";
 import {
@@ -10,6 +9,7 @@ import {
   TooltipTrigger,
 } from "@/_components/ui/tooltip";
 import { UserAvatar } from "@/_components/UserAvatar";
+import { Pagination } from "@/app/(pages)/admin/_components/Pagination";
 import { formatDate } from "@/lib/utils/date";
 import { Review } from "@/types/review";
 import { ExternalLink, Star } from "lucide-react";
@@ -75,7 +75,7 @@ export default function RoomReviewsTab({ reviews }: { reviews: Review[] }) {
     data.sort((a, b) =>
       sortType === "newest"
         ? +new Date(b.createdAt) - +new Date(a.createdAt)
-        : +new Date(a.createdAt) - +new Date(b.createdAt)
+        : +new Date(a.createdAt) - +new Date(b.createdAt),
     );
 
     return data;

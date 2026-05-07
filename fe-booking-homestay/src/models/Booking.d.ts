@@ -1,4 +1,4 @@
-import { BookingStatus } from "@/constants";
+import { BookingStatus } from "@/constants/booking-status";
 import { Room } from "./Room";
 
 interface User {

@@ -1,6 +1,6 @@
-import { toDateKey } from "@/lib/utils/calendar";
+import { toDateKey } from "@/app/(pages)/admin/_utils/calendar";
 import { formatDateAPI } from "@/lib/utils/date";
-import { roomCalendar, updateRoomCalendar } from "@/services/admin/roomsApi";
+import { getRoomCalendar, updateRoomCalendar } from "@/services/admin/roomsApi";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 type CalendarItem = {
@@ -49,7 +49,7 @@ export function useCalendarPricing({
         const results = await Promise.all(
           needFetch.map(async ({ month, year }) => {
             const key = `${roomId}-${month}-${year}`;
-            const res = await roomCalendar(roomId, month, year);
+            const res = await getRoomCalendar(Number(roomId), month, year);
 
             cache.current.set(key, res.calendar);
             return res.calendar;
@@ -171,7 +171,7 @@ export function useCalendarPricing({
     });
 
     try {
-      await updateRoomCalendar(roomId, payload);
+      await updateRoomCalendar(Number(roomId), payload);
     } catch (err) {
       console.error("rollback", err);
       setData(prev);

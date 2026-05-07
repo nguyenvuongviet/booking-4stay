@@ -1,74 +1,100 @@
 "use client";
 
 import { Button } from "@/_components/ui/button";
-import { Check, X } from "lucide-react";
+import { BookingStatus } from "@/types/booking";
+import { Banknote, Edit, X } from "lucide-react";
 
 export function BookingActionButtons({
   status,
   id,
-  paidAmount,
-  onAccept,
-  onReject,
-  onRefund,
+  booking,
+  onEdit,
   onCancel,
+  onRefund,
   className,
 }: {
   status: string;
   id: number;
-  paidAmount?: number;
-  onAccept: (id: number) => void;
-  onReject: (id: number) => void;
-  onRefund: (id: number, maxAmount: number) => void;
+  booking?: any;
+  onEdit?: (id: number) => void;
   onCancel: (id: number) => void;
+  onRefund: (booking: any) => void;
   className?: string;
 }) {
-  if (status === "PENDING")
-    return (
-      <div className={`flex items-center justify-center gap-2 ${className}`}>
-        <Button
-          size="sm"
-          className="bg-green-600 text-white rounded-full"
-          onClick={() => onAccept(id)}
-        >
-          <Check className="w-4 h-4" /> Duyệt
-        </Button>
+  const refundAmount = Number(booking?.refundAmount || 0);
 
-        <Button
-          size="sm"
-          className="rounded-full"
-          variant="destructive"
-          onClick={() => onReject(id)}
-        >
-          <X className="w-4 h-4" /> Huỷ
-        </Button>
+  const canEdit = [
+    BookingStatus.PENDING,
+    BookingStatus.CONFIRMED,
+    BookingStatus.PARTIALLY_PAID,
+    BookingStatus.CHECKED_IN,
+  ].includes(status as BookingStatus);
+
+  const canCancel = [
+    BookingStatus.PENDING,
+    BookingStatus.CONFIRMED,
+    BookingStatus.PARTIALLY_PAID,
+    BookingStatus.CHECKED_IN,
+  ].includes(status as BookingStatus);
+
+  const canRefund = refundAmount > 0 && status !== BookingStatus.REFUNDED;
+
+  if (
+    [
+      BookingStatus.CANCELLED,
+      BookingStatus.CANCELLED_BY_ADMIN,
+      BookingStatus.REFUNDED,
+      BookingStatus.CHECKED_OUT,
+    ].includes(status as BookingStatus) &&
+    !canRefund
+  ) {
+    return (
+      <div
+        className={`flex items-center justify-center gap-1.5 opacity-40 grayscale ${className}`}
+      >
+        <div className="w-1.5 h-1.5 rounded-full bg-gray-400" />
+        <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">
+          Khóa
+        </span>
       </div>
     );
+  }
 
-  if (status === "WAITING_REFUND")
-    return (
-      <Button
-        size="sm"
-        className={`bg-amber-600 rounded-full hover:bg-amber-700 text-white font-semibold ${className}`}
-        onClick={() => onRefund(id, paidAmount || 0)}
-      >
-        Hoàn tiền
-      </Button>
-    );
+  return (
+    <div
+      className={`flex items-center justify-center gap-2 flex-wrap ${className}`}
+    >
+      {canEdit && onEdit && (
+        <Button
+          size="sm"
+          variant="outline"
+          className="rounded-full shadow-sm font-semibold flex items-center gap-1 border-gray-300 hover:bg-gray-50"
+          onClick={() => onEdit(id)}
+        >
+          <Edit className="w-4 h-4" /> Sửa
+        </Button>
+      )}
 
-  if (status === "CONFIRMED" || status === "PARTIALLY_PAID") {
-    return (
-      <div className={`flex items-center gap-2 ${className}`}>
+      {canCancel && (
         <Button
           size="sm"
           variant="destructive"
           className="rounded-full shadow-sm font-semibold flex items-center gap-1"
           onClick={() => onCancel(id)}
         >
-          <X className="w-4 h-4" /> Huỷ đơn
+          <X className="w-4 h-4" /> Huỷ
         </Button>
-      </div>
-    );
-  }
+      )}
 
-  return <span className={`text-xs text-gray-400 italic ${className}`}>-</span>;
+      {canRefund && (
+        <Button
+          size="sm"
+          className="rounded-full shadow-sm font-semibold flex items-center gap-1 bg-amber-600 hover:bg-amber-700 text-white"
+          onClick={() => onRefund(booking)}
+        >
+          <Banknote className="w-4 h-4" /> Hoàn tiền
+        </Button>
+      )}
+    </div>
+  );
 }

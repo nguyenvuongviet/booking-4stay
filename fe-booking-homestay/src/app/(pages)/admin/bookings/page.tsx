@@ -3,6 +3,8 @@
 import { Button } from "@/_components/ui/button";
 import { Card } from "@/_components/ui/card";
 import { formatDate } from "@/lib/utils/date";
+import api from "@/services/api";
+import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import {
   ArrowUpDown,
@@ -14,17 +16,20 @@ import {
   Users,
 } from "lucide-react";
 import Link from "next/link";
-import ExcelJS from "exceljs";
+import { useState } from "react";
+import toast from "react-hot-toast";
 import { DateRangePicker } from "../_components/DateRangePicker";
 import { Pagination } from "../_components/Pagination";
 import { RefreshButton } from "../_components/RefreshButton";
 import {
   BOOKING_STATUS_MAP,
   getStatusColorClasses,
-} from "../_utils/color-utils";
+  translateStatus,
+} from "../_utils/bookingStatus";
+import { AdminBookingUpdateDialog } from "./_components/AdminBookingUpdateDialog";
 import { BookingActionButtons } from "./_components/BookingActionButtons";
-import { BookingActionDialog } from "./_components/BookingActionDialog";
-import { useBookingActions } from "./_hooks/useBookingActions";
+import { RefundDialog } from "./_components/RefundDialog";
+import { SmartCancelDialog } from "./_components/SmartCancelDialog";
 import { useBookingList } from "./_hooks/useBookingList";
 
 export default function BookingListPage() {
@@ -50,15 +55,9 @@ export default function BookingListPage() {
     refresh,
   } = useBookingList();
 
-  const {
-    dialog,
-    openAccept,
-    openReject,
-    openRefund,
-    openAdminCancel,
-    closeDialog,
-    handleConfirm,
-  } = useBookingActions(refresh);
+  const [editingBooking, setEditingBooking] = useState<any>(null);
+  const [cancelBookingId, setCancelBookingId] = useState<number | null>(null);
+  const [refundBooking, setRefundBooking] = useState<any>(null);
 
   if (initialLoading || !raw) {
     return <div className="p-6">Đang tải dữ liệu…</div>;
@@ -99,7 +98,10 @@ export default function BookingListPage() {
     });
 
     worksheet.getRow(1).font = { bold: true };
-    worksheet.getRow(1).alignment = { vertical: "middle", horizontal: "center" };
+    worksheet.getRow(1).alignment = {
+      vertical: "middle",
+      horizontal: "center",
+    };
 
     const buffer = await workbook.xlsx.writeBuffer();
     saveAs(
@@ -159,7 +161,7 @@ export default function BookingListPage() {
       </Card>
 
       <Card className="p-6 rounded-xl shadow-sm">
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto min-h-[500px]">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b text-sm">
@@ -208,8 +210,11 @@ export default function BookingListPage() {
                 <tr key={b.id} className="border-b hover:bg-gray-50">
                   <td className="py-4 px-4">
                     <div className="font-medium">{b.guestInfo.fullName}</div>
-                    <div className="text-xs text-gray-500">
+                    <div className="text-[10px] text-gray-400 mt-0.5">
                       {b.guestInfo.email}
+                    </div>
+                    <div className="text-[10px] text-primary font-bold">
+                      {b.guestInfo.phoneNumber}
                     </div>
                   </td>
                   <td className="py-4 px-4 font-medium">{b.room?.name}</td>
@@ -235,10 +240,10 @@ export default function BookingListPage() {
                   <td className="py-4 px-4 text-center">
                     <span
                       className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColorClasses(
-                        b.status
+                        b.status,
                       )}`}
                     >
-                      {b.status}
+                      {translateStatus(b.status)}
                     </span>
                   </td>
 
@@ -246,11 +251,10 @@ export default function BookingListPage() {
                     <BookingActionButtons
                       status={b.status}
                       id={b.id}
-                      paidAmount={b.paidAmount}
-                      onAccept={openAccept}
-                      onReject={openReject}
-                      onRefund={openRefund}
-                      onCancel={openAdminCancel}
+                      booking={b}
+                      onEdit={() => setEditingBooking(b)}
+                      onCancel={(id) => setCancelBookingId(id)}
+                      onRefund={(bk) => setRefundBooking(bk)}
                     />
                   </td>
 
@@ -270,10 +274,37 @@ export default function BookingListPage() {
         <Pagination page={page} pageCount={pageCount} onPageChange={setPage} />
       </Card>
 
-      <BookingActionDialog
-        dialog={dialog}
-        onCancel={closeDialog}
-        onConfirm={handleConfirm}
+      {/* 1. Smart Cancel Dialog */}
+      <SmartCancelDialog
+        open={cancelBookingId !== null}
+        bookingId={cancelBookingId}
+        onClose={() => setCancelBookingId(null)}
+        onSuccess={refresh}
+      />
+
+      {/* 2. Refund Dialog */}
+      <RefundDialog
+        open={refundBooking !== null}
+        booking={refundBooking}
+        onClose={() => setRefundBooking(null)}
+        onSuccess={refresh}
+      />
+
+      {/* 3. Edit Dialog */}
+      <AdminBookingUpdateDialog
+        open={!!editingBooking}
+        onClose={() => setEditingBooking(null)}
+        booking={editingBooking}
+        onConfirm={async (data) => {
+          try {
+            await api.patch(`/bookings/${editingBooking?.id}`, data);
+            toast.success("Cập nhật thông tin thành công");
+            setEditingBooking(null);
+            refresh();
+          } catch (err: any) {
+            toast.error(err.response?.data?.message || "Cập nhật thất bại");
+          }
+        }}
       />
     </div>
   );

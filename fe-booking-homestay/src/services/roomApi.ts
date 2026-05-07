@@ -143,3 +143,18 @@ export const sort_price = async ({
     throw error;
   }
 };
+export const get_room_calendar = async (
+  roomId: number | string,
+  month?: number,
+  year?: number
+) => {
+  try {
+    const resp = await api.get(`/room/${roomId}/calendar`, {
+      params: { month, year },
+    });
+    return resp.data?.data || {};
+  } catch (error) {
+    console.error("Get room calendar error:", error);
+    throw error;
+  }
+};
