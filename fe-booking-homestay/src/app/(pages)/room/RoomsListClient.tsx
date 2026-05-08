@@ -33,7 +33,7 @@ export default function RoomsListPage() {
   const checkOut = searchParams.get("checkOut") || "";
   const [filters, setFilters] = useState<{
     priceRanges?: string[];
-    minRating?: number;
+    minRating?: number[];
     sortOrder?: "asc" | "desc";
   }>({});
   const y = useSpring(scrolled ? -20 : 0, { stiffness: 120, damping: 25 });
@@ -43,12 +43,43 @@ export default function RoomsListPage() {
     null,
   );
   const buildParams = (pageParam: number) => {
+    let minPrice: number | undefined;
+    let maxPrice: number | undefined;
+    let minRating: number | undefined;
+
+    if (filters.priceRanges?.length) {
+      const prices = filters.priceRanges.map((range) => {
+        if (range.includes("+")) {
+          return { min: Number(range.replace("+", "")), max: undefined };
+        }
+        const [min, max] = range.split("-").map(Number);
+        return { min, max };
+      });
+
+      minPrice = Math.min(...prices.map((p) => p.min));
+      const maxes = prices
+        .map((p) => p.max)
+        .filter((m) => m !== undefined) as number[];
+      if (maxes.length > 0 && maxes.length === prices.length) {
+        maxPrice = Math.max(...maxes);
+      }
+    }
+
+    if (filters.minRating?.length) {
+      minRating = Math.min(...filters.minRating);
+    }
+
     return {
       search: location || undefined,
       adults,
       children,
       page: pageParam,
       pageSize: 6,
+      minPrice,
+      maxPrice,
+      minRating,
+      sortBy: filters.sortOrder ? "price" : undefined,
+      sortOrder: filters.sortOrder,
     };
   };
 
@@ -165,8 +196,13 @@ export default function RoomsListPage() {
       );
     }
 
-    if (filters.minRating) {
-      result = result.filter((r) => (r.rating ?? 0) >= filters.minRating!);
+    if (filters.minRating && filters.minRating.length > 0) {
+      result = result.filter(
+        (r) =>
+          r.rating !== undefined &&
+          r.rating !== null &&
+          filters.minRating!.includes(Math.floor(r.rating)),
+      );
     }
 
     if (filters.sortOrder) {
@@ -238,17 +274,17 @@ export default function RoomsListPage() {
   }, [location]);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background dark:bg-black">
       <Header />
       <main className="max-w-9xl container mx-auto space-y-12 mb:pt-36 sm:pt-40 px-3 pb-10 sm:px-4 md:px-6 lg:px-8">
         <motion.div
           layoutId="search-bar"
           className={`
             fixed left-1/2 -translate-x-1/2 z-50 
-            w-[95%] sm:w-full max-w-4xl 
+          w-[95%] sm:w-full max-w-4xl 
             transition-all duration-300
-            ${scrolled ? "top-0 scale-90" : "top-20 scale-100"}
-          `}
+            ${scrolled ? "top-1 scale-90" : "top-22 scale-100"}
+        `}
           transition={{ layout: { duration: 0.35, ease: "easeInOut" } }}
         >
           <SearchBar compact={scrolled} />

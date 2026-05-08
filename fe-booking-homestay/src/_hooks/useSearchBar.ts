@@ -19,37 +19,35 @@ export function useSearchBar(options?: UseSearchBarOptions) {
   // sync URL → state
   const params = new URLSearchParams(searchParams.toString());
 
-  const locationFromUrl = params.get("location");
-  const checkInFromUrl = params.get("checkIn");
-  const checkOutFromUrl = params.get("checkOut");
-  const adultsFromUrl = params.get("adults");
-  const childrenFromUrl = params.get("children");
-
   // state
   const [locations, setLocations] = useState<Location[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
   const [error, setError] = useState("");
 
-  const [locationInput, setLocationInput] = useState(
-    locationFromUrl ? decodeURIComponent(locationFromUrl) : "",
-  );
+  const [locationInput, setLocationInput] = useState("");
+  const [adults, setAdults] = useState(1);
+  const [children, setChildren] = useState(0);
+  const [checkIn, setCheckIn] = useState<Date | null>(null);
+  const [checkOut, setCheckOut] = useState<Date | null>(null);
 
-  const [checkIn, setCheckIn] = useState<Date | null>(
-    checkInFromUrl ? new Date(checkInFromUrl + "T00:00") : null,
-  );
+  useEffect(() => {
+    const loc = searchParams.get("location");
+    const ci = searchParams.get("checkIn");
+    const co = searchParams.get("checkOut");
+    const ad = searchParams.get("adults");
+    const ch = searchParams.get("children");
 
-  const [checkOut, setCheckOut] = useState<Date | null>(
-    checkOutFromUrl ? new Date(checkOutFromUrl + "T00:00") : null,
-  );
+    setLocationInput(loc ? decodeURIComponent(loc) : "");
 
-  const [adults, setAdults] = useState(
-    adultsFromUrl ? Number(adultsFromUrl) : 1,
-  );
+    setCheckIn(ci ? new Date(ci + "T00:00") : null);
 
-  const [children, setChildren] = useState(
-    childrenFromUrl ? Number(childrenFromUrl) : 0,
-  );
+    setCheckOut(co ? new Date(co + "T00:00") : null);
+
+    setAdults(ad ? Number(ad) : 1);
+
+    setChildren(ch ? Number(ch) : 0);
+  }, [searchParams]);
 
   // fetch location
   const fetchLocations = useCallback(async (query: string) => {

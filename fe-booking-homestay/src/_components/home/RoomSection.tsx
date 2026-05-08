@@ -1,106 +1,126 @@
 "use client";
 
-import { Card, CardContent } from "@/_components/ui/card";
-import HoverScale from "@/styles/animations/HoverScale";
-import StaggerItem from "@/styles/animations/StaggerItem";
+import { Button } from "@/_components/ui/button";
+import { getAmenityIcon } from "@/constants/amenity-icons";
+import { useAuth } from "@/context/auth-context";
+import { useLang } from "@/context/lang-context";
+import { Room } from "@/models/Room";
 import ScrollFade from "@/styles/animations/ScrollFade";
 import ScrollScale from "@/styles/animations/ScrollScale";
-import { getAmenityIcon } from "@/constants/amenity-icons";
-import { Room } from "@/models/Room";
-import { Button } from "@/_components/ui/button";
-import { MapPin, Star } from "lucide-react";
+import StaggerItem from "@/styles/animations/StaggerItem";
+import { Heart, MapPin, Star } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { use } from "react";
-import { useLang } from "@/context/lang-context";
 
-export default function RoomSection({
-  rooms,
-}: {
-  rooms: Room[];
-}) {
+export default function RoomSection({ rooms }: { rooms: Room[] }) {
   const router = useRouter();
-  const {t} = useLang();
+  const { t } = useLang();
 
-  const formatPrice = (price: number) =>
-    `${price.toLocaleString()} VND`;
+  const formatPrice = (price: number) => `${price.toLocaleString()} VND`;
+
+  const { user } = useAuth();
 
   return (
-    <section className="py-26 bg-background">
+    <section className="pt-28 bg-background">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-20">
-          <ScrollScale className="elegant-heading text-5xl text-foreground mb-6">
-            {t("Featured Hotels")}
-          </ScrollScale>
-          <ScrollFade className="elegant-subheading text-xl text-muted-foreground max-w-2xl mx-auto">
-            {t("Discover our handpicked selection of premium accommodations")}
-          </ScrollFade>
+        <div className="flex justify-between items-end mb-12">
+          <div>
+            <ScrollScale className="elegant-heading text-4xl text-foreground mb-2">
+              {user ? `Gợi ý cho ${user.firstName}` : "Gợi ý cho bạn  "}
+            </ScrollScale>
+            <ScrollFade className="elegant-subheading text-lg text-muted-foreground">
+              {user
+                ? "Dựa trên lịch sử và sở thích du lịch của bạn"
+                : "Dựa trên sở thích và lựa chọn phổ biến"}
+            </ScrollFade>
+          </div>
+          <Button
+            variant="ghost"
+            className="text-primary hover:text-primary/80 hidden md:flex items-center gap-2"
+          >
+            Xem tất cả
+            <span className="text-xl">→</span>
+          </Button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-10">
           {rooms.map((room, index) => (
             <StaggerItem index={index} key={room.id}>
-              <HoverScale>
-                <Card className="overflow-hidden hover:shadow-xl">
-                  <div className="relative">
-                    <Image
-                      src={room.images?.main || "/default.jpg"}
-                      alt={room.name}
-                      width={400}
-                      height={600}
-                      className="w-full h-64 object-cover rounded-t-2xl transition-transform duration-500 group-hover:scale-110"
-                    />
-                    <div className="absolute top-4 right-4 bg-white px-2 py-1 rounded-full flex items-center gap-1">
-                      <Star className="text-yellow-400 fill-current" size={16} />
-                      <span className="text-sm elegant-sans">
-                        {room.rating}
+              <div
+                className="group cursor-pointer"
+                onClick={() => router.push(`/room/${room.id}`)}
+              >
+                <div className="relative aspect-square overflow-hidden rounded-2xl mb-4">
+                  <Image
+                    src={room.images?.main || "/default.jpg"}
+                    alt={room.name}
+                    fill
+                    className="object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
+
+                  {/* Heart Button */}
+                  <button
+                    className="absolute top-3 right-3 p-2 rounded-full bg-white/70 backdrop-blur-sm hover:bg-white transition-colors"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      // logic here
+                    }}
+                  >
+                    <Heart size={18} />
+                  </button>
+
+                  {/* Badges */}
+                  {room.rating && room.rating >= 4.8 && (
+                    <div className="absolute top-3 left-3 px-3 py-1 bg-red-500/80 rounded-full shadow-md">
+                      <span className="text-xs font-semibold  text-white uppercase tracking-wider">
+                        {t("Trending")}
                       </span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-1">
+                  <div className="flex justify-between items-start">
+                    <h3 className="font-semibold text-base text-foreground line-clamp-1">
+                      {room.name}
+                    </h3>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <Star
+                        className="text-yellow-400 fill-current"
+                        size={16}
+                      />
+                      <span className="text-sm font-medium">{room.rating}</span>
                     </div>
                   </div>
 
-                  <CardContent className="pb-8">
-                    <h3 className="elegant-heading text-xl text-secondary-foreground mb-2">
-                      {room.name}
-                    </h3>
+                  <p className="text-muted-foreground text-sm flex items-center gap-1">
+                    <MapPin size={14} />
+                    <span className="line-clamp-1">
+                      {room.location.fullAddress || room.location.province}
+                    </span>
+                  </p>
 
-                    <p className="elegant-subheading text-sm text-muted-foreground mb-2 flex items-center gap-1">
-                      <MapPin size={20} className="mr-2" />
-                      <span className="line-clamp-1">
-                        {room.location.fullAddress}
-                      </span>
-                    </p>
-
-                    <div className="flex items-center gap-2 mb-4 h-4">
-                      {(room.amenities || []).map((amenity) => (
-                        <div
-                          key={amenity.id}
-                          className="elegant-subheading text-muted-foreground flex items-center gap-1"
-                        >
-                          <span>{getAmenityIcon(amenity.name)}</span>
-                        </div>
-                      ))}
-                    </div>
-
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <span className="text-xl elegant-sans text-foreground">
-                          {formatPrice(room.price)}
-                        </span>
-                        <span className="elegant-subheading text-sm text-muted-foreground">
-                          /{t("night")}
-                        </span>
-                      </div>
-
-                      <Button
-                        onClick={() => router.push(`/room/${room.id}`)}
-                        className="bg-primary hover:bg-primary/90 elegant-sans hover:cursor-pointer rounded-xl"
+                  <div className="flex items-center gap-2 mb-4 h-4">
+                    {(room.amenities || []).map((amenity) => (
+                      <div
+                        key={amenity.id}
+                        className="elegant-subheading text-muted-foreground flex items-center gap-1"
                       >
-                        {t("Book Now")}
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              </HoverScale>
+                        <span>{getAmenityIcon(amenity.name)}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="pt-2">
+                    <span className="font-bold text-base">
+                      {formatPrice(room.price)}
+                    </span>
+                    <span className="text-muted-foreground text-sm font-normal">
+                      /{t("night")}
+                    </span>
+                  </div>
+                </div>
+              </div>
             </StaggerItem>
           ))}
         </div>

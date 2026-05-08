@@ -18,15 +18,17 @@ export default function PopularDestinations({
   const { t } = useLang();
 
   return (
-    <section className="py-24 bg-card">
+    <section className="pt-32 pb-40 bg-background">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-20">
-          <ScrollScale className="elegant-heading text-5xl text-foreground mb-6">
-            {t("Popular Destinations")}
-          </ScrollScale>
-          <ScrollFade className="elegant-subheading text-xl text-muted-foreground max-w-2xl mx-auto">
-            {t("Explore the most sought-after travel destinations")}
-          </ScrollFade>
+        <div className="flex justify-between items-end mb-12">
+          <div>
+            <ScrollScale className="elegant-heading text-4xl text-foreground mb-2">
+              {t("Popular Destinations")}
+            </ScrollScale>
+            <ScrollFade className="elegant-subheading text-lg text-muted-foreground">
+              {t("Explore the most sought-after travel destinations")}
+            </ScrollFade>
+          </div>
         </div>
 
         {locations.length > 0 ? (
@@ -48,11 +50,22 @@ export default function PopularDestinations({
                         alt={loc.name}
                         className="w-full h-72 object-cover"
                       />
-                      <div className="absolute inset-0 bg-linear-to-t from-black/60 to-transparent" />
-                      <div className="absolute bottom-4 left-6 text-accent">
-                        <h3 className="text-2xl elegant-sans mb-1">
-                          {loc.name}
-                        </h3>
+                      {index === 0 && (
+                        <div className="absolute top-3 left-3 px-3 py-1 bg-red-500/80 rounded-full shadow-md">
+                          <span className="text-xs font-semibold  text-white uppercase tracking-wider">
+                            {t("Trending")}
+                          </span>
+                        </div>
+                      )}
+                      <div className="absolute inset-0 bg-linear-to-t from-black/70 via-black/20 to-transparent opacity-80 group-hover:opacity-90 transition-opacity" />
+                      <div className="absolute bottom-6 left-6 text-white">
+                        <h3 className="text-2xl font-bold mb-1">{loc.name}</h3>
+                        {/* <p className="text-sm text-gray-200 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                          {Math.floor(
+                            Math.random() * 1000 + 100,
+                          ).toLocaleString()}{" "}
+                          {t("properties")}
+                        </p> */}
                       </div>
                     </div>
                   </Card>

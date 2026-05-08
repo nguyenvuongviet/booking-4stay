@@ -1,4 +1,3 @@
-import { loyalty_program } from "@prisma/client";
 export interface IUser {
   id: string;
   email: string;
@@ -17,8 +16,9 @@ export interface IUser {
     totalBooking: number;
     totalPoint: number;
     levels: {
-      description: string;
       name: string;
+      discountPercent: number;
+      maxDiscountAmount: number;
     };
   };
 }

@@ -2,7 +2,6 @@
 
 import Footer from "@/_components/Footer";
 import Header from "@/_components/Header";
-import FeaturesSection from "@/_components/home/FeaturesSection";
 import HeroSection from "@/_components/home/HeroSection";
 import PopularDestinations from "@/_components/home/PopularDestinations";
 import RoomSection from "@/_components/home/RoomSection";
@@ -10,7 +9,7 @@ import { useAuth } from "@/context/auth-context";
 import { Room } from "@/models/Room";
 import { getLocation } from "@/services/locationApi";
 import { room_all } from "@/services/roomApi";
-import { useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 
 export default function HomePage() {
   const { user } = useAuth();
@@ -58,7 +57,29 @@ export default function HomePage() {
         const resp = await getLocation({ pageSize: 1000 });
         const items = resp.items || [];
 
-        setLocations(items);
+        // Popular provinces in Vietnam
+        const popularProvinces = [
+          "Đà Nẵng",
+          "Hà Nội",
+          "Hồ Chí Minh",
+          "Hội An",
+          "Phú Quốc",
+          "Đà Lạt",
+          "Nha Trang",
+        ];
+
+        // Sort: popular first, then others
+        const sortedLocations = items.sort((a, b) => {
+          const aIndex = popularProvinces.indexOf(a.name);
+          const bIndex = popularProvinces.indexOf(b.name);
+
+          if (aIndex !== -1 && bIndex !== -1) return aIndex - bIndex;
+          if (aIndex !== -1) return -1;
+          if (bIndex !== -1) return 1;
+          return 0;
+        });
+
+        setLocations(sortedLocations);
       } catch (error) {
         console.error("Error fetching locations:", error);
       }
@@ -70,10 +91,14 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-background ">
       <Header />
-      <HeroSection />
+      <Suspense
+        fallback={<div className="h-screen bg-black/20 animate-pulse" />}
+      >
+        <HeroSection />
+      </Suspense>
       <RoomSection rooms={rooms} />
       <PopularDestinations locations={locations} />
-      <FeaturesSection />
+      {/* <FeaturesSection /> */}
       <Footer />
     </div>
   );

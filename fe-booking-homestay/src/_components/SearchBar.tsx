@@ -3,7 +3,6 @@
 import { Button } from "@/_components/ui/button";
 import { Input } from "@/_components/ui/input";
 import { useSearchBar } from "@/_hooks/useSearchBar";
-import { useAuth } from "@/context/auth-context";
 import { useLang } from "@/context/lang-context";
 import { MapPin, Search, Users } from "lucide-react";
 import { useEffect } from "react";
@@ -17,7 +16,6 @@ interface SearchBarProps {
 }
 export function SearchBar({ compact = false }: SearchBarProps) {
   const { t } = useLang();
-  const { user } = useAuth();
   const {
     locationInput,
     locations,
@@ -57,20 +55,22 @@ export function SearchBar({ compact = false }: SearchBarProps) {
 
   return (
     <div
-      className={`mx-auto w-full bg-card rounded-4xl shadow-lg transition-all duration-300 ${
+      className={`mx-auto bg-transparent backdrop-blur-2xl rounded-full p-8 md:p-3 shadow-2xl hover:-translate-y-1 hover:shadow-2xl hover:bg-white/20 transition-all duration-300 z-50 ${
         compact
-          ? "max-w-2xl p-2 sm:scale-[80%] md:scale-[100%]"
-          : "max-w-5xl p-2 sm:scale-[80%] md:scale-[90%] md:p-3"
+          ? "max-w-2xl p-2 sm:scale-[70%] md:scale-[100%]"
+          : "max-w-5xl p-2 sm:scale-[80%] md:scale-[90%]"
       }`}
     >
       <div
-        className={`${
-          compact ? "flex items-center gap-2" : "grid grid-cols-7 gap-4"
+        className={`flex ${
+          compact ? "items-center gap-1" : "gap-1 md:gap-2 items-center"
         }`}
       >
-        <div className={`relative ${compact ? "flex-1" : "col-span-2"}`}>
+        <div
+          className={`relative flex-2 rounded-full hover:border-ring focus:border-ring focus:ring-1 focus:ring-accent cursor-pointer`}
+        >
           <MapPin
-            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground"
+            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-primary drop-shadow-sm shrink-0"
             size={20}
           />
           <Input
@@ -81,10 +81,9 @@ export function SearchBar({ compact = false }: SearchBarProps) {
             onClick={(e) => e.stopPropagation()}
             onKeyDown={handleKeyDown}
             placeholder={t("Where are you going?")}
-            className="pl-10 h-12 bg-card elegant-subheading rounded-4xl placeholder:text-muted border border-border text-[15px]"
+            className={`pl-10 h-12 bg-transparent border-none elegant-subheading rounded-full placeholder:text-muted-foreground/60 truncate `}
           />
 
-          {/* Danh sách gợi ý location */}
           {error && (
             <p className="text-xs text-red-500 absolute mt-1 ml-4">{error}</p>
           )}
@@ -97,9 +96,10 @@ export function SearchBar({ compact = false }: SearchBarProps) {
           />
         </div>
 
-        <div className={`relative ${compact ? "flex-1 " : "col-span-2"}`}>
+        <div
+          className={`relative border-none hover:border-ring focus:border-ring focus:ring-1 focus:ring-accent flex-2`}
+        >
           <DateRangePicker
-            // key={`${checkIn}-${checkOut}`}
             value={
               checkIn && checkOut ? { from: checkIn, to: checkOut } : undefined
             }
@@ -110,10 +110,13 @@ export function SearchBar({ compact = false }: SearchBarProps) {
           />
         </div>
 
-        <div className={`relative ${compact ? "flex-1 " : "col-span-2"}`}>
+        {/* Guest Section */}
+        <div
+          className={`relative flex-2 bg-transparent border-none elegant-subheading rounded-full text-sm truncate hover:bg-transparent drop-shadow-sm transform hover:border-ring focus:border-ring focus:ring-1 focus:ring-accent ${compact ? "" : ""}`}
+        >
           <Users
-            className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground"
-            size={20}
+            className="absolute left-4 top-1/2 transform -translate-y-1/2 text-primary drop-shadow-xs shrink-0"
+            size={18}
           />
           <GuestPicker
             adults={adults}
@@ -122,6 +125,7 @@ export function SearchBar({ compact = false }: SearchBarProps) {
             setChildren={setChildren}
           />
         </div>
+
         <Button
           onClick={() => handleSearch()}
           className={`h-12 rounded-3xl bg-primary hover:bg-primary/80 
@@ -131,8 +135,10 @@ export function SearchBar({ compact = false }: SearchBarProps) {
                 : "elegant-subheading text-base"
             }`}
         >
-          <Search size={20} />
-          {!compact && <span>{t("search")}</span>}
+          {compact && <Search size={22} />}
+          {!compact && (
+            <span className="text-sm items-center">{t("search")}</span>
+          )}
         </Button>
       </div>
     </div>

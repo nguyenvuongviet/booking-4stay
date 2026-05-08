@@ -4,7 +4,7 @@ import { BookingDetail } from "@/app/(pages)/booking/_component/BookingDetail";
 import { useLang } from "@/context/lang-context";
 import { Booking } from "@/models/Booking";
 import { get_booking_detail } from "@/services/bookingApi";
-import { ArrowLeft } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -26,7 +26,8 @@ export default function BookingDetailClient({
         console.log("Booking detail API response:", res);
 
         const bookingData = res.data;
-        if (!bookingData || !bookingData.id) throw new Error(t("booking_not_found"));
+        if (!bookingData || !bookingData.id)
+          throw new Error(t("booking_not_found"));
         setBooking(bookingData);
       } catch (err: any) {
         console.error("Fetch booking error:", err);
@@ -52,7 +53,7 @@ export default function BookingDetailClient({
       <div className="flex flex-col items-center justify-center min-h-screen text-center">
         <p className="text-red-500 mb-4">{error}</p>
         <button
-          onClick={() => router.push("/booking")}
+          onClick={() => router.back()}
           className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition"
         >
           {t("back_to_list")}
@@ -72,20 +73,26 @@ export default function BookingDetailClient({
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="bg-background border-b sticky top-0 z-50 mb-8">
-        <div className="max-w-7xl mx-auto px-12 py-4">
-          <button
-            onClick={() => router.push("/booking")}
-            className="px-4 flex items-center gap-2 hover:text-primary hover:cursor-pointer"
-          >
-            <ArrowLeft className="h-5 w-5" />
-            <span className="elegant-sans">{t("back")}</span>
-          </button>
-        </div>
-      </header>
+      <div className="max-w-6xl mx-auto pt-4">
+        <div className="sticky top-0 z-30 backdrop-blur-xl bg-background/70 border-b border-border/50">
+          <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-6 h-20 flex items-center gap-4 ">
+            {/* Back Button */}
+            <button
+              onClick={() => router.back()}
+              className="group flex items-center justify-center h-10 w-10 rounded-full hover:bg-primary/10 hover:scale-105 backdrop-blur-xl shadow-sm hover:shadow-lg hover:shadow-primary/10 hover:border-primary/30 transition-all duration-300 hover:-translate-x-1"
+            >
+              <ChevronLeft className="h-6 w-6 text-muted-foreground group-hover:text-primary duration-300 transition-colors" />
+            </button>
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h1 className="text-4xl elegant-heading mb-6">{t("booking_details")}</h1>
+            {/* Title */}
+            <div className="flex flex-col">
+              <h1 className="text-2xl sm:text-3xl elegant-heading text-foreground leading-tight">
+                {t("booking_details")}
+              </h1>
+            </div>
+          </div>
+        </div>
+
         <BookingDetail booking={booking} />
       </div>
     </div>

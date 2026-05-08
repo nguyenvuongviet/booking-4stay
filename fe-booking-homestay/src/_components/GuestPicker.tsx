@@ -1,10 +1,10 @@
 "use client";
 
+import { useLang } from "@/context/lang-context";
+import { ChevronDown } from "lucide-react";
 import { useState } from "react";
 import { Button } from "./ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
-import { useLang } from "@/context/lang-context";
-import toast from "react-hot-toast";
 
 interface GuestPickerProps {
   adults: number;
@@ -14,6 +14,7 @@ interface GuestPickerProps {
   maxAdults?: number;
   maxChildren?: number;
   onLimitReached?: (type: "adults" | "children", limit: number) => void;
+  className?: string;
 }
 
 export default function GuestPicker({
@@ -24,6 +25,7 @@ export default function GuestPicker({
   maxAdults,
   maxChildren,
   onLimitReached,
+  className,
 }: GuestPickerProps) {
   const [isOpen, setIsOpen] = useState(false);
   const { t } = useLang();
@@ -39,45 +41,48 @@ export default function GuestPicker({
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
-        <button className="w-full h-12 px-4 border border-border rounded-3xl hover:border-ring focus:border-ring focus:ring-2 focus:ring-accent text-left flex items-center justify-between">
-          <span className="ml-8 text-sm elegant-subheading">
+        <button
+          className={
+            className ||
+            "w-full h-12 px-4 border border-border rounded-3xl hover:border-ring focus:border-ring focus:ring-2 focus:ring-accent text-left flex items-center justify-between"
+          }
+        >
+          <span
+            className={`${!className ? "ml-8" : ""} text-sm elegant-subheading`}
+          >
             {getGuestDisplayText()}
           </span>
-          <svg
-            className="w-4 h-4 text-muted-foreground"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M19 9l-7 7-7-7"
-            />
-          </svg>
+          <ChevronDown
+            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-primary"
+            size={18}
+          />
         </button>
       </PopoverTrigger>
 
-      <PopoverContent className="w-62.5 p-0 rounded-2xl" align="start">
+      <PopoverContent
+        className="w-62.5 p-0 bg-white/90 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl"
+        align="start"
+      >
         <div className="p-6 space-y-4">
           {/* Adults */}
           <div className="flex items-center justify-between ">
             <div>
-              <p className="elegant-subheading text-foreground ">
+              <p className="elegant-subheading text-foreground font-semibold">
                 {t("adults")}
               </p>
-              <p className="text-xs text-muted-foreground">&gt;13 {t("year old")}</p>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                &gt;13 {t("year old")}
+              </p>
             </div>
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-2">
               <button
                 onClick={() => setAdults(Math.max(1, adults - 1))}
                 disabled={adults <= 1}
-                className="w-6 h-6 rounded-full border-2 border-border flex items-center justify-center text-muted-foreground hover:border-primary hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed"
+                className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-foreground hover:bg-gray-100 disabled:opacity-30 transition-colors"
               >
                 -
               </button>
-              <span className="w-8 text-center elegant-subheading text-foreground">
+              <span className="w-6 text-center font-bold text-foreground">
                 {adults}
               </span>
               <button
@@ -88,55 +93,59 @@ export default function GuestPicker({
                   }
                   setAdults(adults + 1);
                 }}
-              disabled={maxAdults !== undefined && adults >= maxAdults}
-              className="w-6 h-6 rounded-full border-2 border-border flex items-center justify-center text-muted-foreground hover:border-primary hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed"
+                disabled={maxAdults !== undefined && adults >= maxAdults}
+                className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-foreground hover:bg-gray-100 disabled:opacity-30 transition-colors"
               >
-              +
-            </button>
+                +
+              </button>
+            </div>
           </div>
-        </div>
 
-        {/* Children */}
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="elegant-subheading text-foreground">{t("children")}</p>
-            <p className="text-xs text-muted-foreground">2 – 12 {t("year old")}</p>
+          {/* Children */}
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="elegant-subheading text-foreground font-semibold">
+                {t("children")}
+              </p>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                2 – 12 {t("year old")}
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setChildren(Math.max(0, children - 1))}
+                disabled={children <= 0}
+                className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-foreground hover:bg-gray-100 disabled:opacity-30 transition-colors"
+              >
+                -
+              </button>
+              <span className="w-6 text-center font-bold text-foreground">
+                {children}
+              </span>
+              <button
+                onClick={() => {
+                  if (maxChildren !== undefined && children >= maxChildren) {
+                    onLimitReached?.("children", maxChildren);
+                    return;
+                  }
+                  setChildren(children + 1);
+                }}
+                disabled={maxChildren !== undefined && children >= maxChildren}
+                className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-foreground hover:bg-gray-100 disabled:opacity-30 transition-colors"
+              >
+                +
+              </button>
+            </div>
           </div>
-          <div className="flex items-center gap-1">
-            <button
-              onClick={() => setChildren(Math.max(0, children - 1))}
-              disabled={children <= 0}
-              className="w-6 h-6 rounded-full border-2 border-border flex items-center justify-center text-muted-foreground hover:border-primary hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed"
-            >
-              -
-            </button>
-            <span className="w-8 text-center elegant-subheading text-foreground">
-              {children}
-            </span>
-            <button
-              onClick={() => {
-                if (maxChildren !== undefined && children >= maxChildren) {
-                  onLimitReached?.("children", maxChildren);
-                  return;
-                }
-                setChildren(children + 1);
-              }}
-              disabled={maxChildren !== undefined && children >= maxChildren}
-              className="w-6 h-6 rounded-full border-2 border-border flex items-center justify-center text-muted-foreground hover:border-primary hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed"
-            >
-              +
-            </button>
-          </div>
-        </div>
 
-        <Button
-          onClick={() => setIsOpen(false)}
-          className="w-full bg-white elegant-sans elegant-subheading hover:bg-background text-primary border border-border rounded-xl"
-        >
-          {t("close")}
-        </Button>
-      </div>
-    </PopoverContent>
-    </Popover >
+          <Button
+            onClick={() => setIsOpen(false)}
+            className="w-full bg-primary text-white hover:bg-primary/90 rounded-2xl font-bold py-6"
+          >
+            Áp dụng
+          </Button>
+        </div>
+      </PopoverContent>
+    </Popover>
   );
 }

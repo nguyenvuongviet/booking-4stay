@@ -1,13 +1,14 @@
 "use client";
 
-import Header from "./_component/Header";
 import { Card } from "@/_components/ui/card";
 import { useLang } from "@/context/lang-context";
+import { ChevronLeft } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useCheckout } from "../../../_hooks/useCheckout";
+import BookingSummary from "./_component/BookingSummary";
 import GuestInfor from "./_component/GuestInfor";
 import PaymentMethod from "./_component/PaymentMethod";
-import BookingSummary from "./_component/BookingSummary";
 import PaymentModal from "./_component/PaymentModal";
-import { useCheckout } from "../../../_hooks/useCheckout";
 
 export default function CheckoutClient() {
   const { t } = useLang();
@@ -41,6 +42,14 @@ export default function CheckoutClient() {
     setPolicyUpdatedAt,
     validateGuestInfo,
   } = useCheckout();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const roomId = searchParams.get("roomId");
+  const loc = searchParams.get("location") || "";
+  const ad = searchParams.get("adults") || "1";
+  const ch = searchParams.get("children") || "0";
+  const ci = searchParams.get("checkIn") || "";
+  const co = searchParams.get("checkOut") || "";
 
   return (
     <div className="min-h-screen bg-background">
@@ -55,10 +64,33 @@ export default function CheckoutClient() {
         </div>
       )}
       {/* Header */}
-      <Header />
+      {/* <Header /> */}
 
       <main className="container max-w-7xl mx-auto px-4 py-8 space-y-12 sm:px-6 lg:px-8">
-        <h1 className="text-3xl elegant-heading">{t("Confirm and Payment")}</h1>
+        <div className="sticky top-0 z-30 backdrop-blur-xl bg-background/70 border-b border-border/50">
+          <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-6 h-20 flex items-center gap-4 ">
+            {/* Back Button */}
+            <button
+              onClick={() =>
+                router.push(
+                  `/room/${roomId}?location=${loc}&adults=${ad}&children=${ch}&checkIn=${ci}&checkOut=${co}`,
+                )
+              }
+              className="group flex items-center justify-center h-10 w-10 rounded-full hover:bg-primary/10 hover:scale-105 backdrop-blur-xl shadow-sm hover:shadow-lg hover:shadow-primary/10 hover:border-primary/30 transition-all duration-300 hover:-translate-x-1"
+            >
+              <ChevronLeft className="h-6 w-6 text-muted-foreground group-hover:text-primary duration-300 transition-colors" />
+            </button>
+
+            {/* Title */}
+            <div className="flex flex-col">
+              <h1 className="text-2xl sm:text-3xl elegant-heading text-foreground leading-tight">
+                {t("Confirm and Payment")}
+              </h1>
+            </div>
+          </div>
+        </div>
+
+        <h1 className="text-3xl elegant-heading"></h1>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left  */}
           <div className="lg:col-span-2 space-y-6">

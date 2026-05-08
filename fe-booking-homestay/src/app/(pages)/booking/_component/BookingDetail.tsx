@@ -211,7 +211,7 @@ export const BookingDetail = ({
   const disableEdit = !showActions || !canReschedule;
 
   return (
-    <div className="max-w-[1200px] mx-auto px-4 py-8">
+    <div className="max-w-6xl mx-auto px-4 py-8">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* CỘT TRÁI (Nội dung chính) */}
         <div className="lg:col-span-8 space-y-6">

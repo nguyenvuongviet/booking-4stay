@@ -7,11 +7,12 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/_components/ui/popover";
-import { useLang } from "@/context/lang-context";
 import { toDateKey } from "@/app/(pages)/admin/_utils/calendar";
+import { useLang } from "@/context/lang-context";
 import { addMonths, format } from "date-fns";
 import { Calendar as CalendarIcon } from "lucide-react";
 import * as React from "react";
+import { useEffect } from "react";
 import { type DateRange } from "react-day-picker";
 import toast from "react-hot-toast";
 
@@ -24,6 +25,7 @@ interface DateRangePickerProps {
   onChange?: (range: DateRange | undefined) => void;
   onMonthChange?: (date: Date) => void;
   autoClose?: boolean;
+  className?: string;
 }
 
 export default function DateRangePicker({
@@ -35,6 +37,7 @@ export default function DateRangePicker({
   onChange,
   onMonthChange,
   autoClose = true,
+  className,
 }: DateRangePickerProps) {
   const [open, setOpen] = React.useState(false);
   const [selectedRange, setSelectedRange] = React.useState<
@@ -42,6 +45,10 @@ export default function DateRangePicker({
   >(value);
   const [currentMonth, setCurrentMonth] = React.useState<Date>(new Date());
   const { t } = useLang();
+
+  useEffect(() => {
+    setSelectedRange(value);
+  }, [value]);
 
   const formatLabel = (date?: Date) =>
     date ? format(date, "MMM dd, yyyy") : "";
@@ -103,29 +110,43 @@ export default function DateRangePicker({
       <PopoverTrigger asChild>
         <Button
           variant="outline"
-          className="relative w-full h-12 px-4 bg-transparent border border-border rounded-3xl hover:border-ring focus:border-ring focus:ring-2 focus:ring-accent hover:bg-transparent text-left flex items-center justify-between"
+          className={
+            className ||
+            "relative w-full h-12 px-4 bg-transparent border-none rounded-3xl hover:border-ring focus:border-ring focus:ring-2 focus:ring-accent hover:bg-transparent text-left flex items-center justify-between"
+          }
         >
-          <CalendarIcon
-            className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground"
-            size={20}
-          />
-          <div className="ml-8 elegant-subheading truncate">
+          {!className && (
+            <CalendarIcon
+              className="absolute left-4 top-1/2 transform -translate-y-1/2 text-primary shrink-0 drop-shadow-sm"
+              size={22}
+            />
+          )}
+          <div
+            className={`${!className ? "ml-8" : ""} text-foreground-muted elegant-subheading truncate`}
+          >
             {selectedRange?.from ? (
               formatLabel(selectedRange.from)
             ) : (
-              <span className="text-muted">{t("checkIn")}</span>
+              <span className={className ? "text-white/40 " : "text-muted "}>
+                {t("checkIn")}
+              </span>
             )}
-            <span className="text-muted"> - </span>{" "}
+            <span className={className ? "text-white/40" : "text-muted"}>
+              {" "}
+              -{" "}
+            </span>{" "}
             {selectedRange?.to ? (
               formatLabel(selectedRange.to)
             ) : (
-              <span className="text-muted">{t("checkOut")}</span>
+              <span className={className ? "text-white/40" : "text-muted"}>
+                {t("checkOut")}
+              </span>
             )}
           </div>
         </Button>
       </PopoverTrigger>
 
-      <PopoverContent className="w-auto p-2">
+      <PopoverContent className="w-auto p-2 bg-white/90 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl">
         <div className="flex flex-col sm:flex-row gap-2">
           {[0, 1].map((i) => (
             <Calendar
@@ -156,7 +177,7 @@ export default function DateRangePicker({
               defaultPrice={defaultPrice}
               showOutsideDays={false}
               className={`
-                [&_.rdp-day_selected]:bg-primary 
+                [&_.rdp-day_selected]:bg-primary  
                 [&_.rdp-day_selected:hover]:bg-primary/90
                 [&_.rdp-day_range_middle]:bg-primary/20 
                 [&_.rdp-day_range_middle:hover]:bg-primary/40

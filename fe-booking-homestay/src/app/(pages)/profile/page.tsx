@@ -8,7 +8,6 @@ import { update_profile, upload_file } from "@/services/authApi";
 import { useEffect, useRef, useState } from "react";
 import "react-datepicker/dist/react-datepicker.css";
 import toast from "react-hot-toast";
-import ProfileHeader from "./_component/ProfileHeader";
 import ProfileTabs from "./_component/ProfileTabs";
 
 export default function ProfilePage() {
@@ -27,9 +26,11 @@ export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
 
   const getTierPoints = (total: number) => {
-    if (total < 1000) return 1000 - total;
-    if (total < 2000) return 2000 - total;
-    return 0;
+    if (total < 1000) return 1000 - total; // Lên Silver
+    if (total < 3000) return 3000 - total; // Lên Gold
+    if (total < 10000) return 10000 - total; // Lên Platinum
+    if (total < 30000) return 30000 - total; // Lên Diamond
+    return 0; // Đã đạt mức tối đa
   };
 
   const handleSubmit = async () => {
@@ -43,7 +44,7 @@ export default function ProfilePage() {
           country,
           dateOfBirth: dob ? new Date(dob).toISOString() : undefined,
           gender,
-        }).filter(([_, v]) => v && v !== "")
+        }).filter(([_, v]) => v && v !== ""),
       );
 
       const res = await update_profile(updatedUser);
@@ -62,7 +63,7 @@ export default function ProfilePage() {
   };
 
   const handleAvatarUpload = async (
-    event: React.ChangeEvent<HTMLInputElement>
+    event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const file = event.target.files?.[0];
     if (!file || !user) return;
@@ -108,8 +109,7 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-background">
       <Headers />
       <main className="min-h-screen p-4 md:p-8 mt-18">
-        <div className="mx-auto max-w-5xl">
-          <ProfileHeader user={user as IUser} />
+        <div className="mx-auto max-w-7xl">
           <ProfileTabs
             user={user}
             activeTab={activeTab}

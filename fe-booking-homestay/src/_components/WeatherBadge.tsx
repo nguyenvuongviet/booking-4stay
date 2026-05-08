@@ -54,7 +54,7 @@ export default function WeatherBadge({
       className={`relative w-full rounded-3xl overflow-hidden shadow-2xl border border-white/20 bg-linear-to-br ${bg}`}
     >
       {/* glass overlay */}
-      <div className="absolute inset-0 backdrop-blur-2xl opacity-70" />
+      <div className="absolute inset-0 backdrop-blur-2xl opacity-80" />
 
       <div className="relative p-4">
         {/* HEADER */}
