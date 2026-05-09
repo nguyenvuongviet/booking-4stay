@@ -107,3 +107,12 @@ export const login_with_google = async (data: { code: string }) => {
     throw error;
   }
 };
+export const get_profile = async () => {
+  try {
+    const resp = await api.get("auth/get-info");
+    return resp.data;
+  } catch (error) {
+    console.error("Get profile error: ", error);
+    throw error;
+  }
+};

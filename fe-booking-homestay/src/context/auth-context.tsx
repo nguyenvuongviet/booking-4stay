@@ -7,13 +7,15 @@ import SignUpModal from "@/_components/auth/signup-modal";
 import { STORAGE_KEYS } from "@/constants";
 import { IUser } from "@/models/User";
 import api from "@/services/api";
-import { login } from "@/services/authApi";
+import { get_profile, login } from "@/services/authApi";
 import { useRouter } from "next/navigation";
 import {
   createContext,
   ReactNode,
+  useCallback,
   useContext,
   useEffect,
+  useMemo,
   useState,
 } from "react";
 
@@ -33,6 +35,7 @@ interface AuthContextType {
   password: string;
   setPassword: (password: string) => void;
   openNewPassword: () => void;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -60,7 +63,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
-  const updateUser = (newUser: IUser) => {
+  const updateUser = useCallback((newUser: IUser) => {
     const raw = localStorage.getItem(STORAGE_KEYS.CURRENT_USER);
     let parsed: any = {};
     try {
@@ -72,7 +75,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
     localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(updated));
     setUser(newUser);
-  };
+  }, []);
+
+  const refreshUser = useCallback(async () => {
+    try {
+      const res = await get_profile();
+      if (res?.data) {
+        updateUser(res.data);
+      }
+    } catch (error) {
+      console.error("Refresh user error:", error);
+    }
+  }, [updateUser]);
 
   const logout = () => {
     localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
@@ -110,26 +124,44 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setShowNewPassword(true);
   };
 
+  const contextValue = useMemo(() => ({
+    user,
+    setUser,
+    updateUser,
+    logout,
+    openSignIn,
+    openSignUp,
+    closeAll,
+    email,
+    setEmail,
+    openOTP,
+    otp,
+    setOtp,
+    password,
+    setPassword,
+    openNewPassword,
+    refreshUser,
+  }), [
+    user,
+    setUser,
+    updateUser,
+    logout,
+    openSignIn,
+    openSignUp,
+    closeAll,
+    email,
+    setEmail,
+    openOTP,
+    otp,
+    setOtp,
+    password,
+    setPassword,
+    openNewPassword,
+    refreshUser,
+  ]);
+
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        setUser,
-        updateUser,
-        logout,
-        openSignIn,
-        openSignUp,
-        closeAll,
-        email,
-        setEmail,
-        openOTP,
-        otp,
-        setOtp,
-        password,
-        setPassword,
-        openNewPassword,
-      }}
-    >
+    <AuthContext.Provider value={contextValue}>
       {children}
 
       <SignInModal

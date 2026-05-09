@@ -12,7 +12,7 @@ import ProfileTabs from "./_component/ProfileTabs";
 
 export default function ProfilePage() {
   const { t } = useLang();
-  const { user, updateUser } = useAuth();
+  const { user, updateUser, refreshUser } = useAuth();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [avatarUrl, setAvatarUrl] = useState("/default-avatar.png");
   const [firstName, setFirstName] = useState("");
@@ -89,6 +89,14 @@ export default function ProfilePage() {
   };
 
   const handleEditClick = () => setIsEditing(true);
+
+  const hasRefreshed = useRef(false);
+  useEffect(() => {
+    if (!hasRefreshed.current) {
+      refreshUser();
+      hasRefreshed.current = true;
+    }
+  }, [refreshUser]);
 
   useEffect(() => {
     if (user) {

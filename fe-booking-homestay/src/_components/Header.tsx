@@ -101,10 +101,10 @@ export default function Header() {
                 <Popover open={openMenu} onOpenChange={setOpenMenu}>
                   <PopoverTrigger asChild>
                     <button
-                      className={`flex items-center gap-2 p-1.5 rounded-full border transition-all duration-300 hover:shadow-md ${
+                      className={`flex items-center gap-2 p-1.5 rounded-full bg-white/10 border transition-all duration-300 hover:shadow-md ${
                         !isScrolled && pathname === "/"
-                          ? "bg-white/10 border-white/20 hover:bg-white/20"
-                          : "bg-secondary/30 border-border hover:bg-secondary/40"
+                          ? "border-white/20 hover:bg-white/20"
+                          : ""
                       }`}
                     >
                       <UserAvatar
