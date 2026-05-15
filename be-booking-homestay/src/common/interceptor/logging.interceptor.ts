@@ -21,9 +21,7 @@ export class LoggingInterceptor implements NestInterceptor {
     const url = req.originalUrl || req.url;
     const now = Date.now();
 
-    const timestamp = new Date().toLocaleString('vi-VN', {
-      timeZone: 'Asia/Ho_Chi_Minh',
-    });
+    const timestamp = new Date().toLocaleString('en-GB').replace(',', '');
     const methodColor = this.getMethodColor(method);
     const statusCode = res.statusCode;
 

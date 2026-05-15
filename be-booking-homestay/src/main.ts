@@ -9,6 +9,8 @@ import { LoggingInterceptor } from './common/interceptor/logging.interceptor';
 import { ResponseSuccessInterceptor } from './common/interceptor/response-success.interceptor';
 import { GlobalLoggerConfig } from './config/logger.config';
 
+process.env.TZ = 'Asia/Ho_Chi_Minh';
+
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     logger: GlobalLoggerConfig,

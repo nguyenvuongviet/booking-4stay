@@ -2,16 +2,19 @@
 
 import { CancellationPolicy } from "@/_components/CancellationPolicy";
 import { PhotoGalleryModal } from "@/_components/gallery/PhotoGalleryModal";
+import SimilarRooms from "@/_components/room/SimilarRooms";
 import { Button } from "@/_components/ui/button";
 import { Card } from "@/_components/ui/card";
 import { useCalendarPricing } from "@/_hooks/useCalendarPricing";
+import { useRecentlyViewed } from "@/_hooks/useRecentlyViewed";
 import { getAmenityIcon } from "@/constants/amenity-icons";
 import { useAuth } from "@/context/auth-context";
 import { useLang } from "@/context/lang-context";
 import { Room } from "@/models/Room";
+import { checkFavorite, toggleFavorite } from "@/services/favoriteApi";
 import { room_available, room_detail, room_preview } from "@/services/roomApi";
 import { addMonths, format, parse } from "date-fns";
-import { Loader2, Mail, MapPin, Phone, Star, Users } from "lucide-react";
+import { Heart, Loader2, Mail, MapPin, Phone, Star, Users } from "lucide-react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -28,6 +31,7 @@ interface RoomDetailClientProps {
 
 export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
   const { openSignIn, user } = useAuth();
+  const { trackView } = useRecentlyViewed();
   const router = useRouter();
   const searchParams = useSearchParams();
   const { t } = useLang();
@@ -45,6 +49,7 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
   const [showFullOverview, setShowFullOverview] = useState(false);
   const [highlightDatePicker, setHighlightDatePicker] = useState(false);
   const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [isFav, setIsFav] = useState(false);
 
   const [roomPreview, setRoomPreview] = useState<{
     priceSummary: {
@@ -63,6 +68,9 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
         const dataRoom = await room_detail(roomId);
         setRoom(dataRoom);
 
+        // Ghi nhận phòng đã xem
+        trackView(roomId);
+
         // Đảm bảo số lượng khách đã chọn không vượt quá sức chứa của phòng
         if (dataRoom.adultCapacity && adults > dataRoom.adultCapacity) {
           setAdults(dataRoom.adultCapacity);
@@ -78,6 +86,14 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
       }
     })();
   }, [roomId]);
+
+  // Check trạng thái yêu thích (tách riêng vì user load muộn hơn room)
+  useEffect(() => {
+    if (!user || !roomId) return;
+    checkFavorite(roomId)
+      .then((res) => setIsFav(res.isFavorited))
+      .catch(() => {});
+  }, [roomId, user]);
 
   const current = currentMonth;
   const next = addMonths(current, 1);
@@ -317,16 +333,44 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
                     {room.location?.fullAddress ?? "Unknown"}
                   </p>
                 </div>
-                <div className="text-right ">
-                  {/* <Badge className="bg-primary elegant-subheading text-muted text-lg px-3 py-1 mb-2">
-                    {hotel.rating}
-                  </Badge>
-                   */}
-                  <div className="flex flex-row-reverse items-center elegant-sans mb-2">
-                    {room.rating}
-                    <Star className="h-4 w-4 mr-1 fill-yellow-400 text-yellow-400" />
+
+                {/* Favorite + Rating */}
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={async () => {
+                      if (!user) {
+                        openSignIn();
+                        return;
+                      }
+                      setIsFav((prev) => !prev);
+                      try {
+                        const res = await toggleFavorite(roomId);
+                        setIsFav(res.isFavorited);
+                        toast.success(
+                          res.isFavorited
+                            ? "Đã thêm vào yêu thích"
+                            : "Đã bỏ yêu thích",
+                        );
+                      } catch {
+                        setIsFav((prev) => !prev);
+                      }
+                    }}
+                    className={`p-2.5 rounded-full border transition-all duration-300 ${
+                      isFav
+                        ? "border-red-200 bg-red-50 text-red-500"
+                        : "border-border bg-background text-muted-foreground hover:text-red-500 hover:border-red-200"
+                    }`}
+                    title="Yêu thích"
+                  >
+                    <Heart size={20} className={isFav ? "fill-red-500" : ""} />
+                  </button>
+                  <div className="text-right">
+                    <div className="flex flex-row-reverse items-center elegant-sans mb-2">
+                      {room.rating}
+                      <Star className="h-4 w-4 mr-1 fill-yellow-400 text-yellow-400" />
+                    </div>
+                    <p className="text-sm elegant-subheading text-muted-foreground"></p>
                   </div>
-                  <p className="text-sm elegant-subheading text-muted-foreground"></p>
                 </div>
               </div>
             </div>
@@ -597,6 +641,9 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
             </Card>
           </div>
         </div>
+
+        {/* Similar Rooms */}
+        <SimilarRooms roomId={roomId} />
       </div>
     </div>
   );

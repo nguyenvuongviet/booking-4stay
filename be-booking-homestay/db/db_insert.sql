@@ -54,16 +54,16 @@ INSERT IGNORE INTO `location_countries` (`id`, `name`, `code`) VALUES (1, 'Việ
 
 -- 9. Rooms
 INSERT IGNORE INTO `rooms` (`id`, `hostId`, `provinceId`, `wardId`, `street`, `name`, `description`, `price`, `adultCapacity`, `childCapacity`, `latitude`, `longitude`) VALUES
-(1, 3, 1, 1, '47 Nguyễn Thái Bình', '4Stay Central Saigon', 'Căn hộ ngay trung tâm Q1', 1200000.00, 2, 1, 10.7769, 106.7009),
-(2, 3, 2, 2, '12 Hoàng Hoa Thám', '4Stay Hanoi View', 'Phòng đôi view Hồ Tây', 950000.00, 2, 0, 21.0285, 105.8542),
-(3, 3, 3, 3, '5 Trần Hưng Đạo', '4Stay Da Nang Riverside', 'Phòng sát sông Hàn', 880000.00, 2, 1, 16.0544, 108.2022),
-(4, 3, 1, 1, '22 Lê Lợi', 'Saigon Luxury Loft', 'Căn hộ kiểu loft sang trọng', 1500000.00, 3, 1, 10.7740, 106.7030),
-(5, 3, 2, 2, '88 Thụy Khuê', 'Hanoi Old Quarter Home', 'Phòng ấm cúng trong phố cổ', 780000.00, 2, 1, 21.0340, 105.8500),
-(6, 3, 3, 3, '19 Võ Văn Kiệt', 'Da Nang Beachfront', 'Phòng hướng biển Mỹ Khê', 1100000.00, 2, 1, 16.0610, 108.2480),
-(7, 3, 1, 1, '10 Nguyễn Huệ', 'Saigon Walking Street Studio', 'Studio ngay phố đi bộ', 1350000.00, 2, 0, 10.7750, 106.7020),
-(8, 3, 2, 2, '55 Nguyễn Trãi', 'Hanoi Cozy Apartment', 'Căn hộ mini trung tâm', 650000.00, 2, 1, 21.0260, 105.8430),
-(9, 3, 3, 3, '77 Bạch Đằng', 'Da Nang River Suite', 'Suite cao cấp sông Hàn', 1600000.00, 3, 1, 16.0670, 108.2240),
-(10, 3, 1, 1, '320 Lý Tự Trọng', 'Saigon City View', 'Phòng view thành phố tuyệt đẹp', 900000.00, 2, 1, 10.7780, 106.6980);
+(1, 1, 28, 2631, '47 Nguyễn Thái Bình', '4Stay Central Saigon', 'Căn hộ ngay trung tâm Q1', 1200000.00, 2, 1, 10.7694452, 106.7005728),
+(2, 1, 1, 8, '12 Hoàng Hoa Thám', '4Stay Hanoi View', 'Phòng đôi view Hồ Tây', 950000.00, 2, 0, 21.0425013, 105.8159563),
+(3, 1, 21, 1860, '5 Trần Hưng Đạo', '4Stay Da Nang Riverside', 'Phòng sát sông Hàn', 880000.00, 2, 1, 16.0607904, 108.2303821),
+(4, 1, 28, 2631, '22 Lê Lợi', 'Saigon Luxury Loft', 'Căn hộ kiểu loft sang trọng', 1500000.00, 3, 1, 10.7726018, 106.6994504),
+(5, 1, 1, 8, '88 Thụy Khuê', 'Hanoi Old Quarter Home', 'Phòng ấm cúng trong phố cổ', 780000.00, 2, 1, 21.0417658, 105.8260564),
+(6, 1, 21, 1860, '19 Võ Văn Kiệt', 'Da Nang Beachfront', 'Phòng hướng biển Mỹ Khê', 1100000.00, 2, 1, 16.0631470, 108.2419488),
+(7, 1, 28, 2630, '10 Nguyễn Huệ', 'Saigon Walking Street Studio', 'Studio ngay phố đi bộ', 1350000.00, 2, 0, 10.7734609, 106.7040780),
+(8, 1, 1, 58, '55 Nguyễn Trãi', 'Hanoi Cozy Apartment', 'Căn hộ mini trung tâm', 650000.00, 2, 1, 20.9869283, 105.7970533),
+(9, 1, 21, 1856, '77 Bạch Đằng', 'Da Nang River Suite', 'Suite cao cấp sông Hàn', 1600000.00, 3, 1, 16.0738682, 108.2246250),
+(10, 1, 28, 2631, '320 Lý Tự Trọng', 'Saigon City View', 'Phòng view thành phố tuyệt đẹp', 900000.00, 2, 1, 10.7753297, 106.6985971);
 
 -- 10. Room Beds
 INSERT IGNORE INTO `room_beds` (`roomId`, `type`, `quantity`) VALUES

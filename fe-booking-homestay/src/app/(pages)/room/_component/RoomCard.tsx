@@ -1,13 +1,24 @@
+import { useAuth } from "@/context/auth-context";
 import { useLang } from "@/context/lang-context";
 import { Room } from "@/models/Room";
 import { Heart, MapPin, Star } from "lucide-react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
+import toast from "react-hot-toast";
 
-type RoomCardProps = { room: Room };
+type RoomCardProps = {
+  room: Room;
+  isFavorited?: boolean;
+  onToggleFavorite?: (roomId: number) => Promise<boolean> | void;
+};
 
-export function RoomCard({ room }: RoomCardProps) {
+export function RoomCard({
+  room,
+  isFavorited = false,
+  onToggleFavorite,
+}: RoomCardProps) {
   const { t } = useLang();
+  const { user, openSignIn } = useAuth();
   const searchParams = useSearchParams();
   const router = useRouter();
   const loc = searchParams.get("location");
@@ -29,6 +40,18 @@ export function RoomCard({ room }: RoomCardProps) {
 
   const isGuestFavorite = room.rating ?? 0 >= 4.8;
 
+  const handleFavoriteClick = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!user) {
+      openSignIn();
+      return;
+    }
+    if (onToggleFavorite) {
+      const result = await onToggleFavorite(room.id);
+      toast.success(result ? "Đã thêm vào yêu thích" : "Đã bỏ yêu thích");
+    }
+  };
+
   return (
     <div
       onClick={() => {
@@ -42,6 +65,7 @@ export function RoomCard({ room }: RoomCardProps) {
           src={room.images?.main || "/default.jpg"}
           alt={room.name}
           fill
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
           className="object-cover transition-transform duration-500 group-hover:scale-110"
         />
 
@@ -61,13 +85,17 @@ export function RoomCard({ room }: RoomCardProps) {
 
         {/* Favorite Button */}
         <button
-          onClick={(e) => {
-            e.stopPropagation();
-            // Wishlist logic here
-          }}
-          className="absolute top-3 right-3 p-2 rounded-full bg-black/20 backdrop-blur-md text-white hover:bg-white hover:text-red-500 transition-all duration-300"
+          onClick={handleFavoriteClick}
+          className={`absolute top-3 right-3 p-2 rounded-full backdrop-blur-md transition-all duration-300 ${
+            isFavorited
+              ? "bg-white text-red-500"
+              : "bg-black/20 text-white hover:bg-white hover:text-red-500"
+          }`}
         >
-          <Heart size={18} />
+          <Heart
+            size={18}
+            className={isFavorited ? "fill-red-500 text-red-500" : ""}
+          />
         </button>
       </div>
 

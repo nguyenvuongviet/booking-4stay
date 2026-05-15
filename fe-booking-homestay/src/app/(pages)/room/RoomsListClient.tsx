@@ -6,7 +6,9 @@ import Header from "@/_components/Header";
 import { MapMarker } from "@/_components/map/MapMarker";
 import { SearchBar } from "@/_components/SearchBar";
 import WeatherBadge from "@/_components/WeatherBadge";
+import { useFavorites } from "@/_hooks/useFavorites";
 import { RoomCard } from "@/app/(pages)/room/_component/RoomCard";
+import RoomListRecommendations from "@/app/(pages)/room/_component/RoomListRecommendations";
 import { useLang } from "@/context/lang-context";
 import { Room } from "@/models/Room";
 import { searchProvince } from "@/services/locationApi";
@@ -16,7 +18,7 @@ import StaggerItem from "@/styles/animations/StaggerItem";
 import { motion, useSpring } from "framer-motion";
 import { Loader2 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 export default function RoomsListPage() {
   const [rawRooms, setRawRooms] = useState<Room[]>([]);
@@ -273,6 +275,10 @@ export default function RoomsListPage() {
     });
   }, [location]);
 
+  // Favorites
+  const roomIds = useMemo(() => rooms.map((r) => r.id), [rooms]);
+  const { isFavorited, toggle } = useFavorites(roomIds);
+
   return (
     <div className="min-h-screen bg-background dark:bg-black">
       <Header />
@@ -310,12 +316,18 @@ export default function RoomsListPage() {
             </div>
           </div>
           <div className="w-full lg:w-3/4 mt-4 lg:mt-0">
+            {/* Recommendation sections — chỉ hiện khi chưa search */}
+            {!location && <RoomListRecommendations />}
             {rooms.length > 0 && (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 lg:gap-6 mb-6">
                 {rooms.map((room, index) => (
                   <StaggerItem index={index} key={`${room.id}-${index}`}>
                     <HoverScale>
-                      <RoomCard room={room} />
+                      <RoomCard
+                        room={room}
+                        isFavorited={isFavorited(room.id)}
+                        onToggleFavorite={toggle}
+                      />
                     </HoverScale>
                   </StaggerItem>
                 ))}

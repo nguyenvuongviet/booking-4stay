@@ -2,74 +2,54 @@
 
 import Footer from "@/_components/Footer";
 import Header from "@/_components/Header";
+import AvailableSoonSection from "@/_components/home/AvailableSoonSection";
+import CheckinCountdown from "@/_components/home/CheckinCountdown";
+import ForYouSection from "@/_components/home/ForYouSection";
 import HeroSection from "@/_components/home/HeroSection";
 import PopularDestinations from "@/_components/home/PopularDestinations";
+import RecentlyViewedSection from "@/_components/home/RecentlyViewedSection";
 import RoomSection from "@/_components/home/RoomSection";
 import { useAuth } from "@/context/auth-context";
-import { Room } from "@/models/Room";
 import { getLocation } from "@/services/locationApi";
-import { room_all } from "@/services/roomApi";
-import { Suspense, useCallback, useEffect, useState } from "react";
+import { getPopularRooms, PopularRoom } from "@/services/recommendationApi";
+import { Suspense, useEffect, useState } from "react";
 
 export default function HomePage() {
   const { user } = useAuth();
-  const [rooms, setRooms] = useState<Room[]>([]);
-  const [page, setPage] = useState(1);
+  const [rooms, setRooms] = useState<PopularRoom[]>([]);
   const [locations, setLocations] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
 
-  const loadRooms = useCallback(
-    async (reset = false) => {
-      if (loading) return;
+  useEffect(() => {
+    // Fetch popular rooms từ recommendation API
+    const fetchPopular = async () => {
+      setLoading(true);
       try {
-        setLoading(true);
-        const result = await room_all({
-          page: reset ? 1 : page,
-          pageSize: 6,
-          sortBy: "rating",
-          sortOrder: "desc", // explicit popular
-        });
-
-        const roomsData = result.rooms || [];
-
-        if (reset) {
-          setRooms(roomsData);
-          setPage(2);
-        } else {
-          setRooms((prev) => [...prev, ...roomsData]);
-          setPage((prev) => prev + 1);
-        }
-
-        setHasMore(roomsData.length > 0);
+        const data = await getPopularRooms(6);
+        setRooms(data);
       } catch (err) {
-        console.error("Error loading rooms:", err);
+        console.error("Error loading popular rooms:", err);
       } finally {
         setLoading(false);
       }
-    },
-    [page, loading],
-  );
+    };
 
-  useEffect(() => {
     const fetchLocations = async () => {
       try {
         const resp = await getLocation({ pageSize: 1000 });
         const items = resp.items || [];
 
-        // Popular provinces in Vietnam
         const popularProvinces = [
-          "Đà Nẵng",
-          "Hà Nội",
-          "Hồ Chí Minh",
-          "Hội An",
-          "Phú Quốc",
-          "Đà Lạt",
+          "Đà Nẵng",
+          "Hà Nội",
+          "Hồ Chí Minh",
+          "Hội An",
+          "Phú Quốc",
+          "Đà Lạt",
           "Nha Trang",
         ];
 
-        // Sort: popular first, then others
-        const sortedLocations = items.sort((a, b) => {
+        const sortedLocations = items.sort((a: any, b: any) => {
           const aIndex = popularProvinces.indexOf(a.name);
           const bIndex = popularProvinces.indexOf(b.name);
 
@@ -84,8 +64,9 @@ export default function HomePage() {
         console.error("Error fetching locations:", error);
       }
     };
+
+    fetchPopular();
     fetchLocations();
-    loadRooms(true);
   }, []);
 
   return (
@@ -96,7 +77,11 @@ export default function HomePage() {
       >
         <HeroSection />
       </Suspense>
-      <RoomSection rooms={rooms} />
+      <CheckinCountdown />
+      <RecentlyViewedSection />
+      <RoomSection rooms={rooms as any} />
+      <ForYouSection />
+      <AvailableSoonSection />
       <PopularDestinations locations={locations} />
       {/* <FeaturesSection /> */}
       <Footer />

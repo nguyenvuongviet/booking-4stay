@@ -52,6 +52,7 @@ export default function Header() {
                   src="/4stay-logo.png"
                   alt="Logo"
                   fill
+                  sizes="40px"
                   className="object-contain"
                 />
               </div>

@@ -6,7 +6,7 @@ export const GlobalLoggerConfig = WinstonModule.createLogger({
   transports: [
     new winston.transports.Console({
       format: winston.format.combine(
-        winston.format.timestamp(),
+        winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
         winston.format.colorize(),
         winston.format.printf(
           ({ timestamp, level, message, context, trace }) => {
@@ -24,7 +24,7 @@ export const GlobalLoggerConfig = WinstonModule.createLogger({
       maxFiles: '14d',
       level: 'error',
       format: winston.format.combine(
-        winston.format.timestamp(),
+        winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
         winston.format.json(),
       ),
     }),
@@ -36,7 +36,7 @@ export const GlobalLoggerConfig = WinstonModule.createLogger({
       maxSize: '20m',
       maxFiles: '14d',
       format: winston.format.combine(
-        winston.format.timestamp(),
+        winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
         winston.format.json(),
       ),
     }),

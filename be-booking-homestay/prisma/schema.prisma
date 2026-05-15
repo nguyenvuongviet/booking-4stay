@@ -247,6 +247,8 @@ model rooms {
   room_beds          room_beds[]
   room_images        room_images[]
   room_prices        room_prices[]
+  user_favorites     user_favorites[]
+  room_popularity    room_popularity?
   location_countries location_countries? @relation(fields: [countryId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_room_country")
   users              users               @relation(fields: [hostId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "rooms_ibfk_1")
   location_provinces location_provinces  @relation(fields: [provinceId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_room_province")
@@ -293,6 +295,8 @@ model users {
   contacts        contacts[]
   loyalty_program loyalty_program?
   otp_codes       otp_codes[]
+  user_favorites   user_favorites[]
+  user_preferences  user_preferences?
 
   reviews    reviews[]
   rooms      rooms[]
@@ -412,4 +416,51 @@ model booking_logs {
   booking bookings @relation(fields: [bookingId], references: [id], onDelete: Cascade)
 
   @@index([bookingId])
+}
+
+model user_favorites {
+  id        Int      @id @default(autoincrement()) @db.UnsignedInt
+  userId    Int      @db.UnsignedInt
+  roomId    Int      @db.UnsignedInt
+  createdAt DateTime @default(now()) @db.Timestamp(0)
+
+  users users @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "user_favorites_ibfk_1")
+  rooms rooms @relation(fields: [roomId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "user_favorites_ibfk_2")
+
+  @@unique([userId, roomId], map: "uq_user_favorite")
+  @@index([userId], map: "idx_user_favorites_user")
+}
+
+model room_popularity {
+  id                 Int      @id @default(autoincrement()) @db.UnsignedInt
+  roomId             Int      @unique @db.UnsignedInt
+  popularityScore    Decimal  @default(0) @db.Decimal(8, 3)
+  bookingCount30d    Int      @default(0) @db.UnsignedInt
+  avgRating          Decimal  @default(0) @db.Decimal(2, 1)
+  reviewCount        Int      @default(0) @db.UnsignedInt
+  recentCancelCount  Int      @default(0) @db.UnsignedInt
+  lastCalculatedAt   DateTime @default(now()) @db.Timestamp(0)
+
+  rooms rooms @relation(fields: [roomId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "room_popularity_ibfk_1")
+
+  @@index([popularityScore(sort: Desc)], map: "idx_popularity_score")
+}
+
+model user_preferences {
+  id                     Int      @id @default(autoincrement()) @db.UnsignedInt
+  userId                 Int      @unique @db.UnsignedInt
+  avgPrice               Decimal  @default(0) @db.Decimal(12, 2)
+  minPrice               Decimal  @default(0) @db.Decimal(12, 2)
+  maxPrice               Decimal  @default(0) @db.Decimal(12, 2)
+  avgAdults              Decimal  @default(1) @db.Decimal(3, 1)
+  avgChildren            Decimal  @default(0) @db.Decimal(3, 1)
+  minAcceptRating        Decimal  @default(0) @db.Decimal(2, 1)
+  favoriteProvinces      Json?
+  preferredAmenities     Json?
+  totalCompletedBookings Int      @default(0) @db.UnsignedInt
+  lastCalculatedAt       DateTime @default(now()) @db.Timestamp(0)
+
+  users users @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "user_preferences_ibfk_1")
+
+  @@index([userId], map: "idx_user_preferences_user")
 }

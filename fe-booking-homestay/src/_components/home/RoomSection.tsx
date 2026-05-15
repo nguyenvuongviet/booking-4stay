@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/_components/ui/button";
+import { useFavorites } from "@/_hooks/useFavorites";
 import { getAmenityIcon } from "@/constants/amenity-icons";
 import { useAuth } from "@/context/auth-context";
 import { useLang } from "@/context/lang-context";
@@ -11,14 +12,29 @@ import StaggerItem from "@/styles/animations/StaggerItem";
 import { Heart, MapPin, Star } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useMemo } from "react";
+import toast from "react-hot-toast";
 
 export default function RoomSection({ rooms }: { rooms: Room[] }) {
   const router = useRouter();
   const { t } = useLang();
+  const { user, openSignIn } = useAuth();
 
   const formatPrice = (price: number) => `${price.toLocaleString()} VND`;
 
-  const { user } = useAuth();
+  // Favorite logic
+  const roomIds = useMemo(() => rooms.map((r) => r.id), [rooms]);
+  const { isFavorited, toggle } = useFavorites(roomIds);
+
+  const handleToggleFavorite = async (e: React.MouseEvent, roomId: number) => {
+    e.stopPropagation();
+    if (!user) {
+      openSignIn();
+      return;
+    }
+    const result = await toggle(roomId);
+    toast.success(result ? "Đã thêm vào yêu thích" : "Đã bỏ yêu thích");
+  };
 
   return (
     <section className="pt-28 bg-background">
@@ -26,17 +42,16 @@ export default function RoomSection({ rooms }: { rooms: Room[] }) {
         <div className="flex justify-between items-end mb-12">
           <div>
             <ScrollScale className="elegant-heading text-4xl text-foreground mb-2">
-              {user ? `Gợi ý cho ${user.firstName}` : "Gợi ý cho bạn  "}
+              Các phòng phổ biến
             </ScrollScale>
             <ScrollFade className="elegant-subheading text-lg text-muted-foreground">
-              {user
-                ? "Dựa trên lịch sử và sở thích du lịch của bạn"
-                : "Dựa trên sở thích và lựa chọn phổ biến"}
+              Được đặt nhiều và đánh giá cao bởi khách hàng
             </ScrollFade>
           </div>
           <Button
             variant="ghost"
             className="text-primary hover:text-primary/80 hidden md:flex items-center gap-2"
+            onClick={() => router.push("/room")}
           >
             Xem tất cả
             <span className="text-xl">→</span>
@@ -55,28 +70,44 @@ export default function RoomSection({ rooms }: { rooms: Room[] }) {
                     src={room.images?.main || "/default.jpg"}
                     alt={room.name}
                     fill
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                     className="object-cover transition-transform duration-500 group-hover:scale-105"
                   />
 
                   {/* Heart Button */}
                   <button
-                    className="absolute top-3 right-3 p-2 rounded-full bg-white/70 backdrop-blur-sm hover:bg-white transition-colors"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      // logic here
-                    }}
+                    className={`absolute top-3 right-3 p-2 rounded-full backdrop-blur-sm transition-all duration-300 ${
+                      isFavorited(room.id)
+                        ? "bg-white text-red-500"
+                        : "bg-white/70 text-gray-700 hover:bg-white"
+                    }`}
+                    onClick={(e) => handleToggleFavorite(e, room.id)}
                   >
-                    <Heart size={18} />
+                    <Heart
+                      size={18}
+                      className={
+                        isFavorited(room.id) ? "fill-red-500 text-red-500" : ""
+                      }
+                    />
                   </button>
 
-                  {/* Badges */}
-                  {room.rating && room.rating >= 4.8 && (
-                    <div className="absolute top-3 left-3 px-3 py-1 bg-red-500/80 rounded-full shadow-md">
-                      <span className="text-xs font-semibold  text-white uppercase tracking-wider">
-                        {t("Trending")}
+                  {/* Urgency Badges */}
+                  {(room as any).badges?.length > 0 && (
+                    <div className="absolute top-3 left-3 px-3 py-1 bg-black/60 backdrop-blur-sm rounded-full shadow-md">
+                      <span className="text-xs font-semibold text-white">
+                        {(room as any).badges[0]}
                       </span>
                     </div>
                   )}
+                  {!(room as any).badges?.length &&
+                    room.rating &&
+                    room.rating >= 4.8 && (
+                      <div className="absolute top-3 left-3 px-3 py-1 bg-red-500/80 rounded-full shadow-md">
+                        <span className="text-xs font-semibold text-white uppercase tracking-wider">
+                          {t("Trending")}
+                        </span>
+                      </div>
+                    )}
                 </div>
 
                 <div className="space-y-1">
