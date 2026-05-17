@@ -20,6 +20,7 @@ import { ReviewModule } from './modules/review/review.module';
 import { RoomModule } from './modules/room/room.module';
 import { TokenModule } from './modules/token/token.module';
 import { UserModule } from './modules/user/user.module';
+import { ChatModule } from './modules/chatbot/chatbot.module';
 
 @Module({
   imports: [
@@ -40,8 +41,9 @@ import { UserModule } from './modules/user/user.module';
     FavoriteModule,
     RecommendationModule,
     BlogModule,
+    ChatModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService, ProtectStrategy],
 })
-export class AppModule {}
+export class AppModule { }

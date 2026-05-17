@@ -1,16 +1,17 @@
 import { Toaster as ShadcnToaster } from "@/_components/ui/toaster";
 
-import { AuthProvider } from "@/context/auth-context";
-import PageTransition from "@/styles/animations/PageTransition";
+import ChatWidget from "@/_components/chatbot/ChatWidget";
 import GoogleAuthProviderWrapper from "@/_components/providers/GoogleAuthProviderWrapper";
+import { AuthProvider } from "@/context/auth-context";
+import { LangProvider } from "@/context/lang-context";
+import PageTransition from "@/styles/animations/PageTransition";
 import type { Metadata } from "next";
-import { Fira_Mono, Lora,Lexend } from "next/font/google";
+import { Fira_Mono, Lexend, Lora } from "next/font/google";
 import { Toaster as HotToaster } from "react-hot-toast";
 import "./globals.css";
-import { LangProvider } from "@/context/lang-context";
 
 const lexend = Lexend({
- subsets: ["latin", "latin-ext"],
+  subsets: ["latin", "latin-ext"],
   variable: "--font-sans",
   weight: ["400", "500", "600", "700"],
 });
@@ -45,7 +46,10 @@ export default function RootLayout({
         <LangProvider>
           <GoogleAuthProviderWrapper>
             <PageTransition>
-              <AuthProvider>{children}</AuthProvider>
+              <AuthProvider>
+                {children}
+                <ChatWidget />
+              </AuthProvider>
             </PageTransition>
           </GoogleAuthProviderWrapper>
           <ShadcnToaster />
