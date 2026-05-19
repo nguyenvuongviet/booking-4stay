@@ -242,6 +242,7 @@ model rooms {
   createdAt          DateTime            @default(now()) @db.Timestamp(0)
   updatedAt          DateTime            @default(now()) @db.Timestamp(0)
   bookings           bookings[]
+  conversations      conversations[]
   room_amenities     room_amenities[]
   room_availability  room_availability[]
   room_beds          room_beds[]
@@ -289,14 +290,17 @@ model users {
   lastLogin       DateTime?        @db.Timestamp(0)
   isDeleted       Boolean          @default(false)
   deletedAt       DateTime?        @db.Timestamp(0)
-  createdAt       DateTime         @default(now()) @db.Timestamp(0)
-  updatedAt       DateTime         @default(now()) @db.Timestamp(0)
-  bookings        bookings[]
-  contacts        contacts[]
-  loyalty_program loyalty_program?
-  otp_codes       otp_codes[]
+  createdAt           DateTime         @default(now()) @db.Timestamp(0)
+  updatedAt           DateTime         @default(now()) @db.Timestamp(0)
+  bookings            bookings[]
+  contacts            contacts[]
+  loyalty_program     loyalty_program?
+  otp_codes           otp_codes[]
   user_favorites   user_favorites[]
   user_preferences  user_preferences?
+  guest_conversations conversations[]  @relation("GuestConversations")
+  host_conversations  conversations[]  @relation("HostConversations")
+  messages            messages[]
 
   reviews       reviews[]
   rooms         rooms[]
@@ -568,4 +572,41 @@ enum blog_comments_status {
   PENDING
   APPROVED
   SPAM
+}
+
+model conversations {
+  id            Int        @id @default(autoincrement()) @db.UnsignedInt
+  guestId       Int        @db.UnsignedInt
+  hostId        Int        @db.UnsignedInt
+  roomId        Int?       @db.UnsignedInt
+  lastMessageId Int?       @db.UnsignedInt
+  isDeleted     Boolean    @default(false)
+  createdAt     DateTime   @default(now()) @db.Timestamp(0)
+  updatedAt     DateTime   @default(now()) @db.Timestamp(0)
+
+  guest        users      @relation("GuestConversations", fields: [guestId], references: [id], onDelete: Cascade)
+  host         users      @relation("HostConversations", fields: [hostId], references: [id], onDelete: Cascade)
+  room         rooms?     @relation(fields: [roomId], references: [id], onDelete: SetNull)
+  messages     messages[]
+
+  @@unique([guestId, hostId, roomId], map: "uq_guest_host_room")
+  @@index([guestId])
+  @@index([hostId])
+  @@index([roomId])
+}
+
+model messages {
+  id             Int      @id @default(autoincrement()) @db.UnsignedInt
+  conversationId Int      @db.UnsignedInt
+  senderId       Int      @db.UnsignedInt
+  content        String   @db.Text
+  isRead         Boolean  @default(false)
+  createdAt      DateTime @default(now()) @db.Timestamp(0)
+
+  conversation conversations @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender       users         @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
+  @@index([senderId])
+  @@index([createdAt])
 }

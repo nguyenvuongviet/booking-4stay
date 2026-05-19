@@ -538,12 +538,12 @@ body {
   font-style: italic;
 }
 
-@keyframes aura-pulse {
+@keyframes aura-pulse-2 {
   0%,
   100% {
     box-shadow:
-      0 0 0 0px rgba(17, 84, 160, 0.4),
-      0 0 0 4px rgba(37, 99, 235, 0.2);
+      0 0 0 0px rgba(248, 224, 146, 0.592),
+      0 0 0 4px rgba(245, 235, 182, 0.514);
   }
   50% {
     box-shadow:
@@ -552,6 +552,24 @@ body {
   }
 }
 
-.animate-aura {
-  animation: aura-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+.animate-aura-1 {
+  animation: aura-pulse-1 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes aura-pulse-1 {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 0px rgba(143, 192, 249, 0.4),
+      0 0 0 4px rgba(153, 184, 250, 0.2);
+  }
+  50% {
+    box-shadow:
+      0 0 0 8px rgba(17, 84, 160, 0),
+      0 0 0 16px rgba(37, 99, 235, 0);
+  }
+}
+
+.animate-aura-2 {
+  animation: aura-pulse-2 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }

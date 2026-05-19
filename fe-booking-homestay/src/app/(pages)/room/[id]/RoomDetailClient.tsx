@@ -16,7 +16,7 @@ import { Room } from "@/models/Room";
 import { checkFavorite, toggleFavorite } from "@/services/favoriteApi";
 import { room_available, room_detail, room_preview } from "@/services/roomApi";
 import { addMonths, format, parse } from "date-fns";
-import { Heart, Loader2, Mail, MapPin, Phone, Star, Users } from "lucide-react";
+import { Heart, Loader2, Mail, MapPin, Phone, Star, Users, MessageSquare } from "lucide-react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -419,6 +419,32 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
                   Chủ phòng đã xác minh danh tính và thông tin liên hệ.
                   <br />
                   Luôn sẵn sàng hỗ trợ bạn trong quá trình lưu trú.
+                </div>
+
+                {/* Real-time Chat Trigger Buttons */}
+                <div className="mt-6 flex flex-col sm:flex-row gap-3">
+                  <button
+                    onClick={() => {
+                      if (!user) {
+                        openSignIn();
+                        return;
+                      }
+                      if (room.host) {
+                        router.push(`/inbox?hostId=${room.host.id}&roomId=${room.id}`);
+                      }
+                    }}
+                    className="flex-1 flex items-center justify-center gap-2 rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold text-sm px-6 py-3.5 shadow-lg shadow-primary/10 active:scale-95 transition-all cursor-pointer"
+                  >
+                    <MessageSquare className="w-4.5 h-4.5" />
+                    Nhắn tin với Host
+                  </button>
+                  <a
+                    href={room.host?.phoneNumber ? `tel:${room.host.phoneNumber}` : "#"}
+                    className="flex items-center justify-center gap-2 rounded-2xl border bg-white text-slate-700 hover:bg-slate-50 font-bold text-sm px-6 py-3.5 transition-all cursor-pointer"
+                  >
+                    <Phone className="w-4.5 h-4.5 text-primary" />
+                    Gọi điện trực tiếp
+                  </a>
                 </div>
               </div>
             )}

@@ -33,6 +33,7 @@ export interface Room {
   amenities?: Amenity[];
   status?: "Available" | "Sold out";
   host?: {
+    id: number;
     name: string;
     avatar: string;
     email: string;

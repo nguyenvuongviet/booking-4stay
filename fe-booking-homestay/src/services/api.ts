@@ -54,8 +54,14 @@ api.interceptors.response.use(
 
     const status = error.response.status;
 
-    // 401 thường là token hết hạn -> Thử refresh
-    if (status === 401) {
+    // 401 hoặc 403 với nội dung "jwt expired" tương ứng với token hết hạn
+    const isTokenExpired =
+      status === 401 ||
+      (status === 403 &&
+        (error.response?.data?.message === "jwt expired" ||
+         error.response?.data?.message?.includes("expired")));
+
+    if (isTokenExpired) {
       if (isRefreshing) {
         return new Promise((resolve) => {
           subscribeTokenRefresh((token: string) => {

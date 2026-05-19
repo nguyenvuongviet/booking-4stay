@@ -8,7 +8,7 @@ import {
   KeyRound,
   LogOut,
   Menu,
-  User as UserIcon,
+  User as UserIcon
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -37,11 +37,10 @@ export default function Header() {
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-40 transition-all duration-500 ${
-        isScrolled
+      className={`fixed top-0 left-0 right-0 z-40 transition-all duration-500 ${isScrolled
           ? "py-2 bg-white/80 dark:bg-black/80 backdrop-blur-xl border-b border-white/20 shadow-lg"
           : "py-4 bg-transparent"
-      }`}
+        }`}
     >
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
@@ -58,11 +57,10 @@ export default function Header() {
                 />
               </div>
               <span
-                className={`elegant-heading text-2xl tracking-tighter transition-colors ${
-                  !isScrolled && pathname === "/"
+                className={`elegant-heading text-2xl tracking-tighter transition-colors ${!isScrolled && pathname === "/"
                     ? "text-white"
                     : "text-foreground"
-                }`}
+                  }`}
               >
                 4STAY
               </span>
@@ -79,13 +77,12 @@ export default function Header() {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`relative elegant-subheading tracking-wide transition-all duration-300 hover:text-primary ${
-                  pathname === item.href
+                className={`relative elegant-subheading tracking-wide transition-all duration-300 hover:text-primary ${pathname === item.href
                     ? "text-primary elegant-sans"
                     : !isScrolled && pathname === "/"
                       ? "text-white/80"
                       : "text-muted-foreground"
-                }`}
+                  }`}
               >
                 {item.label}
                 {pathname === item.href && (
@@ -104,11 +101,10 @@ export default function Header() {
                 <Popover open={openMenu} onOpenChange={setOpenMenu}>
                   <PopoverTrigger asChild>
                     <button
-                      className={`flex items-center gap-2 p-1.5 rounded-full bg-white/10 border transition-all duration-300 hover:shadow-md ${
-                        !isScrolled && pathname === "/"
+                      className={`flex items-center gap-2 p-1.5 rounded-full bg-white/10 border transition-all duration-300 hover:shadow-md ${!isScrolled && pathname === "/"
                           ? "border-white/20 hover:bg-white/20"
                           : ""
-                      }`}
+                        }`}
                     >
                       <UserAvatar
                         avatarUrl={user?.avatar}
@@ -116,20 +112,18 @@ export default function Header() {
                         size="sm"
                       />
                       <span
-                        className={`hidden sm:block elegant-subheading text-xs font-bold px-2 ${
-                          !isScrolled && pathname === "/"
+                        className={`hidden sm:block elegant-subheading text-xs font-bold px-2 ${!isScrolled && pathname === "/"
                             ? "text-white"
                             : "text-foreground"
-                        }`}
+                          }`}
                       >
                         {user.firstName}
                       </span>
                       <Menu
-                        className={`w-4 h-4 mr-2 ${
-                          !isScrolled && pathname === "/"
+                        className={`w-4 h-4 mr-2 ${!isScrolled && pathname === "/"
                             ? "text-white/70"
                             : "text-muted-foreground"
-                        }`}
+                          }`}
                       />
                     </button>
                   </PopoverTrigger>
@@ -202,11 +196,10 @@ export default function Header() {
             )}
 
             <button
-              className={`md:hidden p-2 rounded-full transition-colors ${
-                !isScrolled && pathname === "/"
+              className={`md:hidden p-2 rounded-full transition-colors ${!isScrolled && pathname === "/"
                   ? "text-white hover:bg-white/10"
                   : "text-foreground hover:bg-secondary"
-              }`}
+                }`}
               onClick={() => setOpenMobile(!openMobile)}
             >
               <Menu size={24} />
@@ -237,11 +230,10 @@ export default function Header() {
                     key={item.href}
                     href={item.href}
                     onClick={() => setOpenMobile(false)}
-                    className={`text-lg font-bold ${
-                      pathname === item.href
+                    className={`text-lg font-bold ${pathname === item.href
                         ? "text-primary"
                         : "text-foreground"
-                    }`}
+                      }`}
                   >
                     {item.label}
                   </Link>

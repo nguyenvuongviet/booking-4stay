@@ -23,13 +23,16 @@
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "@nestjs/common": "^11.1.8",
     "@nestjs/core": "^11.1.8",
     "@nestjs/jwt": "^11.0.0",
     "@nestjs/passport": "^11.0.5",
     "@nestjs/platform-express": "^11.1.8",
+    "@nestjs/platform-socket.io": "^11.1.21",
     "@nestjs/schedule": "^6.0.1",
     "@nestjs/swagger": "^11.2.0",
+    "@nestjs/websockets": "^11.1.21",
     "@payos/node": "^2.0.5",
     "@prisma/client": "^6.18.0",
     "axios": "^1.13.2",
@@ -48,6 +51,7 @@
     "passport-jwt": "^4.0.1",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
+    "socket.io": "^4.8.3",
     "winston": "^3.19.0",
     "winston-daily-rotate-file": "^5.0.0"
   },

@@ -3,6 +3,7 @@ import { Toaster as ShadcnToaster } from "@/_components/ui/toaster";
 import ChatWidget from "@/_components/chatbot/ChatWidget";
 import GoogleAuthProviderWrapper from "@/_components/providers/GoogleAuthProviderWrapper";
 import { AuthProvider } from "@/context/auth-context";
+import { ChatProvider } from "@/context/ChatContext";
 import { LangProvider } from "@/context/lang-context";
 import PageTransition from "@/styles/animations/PageTransition";
 import type { Metadata } from "next";
@@ -47,8 +48,10 @@ export default function RootLayout({
           <GoogleAuthProviderWrapper>
             <PageTransition>
               <AuthProvider>
-                {children}
-                <ChatWidget />
+                <ChatProvider>
+                  {children}
+                  <ChatWidget />
+                </ChatProvider>
               </AuthProvider>
             </PageTransition>
           </GoogleAuthProviderWrapper>

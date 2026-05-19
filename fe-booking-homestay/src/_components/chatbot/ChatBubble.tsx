@@ -72,7 +72,7 @@ export default function ChatBubble({ message }: Props) {
                 hover:bg-slate-100
               "
             >
-              <div className="relative z-10 whitespace-pre-wrap break-words font-medium text-secondary-foreground">
+              <div className="relative z-10 whitespace-pre-wrap wrap-break-words font-medium text-secondary-foreground">
                 {message.content}
               </div>
             </div>

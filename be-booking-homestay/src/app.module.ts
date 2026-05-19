@@ -21,6 +21,7 @@ import { RoomModule } from './modules/room/room.module';
 import { TokenModule } from './modules/token/token.module';
 import { UserModule } from './modules/user/user.module';
 import { ChatModule } from './modules/chatbot/chatbot.module';
+import { MessageModule } from './modules/message/message.module';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { ChatModule } from './modules/chatbot/chatbot.module';
     RecommendationModule,
     BlogModule,
     ChatModule,
+    MessageModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService, ProtectStrategy],
