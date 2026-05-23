@@ -9,6 +9,7 @@ import ChatInput from "./ChatInput";
 import ChatMessages from "./ChatMessages";
 import SuggestionChips from "./SuggestionChips";
 
+import { isChatPage } from "@/_helper/chat-realtime.helper";
 import { useChatbot } from "@/_hooks/useChatbot";
 
 export default function ChatWidget() {
@@ -31,7 +32,7 @@ export default function ChatWidget() {
   } = useChatbot();
 
   // Ẩn toàn bộ widget khi đang ở trang /inbox
-  if (pathname === "/inbox") return null;
+  if (isChatPage(pathname)) return null;
 
   const handleClose = () => {
     setClose(true);

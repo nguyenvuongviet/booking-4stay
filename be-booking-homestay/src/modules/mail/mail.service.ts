@@ -21,6 +21,15 @@ export class MailService {
     `;
   }
 
+  private escapeHtml(value: string) {
+    return value
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
   private bookingInfoBlock(booking: any) {
     const nights =
       (new Date(booking.checkOut).getTime() -
@@ -197,6 +206,43 @@ export class MailService {
       `;
         break;
     }
+
+    await transporter.sendMail({
+      from: `"4Stay Support" <${SENDER_EMAIL}>`,
+      to,
+      subject: `4Stay - ${subject}`,
+      html: this.wrapTemplate(subject, body),
+    });
+  }
+
+  async sendNewMessageMail(
+    to: string,
+    senderName: string,
+    messagePreview: string,
+    conversationUrl?: string,
+  ) {
+    const subject = 'Tin nhắn mới';
+    const preview =
+      messagePreview.length > 160
+        ? `${messagePreview.slice(0, 157)}...`
+        : messagePreview;
+    const safePreview = this.escapeHtml(preview);
+    const safeSenderName = this.escapeHtml(senderName);
+    const body = `
+      <p>Bạn có tin nhắn mới từ <b>${safeSenderName}</b> trên 4Stay.</p>
+      <div style="margin: 16px 0; padding: 14px; background: #fff7ed; border-left: 4px solid #FF6B00; color: #333;">
+        ${safePreview}
+      </div>
+      ${conversationUrl
+        ? `<p style="margin-top: 18px;">
+              <a href="${conversationUrl}" style="display:inline-block; padding: 10px 16px; background:#FF6B00; color:#fff; text-decoration:none; border-radius:6px;">
+                Mở hộp thư
+              </a>
+            </p>`
+        : ''
+      }
+      <p style="color:#666;">Email này chỉ được gửi tối đa một lần trong 15 phút cho cùng một cuộc trò chuyện.</p>
+    `;
 
     await transporter.sendMail({
       from: `"4Stay Support" <${SENDER_EMAIL}>`,

@@ -1,7 +1,7 @@
 "use client";
 
 import { getImageUrl, getPartner } from "@/_helper/chat.helper";
-import { IConversation } from "@/context/ChatContext";
+import { IConversation } from "@/types/chat";
 import { Home, User, X } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -12,6 +12,7 @@ interface Props {
   userId: number | string;
   open?: boolean;
   onClose?: () => void;
+  drawerOnly?: boolean;
 }
 
 export default function ContextPanel({
@@ -19,17 +20,21 @@ export default function ContextPanel({
   userId,
   open = true,
   onClose,
+  drawerOnly = false,
 }: Props) {
   const router = useRouter();
   const partner = getPartner(activeConversation, userId);
-  const isGuest = String(activeConversation.guestId) === String(userId);
   const isHost = String(activeConversation.hostId) === String(userId);
 
   const panelContent = (
     <div className="flex h-full flex-col overflow-y-auto p-5 space-y-6 scrollbar-hide">
       {/* Close button (mobile/tablet drawer) */}
       {onClose && (
-        <div className="flex items-center justify-between lg:hidden">
+        <div
+          className={`items-center justify-between ${
+            drawerOnly ? "flex" : "flex lg:hidden"
+          }`}
+        >
           <span className="text-sm elegant-sans text-foreground">
             Thông tin liên hệ
           </span>
@@ -162,13 +167,19 @@ export default function ContextPanel({
   return (
     <>
       {/* Desktop: luôn hiện (lg+) */}
-      <div className="hidden lg:flex h-full w-60 xl:w-70 shrink-0 flex-col border-l border-white/30 dark:border-white/10 bg-white/20 dark:bg-black/20 backdrop-blur-2xl shadow-[-8px_0_30px_-15px_rgba(0,0,0,0.1)]">
-        {panelContent}
-      </div>
+      {!drawerOnly && (
+        <div className="hidden lg:flex h-full w-60 xl:w-70 shrink-0 flex-col border-l border-white/30 dark:border-white/10 bg-white/20 dark:bg-black/20 backdrop-blur-2xl shadow-[-8px_0_30px_-15px_rgba(0,0,0,0.1)]">
+          {panelContent}
+        </div>
+      )}
 
       {/* Mobile/Tablet: drawer slide-in từ phải */}
       {open && (
-        <div className="lg:hidden fixed inset-0 z-50 flex">
+        <div
+          className={`${
+            drawerOnly ? "absolute" : "fixed lg:hidden"
+          } inset-0 z-50 flex`}
+        >
           {/* Overlay */}
           <div
             className="flex-1 bg-black/40 backdrop-blur-sm"

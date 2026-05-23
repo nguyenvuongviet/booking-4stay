@@ -302,11 +302,12 @@ model users {
   host_conversations  conversations[]  @relation("HostConversations")
   messages            messages[]
 
-  reviews       reviews[]
-  rooms         rooms[]
-  user_roles    user_roles[]
+  reviews               reviews[]
+  rooms                 rooms[]
+  user_roles            user_roles[]
   blog_posts    blog_posts[]
   blog_comments blog_comments[]
+  push_subscriptions push_subscriptions[]
 
   @@index([email], map: "idx_users_email")
 }
@@ -609,4 +610,18 @@ model messages {
   @@index([conversationId])
   @@index([senderId])
   @@index([createdAt])
+}
+
+model push_subscriptions {
+  id        Int      @id @default(autoincrement()) @db.UnsignedInt
+  userId    Int      @db.UnsignedInt
+  endpoint  String   @db.VarChar(500)
+  p256dh    String   @db.VarChar(255)
+  auth      String   @db.VarChar(255)
+  createdAt DateTime @default(now()) @db.Timestamp(0)
+  updatedAt DateTime @default(now()) @db.Timestamp(0)
+
+  users     users    @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_push_sub_user")
+
+  @@index([userId])
 }

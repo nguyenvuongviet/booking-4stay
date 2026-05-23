@@ -1,7 +1,12 @@
 "use client";
 
-import { formatTime, getImageUrl, getPartner } from "@/_helper/chat.helper";
-import { IConversation } from "@/context/ChatContext";
+import {
+  formatTime,
+  getConversationUnreadCount,
+  getImageUrl,
+  getPartner,
+} from "@/_helper/chat.helper";
+import { IConversation } from "@/types/chat";
 import Image from "next/image";
 
 interface Props {
@@ -18,7 +23,7 @@ export default function ConversationItem({
   onSelect,
 }: Props) {
   const partner = getPartner(conv, userId);
-  const unread = conv.unreadCount ?? 0;
+  const unread = getConversationUnreadCount(conv, userId);
   const isMe = conv.lastMessage
     ? String(conv.lastMessage.senderId) === String(userId)
     : false;

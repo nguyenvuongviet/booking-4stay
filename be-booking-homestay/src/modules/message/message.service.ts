@@ -1,13 +1,11 @@
-import { Injectable, ForbiddenException, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class MessageService {
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(private readonly prismaService: PrismaService) { }
 
-  /**
-   * Lấy danh sách các cuộc trò chuyện của người dùng (Guest hoặc Host)
-   */
+  // Lấy danh sách các cuộc trò chuyện của người dùng (Guest hoặc Host)
   async getConversations(userId: number) {
     const conversations = await this.prismaService.conversations.findMany({
       where: {
@@ -53,14 +51,32 @@ export class MessageService {
           },
           take: 1,
         },
+        _count: {
+          select: {
+            messages: true,
+          },
+        },
       },
       orderBy: {
         updatedAt: 'desc',
       },
     });
 
+    // Đếm tin nhắn chưa đọc của từng cuộc hội thoại
+    const unreadCounts = await Promise.all(
+      conversations.map((conv) =>
+        this.prismaService.messages.count({
+          where: {
+            conversationId: conv.id,
+            senderId: { not: userId },
+            isRead: false,
+          },
+        }),
+      ),
+    );
+
     // Định dạng lại kết quả trả về để UI dễ dùng hơn
-    return conversations.map((conv) => {
+    return conversations.map((conv, index) => {
       const lastMessage = conv.messages[0] || null;
       return {
         id: conv.id,
@@ -84,13 +100,12 @@ export class MessageService {
           isRead: lastMessage.isRead,
           createdAt: lastMessage.createdAt,
         } : null,
+        unreadCount: unreadCounts[index],
       };
     });
   }
 
-  /**
-   * Tạo cuộc hội thoại mới giữa Guest và Host liên quan tới Room
-   */
+  // Tạo cuộc hội thoại mới giữa Guest và Host liên quan tới Room
   async createConversation(guestId: number, hostId: number, roomId?: number) {
     // 1. Kiểm tra xem cuộc hội thoại đã tồn tại chưa
     let conversation = await this.prismaService.conversations.findFirst({
@@ -116,9 +131,7 @@ export class MessageService {
     return conversation;
   }
 
-  /**
-   * Lấy lịch sử tin nhắn của một cuộc trò chuyện có phân trang
-   */
+  // Lấy lịch sử tin nhắn của một cuộc trò chuyện có phân trang
   async getMessages(conversationId: number, userId: number, limit = 20, page = 1) {
     // 1. Xác thực quyền truy cập: Kiểm tra xem user có thuộc conversation này không
     const conversation = await this.prismaService.conversations.findUnique({
@@ -156,9 +169,7 @@ export class MessageService {
     return messages.reverse();
   }
 
-  /**
-   * Lưu tin nhắn mới vào cơ sở dữ liệu
-   */
+  // Lưu tin nhắn mới vào cơ sở dữ liệu
   async saveMessage(conversationId: number, senderId: number, content: string) {
     // 1. Kiểm tra sự tồn tại của cuộc hội thoại
     const conversation = await this.prismaService.conversations.findUnique({
@@ -200,9 +211,7 @@ export class MessageService {
     return message;
   }
 
-  /**
-   * Đánh dấu đã đọc tất cả tin nhắn đối phương gửi trong cuộc hội thoại
-   */
+  // Đánh dấu đã đọc tất cả tin nhắn đối phương gửi trong cuộc hội thoại
   async markAsRead(conversationId: number, userId: number) {
     return this.prismaService.messages.updateMany({
       where: {
@@ -216,9 +225,17 @@ export class MessageService {
     });
   }
 
-  /**
-   * Xác thực nhanh quyền truy cập cuộc trò chuyện (Dùng cho Websocket Gateway)
-   */
+  countUnread(conversationId: number, userId: number) {
+    return this.prismaService.messages.count({
+      where: {
+        conversationId,
+        senderId: { not: userId },
+        isRead: false,
+      },
+    });
+  }
+
+  // Xác thực nhanh quyền truy cập cuộc trò chuyện (Dùng cho Websocket Gateway)
   async verifyAccess(userId: number, conversationId: number): Promise<boolean> {
     const conv = await this.prismaService.conversations.findUnique({
       where: { id: conversationId },

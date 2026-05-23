@@ -1,7 +1,8 @@
 "use client";
 
+import { getConversationUnreadCount } from "@/_helper/chat.helper";
 import { FilterType } from "@/_hooks/useInbox";
-import { IConversation } from "@/context/ChatContext";
+import { IConversation } from "@/types/chat";
 import { ArrowLeft, Inbox, MessageSquare, Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import ConversationItem from "./ConversationItem";
@@ -17,6 +18,7 @@ interface Props {
   filterType: FilterType;
   setFilterType: (f: FilterType) => void;
   onSelect: (id: number) => void;
+  backHref?: string;
 }
 
 export default function ConversationList({
@@ -30,9 +32,12 @@ export default function ConversationList({
   filterType,
   setFilterType,
   onSelect,
+  backHref,
 }: Props) {
   const router = useRouter();
-  const hasUnread = conversations.some((c) => (c.unreadCount ?? 0) > 0);
+  const hasUnread = conversations.some(
+    (c) => getConversationUnreadCount(c, userId) > 0,
+  );
 
   return (
     <div className="flex h-full flex-col border-r border-white/30 dark:border-white/10 bg-white/20 dark:bg-black/20 backdrop-blur-2xl shadow-[8px_0_30px_-15px_rgba(0,0,0,0.1)]">
@@ -40,7 +45,7 @@ export default function ConversationList({
       <div className="flex items-center gap-4 px-4 py-4 border-b border-white/30 dark:border-white/10 shrink-0 bg-white/10 dark:bg-black/10">
         {/* Nút Back về trang trước */}
         <button
-          onClick={() => router.back()}
+          onClick={() => (backHref ? router.push(backHref) : router.back())}
           className="flex items-center justify-center h-9 w-9 rounded-full  dark:border-white/10 bg-white/50 dark:bg-white/5 text-muted-foreground hover:bg-white/80 dark:hover:bg-white/10 hover:text-primary transition-all duration-200 cursor-pointer shrink-0 shadow-md"
           title="Quay lại"
         >

@@ -1,10 +1,10 @@
 "use client";
 
 import { getImageUrl, getPartner } from "@/_helper/chat.helper";
-import { IConversation, IMessage } from "@/context/ChatContext";
+import { IConversation, IMessage } from "@/types/chat";
 import { ArrowLeft, Send, Smile, Sparkles } from "lucide-react";
 import Image from "next/image";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import MessageBubble from "./MessageBubble";
 import QuickTemplates from "./QuickTemplates";
 import TypingIndicator from "./TypingIndicator";
@@ -22,6 +22,7 @@ interface Props {
   onSelectTemplate: (t: string) => void;
   onBack?: () => void;
   onToggleInfo?: () => void;
+  infoToggleMode?: "hidden" | "responsive" | "always";
 }
 
 export default function ChatArea({
@@ -37,16 +38,24 @@ export default function ChatArea({
   onSelectTemplate,
   onBack,
   onToggleInfo,
+  infoToggleMode = "hidden",
 }: Props) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const partner = getPartner(activeConversation, userId);
   const isHost = String(activeConversation.hostId) === String(userId);
 
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "end",
+    });
+  }, [messages, activeConversation?.id, isTyping]);
+
   return (
-    <div className="flex h-full flex-col bg-transparent">
+    <div className="flex h-full min-w-0 flex-col bg-transparent">
       {/* Header */}
       <div className="flex items-center justify-between px-4 sm:px-5 py-3.5 border-b border-white/30 dark:border-white/10 bg-white/20 dark:bg-black/20 backdrop-blur-2xl shrink-0 shadow-[0_4px_30px_rgba(0,0,0,0.05)]">
-        <div className="flex items-center gap-3">
+        <div className="flex min-w-0 items-center gap-3">
           {/* Back to list (mobile) */}
           {onBack && (
             <button
@@ -74,7 +83,7 @@ export default function ChatArea({
             )}
           </div>
 
-          <div>
+          <div className="min-w-0">
             <h2 className="text-sm font-extrabold tracking-tight text-foreground">
               {partner.firstName} {partner.lastName}
             </h2>
@@ -108,10 +117,12 @@ export default function ChatArea({
           )} */}
 
           {/* Toggle info panel button (visible when lg panel is hidden) */}
-          {onToggleInfo && (
+          {onToggleInfo && infoToggleMode !== "hidden" && (
             <button
               onClick={onToggleInfo}
-              className="lg:hidden flex items-center justify-center h-9 px-3 rounded-xl border border-white/20 dark:border-white/10 bg-white/50 dark:bg-white/5 text-muted-foreground hover:bg-white/80 dark:hover:bg-white/10 hover:text-foreground transition-all cursor-pointer text-xs font-semibold gap-1.5 shadow-sm"
+              className={`items-center justify-center h-9 px-3 rounded-xl border border-white/20 dark:border-white/10 bg-white/50 dark:bg-white/5 text-muted-foreground hover:bg-white/80 dark:hover:bg-white/10 hover:text-foreground transition-all cursor-pointer text-xs font-semibold gap-1.5 shadow-sm ${
+                infoToggleMode === "responsive" ? "flex lg:hidden" : "flex"
+              }`}
               title="Thông tin liên hệ"
             >
               <span className="hidden sm:inline">Thông tin</span>

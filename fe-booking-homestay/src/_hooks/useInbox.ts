@@ -1,8 +1,9 @@
 "use client";
 
-import { getPartner } from "@/_helper/chat.helper";
+import { getConversationUnreadCount, getPartner } from "@/_helper/chat.helper";
 import { useAuth } from "@/context/auth-context";
-import { IConversation, useRealtimeChat } from "@/context/ChatContext";
+import { useRealtimeChat } from "@/context/ChatContext";
+import { IConversation } from "@/types/chat";
 import { useMemo, useRef, useState } from "react";
 
 export type FilterType = "all" | "unread";
@@ -31,7 +32,7 @@ export function useInbox() {
       const matchesSearch =
         partnerName.includes(q) || roomName.includes(q);
       if (filterType === "unread") {
-        return matchesSearch && (conv.unreadCount ?? 0) > 0;
+        return matchesSearch && getConversationUnreadCount(conv, user.id) > 0;
       }
       return matchesSearch;
     });

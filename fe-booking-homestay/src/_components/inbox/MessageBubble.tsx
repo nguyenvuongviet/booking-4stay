@@ -5,7 +5,7 @@ import {
   formatTime,
   getImageUrl,
 } from "@/_helper/chat.helper";
-import { IMessage } from "@/context/ChatContext";
+import { IMessage } from "@/types/chat";
 import { Check, CheckCheck } from "lucide-react";
 import Image from "next/image";
 
@@ -62,7 +62,7 @@ export default function MessageBubble({
           )}
 
           {/* Bubble + metadata */}
-          <div className="space-y-1">
+          <div className="space-y-1 min-w-0 max-w-full">
             <div
               className={`rounded-2xl px-4 py-2.5 shadow-md backdrop-blur-md text-sm leading-relaxed whitespace-pre-wrap wrap-break-words border ${
                 isMe

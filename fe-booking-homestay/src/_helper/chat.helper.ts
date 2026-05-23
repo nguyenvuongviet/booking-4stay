@@ -1,4 +1,4 @@
-import { IConversation } from "@/context/ChatContext";
+import { IConversation } from "@/types/chat";
 
 // Định dạng giờ hiển thị (HH:mm)
 export function formatTime(dateStr: string): string {
@@ -35,6 +35,23 @@ export function getPartner(
   userId: number | string
 ): IConversation["host"] | IConversation["guest"] {
   return String(conv.guestId) === String(userId) ? conv.host : conv.guest;
+}
+
+export function getConversationUnreadCount(
+  conv: IConversation,
+  userId: number | string
+): number {
+  if ((conv.unreadCount ?? 0) > 0) return conv.unreadCount ?? 0;
+
+  if (
+    conv.lastMessage &&
+    !conv.lastMessage.isRead &&
+    String(conv.lastMessage.senderId) !== String(userId)
+  ) {
+    return 1;
+  }
+
+  return 0;
 }
 
 // Rút ngắn nội dung tin nhắn nếu quá dài

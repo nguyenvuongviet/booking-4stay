@@ -9,7 +9,17 @@ import { AlertCircle, Home } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
-export default function InboxPageContent() {
+type InboxPageContentProps = {
+  routePath?: string;
+  embedded?: boolean;
+  backHref?: string;
+};
+
+export default function InboxPageContent({
+  routePath = "/inbox",
+  embedded = false,
+  backHref,
+}: InboxPageContentProps) {
   const { user } = useAuth();
   const {
     conversations,
@@ -41,6 +51,7 @@ export default function InboxPageContent() {
   } = useInbox();
 
   const [showInfo, setShowInfo] = useState(false);
+  const infoToggleMode = embedded ? "always" : "responsive";
 
   useEffect(() => {
     if (!user) return;
@@ -49,12 +60,19 @@ export default function InboxPageContent() {
     if (hostId) {
       createOrGetConversation(+hostId, roomId ? +roomId : undefined).then(
         () => {
-          router.replace("/inbox");
+          router.replace(routePath);
           setMobileView("chat");
         },
       );
     }
-  }, [user, searchParams, createOrGetConversation, router, setMobileView]);
+  }, [
+    user,
+    searchParams,
+    createOrGetConversation,
+    router,
+    routePath,
+    setMobileView,
+  ]);
 
   // Khi chọn conversation trên mobile → chuyển sang view chat
   const handleSelectConversation = async (id: number) => {
@@ -87,7 +105,13 @@ export default function InboxPageContent() {
   }
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-slate-50 dark:bg-slate-950 text-foreground font-sans relative">
+    <div
+      className={`flex overflow-hidden bg-slate-50 dark:bg-slate-950 text-foreground font-sans relative ${
+        embedded
+          ? "h-[calc(100vh-7rem)] w-full max-w-full rounded-xl border border-border"
+          : "h-screen w-screen"
+      }`}
+    >
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {/* Base */}
         <div className="absolute inset-0 bg-background dark:bg-background" />
@@ -105,7 +129,7 @@ export default function InboxPageContent() {
       <div
         className={`
           relative z-10 h-full shrink-0
-          w-full md:w-80 lg:w-88
+          w-full md:w-72 lg:w-80 xl:w-88
           ${mobileView === "list" ? "flex" : "hidden"} md:flex flex-col
         `}
       >
@@ -120,17 +144,18 @@ export default function InboxPageContent() {
           filterType={filterType}
           setFilterType={setFilterType}
           onSelect={handleSelectConversation}
+          backHref={backHref}
         />
       </div>
 
       <div
         className={`
-          relative z-10 flex-1 flex h-full overflow-hidden
+          relative z-10 min-w-0 flex-1 flex h-full overflow-hidden
           ${mobileView === "chat" ? "flex" : "hidden"} md:flex
         `}
       >
         {/* Khung chat */}
-        <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
           {activeConversation ? (
             <ChatArea
               userId={user.id}
@@ -144,6 +169,7 @@ export default function InboxPageContent() {
               onSend={handleSend}
               onSelectTemplate={handleSelectTemplate}
               onBack={() => setMobileView("list")}
+              infoToggleMode={infoToggleMode}
               onToggleInfo={
                 activeConversation ? () => setShowInfo(true) : undefined
               }
@@ -153,12 +179,13 @@ export default function InboxPageContent() {
           )}
         </div>
 
-        {activeConversation && (
+        {activeConversation && (!embedded || showInfo) && (
           <ContextPanel
             activeConversation={activeConversation}
             userId={user.id}
             open={showInfo}
             onClose={() => setShowInfo(false)}
+            drawerOnly={embedded}
           />
         )}
       </div>

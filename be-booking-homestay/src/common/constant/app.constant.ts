@@ -15,6 +15,11 @@ export const REFRESH_TOKEN_EXPIRES = process.env.REFRESH_TOKEN_EXPIRES;
 export const SENDER_EMAIL = process.env.SENDER_EMAIL;
 export const SENDER_PASSWORD = process.env.SENDER_PASSWORD;
 
+export const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY || '';
+export const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY || '';
+export const VAPID_SUBJECT =
+  process.env.VAPID_SUBJECT || (SENDER_EMAIL ? `mailto:${SENDER_EMAIL}` : '');
+
 export const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 export const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
 
@@ -41,6 +46,8 @@ console.log({
   REFRESH_TOKEN_EXPIRES,
   SENDER_EMAIL,
   SENDER_PASSWORD,
+  VAPID_PUBLIC_KEY,
+  VAPID_SUBJECT,
   GOOGLE_CLIENT_ID,
   GOOGLE_CLIENT_SECRET,
   CLOUDINARY_NAME,
