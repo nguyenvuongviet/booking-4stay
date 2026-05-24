@@ -2,8 +2,8 @@
 
 import { FilterBar } from "@/_components/FilterBar";
 import Footer from "@/_components/Footer";
+import { GoogleMap } from "@/_components/GoogleMap";
 import Header from "@/_components/Header";
-import { MapMarker } from "@/_components/map/MapMarker";
 import { SearchBar } from "@/_components/SearchBar";
 import WeatherBadge from "@/_components/WeatherBadge";
 import { useFavorites } from "@/_hooks/useFavorites";
@@ -308,9 +308,12 @@ export default function RoomsListPage() {
                 />
               )}
               <div className="h-[calc(100vh-200px)] overflow-hidden rounded-lg shadow-md">
-                <MapMarker
-                  rooms={rooms}
-                  fallbackCenter={fallbackCenter || undefined}
+                <GoogleMap
+                  lat={location ? fallbackCenter?.[0] : undefined}
+                  lng={location ? fallbackCenter?.[1] : undefined}
+                  address={location ? `${location}, Việt Nam` : "Việt Nam"}
+                  zoom={location ? 12 : 5}
+                  showOpenButton={false}
                 />
               </div>
             </div>

@@ -2,6 +2,7 @@
 
 import { CancellationPolicy } from "@/_components/CancellationPolicy";
 import { PhotoGalleryModal } from "@/_components/gallery/PhotoGalleryModal";
+import { GoogleMap } from "@/_components/GoogleMap";
 import SimilarRooms from "@/_components/room/SimilarRooms";
 import { Button } from "@/_components/ui/button";
 import { Card } from "@/_components/ui/card";
@@ -21,7 +22,6 @@ import { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import GuestPicker from "../../../../_components/GuestPicker";
 import Header from "../../../../_components/Header";
-import { MapMarker } from "../../../../_components/map/MapMarker";
 import DateRangePicker from "../../../../_components/ui/date-range-picker";
 import { ReviewList } from "../_component/ReviewList";
 
@@ -614,7 +614,13 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
 
               {/* Map */}
               <div className="h-[30vh] rounded-lg shadow-md">
-                <MapMarker rooms={[room]} />
+                <GoogleMap
+                  lat={room.location?.latitude}
+                  lng={room.location?.longitude}
+                  address={room.location?.fullAddress}
+                  zoom={16}
+                  showOpenButton
+                />
               </div>
 
               {/* Policy */}
