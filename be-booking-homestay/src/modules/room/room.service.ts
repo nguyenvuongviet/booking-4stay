@@ -28,6 +28,7 @@ export class RoomService {
       sortOrder = 'desc',
       page = 1,
       pageSize = 12,
+      provinceId,
     } = query;
 
     search = search?.trim();
@@ -52,6 +53,9 @@ export class RoomService {
     }
 
     const where: any = { isDeleted: false };
+    if (provinceId) {
+      where.provinceId = Number(provinceId);
+    }
     if (search) {
       where.OR = [
         { name: { contains: search } },

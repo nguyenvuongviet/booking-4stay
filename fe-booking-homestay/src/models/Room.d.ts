@@ -15,6 +15,7 @@ export interface Room {
     id?: string;
     fullAddress?: string;
     province?: string;
+    provinceId?: number;
     latitude?: string | number;
     longitude?: string | number;
   };

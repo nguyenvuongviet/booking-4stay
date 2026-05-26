@@ -3,6 +3,7 @@
 import { CancellationPolicy } from "@/_components/CancellationPolicy";
 import { PhotoGalleryModal } from "@/_components/gallery/PhotoGalleryModal";
 import { GoogleMap } from "@/_components/GoogleMap";
+import { RelatedBlogPosts } from "@/_components/room/RelatedBlogPosts";
 import SimilarRooms from "@/_components/room/SimilarRooms";
 import { Button } from "@/_components/ui/button";
 import { Card } from "@/_components/ui/card";
@@ -647,6 +648,14 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
             </Card>
           </div>
         </div>
+
+        {/* Related Blog Posts (Room-to-Blog linking) */}
+        {room.location?.provinceId && (
+          <RelatedBlogPosts
+            provinceId={room.location.provinceId}
+            provinceName={room.location.province || ""}
+          />
+        )}
 
         {/* Similar Rooms */}
         <SimilarRooms roomId={roomId} />

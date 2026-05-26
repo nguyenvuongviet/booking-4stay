@@ -54,6 +54,7 @@ export default function Header() {
                   fill
                   sizes="40px"
                   className="object-contain"
+                  priority
                 />
               </div>
               <span
@@ -72,6 +73,7 @@ export default function Header() {
             {[
               { label: t("home"), href: "/" },
               { label: t("Rooms"), href: "/room" },
+              { label: "Blog", href: "/blog" },
               { label: t("contact"), href: "/contact" },
             ].map((item) => (
               <Link
@@ -222,12 +224,13 @@ export default function Header() {
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="md:hidden fixed top-[72px] left-0 right-0 bg-white/95 dark:bg-black/95 backdrop-blur-xl border-t border-gray-100 dark:border-white/10 shadow-2xl p-6 space-y-6 z-999"
+              className="md:hidden fixed top-18 left-0 right-0 bg-white/95 dark:bg-black/95 backdrop-blur-xl border-t border-gray-100 dark:border-white/10 shadow-2xl p-6 space-y-6 z-999"
             >
               <nav className="flex flex-col gap-4">
                 {[
                   { label: t("home"), href: "/" },
                   { label: t("Rooms"), href: "/room" },
+                  { label: "Blog", href: "/blog" },
                   { label: t("contact"), href: "/contact" },
                 ].map((item) => (
                   <Link

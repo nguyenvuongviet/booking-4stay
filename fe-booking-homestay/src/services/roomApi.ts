@@ -10,6 +10,7 @@ export interface RoomQueryParams {
   sortOrder?: "asc" | "desc";
   page?: number;
   pageSize?: number;
+  provinceId?: number;
 }
 
 export const room_all = async (params?: any) => {

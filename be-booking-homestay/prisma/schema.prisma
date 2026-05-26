@@ -298,9 +298,11 @@ model users {
   user_favorites   user_favorites[]
   user_preferences  user_preferences?
 
-  reviews    reviews[]
-  rooms      rooms[]
-  user_roles user_roles[]
+  reviews       reviews[]
+  rooms         rooms[]
+  user_roles    user_roles[]
+  blog_posts    blog_posts[]
+  blog_comments blog_comments[]
 
   @@index([email], map: "idx_users_email")
 }
@@ -330,6 +332,7 @@ model location_provinces {
   location_countries location_countries @relation(fields: [countryId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_province_country")
   location_wards     location_wards[]
   rooms              rooms[]
+  blog_posts         blog_posts[]
 
   @@index([countryId], map: "fk_province_country")
 }
@@ -463,4 +466,106 @@ model user_preferences {
   users users @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "user_preferences_ibfk_1")
 
   @@index([userId], map: "idx_user_preferences_user")
+}
+
+// ==================== BLOG MODELS ====================
+
+model blog_categories {
+  id          Int      @id @default(autoincrement()) @db.UnsignedInt
+  name        String   @unique(map: "uq_blog_category_name") @db.VarChar(100)
+  slug        String   @unique(map: "uq_blog_category_slug") @db.VarChar(120)
+  description String?  @db.VarChar(500)
+  position    Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now()) @db.Timestamp(0)
+  updatedAt   DateTime @default(now()) @db.Timestamp(0)
+  posts       blog_posts[]
+}
+
+model blog_posts {
+  id              Int               @id @default(autoincrement()) @db.UnsignedInt
+  categoryId      Int               @db.UnsignedInt
+  authorId        Int               @db.UnsignedInt
+  provinceId      Int?              @db.UnsignedInt
+  title           String            @db.VarChar(255)
+  slug            String            @unique(map: "uq_blog_post_slug") @db.VarChar(280)
+  excerpt         String?           @db.VarChar(500)
+  content         String            @db.LongText
+  thumbnailUrl    String?           @db.VarChar(255)
+  metaTitle       String?           @db.VarChar(70)
+  metaDescription String?           @db.VarChar(160)
+  metaKeywords    String?           @db.VarChar(255)
+  promotionBanner String?           @db.VarChar(500)
+  status          blog_posts_status @default(DRAFT)
+  isFeatured      Boolean           @default(false)
+  viewCount       Int               @default(0) @db.UnsignedInt
+  readingTime     Int?              @db.UnsignedInt
+  publishedAt     DateTime?         @db.Timestamp(0)
+  isDeleted       Boolean           @default(false)
+  deletedAt       DateTime?         @db.Timestamp(0)
+  createdAt       DateTime          @default(now()) @db.Timestamp(0)
+  updatedAt       DateTime          @default(now()) @db.Timestamp(0)
+
+  category blog_categories    @relation(fields: [categoryId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "blog_posts_ibfk_1")
+  author   users              @relation(fields: [authorId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "blog_posts_ibfk_2")
+  province location_provinces? @relation(fields: [provinceId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "blog_posts_ibfk_3")
+  tags     blog_post_tags[]
+  comments blog_comments[]
+
+  @@index([categoryId], map: "fk_blog_post_category")
+  @@index([authorId], map: "fk_blog_post_author")
+  @@index([provinceId], map: "fk_blog_post_province")
+  @@index([slug], map: "idx_blog_post_slug")
+  @@index([status, publishedAt], map: "idx_blog_post_status_published")
+  @@index([isFeatured, status], map: "idx_blog_post_featured")
+}
+
+model blog_tags {
+  id        Int              @id @default(autoincrement()) @db.UnsignedInt
+  name      String           @unique(map: "uq_blog_tag_name") @db.VarChar(50)
+  slug      String           @unique(map: "uq_blog_tag_slug") @db.VarChar(60)
+  createdAt DateTime         @default(now()) @db.Timestamp(0)
+  posts     blog_post_tags[]
+}
+
+model blog_post_tags {
+  id     Int @id @default(autoincrement()) @db.UnsignedInt
+  postId Int @db.UnsignedInt
+  tagId  Int @db.UnsignedInt
+
+  post blog_posts @relation(fields: [postId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "blog_post_tags_ibfk_1")
+  tag  blog_tags  @relation(fields: [tagId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "blog_post_tags_ibfk_2")
+
+  @@unique([postId, tagId], map: "uq_blog_post_tag")
+  @@index([tagId], map: "fk_blog_post_tag_tag")
+}
+
+model blog_comments {
+  id        Int                  @id @default(autoincrement()) @db.UnsignedInt
+  postId    Int                  @db.UnsignedInt
+  userId    Int                  @db.UnsignedInt
+  content   String               @db.VarChar(1000)
+  status    blog_comments_status @default(PENDING)
+  isDeleted Boolean              @default(false)
+  deletedAt DateTime?            @db.Timestamp(0)
+  createdAt DateTime             @default(now()) @db.Timestamp(0)
+  updatedAt DateTime             @default(now()) @db.Timestamp(0)
+
+  post blog_posts @relation(fields: [postId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "blog_comments_ibfk_1")
+  user users      @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "blog_comments_ibfk_2")
+
+  @@index([postId, createdAt], map: "idx_blog_comment_post_date")
+  @@index([userId], map: "idx_blog_comment_user")
+}
+
+enum blog_posts_status {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum blog_comments_status {
+  PENDING
+  APPROVED
+  SPAM
 }

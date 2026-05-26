@@ -6,6 +6,7 @@ import { ProtectStrategy } from './common/guard/protect/protect.strategy';
 import { AmenityModule } from './modules/amenity/amenity.module';
 import { AppConfigsModule } from './modules/app-configs/app-configs.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { BlogModule } from './modules/blog/blog.module';
 import { BookingModule } from './modules/booking/booking.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { FavoriteModule } from './modules/favorite/favorite.module';
@@ -38,6 +39,7 @@ import { UserModule } from './modules/user/user.module';
     DashboardModule,
     FavoriteModule,
     RecommendationModule,
+    BlogModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService, ProtectStrategy],

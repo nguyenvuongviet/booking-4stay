@@ -169,6 +169,40 @@ INSERT IGNORE INTO `bookings` (`id`, `userId`, `roomId`, `guestFullName`, `guest
 -- 14. Reviews
 INSERT IGNORE INTO `reviews` (`bookingId`, `userId`, `rating`, `comment`) VALUES (1, 2, 5.0, 'Tuyệt vời, sạch sẽ!');
 
+-- 15. Blog Categories
+INSERT IGNORE INTO `blog_categories` (`id`, `name`, `slug`, `description`, `position`, `isActive`) VALUES
+(1, 'Cẩm nang du lịch', 'cam-nang-du-lich', 'Cẩm nang hướng dẫn du lịch tự túc từ A-Z', 1, 1),
+(2, 'Ẩm thực', 'am-thuc', 'Khám phá ẩm thực độc đáo tại các homestay', 2, 1),
+(3, 'Review Homestay', 'review-homestay', 'Đánh giá chân thực các căn homestay nổi bật', 3, 1),
+(4, 'Kinh nghiệm đặt phòng', 'kinh-nghiem-dat-phong', 'Mẹo săn deal tốt, tránh lừa đảo khi đặt phòng', 4, 1),
+(5, 'Sự kiện & Lễ hội', 'su-kien-le-hoi', 'Các lễ hội văn hóa đặc sắc tại địa phương', 5, 1);
+
+-- 16. Blog Tags
+INSERT IGNORE INTO `blog_tags` (`id`, `name`, `slug`) VALUES
+(1, 'Đà Lạt', 'da-lat'),
+(2, 'Hà Nội', 'ha-noi'),
+(3, 'Đà Nẵng', 'da-nang'),
+(4, 'Sài Gòn', 'sai-gon'),
+(5, 'Review', 'review'),
+(6, 'Ẩm thực đường phố', 'am-thuc-duong-pho'),
+(7, 'Homestay Đẹp', 'homestay-dep');
+
+-- 17. Blog Posts
+INSERT IGNORE INTO `blog_posts` (`id`, `categoryId`, `authorId`, `provinceId`, `title`, `slug`, `excerpt`, `content`, `thumbnailUrl`, `metaTitle`, `metaDescription`, `metaKeywords`, `promotionBanner`, `status`, `isFeatured`, `viewCount`, `readingTime`, `publishedAt`) VALUES
+(1, 1, 1, 28, 'Top 5 món ăn lề đường phải thử khi ghé thăm Sài Gòn', 'top-5-mon-an-le-duong-phai-thu-khi-ghe-tham-sai-gon', 'Sài Gòn không chỉ nổi tiếng với những tòa nhà chọc trời mà còn có nền ẩm thực đường phố vô cùng đa dạng. Cùng 4Stay khám phá top 5 món ngon đường phố không thể bỏ lỡ tại TPHCM.', '<h2>Sài Gòn - Thiên đường ẩm thực đường phố</h2><p>Nếu bạn lần đầu đến Sài Gòn, hãy chuẩn bị một chiếc bụng đói vì ẩm thực nơi đây sẽ khiến bạn mê mẩn. Từ bánh mì Huỳnh Hoa nổi tiếng đến hủ tiếu gõ lề đường, mỗi món ăn đều mang hương vị rất riêng.</p><h3>1. Cơm tấm Sài Gòn</h3><p>Món ăn huyền thoại có thể ăn từ sáng đến tối muộn. Hạt cơm tấm tơi xốp ăn kèm sườn nướng thơm phức, bì chả và nước mắm chua ngọt sệt sệt đặc trưng.</p><h3>2. Bánh tráng trộn</h3><p>Món ăn vặt quốc dân của giới trẻ Sài Thành. Bánh tráng cắt nhỏ trộn đều cùng muối tôm, tắc, trứng cút, khô bò, xoài xanh và rau răm.</p><p>Đặt phòng tại <strong>4Stay Central Saigon</strong> để thuận tiện đi bộ khám phá các phố ẩm thực sầm uất tại Quận 1 nhé!</p>', 'https://res.cloudinary.com/nguyenvuongviet/image/upload/v1779777922/4stay/blogs/qysrhyrbaxbd63ehhbru.png', 'Top 5 ẩm thực đường phố Sài Gòn không thể bỏ qua | 4Stay', 'Khám phá danh sách các món ăn đường phố ngon nhất tại TPHCM cùng kinh nghiệm đi lại chi tiết từ 4Stay.', 'ẩm thực sài gòn, ăn vặt quận 1, du lịch tphcm, cơm tấm sài gòn', '🎁 Nhận ngay mã giảm giá 10% cho các homestay tại TPHCM khi đặt phòng hôm nay!', 'PUBLISHED', 1, 142, 5, '2026-05-24 15:00:00'),
+(2, 3, 1, 1, 'Review chi tiết căn hộ 4Stay Hanoi View ven Hồ Tây', 'review-chi-tiet-can-ho-4stay-hanoi-view-ven-ho-tay', 'Bạn đang tìm kiếm một không gian yên bình ven Hồ Tây cho chuyến đi Hà Nội sắp tới? Hãy xem bài review chi tiết về tiện ích, không gian và trải nghiệm tại 4Stay Hanoi View nhé.', '<h2>Trải nghiệm yên bình giữa lòng thủ đô</h2><p>Hà Nội có những ngày rất vội vã, nhưng khi bạn bước vào <strong>4Stay Hanoi View</strong>, mọi ồn ào dường như lùi lại phía sau. Tọa lạc trên đường Hoàng Hoa Thám, căn hộ sở hữu ban công rộng lớn hướng thẳng ra mặt nước Hồ Tây thơ mộng.</p><h3>Thiết kế và Tiện ích</h3><p>Căn hộ được thiết kế theo phong cách tối giản Nhật Bản với tông màu gỗ ấm áp. Giường ngủ cỡ King siêu êm ái cùng hệ cửa kính chạm trần giúp bạn đón ánh bình minh mỗi sáng sớm.</p><p>Từ homestay, bạn chỉ mất 5 phút đi bộ ra bờ hồ và thưởng thức cà phê trứng truyền thống hoặc kem Hồ Tây lộng gió.</p>', 'https://res.cloudinary.com/nguyenvuongviet/image/upload/v1779777898/4stay/blogs/kr55i09mbhan0xzaefm5.png', 'Review căn hộ 4Stay Hanoi View bên bờ Hồ Tây thơ mộng', 'Đánh giá chân thực homestay 4Stay Hanoi View: Vị trí đắc địa, view ngắm trọn hoàng hôn Hồ Tây cực chill.', 'homestay hồ tây, review 4stay hanoi view, homestay hà nội đẹp', '🎁 Đặt phòng 4Stay Hanoi View tối thiểu 2 đêm để được tặng kèm 2 ly cà phê trứng miễn phí!', 'PUBLISHED', 0, 89, 4, '2026-05-24 15:05:00'),
+(3, 4, 1, 21, 'Kinh nghiệm đặt homestay Đà Nẵng giá rẻ, tránh bẫy mùa cao điểm', 'kinh-nghiem-dat-homestay-da-nang-gia-re-tranh-bay-mua-cao-diem', 'Đà Nẵng đang bước vào mùa du lịch cao điểm. Để tránh tình trạng cháy phòng hoặc thuê phải phòng kém chất lượng với giá cắt cổ, bỏ túi ngay những mẹo vàng đặt phòng homestay từ 4Stay.', '<h2>Lên kế hoạch đặt phòng thông minh tại Đà Nẵng</h2><p>Đà Nẵng là thành phố đáng sống nhất Việt Nam và luôn thu hút hàng triệu lượt khách mỗi mùa hè. Nhu cầu đặt phòng tăng đột biến dẫn đến việc nhiều cơ sở nâng giá vô tội vạ.</p><h3>1. Hãy đặt trước ít nhất 3 tuần</h3><p>Việc đặt phòng sớm không chỉ giúp bạn giữ được căn phòng ưng ý mà còn được hưởng mức giá ưu đãi từ các hệ thống lớn.</p><h3>2. Lựa chọn các căn homestay gần sông Hàn hoặc gần biển Mỹ Khê</h3><p>Nếu bạn thích sự nhộn nhịp ban đêm và ngắm cầu rồng phun lửa, hãy chọn khu vực sông Hàn như căn <strong>4Stay Da Nang Riverside</strong>. Nếu thích tắm biển đón bình minh, khu vực Mỹ Khê là lựa chọn hoàn hảo.</p>', 'https://res.cloudinary.com/nguyenvuongviet/image/upload/v1779777874/4stay/blogs/zypi6d613moztrsyjgsr.png', 'Kinh nghiệm đặt phòng homestay Đà Nẵng chất lượng giá tốt | 4Stay', 'Mẹo săn phòng homestay Đà Nẵng giá rẻ dịp hè, phân tích ưu nhược điểm khu vực ven sông Hàn và ven biển.', 'kinh nghiệm đặt phòng đà nẵng, homestay đà nẵng gần biển, du lịch đà nẵng', '🔥 Nhập mã DANANG2026 để được giảm trực tiếp 100k cho mỗi đêm lưu trú tại 4Stay Đà Nẵng!', 'PUBLISHED', 1, 210, 6, '2026-05-24 15:10:00');
+
+-- 18. Blog Post Tags
+INSERT IGNORE INTO `blog_post_tags` (`postId`, `tagId`) VALUES
+(1, 4), (1, 6), (2, 2), (2, 5), (2, 7), (3, 3), (3, 5);
+
+-- 19. Blog Comments
+INSERT IGNORE INTO `blog_comments` (`id`, `postId`, `userId`, `content`) VALUES
+(1, 1, 2, 'Bánh mì Huỳnh Hoa ăn siêu ngon nhưng hơi nhiều bơ, ai sợ béo nên cân nhắc nhé!'),
+(2, 1, 3, 'Cơm tấm sườn bì chả ở Sài Gòn đúng là đỉnh nhất, ăn hoài không chán.'),
+(3, 2, 2, 'Vừa ở đây tuần trước, view ban công Hồ Tây buổi chiều ngắm hoàng hôn đỉnh thực sự!');
+
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
 /*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
 /*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
