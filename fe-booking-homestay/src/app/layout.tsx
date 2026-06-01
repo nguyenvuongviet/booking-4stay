@@ -5,6 +5,7 @@ import GoogleAuthProviderWrapper from "@/_components/providers/GoogleAuthProvide
 import { AuthProvider } from "@/context/auth-context";
 import { ChatProvider } from "@/context/ChatContext";
 import { LangProvider } from "@/context/lang-context";
+import { NotificationProvider } from "@/context/notification-context";
 import PageTransition from "@/styles/animations/PageTransition";
 import type { Metadata } from "next";
 import { Fira_Mono, Lexend, Lora } from "next/font/google";
@@ -48,10 +49,12 @@ export default function RootLayout({
           <GoogleAuthProviderWrapper>
             <PageTransition>
               <AuthProvider>
-                <ChatProvider>
-                  {children}
-                  <ChatWidget />
-                </ChatProvider>
+                <NotificationProvider>
+                  <ChatProvider>
+                    {children}
+                    <ChatWidget />
+                  </ChatProvider>
+                </NotificationProvider>
               </AuthProvider>
             </PageTransition>
           </GoogleAuthProviderWrapper>

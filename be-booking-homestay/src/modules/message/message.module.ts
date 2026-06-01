@@ -6,8 +6,10 @@ import { MessageController } from './message.controller';
 import { MessageGateway } from './message.gateway';
 import { MessageService } from './message.service';
 import { NotificationService } from './notification.service';
+import { NotificationModule } from '../notification/notification.module';
 
 @Module({
+  imports: [NotificationModule],
   controllers: [MessageController],
   providers: [
     MessageService,

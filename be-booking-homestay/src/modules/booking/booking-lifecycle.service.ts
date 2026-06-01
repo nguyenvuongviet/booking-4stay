@@ -14,6 +14,7 @@ import {
   STATUS_TO_MAIL_TYPE,
   VALID_STATUS_TRANSITIONS,
 } from './booking.constants';
+import { BookingNotificationDispatcher } from '../notification/booking-notification.dispatcher';
 
 export interface ChangeStatusOptions {
   reason?: string;
@@ -29,6 +30,7 @@ export class BookingLifecycleService {
     private readonly prisma: PrismaService,
     private readonly loyaltyProgram: LoyaltyProgram,
     private readonly mailService: MailService,
+    private readonly bookingNotifications: BookingNotificationDispatcher,
   ) {}
 
   /**
@@ -72,11 +74,47 @@ export class BookingLifecycleService {
     const notifyUser = options?.notifyUser ?? true;
     const notifyAdmin = options?.notifyAdmin ?? true;
     const isWaitingRefund = newStatus === bookings_status.WAITING_REFUND;
-
+    
     this.dispatchMail(updated, newStatus, {
       toUser: notifyUser && !isWaitingRefund,
       toAdmin: notifyAdmin,
     });
+
+    if (notifyUser && !isWaitingRefund) {
+      try {
+        if (newStatus === bookings_status.CONFIRMED) {
+          await this.bookingNotifications.notifyBookingConfirmed(
+            updated.userId,
+            updated.id,
+          );
+        } else if (
+          newStatus === bookings_status.CANCELLED ||
+          newStatus === bookings_status.CANCELLED_BY_ADMIN
+        ) {
+          const byAdmin = newStatus === bookings_status.CANCELLED_BY_ADMIN;
+          await this.bookingNotifications.notifyBookingCancelled(
+            updated.userId,
+            updated.id,
+            byAdmin,
+          );
+          // Noti admin khi booking bị hủy bởi user (không phải admin hủy)
+          if (!byAdmin) {
+            this.bookingNotifications
+              .notifyAdminBookingCancelled(updated.id)
+              .catch((err) => console.error('Admin notification error:', err));
+          }
+        }
+        if (isWaitingRefund) {
+          await this.bookingNotifications.notifyBookingRefunded(
+            updated.userId,
+            updated.id,
+            Number(options?.paidAmount || 0),
+          );
+        }
+      } catch (err) {
+        console.error('Notification error:', err);
+      }
+    }
 
     return updated;
   }
@@ -119,6 +157,28 @@ export class BookingLifecycleService {
       });
 
       this.sendStatusMail(updated, newStatus);
+
+      try {
+        if (paidAmount > 0) {
+          await this.bookingNotifications.notifyPaymentSuccess(
+            updated.userId,
+            updated.id,
+            paidAmount,
+          );
+          if (newStatus === bookings_status.CONFIRMED) {
+            await this.bookingNotifications.notifyBookingConfirmed(
+              updated.userId,
+              updated.id,
+            );
+          }
+          // Noti admin về thanh toán (fire-and-forget)
+          this.bookingNotifications
+            .notifyAdminPaymentSuccess(updated.id, paidAmount, updated.guestFullName)
+            .catch((err) => console.error('Admin notification error:', err));
+        }
+      } catch (err) {
+        console.error('Notification error:', err);
+      }
 
       return updated;
     });
@@ -169,3 +229,5 @@ export class BookingLifecycleService {
     }
   }
 }
+
+

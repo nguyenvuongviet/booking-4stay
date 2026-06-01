@@ -18,6 +18,7 @@ import {
   sortPolicyDesc,
 } from './booking.constants';
 import { CancelBookingDto } from './dto/cancel-booking.dto';
+import { BookingNotificationDispatcher } from '../notification/booking-notification.dispatcher';
 
 interface RefundResult {
   refundAmount: number;
@@ -36,7 +37,8 @@ export class BookingCancelRefundService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly lifecycleService: BookingLifecycleService,
-  ) {}
+    private readonly notificationService: BookingNotificationDispatcher,
+  ) { }
 
   /**
    * Khách hàng hoặc Admin chủ động hủy đơn đặt phòng.
@@ -100,6 +102,33 @@ export class BookingCancelRefundService {
       });
 
       this.lifecycleService.sendStatusMail(updated, finalStatus);
+
+      try {
+        await this.notificationService.notifyBookingCancelled(
+          updated.userId,
+          updated.id,
+          false,
+        );
+        await this.notificationService.notifyAdminBookingCancelled(
+          updated.id,
+          updated.guestFullName,
+          Number(updated.refundAmount || 0),
+        )
+          .catch((err) => console.error('Admin notification error:', err));
+
+
+        if (updated.status === bookings_status.WAITING_REFUND) {
+          this.notificationService
+            .notifyAdminBookingWaitingRefund(
+              updated.id,
+              Number(updated.refundAmount || 0),
+              updated.guestFullName,
+            )
+            .catch((err) => console.error('Admin notification error:', err));
+        }
+      } catch (err) {
+        console.error('Notification error:', err);
+      }
 
       return { message, booking: sanitizeBooking(updated) };
     });
@@ -175,6 +204,26 @@ export class BookingCancelRefundService {
 
       this.lifecycleService.sendStatusMail(updated, finalStatus);
 
+      try {
+        await this.notificationService.notifyBookingCancelled(
+          updated.userId,
+          updated.id,
+          true, // byAdmin = true
+        );
+
+        if (updated.status === bookings_status.WAITING_REFUND) {
+          this.notificationService
+            .notifyAdminBookingWaitingRefund(
+              updated.id,
+              Number(updated.refundAmount || 0),
+              updated.guestFullName,
+            )
+            .catch((err) => console.error('Admin notification error:', err));
+        }
+      } catch (err) {
+        console.error('Notification error:', err);
+      }
+
       return {
         message:
           finalRefund > 0
@@ -226,6 +275,17 @@ export class BookingCancelRefundService {
       });
 
       this.lifecycleService.sendStatusMail(updated, bookings_status.REFUNDED);
+
+      // Emit refund confirmed notification
+      try {
+        await this.notificationService.notifyBookingRefunded(
+          updated.userId,
+          updated.id,
+          refundAmount,
+        );
+      } catch (err) {
+        console.error('Notification error:', err);
+      }
 
       return updated;
     });

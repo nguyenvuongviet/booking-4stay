@@ -273,23 +273,23 @@ model user_roles {
 }
 
 model users {
-  id              Int              @id @default(autoincrement()) @db.UnsignedInt
-  email           String           @unique(map: "email") @db.VarChar(255)
-  password        String?          @db.VarChar(255)
-  firstName       String           @db.VarChar(255)
-  lastName        String           @db.VarChar(255)
-  phoneNumber     String?          @db.VarChar(20)
-  dateOfBirth     DateTime?        @db.Date
-  gender          users_gender?
-  avatar          String?          @db.Text
-  country         String?          @db.VarChar(100)
-  isVerified      Boolean          @default(false)
-  isActive        Boolean          @default(false)
-  googleId        String?          @db.VarChar(255)
-  provider        users_provider   @default(LOCAL)
-  lastLogin       DateTime?        @db.Timestamp(0)
-  isDeleted       Boolean          @default(false)
-  deletedAt       DateTime?        @db.Timestamp(0)
+  id                  Int              @id @default(autoincrement()) @db.UnsignedInt
+  email               String           @unique(map: "email") @db.VarChar(255)
+  password            String?          @db.VarChar(255)
+  firstName           String           @db.VarChar(255)
+  lastName            String           @db.VarChar(255)
+  phoneNumber         String?          @db.VarChar(20)
+  dateOfBirth         DateTime?        @db.Date
+  gender              users_gender?
+  avatar              String?          @db.Text
+  country             String?          @db.VarChar(100)
+  isVerified          Boolean          @default(false)
+  isActive            Boolean          @default(false)
+  googleId            String?          @db.VarChar(255)
+  provider            users_provider   @default(LOCAL)
+  lastLogin           DateTime?        @db.Timestamp(0)
+  isDeleted           Boolean          @default(false)
+  deletedAt           DateTime?        @db.Timestamp(0)
   createdAt           DateTime         @default(now()) @db.Timestamp(0)
   updatedAt           DateTime         @default(now()) @db.Timestamp(0)
   bookings            bookings[]
@@ -301,6 +301,7 @@ model users {
   guest_conversations conversations[]  @relation("GuestConversations")
   host_conversations  conversations[]  @relation("HostConversations")
   messages            messages[]
+  notifications       notifications[]
 
   reviews               reviews[]
   rooms                 rooms[]
@@ -405,6 +406,21 @@ enum bookings_status {
   CANCELLED_BY_ADMIN
   WAITING_REFUND
   REFUNDED
+}
+
+model notifications {
+  id        Int      @id @default(autoincrement()) @db.UnsignedInt
+  userId    Int      @db.UnsignedInt
+  type      String   @db.VarChar(100)
+  title     String   @db.VarChar(255)
+  body      String   @db.VarChar(1000)
+  data      Json?
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now()) @db.Timestamp(0)
+
+  user users @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([userId], map: "idx_notifications_user")
 }
 
 model booking_logs {
@@ -576,19 +592,19 @@ enum blog_comments_status {
 }
 
 model conversations {
-  id            Int        @id @default(autoincrement()) @db.UnsignedInt
-  guestId       Int        @db.UnsignedInt
-  hostId        Int        @db.UnsignedInt
-  roomId        Int?       @db.UnsignedInt
-  lastMessageId Int?       @db.UnsignedInt
-  isDeleted     Boolean    @default(false)
-  createdAt     DateTime   @default(now()) @db.Timestamp(0)
-  updatedAt     DateTime   @default(now()) @db.Timestamp(0)
+  id            Int      @id @default(autoincrement()) @db.UnsignedInt
+  guestId       Int      @db.UnsignedInt
+  hostId        Int      @db.UnsignedInt
+  roomId        Int?     @db.UnsignedInt
+  lastMessageId Int?     @db.UnsignedInt
+  isDeleted     Boolean  @default(false)
+  createdAt     DateTime @default(now()) @db.Timestamp(0)
+  updatedAt     DateTime @default(now()) @db.Timestamp(0)
 
-  guest        users      @relation("GuestConversations", fields: [guestId], references: [id], onDelete: Cascade)
-  host         users      @relation("HostConversations", fields: [hostId], references: [id], onDelete: Cascade)
-  room         rooms?     @relation(fields: [roomId], references: [id], onDelete: SetNull)
-  messages     messages[]
+  guest    users      @relation("GuestConversations", fields: [guestId], references: [id], onDelete: Cascade)
+  host     users      @relation("HostConversations", fields: [hostId], references: [id], onDelete: Cascade)
+  room     rooms?     @relation(fields: [roomId], references: [id], onDelete: SetNull)
+  messages messages[]
 
   @@unique([guestId, hostId, roomId], map: "uq_guest_host_room")
   @@index([guestId])
@@ -621,7 +637,7 @@ model push_subscriptions {
   createdAt DateTime @default(now()) @db.Timestamp(0)
   updatedAt DateTime @default(now()) @db.Timestamp(0)
 
-  users     users    @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_push_sub_user")
+  users users @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_push_sub_user")
 
   @@index([userId])
 }

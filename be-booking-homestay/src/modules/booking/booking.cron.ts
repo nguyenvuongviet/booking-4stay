@@ -1,9 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { bookings_status } from '@prisma/client';
-import { endOfDay, startOfDay, subMinutes } from 'date-fns';
+import { addDays, endOfDay, startOfDay, subMinutes } from 'date-fns';
 import { AppConfigsService } from '../app-configs/app-configs.service';
 import { AppConfigKey } from '../app-configs/constants/app-config.constant';
+import { BookingNotificationDispatcher } from '../notification/booking-notification.dispatcher';
 import { PrismaService } from '../prisma/prisma.service';
 import { BookingLifecycleService } from './booking-lifecycle.service';
 
@@ -15,6 +16,7 @@ export class BookingCron {
     private readonly prisma: PrismaService,
     private readonly lifecycleService: BookingLifecycleService,
     private readonly appConfigsService: AppConfigsService,
+    private readonly bookingNotifications: BookingNotificationDispatcher,
   ) {}
 
   /**
@@ -150,6 +152,48 @@ export class BookingCron {
       }
     } catch (e) {
       this.logger.error('[Cron] Lỗi khi dọn dẹp dữ liệu Calendar cũ', e);
+    }
+  }
+
+  /**
+   * Chạy lúc 9:00 mỗi ngày.
+   * Nhắc khách có booking sắp check-in vào ngày mai.
+   */
+  @Cron('0 9 * * *', { timeZone: 'Asia/Ho_Chi_Minh' })
+  async sendCheckInReminders() {
+    const tomorrow = startOfDay(addDays(new Date(), 1));
+    const bookings = await this.prisma.bookings.findMany({
+      where: {
+        isDeleted: false,
+        status: {
+          in: [bookings_status.CONFIRMED, bookings_status.PARTIALLY_PAID],
+        },
+        checkIn: { gte: tomorrow, lt: endOfDay(tomorrow) },
+      },
+      select: {
+        id: true,
+        userId: true,
+        checkIn: true,
+      },
+    });
+
+    for (const booking of bookings) {
+      try {
+        await this.bookingNotifications.notifyCheckinReminder(
+          booking.userId,
+          booking.id,
+          new Date(booking.checkIn),
+        );
+      } catch (err) {
+        this.logger.error(
+          `[Cron] Failed to send check-in reminder for booking ${booking.id}`,
+          err as any,
+        );
+      }
+    }
+
+    if (bookings.length) {
+      this.logger.log(`[Cron] Sent check-in reminders: ${bookings.length}.`);
     }
   }
 }

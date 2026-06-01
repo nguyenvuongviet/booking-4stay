@@ -17,6 +17,7 @@ import { sanitizeBooking } from 'src/utils/sanitize/booking.sanitize';
 import { AppConfigsService } from '../app-configs/app-configs.service';
 import { AppConfigKey } from '../app-configs/constants/app-config.constant';
 import { MailService } from '../mail/mail.service';
+import { BookingNotificationDispatcher } from '../notification/booking-notification.dispatcher';
 import { PrismaService } from '../prisma/prisma.service';
 import { Role } from '../user/dto/enum.dto';
 import { BookingLifecycleService } from './booking-lifecycle.service';
@@ -41,7 +42,8 @@ export class BookingService {
     private readonly appConfigsService: AppConfigsService,
     private readonly lifecycleService: BookingLifecycleService,
     private readonly loyalty: LoyaltyProgram,
-  ) {}
+    private readonly notificationService: BookingNotificationDispatcher,
+  ) { }
 
   /**˚
    * Xem trước thông tin đặt phòng (Pre-check).
@@ -188,6 +190,17 @@ export class BookingService {
     this.mailService
       .sendBookingMail(ADMIN_EMAIL, 'BOOKING_PENDING', booking)
       .catch((e) => console.error('Admin Mail Error:', e));
+
+    // create notification for user
+    try {
+      await this.notificationService.notifyBookingCreated(userId, booking.id);
+      // Notify admin about new booking
+      this.notificationService
+        .notifyAdminNewBooking(booking.id, guestFullName)
+        .catch((err) => console.error('Admin notification error:', err));
+    } catch (err) {
+      console.error('Notification error:', err);
+    }
 
     return {
       message: 'Tạo đơn đặt thành công',
@@ -340,6 +353,18 @@ export class BookingService {
     this.mailService
       .sendBookingMail(ADMIN_EMAIL, mailType, booking)
       .catch((e) => console.error('Admin Mail Error:', e));
+
+    // notify guest user if account exists
+    try {
+      if (booking.guestUserId && booking.guestUserId !== WALK_IN_GUEST_ID) {
+        await this.notificationService.notifyBookingConfirmed(
+          booking.guestUserId,
+          booking.id,
+        );
+      }
+    } catch (err) {
+      console.error('Notification Error:', err);
+    }
 
     return {
       message: booking.accountCreated

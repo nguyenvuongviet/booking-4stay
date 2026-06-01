@@ -20,6 +20,7 @@ import { ReviewModule } from './modules/review/review.module';
 import { RoomModule } from './modules/room/room.module';
 import { TokenModule } from './modules/token/token.module';
 import { UserModule } from './modules/user/user.module';
+import { NotificationModule } from './modules/notification/notification.module';
 import { ChatModule } from './modules/chatbot/chatbot.module';
 import { MessageModule } from './modules/message/message.module';
 
@@ -42,6 +43,7 @@ import { MessageModule } from './modules/message/message.module';
     FavoriteModule,
     RecommendationModule,
     BlogModule,
+    NotificationModule,
     ChatModule,
     MessageModule,
   ],

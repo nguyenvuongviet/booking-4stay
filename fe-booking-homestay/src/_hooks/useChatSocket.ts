@@ -8,13 +8,13 @@ import {
   isChatPage,
   toNotificationPayload,
 } from "@/_helper/chat-realtime.helper";
+import { IUser } from "@/models/User";
 import {
   ChatNotificationPayload,
   IConversation,
   IMessage,
   TypingUser,
 } from "@/types/chat";
-import { IUser } from "@/models/User";
 import { Dispatch, RefObject, SetStateAction, useEffect, useState } from "react";
 import { io, Socket } from "socket.io-client";
 
@@ -68,6 +68,17 @@ export function useChatSocket({
     });
 
     setSocket(socketClient);
+
+    socketClient.on("connect_error", (err) => {
+      console.warn("[Socket Chat] Connect error:", err.message);
+      if (err.message === "jwt expired") {
+        const newToken = getStoredAccessToken();
+        if (newToken) {
+          socketClient.auth = { token: newToken };
+          socketClient.connect();
+        }
+      }
+    });
 
     socketClient.on("connect", () => {
       console.log("[Socket] Connected");

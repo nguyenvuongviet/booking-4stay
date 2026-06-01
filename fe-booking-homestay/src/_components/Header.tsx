@@ -2,22 +2,38 @@
 
 import { useAuth } from "@/context/auth-context";
 import { useLang } from "@/context/lang-context";
+import { useNotifications } from "@/context/notification-context";
 import { AnimatePresence, motion } from "framer-motion";
 import {
+  Bell,
   CalendarDays,
   KeyRound,
   LogOut,
   Menu,
-  User as UserIcon
+  User as UserIcon,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
+import NotificationList from "./NotificationList";
 import { Button } from "./ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { UserAvatar } from "./UserAvatar";
+
+function NotificationBadge() {
+  const { notifications } = useNotifications();
+  const unreadCount = notifications.filter(
+    (n) => !n.read && !String(n.type).startsWith("ADMIN_"),
+  ).length;
+  if (!unreadCount) return null;
+  return (
+    <span className="absolute top-0 right-0 inline-flex items-center justify-center w-4 h-4 rounded-full bg-red-500 text-white text-[10px]">
+      {unreadCount > 9 ? "9+" : unreadCount}
+    </span>
+  );
+}
 
 export default function Header() {
   const { openSignIn, openNewPassword, user, logout } = useAuth();
@@ -37,10 +53,11 @@ export default function Header() {
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-40 transition-all duration-500 ${isScrolled
+      className={`fixed top-0 left-0 right-0 z-40 transition-all duration-500 ${
+        isScrolled
           ? "py-2 bg-white/80 dark:bg-black/80 backdrop-blur-xl border-b border-white/20 shadow-lg"
           : "py-4 bg-transparent"
-        }`}
+      }`}
     >
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
@@ -57,10 +74,11 @@ export default function Header() {
                 />
               </div>
               <span
-                className={`elegant-heading text-2xl tracking-tighter transition-colors ${!isScrolled && pathname === "/"
+                className={`elegant-heading text-2xl tracking-tighter transition-colors ${
+                  !isScrolled && pathname === "/"
                     ? "text-white"
                     : "text-foreground"
-                  }`}
+                }`}
               >
                 4STAY
               </span>
@@ -77,12 +95,13 @@ export default function Header() {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`relative elegant-subheading tracking-wide transition-all duration-300 hover:text-primary ${pathname === item.href
+                className={`relative elegant-subheading tracking-wide transition-all duration-300 hover:text-primary ${
+                  pathname === item.href
                     ? "text-primary elegant-sans"
                     : !isScrolled && pathname === "/"
                       ? "text-white/80"
                       : "text-muted-foreground"
-                  }`}
+                }`}
               >
                 {item.label}
                 {pathname === item.href && (
@@ -97,14 +116,38 @@ export default function Header() {
 
           <div className="flex items-center gap-4">
             {user ? (
-              <div className="relative">
+              <div className="flex items-center gap-2">
+                {/* Notification icon */}
+                <div className="flex items-center">
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <button
+                        className={`relative flex items-center p-2 rounded-full bg-white/10 border transition-all duration-300 hover:shadow-md ${!isScrolled && pathname === "/" ? "border-white/20 hover:bg-white/20" : ""}`}
+                      >
+                        <Bell
+                          className={`w-5 h-5 ${!isScrolled && pathname === "/" ? "text-white/70" : "text-muted-foreground"}`}
+                        />
+                        <NotificationBadge />
+                      </button>
+                    </PopoverTrigger>
+
+                    <PopoverContent
+                      className="w-96 p-2 bg-white/90 dark:bg-black/90 backdrop-blur-2xl shadow-2xl rounded-xl border border-white/20 z-999"
+                      align="end"
+                      sideOffset={8}
+                    >
+                      <NotificationList />
+                    </PopoverContent>
+                  </Popover>
+                </div>
                 <Popover open={openMenu} onOpenChange={setOpenMenu}>
                   <PopoverTrigger asChild>
                     <button
-                      className={`flex items-center gap-2 p-1.5 rounded-full bg-white/10 border transition-all duration-300 hover:shadow-md ${!isScrolled && pathname === "/"
+                      className={`flex items-center gap-2 p-1.5 rounded-full bg-white/10 border transition-all duration-300 hover:shadow-md ${
+                        !isScrolled && pathname === "/"
                           ? "border-white/20 hover:bg-white/20"
                           : ""
-                        }`}
+                      }`}
                     >
                       <UserAvatar
                         avatarUrl={user?.avatar}
@@ -112,18 +155,20 @@ export default function Header() {
                         size="sm"
                       />
                       <span
-                        className={`hidden sm:block elegant-subheading text-xs font-bold px-2 ${!isScrolled && pathname === "/"
+                        className={`hidden sm:block elegant-subheading text-xs font-bold px-2 ${
+                          !isScrolled && pathname === "/"
                             ? "text-white"
                             : "text-foreground"
-                          }`}
+                        }`}
                       >
                         {user.firstName}
                       </span>
                       <Menu
-                        className={`w-4 h-4 mr-2 ${!isScrolled && pathname === "/"
+                        className={`w-4 h-4 mr-2 ${
+                          !isScrolled && pathname === "/"
                             ? "text-white/70"
                             : "text-muted-foreground"
-                          }`}
+                        }`}
                       />
                     </button>
                   </PopoverTrigger>
@@ -196,11 +241,13 @@ export default function Header() {
             )}
 
             <button
-              className={`md:hidden p-2 rounded-full transition-colors ${!isScrolled && pathname === "/"
+              type="button"
+              className={`md:hidden p-2 rounded-full transition-colors ${
+                !isScrolled && pathname === "/"
                   ? "text-white hover:bg-white/10"
                   : "text-foreground hover:bg-secondary"
-                }`}
-              onClick={() => setOpenMobile(!openMobile)}
+              }`}
+              onClick={() => setOpenMobile((prev) => !prev)}
             >
               <Menu size={24} />
             </button>

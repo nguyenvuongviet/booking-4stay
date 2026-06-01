@@ -1,11 +1,37 @@
 "use client";
 
-import { Bell, Lock, LogOut, Settings, User } from "lucide-react";
-import { useMemo, useRef, useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { useAuth } from "@/context/auth-context";
 import { UserAvatar } from "@/_components/UserAvatar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/_components/ui/popover";
 import { toast } from "@/_components/ui/use-toast";
+import { useAuth } from "@/context/auth-context";
+import { useNotifications } from "@/context/notification-context";
+import { Bell, Lock, LogOut, Settings, User } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useRef, useState } from "react";
+import AdminNotificationList from "./AdminNotificationList";
+
+function AdminNotificationBadge() {
+  const { notifications } = useNotifications();
+  const unreadCount = notifications.filter(
+    (n) =>
+      !n.read &&
+      (n.type === "ADMIN_BOOKING_CREATED" ||
+        n.type === "ADMIN_BOOKING_CANCELLED" ||
+        n.type === "ADMIN_BOOKING_WAITING_REFUND" ||
+        n.type === "ADMIN_PAYMENT_SUCCESS" ||
+        n.type === "NEW_MESSAGE"),
+  ).length;
+  if (!unreadCount) return null;
+  return (
+    <span className="absolute -top-0 -right-0 inline-flex items-center justify-center w-4 h-4 rounded-full bg-red-500 text-white text-[10px]">
+      {unreadCount > 9 ? "9+" : unreadCount}
+    </span>
+  );
+}
 
 export function AdminHeader() {
   const router = useRouter();
@@ -45,13 +71,24 @@ export function AdminHeader() {
   return (
     <header className="h-20 bg-card border-b border-border flex items-center justify-end px-6 z-40">
       <div className="flex items-center gap-4">
-        <button
-          className="relative p-2 hover:bg-muted/80 rounded-lg transition-colors cursor-pointer"
-          aria-label="Thông báo"
-        >
-          <Bell className="w-5 h-5 text-foreground" />
-          <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full " />
-        </button>
+        <Popover>
+          <PopoverTrigger asChild>
+            <button
+              className="relative p-2 hover:bg-muted/80 rounded-lg transition-colors cursor-pointer"
+              aria-label="Thông báo"
+            >
+              <Bell className="w-5 h-5 text-foreground" />
+              <AdminNotificationBadge />
+            </button>
+          </PopoverTrigger>
+          <PopoverContent
+            className="w-96 p-2 bg-card shadow-lg rounded-xl border border-border z-50"
+            align="end"
+            sideOffset={8}
+          >
+            <AdminNotificationList />
+          </PopoverContent>
+        </Popover>
 
         <div className="relative" ref={menuRef}>
           <button

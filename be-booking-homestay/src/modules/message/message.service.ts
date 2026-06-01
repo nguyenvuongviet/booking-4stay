@@ -1,9 +1,13 @@
 import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { NotificationService } from '../notification/notification.service';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class MessageService {
-  constructor(private readonly prismaService: PrismaService) { }
+  constructor(
+    private readonly prismaService: PrismaService,
+    private readonly notificationService: NotificationService,
+  ) { }
 
   // Lấy danh sách các cuộc trò chuyện của người dùng (Guest hoặc Host)
   async getConversations(userId: number) {
@@ -207,6 +211,19 @@ export class MessageService {
         updatedAt: new Date(),
       },
     });
+
+    // 4. Gửi notification realtime cho người nhận (người còn lại trong conversation)
+    try {
+      const recipientId = conversation.guestId === senderId ? conversation.hostId : conversation.guestId;
+      if (recipientId && recipientId !== senderId) {
+        const snippet = (content || '').slice(0, 200);
+        // notifyNewMessage accepts array of recipients
+        await this.notificationService.notifyNewMessage([recipientId], senderId, conversationId, snippet);
+      }
+    } catch (e) {
+      // don't fail message save if notification fails
+      console.error('notifyNewMessage failed', e);
+    }
 
     return message;
   }
