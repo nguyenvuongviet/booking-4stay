@@ -8,6 +8,7 @@ import { STORAGE_KEYS } from "@/constants";
 import { IUser } from "@/models/User";
 import api from "@/services/api";
 import { get_profile, login } from "@/services/authApi";
+import { deletePushSubscriptions } from "@/services/chatApi";
 import { useRouter } from "next/navigation";
 import {
   createContext,
@@ -23,7 +24,7 @@ interface AuthContextType {
   user: IUser | null;
   setUser: (user: IUser | null) => void;
   updateUser: (user: IUser) => void;
-  logout: () => void;
+  logout: () => Promise<void>;
   openSignIn: () => void;
   openSignUp: () => void;
   openOTP: () => void;
@@ -88,7 +89,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [updateUser]);
 
-  const logout = () => {
+  const logout = async () => {
+    try {
+      await deletePushSubscriptions();
+    } catch (error) {
+      console.warn("Delete push subscriptions error:", error);
+    }
+
+    try {
+      if ("serviceWorker" in navigator) {
+        const registration = await navigator.serviceWorker.getRegistration();
+        const subscription = await registration?.pushManager.getSubscription();
+        await subscription?.unsubscribe();
+      }
+    } catch (error) {
+      console.warn("Browser push unsubscribe error:", error);
+    }
+
     localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
     setUser(null);
     api.defaults.headers.Authorization = "";

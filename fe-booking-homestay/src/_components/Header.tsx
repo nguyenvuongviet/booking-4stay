@@ -25,7 +25,10 @@ import { UserAvatar } from "./UserAvatar";
 function NotificationBadge() {
   const { notifications } = useNotifications();
   const unreadCount = notifications.filter(
-    (n) => !n.read && !String(n.type).startsWith("ADMIN_"),
+    (n) =>
+      !n.read &&
+      !String(n.type).startsWith("ADMIN_") &&
+      n.type !== "NEW_MESSAGE",
   ).length;
   if (!unreadCount) return null;
   return (

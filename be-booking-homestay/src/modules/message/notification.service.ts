@@ -70,6 +70,13 @@ export class NotificationService {
     return { saved: true };
   }
 
+  async deleteSubscriptions(userId: number) {
+    const result = await (this.prismaService as any).push_subscriptions.deleteMany({
+      where: { userId },
+    });
+    return { deleted: Number(result?.count || 0) };
+  }
+
   async sendChatNotification(
     userId: number,
     payload: {

@@ -80,6 +80,16 @@ export class BookingNotificationDispatcher {
           );
         }
         break;
+      case 'ADMIN_CHECKIN_REMINDER':
+      case 'admin_checkin_reminder':
+        if (bookingId) {
+          return this.notifyAdminCheckinReminder(
+            bookingId,
+            data?.guestName,
+            new Date(data?.checkIn || Date.now()),
+          );
+        }
+        break;
       case 'ADMIN_BOOKING_CANCELLED':
       case 'admin_booking_cancelled':
         if (bookingId) {
@@ -248,6 +258,36 @@ export class BookingNotificationDispatcher {
     );
   }
 
+  async notifyAdminCheckinReminder(
+    bookingId: number,
+    guestName?: string,
+    checkIn?: Date,
+  ) {
+    const adminIds = await this.getAdminUserIds();
+    if (adminIds.length === 0) return;
+
+    const promises = adminIds.map((adminId) =>
+      this.notificationService.create({
+        userId: adminId,
+        type: NotificationType.ADMIN_CHECKIN_REMINDER,
+        title: 'Sap check-in',
+        body: `Don dat phong #${bookingId}${guestName ? ` tu ${guestName}` : ''} se check-in vao ngay mai.`,
+        data: {
+          actionUrl: `/admin/bookings/${bookingId}`,
+          targetType: 'booking',
+          targetId: bookingId,
+          bookingId,
+          guestName,
+          checkIn,
+        },
+      }),
+    );
+
+    await Promise.all(promises).catch((err) =>
+      console.error('Error sending admin notifications:', err),
+    );
+  }
+
   async notifyAdminPaymentSuccess(
     bookingId: number,
     paidAmount: number,
@@ -291,7 +331,7 @@ export class BookingNotificationDispatcher {
         userId: adminId,
         type: NotificationType.ADMIN_BOOKING_CANCELLED,
         title: 'Booking bi huy',
-        body: `Don #${bookingId}${guestName ? ` (${guestName})` : ''} da bi huy boi khach${refundAmount && refundAmount > 0 ? `. Can hoan ${refundAmount.toLocaleString()} d` : '.'}`,
+        body: `Don #${bookingId} da bi huy boi khach hang ${guestName || ''}.`,
         data: {
           actionUrl: `/admin/bookings/${bookingId}`,
           targetType: 'booking',
@@ -335,31 +375,6 @@ export class BookingNotificationDispatcher {
 
     await Promise.all(promises).catch((err) =>
       console.error('Error sending admin waiting-refund notifications:', err),
-    );
-  }
-
-  async notifyAdminNewMessage(conversationId: number, fromUserId: number) {
-    const adminIds = await this.getAdminUserIds();
-    if (adminIds.length === 0) return;
-
-    const promises = adminIds.map((adminId) =>
-      this.notificationService.create({
-        userId: adminId,
-        type: NotificationType.NEW_MESSAGE,
-        title: 'Tin nhan moi',
-        body: 'Ban co tin nhan moi tu khach hang.',
-        data: {
-          actionUrl: '/admin/chat',
-          targetType: 'conversation',
-          targetId: conversationId,
-          conversationId,
-          fromUserId,
-        },
-      }),
-    );
-
-    await Promise.all(promises).catch((err) =>
-      console.error('Error sending admin notifications:', err),
     );
   }
 }

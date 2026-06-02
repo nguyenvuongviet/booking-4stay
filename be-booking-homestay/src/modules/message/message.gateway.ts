@@ -223,7 +223,7 @@ export class MessageGateway implements OnGatewayConnection, OnGatewayDisconnect 
       }
 
       // 2. Gửi Web Push nếu đối phương không ở trong phòng chat này (offline hoặc online nhưng ở trang khác)
-      if (!isReceiverInChatRoom) {
+      if (!isReceiverOnline) {
         console.log(`[Chat] Gửi Web Push tới user ${receiverId}`);
         await this.notificationService.sendChatNotification(receiverId, {
           conversationId: payload.conversationId,
@@ -318,3 +318,4 @@ export class MessageGateway implements OnGatewayConnection, OnGatewayDisconnect 
     }
   }
 }
+

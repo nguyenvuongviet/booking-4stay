@@ -213,17 +213,24 @@ export class MessageService {
     });
 
     // 4. Gửi notification realtime cho người nhận (người còn lại trong conversation)
-    try {
-      const recipientId = conversation.guestId === senderId ? conversation.hostId : conversation.guestId;
-      if (recipientId && recipientId !== senderId) {
-        const snippet = (content || '').slice(0, 200);
-        // notifyNewMessage accepts array of recipients
-        await this.notificationService.notifyNewMessage([recipientId], senderId, conversationId, snippet);
-      }
-    } catch (e) {
-      // don't fail message save if notification fails
-      console.error('notifyNewMessage failed', e);
-    }
+    // 4. Comment luong notification NEW_MESSAGE.
+    // try {
+    //   const recipientId =
+    //     conversation.guestId === senderId
+    //       ? conversation.hostId
+    //       : conversation.guestId;
+    //   if (recipientId && recipientId !== senderId) {
+    //     const snippet = (content || '').slice(0, 200);
+    //     await this.notificationService.notifyNewMessage(
+    //       [recipientId],
+    //       senderId,
+    //       conversationId,
+    //       snippet,
+    //     );
+    //   }
+    // } catch (e) {
+    //   console.error('notifyNewMessage failed', e);
+    // }
 
     return message;
   }
@@ -261,3 +268,4 @@ export class MessageService {
     return conv.guestId === userId || conv.hostId === userId;
   }
 }
+

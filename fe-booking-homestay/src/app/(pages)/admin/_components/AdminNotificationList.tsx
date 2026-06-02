@@ -5,9 +5,9 @@ import { Noti, useNotifications } from "@/context/notification-context";
 import { motion } from "framer-motion";
 import {
   Bell,
+  Calendar,
   CheckCircle2,
   CreditCard,
-  MessageSquare,
   XCircle,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -29,7 +29,8 @@ export default function AdminNotificationList() {
     type === "ADMIN_BOOKING_CANCELLED" ||
     type === "ADMIN_BOOKING_WAITING_REFUND" ||
     type === "ADMIN_PAYMENT_SUCCESS" ||
-    type === "NEW_MESSAGE";
+    type === "ADMIN_CHECKIN_REMINDER" 
+    // type === "NEW_MESSAGE";
   const adminNotifications = notifications.filter((n) =>
     isAdminNotificationType(n.type),
   );
@@ -72,24 +73,20 @@ export default function AdminNotificationList() {
     if (n.data?.bookingId || n.data?.targetId) {
       params.bookingId = n.data.bookingId || n.data.targetId || 0;
     }
-    if (n.data?.paidAmount) {
-      params.paidAmount = Number(n.data.paidAmount).toLocaleString();
-    }
-    if (n.data?.refundAmount) {
-      params.refundAmount = Number(n.data.refundAmount).toLocaleString();
-    }
-    if (n.data?.guestName) {
-      params.guestName = n.data.guestName;
-    }
-
-    if (
-      n.type === "NEW_MESSAGE" &&
-      n.body &&
-      n.body !== "Ban co tin nhan moi" &&
-      n.body !== "Bạn có tin nhắn mới"
-    ) {
-      return n.body;
-    }
+    params.paidAmount = n.data?.paidAmount
+      ? Number(n.data.paidAmount).toLocaleString()
+      : "";
+    params.refundAmount = n.data?.refundAmount
+      ? Number(n.data.refundAmount).toLocaleString()
+      : "";
+    params.guestName = n.data?.guestName || "";
+    params.guestNameText = n.data?.guestName ? ` từ ${n.data.guestName} ` : "";
+    params.paidAmountText = n.data?.paidAmount
+      ? ` ${Number(n.data.paidAmount).toLocaleString()}`
+      : "";
+    params.refundAmountText = n.data?.refundAmount
+      ? ` ${Number(n.data.refundAmount).toLocaleString()}`
+      : "";
 
     const translated = t(typeKey, params);
     if (translated === typeKey) {
@@ -103,11 +100,11 @@ export default function AdminNotificationList() {
       <CheckCircle2 className="text-green-500" size={20} />
     ),
     ADMIN_BOOKING_CANCELLED: <XCircle className="text-red-500" size={20} />,
-    ADMIN_BOOKING_WAITING_REFUND: (
-      <CreditCard className="text-amber-500" size={20} />
-    ),
     ADMIN_PAYMENT_SUCCESS: <CreditCard className="text-blue-500" size={20} />,
-    NEW_MESSAGE: <MessageSquare className="text-indigo-500" size={20} />,
+    ADMIN_CHECKIN_REMINDER: <Calendar className="text-purple-500" size={20} />,
+    ADMIN_BOOKING_WAITING_REFUND: (
+      <CreditCard className="text-red-500" size={20} />
+    ),
   };
   const defaultIcon = <Bell className="text-gray-500" size={20} />;
 
@@ -140,16 +137,18 @@ export default function AdminNotificationList() {
 
       <div className="mt-2 max-h-80 overflow-auto beautiful-scrollbar">
         {adminNotifications.length === 0 && (
-          <div className="p-4 text-sm text-muted-foreground">
-            {t("no_notifications")}
-          </div>
-        )}
-
-        {showUnreadOnly && adminUnreadCount === 0 && (
           <div className="p-4 text-sm text-muted-foreground text-center">
             {t("no_notifications")}
           </div>
         )}
+
+        {adminNotifications.length !== 0 &&
+          showUnreadOnly &&
+          adminUnreadCount === 0 && (
+            <div className="p-4 text-sm text-muted-foreground text-center">
+              {t("no_notifications")}
+            </div>
+          )}
 
         {visibleNotifications.map((n) => (
           <motion.div

@@ -8,10 +8,13 @@ import { AppConfigsModule } from './modules/app-configs/app-configs.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { BlogModule } from './modules/blog/blog.module';
 import { BookingModule } from './modules/booking/booking.module';
+import { ChatModule } from './modules/chatbot/chatbot.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { FavoriteModule } from './modules/favorite/favorite.module';
 import { LocationModule } from './modules/location/location.module';
 import { LoyaltyModule } from './modules/loyalty/loyalty.module';
+import { MessageModule } from './modules/message/message.module';
+import { NotificationModule } from './modules/notification/notification.module';
 import { OtpModule } from './modules/otp/otp.module';
 import { PayosModule } from './modules/payos/payos.module';
 import { PrismaService } from './modules/prisma/prisma.service';
@@ -20,9 +23,6 @@ import { ReviewModule } from './modules/review/review.module';
 import { RoomModule } from './modules/room/room.module';
 import { TokenModule } from './modules/token/token.module';
 import { UserModule } from './modules/user/user.module';
-import { NotificationModule } from './modules/notification/notification.module';
-import { ChatModule } from './modules/chatbot/chatbot.module';
-import { MessageModule } from './modules/message/message.module';
 
 @Module({
   imports: [

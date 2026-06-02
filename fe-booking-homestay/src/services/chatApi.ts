@@ -81,3 +81,7 @@ export async function savePushSubscription(
 ): Promise<void> {
   await api.post("/message/push/subscribe", subscription.toJSON());
 }
+
+export async function deletePushSubscriptions(): Promise<void> {
+  await api.post("/message/push/unsubscribe");
+}

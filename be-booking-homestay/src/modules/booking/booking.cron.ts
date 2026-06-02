@@ -1,9 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { bookings_status } from '@prisma/client';
+import { ADMIN_EMAIL } from 'src/common/constant/app.constant';
 import { addDays, endOfDay, startOfDay, subMinutes } from 'date-fns';
 import { AppConfigsService } from '../app-configs/app-configs.service';
 import { AppConfigKey } from '../app-configs/constants/app-config.constant';
+import { MailService } from '../mail/mail.service';
 import { BookingNotificationDispatcher } from '../notification/booking-notification.dispatcher';
 import { PrismaService } from '../prisma/prisma.service';
 import { BookingLifecycleService } from './booking-lifecycle.service';
@@ -17,7 +19,8 @@ export class BookingCron {
     private readonly lifecycleService: BookingLifecycleService,
     private readonly appConfigsService: AppConfigsService,
     private readonly bookingNotifications: BookingNotificationDispatcher,
-  ) {}
+    private readonly mailService: MailService,
+  ) { }
 
   /**
    * Chạy lúc 12:00 trưa mỗi ngày.
@@ -156,44 +159,125 @@ export class BookingCron {
   }
 
   /**
-   * Chạy lúc 9:00 mỗi ngày.
+   * Chạy mỗi 1 tiếng mỗi ngày.
    * Nhắc khách có booking sắp check-in vào ngày mai.
    */
-  @Cron('0 9 * * *', { timeZone: 'Asia/Ho_Chi_Minh' })
+  @Cron('0 * * * *', { timeZone: 'Asia/Ho_Chi_Minh' })
   async sendCheckInReminders() {
+    this.logger.log('Running check-in reminder cron');
+
+    const today = startOfDay(new Date());
+    const todayEnd = endOfDay(today);
     const tomorrow = startOfDay(addDays(new Date(), 1));
+    const tomorrowEnd = endOfDay(tomorrow);
+
     const bookings = await this.prisma.bookings.findMany({
       where: {
         isDeleted: false,
         status: {
           in: [bookings_status.CONFIRMED, bookings_status.PARTIALLY_PAID],
         },
-        checkIn: { gte: tomorrow, lt: endOfDay(tomorrow) },
+        checkIn: { gte: tomorrow, lt: tomorrowEnd },
       },
       select: {
         id: true,
         userId: true,
         checkIn: true,
+        checkOut: true,
+        guestFullName: true,
+        guestEmail: true,
+        guestPhoneNumber: true,
+        totalPrice: true,
+        paidAmount: true,
+        paymentMethod: true,
+        rooms: {
+          select: {
+            name: true,
+          },
+        },
       },
     });
 
+    if (!bookings.length) {
+      this.logger.log('[Cron] No check-in reminders to send.');
+      return;
+    }
+
+    const existingReminders = await this.prisma.notifications.findMany({
+      where: {
+        type: { in: ['CHECKIN_REMINDER', 'ADMIN_CHECKIN_REMINDER'] },
+        createdAt: { gte: today, lt: todayEnd },
+      },
+      select: {
+        type: true,
+        data: true,
+      },
+    });
+
+    const userRemindedBookings = new Set<number>();
+    const adminRemindedBookings = new Set<number>();
+
+    for (const notification of existingReminders) {
+      const bookingId = Number((notification.data as any)?.bookingId || 0);
+
+      if (!bookingId) continue;
+
+      if (notification.type === 'CHECKIN_REMINDER') {
+        userRemindedBookings.add(bookingId);
+      }
+
+      if (notification.type === 'ADMIN_CHECKIN_REMINDER') {
+        adminRemindedBookings.add(bookingId);
+      }
+    }
+
+    let userSentCount = 0;
+    let adminSentCount = 0;
+
     for (const booking of bookings) {
       try {
-        await this.bookingNotifications.notifyCheckinReminder(
-          booking.userId,
-          booking.id,
-          new Date(booking.checkIn),
-        );
-      } catch (err) {
+        if (!userRemindedBookings.has(booking.id)) {
+          await this.bookingNotifications.notifyCheckinReminder(
+            booking.userId,
+            booking.id,
+            new Date(booking.checkIn),
+          );
+          await this.mailService.sendCheckinReminderMail(
+            booking.guestEmail,
+            booking,
+          );
+
+          userSentCount += 1;
+        }
+
+        if (!adminRemindedBookings.has(booking.id)) {
+          await this.bookingNotifications.notifyAdminCheckinReminder(
+            booking.id,
+            booking.guestFullName,
+            new Date(booking.checkIn),
+          );
+          if (ADMIN_EMAIL) {
+            await this.mailService.sendCheckinReminderMail(
+              ADMIN_EMAIL,
+              booking,
+              true,
+            );
+          }
+
+          adminSentCount += 1;
+        }
+      } catch (error) {
         this.logger.error(
           `[Cron] Failed to send check-in reminder for booking ${booking.id}`,
-          err as any,
+          error as any,
         );
       }
     }
 
-    if (bookings.length) {
-      this.logger.log(`[Cron] Sent check-in reminders: ${bookings.length}.`);
+    if (userSentCount || adminSentCount) {
+      this.logger.log(
+        `[Cron] Sent check-in reminders: user=${userSentCount}, admin=${adminSentCount}.`,
+      );
     }
   }
 }

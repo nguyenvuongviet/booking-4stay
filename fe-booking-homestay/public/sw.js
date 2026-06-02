@@ -1,29 +1,36 @@
 self.addEventListener("push", (event) => {
   const payload = event.data ? event.data.json() : {};
   const title = payload.title || "4Stay";
+  const options = {
+    body: payload.body || "",
+    icon: payload.icon || "/4stay-logo.png",
+    badge: payload.badge || "/4stay-logo.png",
+    tag: payload.tag || "4stay-notification",
+    data: {
+      url: payload?.data?.url || "/",
+      conversationId: payload?.data?.conversationId,
+    },
+  };
 
   const promiseChain = self.clients
     .matchAll({ type: "window", includeUncontrolled: true })
     .then((windowClients) => {
-      let isUserActivelyChatting = false;
+      const isChatPush = Boolean(options.data.conversationId);
+      const hasAnyAppClient = windowClients.some((client) =>
+        client.url.startsWith(self.location.origin),
+      );
+      const hasVisibleClient = windowClients.some((client) => {
+        return (
+          client.url.startsWith(self.location.origin) &&
+          client.visibilityState === "visible"
+        );
+      });
 
-      for (const client of windowClients) {
-        const clientUrl = new URL(client.url);
-        // Nếu user đang mở trang inbox, tab đang hiển thị (visible) và được focus
-        if (
-          clientUrl.pathname === "/inbox" &&
-          client.visibilityState === "visible" &&
-          client.focused
-        ) {
-          isUserActivelyChatting = true;
-          break;
-        }
+      if (isChatPush && hasAnyAppClient) {
+        return;
       }
 
-      if (isUserActivelyChatting) {
-        console.log(
-          "[SW] User đang mở trang chat và active, không hiển thị push.",
-        );
+      if (!isChatPush && hasVisibleClient) {
         return;
       }
 
@@ -35,7 +42,7 @@ self.addEventListener("push", (event) => {
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  const url = event.notification.data?.url || "/inbox";
+  const url = event.notification.data?.url || "/";
 
   event.waitUntil(
     self.clients
@@ -43,10 +50,7 @@ self.addEventListener("notificationclick", (event) => {
       .then((clients) => {
         const targetUrl = new URL(url, self.location.origin).href;
         for (const client of clients) {
-          if (
-            "focus" in client &&
-            client.url.startsWith(self.location.origin)
-          ) {
+          if ("focus" in client && client.url.startsWith(self.location.origin)) {
             client.navigate(targetUrl);
             return client.focus();
           }

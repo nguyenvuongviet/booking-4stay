@@ -1,14 +1,34 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
+import {
+  VAPID_PRIVATE_KEY,
+  VAPID_PUBLIC_KEY,
+  VAPID_SUBJECT,
+} from 'src/common/constant/app.constant';
+import * as webpush from 'web-push';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationGateway } from './notification.gateway';
 import { NotificationData, NotificationType } from './notification.types';
 
 @Injectable()
 export class NotificationService {
+  private readonly logger = new Logger(NotificationService.name);
+  private readonly pushEnabled =
+    Boolean(VAPID_PUBLIC_KEY) &&
+    Boolean(VAPID_PRIVATE_KEY) &&
+    Boolean(VAPID_SUBJECT);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly gateway: NotificationGateway,
-  ) { }
+  ) {
+    if (this.pushEnabled) {
+      webpush.setVapidDetails(
+        VAPID_SUBJECT,
+        VAPID_PUBLIC_KEY,
+        VAPID_PRIVATE_KEY,
+      );
+    }
+  }
 
   async create(
     input:
@@ -96,7 +116,68 @@ export class NotificationService {
       this.gateway.emitToUser(userId, 'notification', noti);
     } catch { }
 
+    if (type !== NotificationType.NEW_MESSAGE) {
+      try {
+        await this.sendPushNotification(userId, {
+          title,
+          body,
+          url: String(data?.actionUrl || '/'),
+          tag: `notification-${type}-${noti.id}`,
+        });
+      } catch (error) {
+        this.logger.warn(
+          `Failed to send push notification for user ${userId}: ${(error as Error).message}`,
+        );
+      }
+    }
+
     return noti;
+  }
+
+  private async sendPushNotification(
+    userId: number,
+    payload: { title: string; body: string; url: string; tag: string },
+  ) {
+    if (!this.pushEnabled) return;
+
+    const subscriptions = await (this.prisma as any).push_subscriptions.findMany({
+      where: { userId },
+    });
+
+    await Promise.all(
+      subscriptions.map(async (subscription) => {
+        try {
+          await webpush.sendNotification(
+            {
+              endpoint: subscription.endpoint,
+              keys: {
+                p256dh: subscription.p256dh,
+                auth: subscription.auth,
+              },
+            },
+            JSON.stringify({
+              title: payload.title,
+              body: payload.body,
+              icon: '/4stay-logo.png',
+              badge: '/4stay-logo.png',
+              tag: payload.tag,
+              data: {
+                url: payload.url,
+              },
+            }),
+          );
+        } catch (error) {
+          const statusCode = (error as any)?.statusCode;
+          if (statusCode === 404 || statusCode === 410) {
+            await (this.prisma as any).push_subscriptions.delete({
+              where: { id: subscription.id },
+            });
+            return;
+          }
+          throw error;
+        }
+      }),
+    );
   }
 
   private async normalizeTypeByRecipientRole(
@@ -108,7 +189,8 @@ export class NotificationService {
     if (
       type !== NotificationType.BOOKING_CREATED &&
       type !== NotificationType.PAYMENT_SUCCESS &&
-      type !== NotificationType.BOOKING_CANCELLED
+      type !== NotificationType.BOOKING_CANCELLED &&
+      type !== NotificationType.CHECKIN_REMINDER
     ) {
       return type;
     }
@@ -133,6 +215,9 @@ export class NotificationService {
 
     if (type === NotificationType.BOOKING_CREATED) {
       return NotificationType.ADMIN_BOOKING_CREATED;
+    }
+    if (type === NotificationType.CHECKIN_REMINDER) {
+      return NotificationType.ADMIN_CHECKIN_REMINDER;
     }
     if (type === NotificationType.PAYMENT_SUCCESS) {
       return NotificationType.ADMIN_PAYMENT_SUCCESS;
@@ -201,33 +286,33 @@ export class NotificationService {
     });
   }
 
-  async notifyNewMessage(
-    recipients: number[],
-    fromUserId: number,
-    conversationId: number,
-    snippet: string,
-  ) {
-    const created: any[] = [];
-    for (const uid of recipients) {
-      try {
-        const noti = await this.create({
-          userId: uid,
-          type: NotificationType.NEW_MESSAGE,
-          title: 'Tin nhan moi',
-          body: snippet || 'Ban co tin nhan moi',
-          data: {
-            conversationId,
-            fromUserId,
-            targetType: 'conversation',
-            targetId: conversationId,
-            actionUrl: '/inbox',
-          },
-        });
-        created.push(noti);
-      } catch (e) {
-        console.error('notifyNewMessage error for user', uid, e);
-      }
-    }
-    return created;
-  }
+  // async notifyNewMessage(
+  //   recipients: number[],
+  //   fromUserId: number,
+  //   conversationId: number,
+  //   snippet: string,
+  // ) {
+  //   const created: any[] = [];
+  //   for (const uid of recipients) {
+  //     try {
+  //       const noti = await this.create({
+  //         userId: uid,
+  //         type: NotificationType.NEW_MESSAGE,
+  //         title: 'Tin nhan moi',
+  //         body: snippet || 'Ban co tin nhan moi',
+  //         data: {
+  //           conversationId,
+  //           fromUserId,
+  //           targetType: 'conversation',
+  //           targetId: conversationId,
+  //           actionUrl: '/inbox',
+  //         },
+  //       });
+  //       created.push(noti);
+  //     } catch (e) {
+  //       console.error('notifyNewMessage error for user', uid, e);
+  //     }
+  //   }
+  //   return created;
+  // }
 }

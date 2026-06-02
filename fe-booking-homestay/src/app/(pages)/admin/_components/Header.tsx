@@ -23,7 +23,7 @@ function AdminNotificationBadge() {
         n.type === "ADMIN_BOOKING_CANCELLED" ||
         n.type === "ADMIN_BOOKING_WAITING_REFUND" ||
         n.type === "ADMIN_PAYMENT_SUCCESS" ||
-        n.type === "NEW_MESSAGE"),
+        n.type === "ADMIN_CHECKIN_REMINDER"),
   ).length;
   if (!unreadCount) return null;
   return (

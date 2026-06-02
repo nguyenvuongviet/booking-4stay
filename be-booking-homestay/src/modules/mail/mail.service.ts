@@ -251,4 +251,29 @@ export class MailService {
       html: this.wrapTemplate(subject, body),
     });
   }
+
+  async sendCheckinReminderMail(to: string, booking: any, isAdmin = false) {
+    const subject = isAdmin
+      ? 'Nhắc lịch check-in ngày mai'
+      : 'Nhắc bạn check-in vào ngày mai';
+    const info = this.bookingInfoBlock(booking);
+    const body = isAdmin
+      ? `
+        ${info}
+        <p style="color:#6d28d9;"><b>Thong bao:</b> Booking này sẽ check-in vào ngày mai.</p>
+        <p>Vui lòng chủ động theo dõi và hỗ trợ khách hàng khi cần.</p>
+      `
+      : `
+        ${info}
+        <p style="color:#6d28d9;"><b>Thong bao:</b> Bạn sẽ check-in vào ngày mai.</p>
+        <p>Vui lòng kiểm tra lại lịch trình và liên hệ 4Stay nếu cần hỗ trợ.</p>
+      `;
+
+    await transporter.sendMail({
+      from: `"4Stay Support" <${SENDER_EMAIL}>`,
+      to,
+      subject: `4Stay - ${subject}`,
+      html: this.wrapTemplate(subject, body),
+    });
+  }
 }

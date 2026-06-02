@@ -6,9 +6,9 @@ import { motion } from "framer-motion";
 import {
   Bell,
   Calendar,
+  CheckCheck,
   CheckCircle2,
   CreditCard,
-  MessageSquare,
   XCircle,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -26,7 +26,7 @@ export default function NotificationList() {
   const { t } = useLang();
   const [showUnreadOnly, setShowUnreadOnly] = useState(false);
   const isUserNotificationType = (type: Noti["type"]) =>
-    !String(type).startsWith("ADMIN_");
+    !String(type).startsWith("ADMIN_") && type !== "NEW_MESSAGE";
   const userNotifications = notifications.filter((n) =>
     isUserNotificationType(n.type),
   );
@@ -87,18 +87,18 @@ export default function NotificationList() {
     if (n.data?.bookingId || n.data?.targetId) {
       params.bookingId = n.data.bookingId || n.data.targetId || 0;
     }
-    if (n.data?.paidAmount) {
-      params.paidAmount = Number(n.data.paidAmount).toLocaleString();
-    }
-
-    if (
-      n.type === "NEW_MESSAGE" &&
-      n.body &&
-      n.body !== "Ban co tin nhan moi" &&
-      n.body !== "Bạn có tin nhắn mới"
-    ) {
-      return n.body;
-    }
+    params.paidAmount = n.data?.paidAmount
+      ? Number(n.data.paidAmount).toLocaleString()
+      : "";
+    params.refundAmount = n.data?.refundAmount
+      ? Number(n.data.refundAmount).toLocaleString()
+      : "";
+    params.paidAmountText = n.data?.paidAmount
+      ? ` ${Number(n.data.paidAmount).toLocaleString()}`
+      : "";
+    params.refundAmountText = n.data?.refundAmount
+      ? ` ${Number(n.data.refundAmount).toLocaleString()}`
+      : "";
 
     const translated = t(typeKey, params);
     if (translated === typeKey) {
@@ -109,12 +109,11 @@ export default function NotificationList() {
 
   const iconMap: Partial<Record<Noti["type"], React.ReactElement>> = {
     BOOKING_CREATED: <CheckCircle2 className="text-green-500" size={20} />,
-    BOOKING_CONFIRMED: <CheckCircle2 className="text-green-500" size={20} />,
+    BOOKING_CONFIRMED: <CheckCheck className="text-green-500" size={20} />,
     BOOKING_CANCELLED: <XCircle className="text-red-500" size={20} />,
     PAYMENT_SUCCESS: <CreditCard className="text-blue-500" size={20} />,
     CHECKIN_REMINDER: <Calendar className="text-purple-500" size={20} />,
-    BOOKING_REFUNDED: <CheckCircle2 className="text-yellow-500" size={20} />,
-    NEW_MESSAGE: <MessageSquare className="text-indigo-500" size={20} />,
+    BOOKING_REFUNDED: <CreditCard className="text-green-500" size={20} />,
   };
   const defaultIcon = <Bell className="text-gray-500" size={20} />;
 
@@ -147,16 +146,18 @@ export default function NotificationList() {
 
       <div className="mt-2 max-h-80 overflow-auto beautiful-scrollbar">
         {userNotifications.length === 0 && (
-          <div className="p-4 text-sm text-muted-foreground">
+          <div className="p-4 text-sm text-muted-foreground  text-center">
             {t("no_notifications")}
           </div>
         )}
 
-        {showUnreadOnly && userUnreadCount === 0 && (
-          <div className="p-4 text-sm text-muted-foreground text-center">
-            {t("no_notifications")}
-          </div>
-        )}
+        {userNotifications.length !== 0 &&
+          showUnreadOnly &&
+          userUnreadCount === 0 && (
+            <div className="p-4 text-sm text-muted-foreground text-center">
+              {t("no_notifications")}
+            </div>
+          )}
 
         {visibleNotifications.map((n) => (
           <motion.div

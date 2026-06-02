@@ -103,4 +103,10 @@ export class MessageController {
     const userId = +req.user.id;
     return this.notificationService.saveSubscription(userId, subscription);
   }
+
+  @Post('push/unsubscribe')
+  unsubscribePush(@Req() req: any) {
+    const userId = +req.user.id;
+    return this.notificationService.deleteSubscriptions(userId);
+  }
 }
