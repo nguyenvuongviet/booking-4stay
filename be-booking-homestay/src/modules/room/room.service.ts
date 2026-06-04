@@ -2,6 +2,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { ensureDateRange } from 'src/utils/date.util';
 import { sanitizeRoom } from 'src/utils/sanitize/room.sanitize';
 import { ACTIVE_BOOKING_STATUSES } from '../booking/booking.constants';
+import { RagIndexService } from '../chatbot/rag-index.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateRoomDto } from './dto/create-room.dto';
 import { RoomFilterDto } from './dto/filter-room.dto';
@@ -12,7 +13,10 @@ const SORT_ORDER = new Set(['asc', 'desc']);
 
 @Injectable()
 export class RoomService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly ragIndexService: RagIndexService,
+  ) { }
 
   async findAll(query: RoomFilterDto) {
     let {
@@ -150,17 +154,23 @@ export class RoomService {
   }
 
   async create(hostId: number = 1, dto: CreateRoomDto) {
-    return this.prisma.rooms.create({
+    const room = await this.prisma.rooms.create({
       data: { ...dto, hostId },
     });
+    // Kích hoạt đồng bộ vector ngầm
+    this.ragIndexService.indexRoom(room.id).catch(e => console.error('[RAG] Failed to index room:', e));
+    return room;
   }
 
   async update(id: number, dto: UpdateRoomDto) {
     await this.findOne(id);
-    return this.prisma.rooms.update({
+    const room = await this.prisma.rooms.update({
       where: { id },
       data: dto,
     });
+    // Kích hoạt đồng bộ vector ngầm
+    this.ragIndexService.indexRoom(id).catch(e => console.error('[RAG] Failed to index room:', e));
+    return room;
   }
 
   async remove(id: number) {
@@ -193,5 +203,10 @@ export class RoomService {
         deletedAt: new Date(),
       },
     });
+
+    // Xoá vector khi phòng bị xoá
+    await this.prisma.room_embeddings
+      .delete({ where: { roomId: id } })
+      .catch(() => { });
   }
 }

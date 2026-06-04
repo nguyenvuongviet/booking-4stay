@@ -6,8 +6,10 @@ import { RoomCalendarService } from './room-calendar.service';
 import { RoomController } from './room.controller';
 import { RoomHelper } from './room.helpers';
 import { RoomService } from './room.service';
+import { ChatModule } from '../chatbot/chatbot.module';
 
 @Module({
+  imports: [ChatModule],
   controllers: [RoomController],
   providers: [
     RoomService,
@@ -18,4 +20,4 @@ import { RoomService } from './room.service';
     RoomHelper,
   ],
 })
-export class RoomModule {}
+export class RoomModule { }
