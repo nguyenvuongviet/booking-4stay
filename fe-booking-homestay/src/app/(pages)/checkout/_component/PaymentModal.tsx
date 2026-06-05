@@ -5,11 +5,9 @@ import {
   Dialog,
   DialogContent,
   DialogFooter,
-  DialogHeader,
-  DialogTitle,
+  DialogTitle
 } from "@/_components/ui/dialog";
 import { AlertTriangle, CheckCircle, Clock } from "lucide-react";
-
 interface PaymentModalProps {
   open: boolean;
   onClose: () => void;
@@ -51,55 +49,73 @@ export default function PaymentModal({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-md rounded-2xl">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-lg font-semibold">
-            <AlertTriangle className="w-5 h-5 text-yellow-600" />
-            {title}
-          </DialogTitle>
-        </DialogHeader>
-
-        <p className="text-sm text-gray-700 leading-relaxed">{message}</p>
-
-        <div className="border border-yellow-100 rounded-xl p-4 bg-yellow-50/50 text-[13px] text-gray-600 mt-2">
-          <strong>Lưu ý:</strong>{" "}
-          {isRemaining ? (
-            <span>
-              Hệ thống sẽ ghi nhận thanh toán và cập nhật trạng thái đơn hàng
-              ngay sau khi giao dịch qua PayOS hoàn tất thành công.
-            </span>
-          ) : (
-            <span>
-              Phòng sẽ được giữ tạm thời cho đến khi bạn hoàn tất thanh toán{" "}
-              <strong>
-                {type === "BANK_TRANSFER" ? "100%" : "30% tiền cọc"}
-              </strong>{" "}
-              qua PayOS. Sau thời gian quy định, đơn hàng sẽ tự động bị huỷ nếu
-              chưa nhận được thanh toán.
-            </span>
-          )}
+      <DialogContent className="max-w-md rounded-3xl p-6 gap-6 border-border/80 bg-card/95 backdrop-blur-md shadow-xl">
+        {/* Header with Icon and Title */}
+        <div className="flex items-start gap-4">
+          <div className="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/40 flex items-center justify-center text-amber-600 dark:text-amber-400 shrink-0 shadow-xs">
+            <AlertTriangle className="w-6 h-6 stroke-2" />
+          </div>
+          <div className="space-y-1.5 flex-1">
+            <DialogTitle className="text-xl font-extrabold text-foreground elegant-heading leading-tight">
+              {title}
+            </DialogTitle>
+            <p className="text-sm text-muted-foreground leading-relaxed mt-1">
+              {message}
+            </p>
+          </div>
         </div>
 
-        <DialogFooter className="flex flex-col gap-3 sm:flex-row sm:justify-end pt-3">
-          <Button
-            variant="outline"
-            className="flex items-center gap-2 w-full sm:w-auto"
+        {/* Warning Notes Box */}
+        <div className="bg-amber-50/60 dark:bg-amber-950/10 border border-amber-200/60 dark:border-amber-800/30 rounded-2xl p-4 text-xs text-amber-800 dark:text-amber-300 leading-relaxed shadow-xs">
+          <div className="flex gap-2.5">
+            <span className="font-extrabold uppercase tracking-wider text-[10px] bg-amber-200/60 dark:bg-amber-800/40 px-1.5 py-0.5 rounded-md shrink-0 h-fit text-amber-800 dark:text-amber-200">
+              Lưu ý
+            </span>
+            <div className="flex-1 text-gray-700 dark:text-gray-300">
+              {isRemaining ? (
+                <span>
+                  Hệ thống sẽ ghi nhận thanh toán và cập nhật trạng thái đơn
+                  hàng ngay sau khi giao dịch qua PayOS hoàn tất thành công.
+                </span>
+              ) : (
+                <span>
+                  Phòng sẽ được giữ tạm thời cho đến khi bạn hoàn tất thanh toán{" "}
+                  <strong className="font-extrabold text-amber-900 dark:text-amber-100">
+                    {type === "BANK_TRANSFER" ? "100%" : "30% tiền cọc"}
+                  </strong>{" "}
+                  qua PayOS. Sau thời gian quy định, đơn hàng sẽ tự động bị huỷ
+                  nếu chưa nhận được thanh toán.
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Actions Footer */}
+        <DialogFooter className="flex flex-col gap-3 sm:flex-row sm:justify-end pt-2">
+          <button
+            type="button"
             onClick={() => {
               onDepositLater();
               onClose();
             }}
+            className="flex items-center justify-center gap-2 w-full sm:w-auto h-11 px-5 rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-slate-900 hover:bg-gray-50 dark:hover:bg-slate-800/80 hover:border-gray-300 dark:hover:border-gray-700 text-gray-700 dark:text-gray-300 active:scale-[0.98] hover:-translate-y-0.5 hover:scale-[1.02] hover:shadow-xs transition-all duration-300 font-semibold text-sm cursor-pointer"
           >
-            <Clock className="w-4 h-4" /> {laterLabel}
-          </Button>
+            <Clock className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+            <span>{laterLabel}</span>
+          </button>
 
           <Button
-            className="flex items-center gap-2 w-full sm:w-auto"
+            type="button"
             onClick={() => {
               onDepositNow();
               onClose();
             }}
+            variant="gradient"
+            className="flex items-center justify-center gap-2 w-full sm:w-auto h-11 px-6 text-sm"
           >
-            <CheckCircle className="w-4 h-4" /> {nowLabel}
+            <CheckCircle className="w-4 h-4 text-white" />
+            <span>{nowLabel}</span>
           </Button>
         </DialogFooter>
       </DialogContent>

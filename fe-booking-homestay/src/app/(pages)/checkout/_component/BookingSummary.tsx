@@ -1,6 +1,7 @@
 import { CancellationPolicy } from "@/_components/CancellationPolicy";
 import { Button } from "@/_components/ui/button";
 import { Card } from "@/_components/ui/card";
+import { getTierColorClass } from "@/_helper/tier.helper";
 import { useLang } from "@/context/lang-context";
 import { PaymentMethod } from "@/types/paymentmethod";
 
@@ -46,9 +47,11 @@ export default function BookingSummary(props: Props) {
   const hasWaterfallDiscount = couponDiscount > 0 || loyaltyDiscount > 0;
 
   return (
-    <Card className="p-6 sticky top-10 space-y-2">
-      <h2 className="text-2xl elegant-heading">{t("Booking Summary")}</h2>
-      <div className="w-full h-50 rounded-lg overflow-hidden">
+    <Card className="p-4 sm:p-6 sticky top-24 max-h-screen overflow-y-auto space-y-4">
+      <h2 className="text-xl sm:text-2xl elegant-heading mb-4 sm:mb-6">
+        {t("Booking Summary")}
+      </h2>
+      <div className="w-full h-40 sm:h-50 rounded-2xl overflow-hidden mb-2">
         <img
           src={bookingData.roomImage || "/placeholder.svg"}
           alt="Room img"
@@ -57,7 +60,9 @@ export default function BookingSummary(props: Props) {
       </div>
       {/* Room Details */}
       <div>
-        <h3 className="elegant-sans text-xl mb-1">{bookingData.roomName}</h3>
+        <h3 className="elegant-sans text-lg sm:text-xl mb-1">
+          {bookingData.roomName}
+        </h3>
         <p className="text-sm text-gray-600 mb-3">{bookingData.roomType}</p>
 
         <div className="space-y-2 text-sm">
@@ -110,32 +115,34 @@ export default function BookingSummary(props: Props) {
 
         {/* Waterfall Discount Breakdown */}
         {couponDiscount > 0 && (
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground flex items-center gap-1">
-              🎫 Mã giảm giá
+          <div className="flex justify-between items-start text-sm gap-2">
+            <span className="text-muted-foreground flex flex-wrap items-center gap-1.5 min-w-0">
+              <span className="whitespace-nowrap">🎫 Mã giảm giá</span>
               {bookingData.couponCode && (
-                <span className="text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded font-mono">
+                <span className="text-[10px] bg-green-50 text-green-700 border border-green-200 px-1.5 py-0.5 rounded font-mono font-semibold">
                   {bookingData.couponCode}
                 </span>
               )}
             </span>
-            <span className="text-green-600 font-medium">
+            <span className="text-green-600 font-medium whitespace-nowrap shrink-0 text-right">
               -{couponDiscount.toLocaleString()}đ
             </span>
           </div>
         )}
 
         {loyaltyDiscount > 0 && (
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground flex items-center gap-1">
-              ⭐ Ưu đãi thành viên
+          <div className="flex justify-between items-start text-sm gap-2">
+            <span className="text-muted-foreground flex flex-wrap items-center gap-1.5 min-w-0">
+              <span className="whitespace-nowrap">⭐ Ưu đãi thành viên</span>
               {bookingData.tierName && (
-                <span className="text-xs bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded">
+                <span
+                  className={`text-[10px] px-1.5 py-0.5 rounded font-semibold uppercase tracking-wider ${getTierColorClass(bookingData.tierName, "badge")}`}
+                >
                   {bookingData.tierName}
                 </span>
               )}
             </span>
-            <span className="text-green-600 font-medium">
+            <span className="text-green-600 font-medium whitespace-nowrap shrink-0 text-right">
               -{loyaltyDiscount.toLocaleString()}đ
               <span className="text-xs text-green-600">
                 {" "}
@@ -147,9 +154,11 @@ export default function BookingSummary(props: Props) {
 
         {/* Fallback: show old format if no waterfall fields */}
         {!hasWaterfallDiscount && bookingData.discountPercent > 0 && (
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Giảm giá</span>
-            <span className="text-foreground">
+          <div className="flex justify-between items-start text-sm gap-2">
+            <span className="text-muted-foreground whitespace-nowrap">
+              Giảm giá
+            </span>
+            <span className="text-foreground whitespace-nowrap shrink-0 text-right">
               -
               {Math.floor(
                 (bookingData.pricePerNight *
@@ -167,19 +176,30 @@ export default function BookingSummary(props: Props) {
         )}
       </div>
 
+      {/* Cancellation Policy */}
+      <div className="border-t pt-4 border-dashed">
+        <CancellationPolicy
+          checkInDate={
+            bookingData.checkIn ? new Date(bookingData.checkIn) : undefined
+          }
+          onLoad={(config) => onPolicyLoad?.(config.updatedAt)}
+          collapsible={true}
+        />
+      </div>
+
       {/* Total */}
-      <div className="border-t pt-4 space-y-2">
-        <div className="flex justify-between items-baseline">
-          <span className="text-lg elegant-sans text-foreground">
+      <div className="border-t pt-4 space-y-2.5">
+        <div className="flex justify-between items-center">
+          <span className="text-lg font-bold text-foreground">
             {t("total")}
           </span>
-          <span className="text-lg elegant-sans text-foreground">
+          <span className="text-2xl font-extrabold text-foreground tracking-tight">
             {bookingData.totalAmount.toLocaleString()}đ
           </span>
         </div>
-        <div className="flex justify-between items-baseline">
-          <span className="text-sm text-foreground">{t("Points earned")}</span>
-          <span className="text-sm text-green-600">
+        <div className="flex justify-between items-center text-xs">
+          <span className="text-muted-foreground">{t("Points earned")}</span>
+          <span className="font-semibold text-green-600">
             +{(bookingData.totalAmount / 1000).toLocaleString()}
           </span>
         </div>
@@ -188,18 +208,12 @@ export default function BookingSummary(props: Props) {
       {/* Confirm Button */}
       <Button
         onClick={() => handleConfirmBooking(paymentMethod)}
-        className="rounded-2xl w-full bg-primary h-10 elegant-subheading text-md"
+        variant="gradient"
+        size="xl"
+        className="w-full mt-5"
       >
         {t("Confirm and Payment")}
       </Button>
-
-      {/* Cancellation Policy */}
-      <div className="pt-4 border-t border-dashed">
-        <CancellationPolicy
-          checkInDate={new Date(bookingData.checkIn)}
-          onLoad={(config) => onPolicyLoad?.(config.updatedAt)}
-        />
-      </div>
     </Card>
   );
 }

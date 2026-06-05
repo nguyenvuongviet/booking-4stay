@@ -1,8 +1,9 @@
 "use client";
 
+import { Button } from "@/_components/ui/button";
 import { Card } from "@/_components/ui/card";
 import {
-  formatDiscount,
+  formatDiscountBadge,
   formatExpiryDate,
   formatMinSpend,
   getEstimatedDiscount,
@@ -15,11 +16,13 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
   AlertCircle,
   Calendar,
+  CheckCircle2,
   ChevronDown,
   ChevronRight,
   ChevronUp,
   Loader2,
   Ticket,
+  X,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
@@ -126,14 +129,14 @@ export default function CouponSelector({
   });
 
   return (
-    <Card className="p-5 space-y-4 border border-border/60 shadow-xs rounded-2xl bg-card">
-      <h3 className="text-base font-bold flex items-center gap-2 text-foreground">
-        <Ticket size={20} className="text-primary" />
+    <Card className="p-4 sm:p-6 space-y-4 sm:space-y-6 rounded-2xl bg-card">
+      <h2 className="text-xl sm:text-2xl elegant-heading mb-4 sm:mb-6 flex items-center gap-2">
+        <Ticket className="text-primary w-5 h-5 sm:w-6 sm:h-6" />
         Mã Giảm Giá (Coupon)
-      </h3>
+      </h2>
 
       {/* Input + Apply */}
-      <div className="flex gap-2">
+      <div className="flex gap-2.5 sm:gap-3">
         <div className="relative flex-1">
           <input
             id="coupon-input"
@@ -141,7 +144,7 @@ export default function CouponSelector({
             value={inputCode}
             onChange={(e) => setInputCode(e.target.value.toUpperCase())}
             placeholder="NHẬP MÃ GIẢM GIÁ"
-            className="w-full px-4 py-2.5 bg-background border border-border/80 focus:border-primary/50 rounded-xl text-sm font-semibold uppercase tracking-widest placeholder:font-normal placeholder:tracking-normal focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all disabled:opacity-60 disabled:cursor-not-allowed text-foreground shadow-xs"
+            className="w-full px-3 sm:px-4 bg-input border border-border/80 focus:border-primary/50 rounded-2xl h-11 text-xs sm:text-sm font-semibold uppercase tracking-wider sm:tracking-widest placeholder:font-normal placeholder:tracking-normal placeholder:text-[11px] sm:placeholder:text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all disabled:opacity-60 disabled:cursor-not-allowed text-foreground"
             disabled={!!appliedCode}
             onKeyDown={(e) => e.key === "Enter" && handleApply()}
           />
@@ -149,22 +152,26 @@ export default function CouponSelector({
         {appliedCode ? (
           <button
             onClick={handleClear}
-            className="px-5 py-2.5 text-sm rounded-xl bg-rose-500/10 text-rose-600 hover:bg-rose-500/20 active:scale-95 transition-all font-semibold cursor-pointer"
+            className="px-4 sm:px-5 h-11 text-xs sm:text-sm rounded-2xl border border-rose-200 bg-rose-50/50 hover:bg-rose-50 hover:border-rose-300 text-rose-600 active:scale-95 transition-all font-semibold cursor-pointer shrink-0 flex items-center gap-1 sm:gap-1.5 shadow-xs shadow-rose-500/5 group"
           >
-            Huỷ bỏ
+            <X
+              size={14}
+              className="stroke-[2.5] text-rose-500 group-hover:scale-110 transition-transform duration-200"
+            />
+            <span>Huỷ bỏ</span>
           </button>
         ) : (
-          <button
+          <Button
             onClick={() => handleApply()}
             disabled={loading || !inputCode.trim()}
-            className="px-5 py-2.5 text-sm rounded-xl bg-primary text-white hover:bg-primary/95 active:scale-95 transition-all font-semibold disabled:opacity-40 disabled:cursor-not-allowed disabled:scale-100 shadow-md shadow-primary/10 cursor-pointer"
+            className="px-4 sm:px-6 h-11 text-xs sm:text-sm rounded-2xl font-semibold shadow-md shadow-primary/10 min-w-20 sm:min-w-25 shrink-0"
           >
             {loading ? (
               <Loader2 size={16} className="animate-spin" />
             ) : (
               "Áp dụng"
             )}
-          </button>
+          </Button>
         )}
       </div>
 
@@ -173,18 +180,20 @@ export default function CouponSelector({
         <motion.div
           initial={{ opacity: 0, y: -5 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex items-start gap-2.5 text-sm bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 p-3.5 rounded-xl font-medium"
+          className="flex items-start gap-2.5 sm:gap-3.5 text-xs sm:text-sm bg-emerald-50/60 dark:bg-emerald-950/20 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40 p-3 sm:p-4 rounded-2xl font-medium shadow-xs shadow-emerald-500/5"
         >
-          <span className="text-base leading-none">✅</span>
-          <div>
+          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center shrink-0 text-emerald-600 dark:text-emerald-400">
+            <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[2.5]" />
+          </div>
+          <div className="flex-1 leading-relaxed self-center text-emerald-800 dark:text-emerald-200 text-xs sm:text-sm">
             Áp dụng thành công mã{" "}
-            <strong className="font-mono bg-emerald-500/10 px-1.5 py-0.5 rounded text-emerald-700">
+            <span className="font-mono bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 px-1.5 sm:px-2 py-0.5 rounded-lg text-[10px] sm:text-xs font-bold border border-emerald-200 dark:border-emerald-800/60 mx-0.5 sm:mx-1 uppercase tracking-wide">
               {appliedCode}
-            </strong>{" "}
-            — Giảm{" "}
-            <strong className="underline text-emerald-700 font-extrabold">
+            </span>{" "}
+            — Bạn được giảm{" "}
+            <span className="text-emerald-700 dark:text-emerald-300 font-extrabold text-sm sm:text-base bg-emerald-100 dark:bg-emerald-900/40 px-1.5 sm:px-2 py-0.5 rounded-lg border border-emerald-200 dark:border-emerald-800/60 mx-0.5">
               {validation.couponDiscount.toLocaleString()}đ
-            </strong>{" "}
+            </span>{" "}
             vào giá phòng.
           </div>
         </motion.div>
@@ -204,10 +213,10 @@ export default function CouponSelector({
 
       {/* Suggestions toggle */}
       {sortedSuggestions.length > 0 && !appliedCode && (
-        <div className="pt-2 border-t border-border/40">
+        <div className="pt-4 border-t border-border/40">
           <button
             onClick={() => setShowSuggestions(!showSuggestions)}
-            className="text-sm font-semibold text-primary hover:text-primary/90 flex items-center gap-1.5 py-1 transition-colors cursor-pointer group"
+            className="text-sm font-semibold text-primary hover:text-primary/90 flex items-center gap-1.5 py-1 transition-colors cursor-pointer group hover:underline"
           >
             {showSuggestions ? (
               <ChevronUp size={16} />
@@ -215,7 +224,7 @@ export default function CouponSelector({
               <ChevronDown size={16} />
             )}
             <span>
-              Xem {sortedSuggestions.length} mã có thể áp dụng cho đơn này
+              Xem {sortedSuggestions.length} mã giảm giá có sẵn cho bạn
             </span>
           </button>
 
@@ -225,41 +234,68 @@ export default function CouponSelector({
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: "auto" }}
                 exit={{ opacity: 0, height: 0 }}
-                className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3.5 max-h-80 overflow-y-auto pr-1 scrollbar-thin"
+                className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-80 overflow-y-auto pr-1 scrollbar-thin"
               >
                 {sortedSuggestions.map((promo) => {
                   return (
                     <div
                       key={promo.id}
                       onClick={() => handleSelectSuggestion(promo)}
-                      className="relative flex items-center justify-between p-3.5 border border-border/60 hover:border-primary/30 hover:bg-primary/5 hover:shadow-xs rounded-xl bg-card active:scale-[0.99] transition-all duration-200 cursor-pointer group"
+                      className="relative flex items-stretch border border-border/60 hover:border-primary/30 hover:bg-primary/5 hover:shadow-xs rounded-2xl bg-card active:scale-[0.98] transition-all duration-200 cursor-pointer overflow-hidden group min-h-24"
                     >
-                      <div className="flex-1 min-w-0 pr-3">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className="font-mono text-xs font-bold text-primary bg-primary/10 border border-primary/20 px-2 py-0.5 rounded-md uppercase tracking-wider group-hover:bg-primary group-hover:text-white transition-colors duration-200">
-                            {promo.code}
-                          </span>
-                          <span className="text-xs font-extrabold text-emerald-600 bg-emerald-500/5 px-2 py-0.5 rounded-md">
-                            Giảm {formatDiscount(promo)}
-                          </span>
-                        </div>
-                        <p className="text-xs font-semibold text-foreground mt-2 line-clamp-1 group-hover:text-primary transition-colors duration-200">
-                          {promo.name}
-                        </p>
-                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-[10px] text-muted-foreground">
-                          <span className="font-medium">
-                            {formatMinSpend(promo)}
-                          </span>
-                          <span className="flex items-center gap-0.5">
-                            <Calendar size={10} />
-                            HSD: {formatExpiryDate(promo.endDate)}
-                          </span>
-                        </div>
+                      {/* Left Stub (Discount highlight) */}
+                      <div className="w-20 sm:w-24 bg-primary/5 dark:bg-primary/10 flex flex-col items-center justify-center text-center p-2.5 border-r border-dashed border-border/80 shrink-0 select-none relative">
+                        {/* Top half-circle notch */}
+                        <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 w-3 h-3 rounded-full bg-card border border-border/60 group-hover:bg-primary/5 transition-colors duration-200 z-10" />
+                        {/* Bottom half-circle notch */}
+                        <div className="absolute bottom-0 right-0 translate-y-1/2 translate-x-1/2 w-3 h-3 rounded-full bg-card border border-border/60 group-hover:bg-primary/5 transition-colors duration-200 z-10" />
+
+                        <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 tracking-wider">
+                          GIẢM
+                        </span>
+                        <span className="text-base sm:text-lg font-extrabold text-primary tracking-tight mt-0.5 whitespace-nowrap">
+                          {formatDiscountBadge(promo)}
+                        </span>
                       </div>
 
-                      <div className="flex items-center gap-1 text-primary opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-300 pl-2 shrink-0">
-                        <span className="text-xs font-bold">Dùng</span>
-                        <ChevronRight size={14} className="stroke-3" />
+                      {/* Right Body */}
+                      <div className="flex-1 p-3 flex flex-col justify-between min-w-0">
+                        <div className="space-y-1">
+                          {/* Code & Max Discount Badges */}
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="font-mono text-[10px] font-extrabold text-primary bg-primary/10 border border-primary/20 px-2 py-0.5 rounded-lg uppercase tracking-wider group-hover:bg-primary group-hover:text-white transition-all duration-200 shrink-0">
+                              {promo.code}
+                            </span>
+                            {promo.discountType === "PERCENTAGE" &&
+                              promo.maxDiscount && (
+                                <span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/5 dark:bg-emerald-500/10 px-1.5 py-0.5 rounded-md shrink-0">
+                                  Tối đa{" "}
+                                  {Number(promo.maxDiscount).toLocaleString()}đ
+                                </span>
+                              )}
+                          </div>
+                          {/* Promo Name */}
+                          <h4 className="text-xs font-bold text-foreground line-clamp-1 group-hover:text-primary transition-colors duration-200 leading-snug">
+                            {promo.name}
+                          </h4>
+                        </div>
+
+                        {/* Footer Terms */}
+                        <div className="flex items-end justify-between text-[9px] sm:text-[10px] text-muted-foreground pt-1.5 mt-1 border-t border-border/20">
+                          <div className="flex flex-col gap-0.5 min-w-0">
+                            <span className="font-medium text-gray-500 dark:text-gray-400 line-clamp-1">
+                              {formatMinSpend(promo)}
+                            </span>
+                            <span className="flex items-center gap-0.5 line-clamp-1">
+                              <Calendar size={10} className="shrink-0" />
+                              HSD: {formatExpiryDate(promo.endDate)}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-0.5 text-primary font-bold opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all duration-300 pl-1.5 shrink-0">
+                            <span className="text-[10px]">Dùng</span>
+                            <ChevronRight size={12} className="stroke-[2.5]" />
+                          </div>
+                        </div>
                       </div>
                     </div>
                   );

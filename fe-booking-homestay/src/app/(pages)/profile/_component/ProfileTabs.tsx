@@ -7,6 +7,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/_components/ui/tabs";
+import { getTierColorClass } from "@/_helper/tier.helper";
 import { useLang } from "@/context/lang-context";
 import { Booking } from "@/models/Booking";
 import { IUser } from "@/models/User";
@@ -53,20 +54,7 @@ export default function ProfileTabs(props: Props) {
   const [totalPages, setTotalPages] = useState(1);
 
   const levelColor = (level: string) => {
-    switch (level.toUpperCase()) {
-      case "BRONZE":
-        return "bg-amber-100/60 text-amber-800 gap-1.5 px-3 py-1.5 rounded-full uppercase tracking-wider";
-      case "SILVER":
-        return "bg-gray-200/60 text-gray-700 gap-1.5 px-3 py-1.5 rounded-full uppercase tracking-wider";
-      case "GOLD":
-        return "bg-yellow-200/60 text-yellow-800 gap-1.5 px-3 py-1.5 rounded-full uppercase tracking-wider";
-      case "PLATINUM":
-        return "bg-blue-200/60 text-blue-800 gap-1.5 px-3 py-1.5 rounded-full uppercase tracking-wider";
-      case "DIAMOND":
-        return "bg-sky-300/60 text-sky-900 gap-1.5 px-3 py-1.5 rounded-full uppercase tracking-wider";
-      default:
-        return "bg-gray-100/60 text-gray-700 gap-1.5 px-3 py-1.5 rounded-full uppercase tracking-wider";
-    }
+    return `${getTierColorClass(level, "full")} gap-1.5 px-3 py-1.5 rounded-full uppercase tracking-wider`;
   };
 
   const fetchBookings = useCallback(async (pageNumber: number) => {

@@ -195,7 +195,7 @@ body {
 }
 
 .elegant-heading {
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
   font-weight: 600;
   letter-spacing: var(--tracking-tight);
   line-height: 1.1;
@@ -209,7 +209,7 @@ body {
 }
 
 .elegant-serif {
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
   font-weight: 400;
   letter-spacing: var(--tracking-tight);
 }
