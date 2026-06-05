@@ -18,6 +18,7 @@ import { NotificationModule } from './modules/notification/notification.module';
 import { OtpModule } from './modules/otp/otp.module';
 import { PayosModule } from './modules/payos/payos.module';
 import { PrismaService } from './modules/prisma/prisma.service';
+import { PromotionModule } from './modules/promotion/promotion.module';
 import { RecommendationModule } from './modules/recommendation/recommendation.module';
 import { ReviewModule } from './modules/review/review.module';
 import { RoomModule } from './modules/room/room.module';
@@ -46,8 +47,9 @@ import { UserModule } from './modules/user/user.module';
     NotificationModule,
     ChatModule,
     MessageModule,
+    PromotionModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService, ProtectStrategy],
 })
-export class AppModule { }
+export class AppModule {}

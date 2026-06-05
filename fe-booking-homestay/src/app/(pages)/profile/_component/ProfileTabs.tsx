@@ -11,12 +11,13 @@ import { useLang } from "@/context/lang-context";
 import { Booking } from "@/models/Booking";
 import { IUser } from "@/models/User";
 import { get_booking } from "@/services/bookingApi";
-import { BookOpen, Gift, Heart, User } from "lucide-react";
+import { BookOpen, Gift, Heart, Ticket, User } from "lucide-react";
 import { RefObject, useCallback, useEffect, useState } from "react";
 import BookingTab from "./BookingTab";
 import FavoritesTab from "./FavoritesTab";
 import ProfileTab from "./ProfileTab";
 import RewardsTab from "./RewardsTab";
+import VoucherWallet from "./VoucherWallet";
 
 interface Props {
   user: IUser | null;
@@ -161,6 +162,13 @@ export default function ProfileTabs(props: Props) {
               <Heart className="h-5 w-5" />
               <span>Yêu thích</span>
             </TabsTrigger>
+            <TabsTrigger
+              value="vouchers"
+              className="w-full justify-start gap-3 py-3 px-4 rounded-xl data-[state=active]:bg-primary/50 data-[state=active]:text-primary-foreground data-[state=active]:shadow-md font-medium transition-all text-muted-foreground dark:text-slate-400 hover:bg-accent/40 dark:hover:bg-slate-800/50"
+            >
+              <Ticket className="h-5 w-5" />
+              <span>Ví Voucher</span>
+            </TabsTrigger>
           </TabsList>
         </div>
       </div>
@@ -218,6 +226,12 @@ export default function ProfileTabs(props: Props) {
           className="m-0 focus-visible:outline-none"
         >
           <FavoritesTab />
+        </TabsContent>
+        <TabsContent
+          value="vouchers"
+          className="m-0 focus-visible:outline-none"
+        >
+          <VoucherWallet />
         </TabsContent>
       </div>
     </Tabs>

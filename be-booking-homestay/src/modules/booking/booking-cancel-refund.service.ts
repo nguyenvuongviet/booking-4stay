@@ -8,7 +8,9 @@ import { bookings_status } from '@prisma/client';
 import { sanitizeBooking } from 'src/utils/sanitize/booking.sanitize';
 import { nowVN } from 'src/utils/timezone.util';
 import { AppConfigKey } from '../app-configs/constants/app-config.constant';
+import { BookingNotificationDispatcher } from '../notification/booking-notification.dispatcher';
 import { PrismaService } from '../prisma/prisma.service';
+import { PromotionHelper } from '../promotion/promotion.helper';
 import { Role } from '../user/dto/enum.dto';
 import { BookingLifecycleService } from './booking-lifecycle.service';
 import {
@@ -18,7 +20,6 @@ import {
   sortPolicyDesc,
 } from './booking.constants';
 import { CancelBookingDto } from './dto/cancel-booking.dto';
-import { BookingNotificationDispatcher } from '../notification/booking-notification.dispatcher';
 
 interface RefundResult {
   refundAmount: number;
@@ -38,7 +39,8 @@ export class BookingCancelRefundService {
     private readonly prisma: PrismaService,
     private readonly lifecycleService: BookingLifecycleService,
     private readonly notificationService: BookingNotificationDispatcher,
-  ) { }
+    private readonly promotionHelper: PromotionHelper,
+  ) {}
 
   /**
    * Khách hàng hoặc Admin chủ động hủy đơn đặt phòng.
@@ -92,6 +94,15 @@ export class BookingCancelRefundService {
         include: { rooms: true },
       });
 
+      if (booking.promotionId) {
+        await this.promotionHelper.refundCouponUsage(
+          booking.promotionId,
+          booking.userId,
+          booking.id,
+          { tx },
+        );
+      }
+
       await (tx as any).booking_logs.create({
         data: {
           bookingId: id,
@@ -109,13 +120,13 @@ export class BookingCancelRefundService {
           updated.id,
           false,
         );
-        await this.notificationService.notifyAdminBookingCancelled(
-          updated.id,
-          updated.guestFullName,
-          Number(updated.refundAmount || 0),
-        )
+        await this.notificationService
+          .notifyAdminBookingCancelled(
+            updated.id,
+            updated.guestFullName,
+            Number(updated.refundAmount || 0),
+          )
           .catch((err) => console.error('Admin notification error:', err));
-
 
         if (updated.status === bookings_status.WAITING_REFUND) {
           this.notificationService
@@ -181,6 +192,15 @@ export class BookingCancelRefundService {
         } as any,
         include: { rooms: true },
       });
+
+      if (booking.promotionId) {
+        await this.promotionHelper.refundCouponUsage(
+          booking.promotionId,
+          booking.userId,
+          booking.id,
+          { tx },
+        );
+      }
 
       // Ghi log chi tiết
       const isOverride = dto.overrideRefundAmount !== undefined;

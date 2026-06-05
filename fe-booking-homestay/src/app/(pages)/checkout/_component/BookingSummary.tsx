@@ -16,6 +16,11 @@ interface BookingData {
   totalAmount: number;
   discountPercent: number;
   roomImage: string | null;
+  // Waterfall fields
+  couponDiscount?: number;
+  couponCode?: string | null;
+  loyaltyDiscount?: number;
+  tierName?: string;
 }
 
 interface Props {
@@ -35,6 +40,10 @@ export default function BookingSummary(props: Props) {
     onPolicyLoad,
   } = props;
   const { t } = useLang();
+
+  const couponDiscount = bookingData.couponDiscount || 0;
+  const loyaltyDiscount = bookingData.loyaltyDiscount || 0;
+  const hasWaterfallDiscount = couponDiscount > 0 || loyaltyDiscount > 0;
 
   return (
     <Card className="p-6 sticky top-10 space-y-2">
@@ -98,23 +107,64 @@ export default function BookingSummary(props: Props) {
           <span className="text-muted-foreground">{t("Taxes & fees")}</span>
           <span className="text-foreground">{t("Included")}</span>
         </div>
-        <div className="flex justify-between text-sm">
-          <span className="text-muted-foreground">Giảm giá</span>
-          <span className="text-foreground">
-            -
-            {Math.floor(
-              (bookingData.pricePerNight *
-                totalNights *
-                bookingData.discountPercent) /
-                100,
-            ).toLocaleString()}
-            đ
-            <span className="text-xs text-green-600">
-              {" "}
-              ({bookingData.discountPercent}%)
+
+        {/* Waterfall Discount Breakdown */}
+        {couponDiscount > 0 && (
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground flex items-center gap-1">
+              🎫 Mã giảm giá
+              {bookingData.couponCode && (
+                <span className="text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded font-mono">
+                  {bookingData.couponCode}
+                </span>
+              )}
             </span>
-          </span>
-        </div>
+            <span className="text-green-600 font-medium">
+              -{couponDiscount.toLocaleString()}đ
+            </span>
+          </div>
+        )}
+
+        {loyaltyDiscount > 0 && (
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground flex items-center gap-1">
+              ⭐ Ưu đãi thành viên
+              {bookingData.tierName && (
+                <span className="text-xs bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded">
+                  {bookingData.tierName}
+                </span>
+              )}
+            </span>
+            <span className="text-green-600 font-medium">
+              -{loyaltyDiscount.toLocaleString()}đ
+              <span className="text-xs text-green-600">
+                {" "}
+                ({bookingData.discountPercent}%)
+              </span>
+            </span>
+          </div>
+        )}
+
+        {/* Fallback: show old format if no waterfall fields */}
+        {!hasWaterfallDiscount && bookingData.discountPercent > 0 && (
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">Giảm giá</span>
+            <span className="text-foreground">
+              -
+              {Math.floor(
+                (bookingData.pricePerNight *
+                  totalNights *
+                  bookingData.discountPercent) /
+                  100,
+              ).toLocaleString()}
+              đ
+              <span className="text-xs text-green-600">
+                {" "}
+                ({bookingData.discountPercent}%)
+              </span>
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Total */}

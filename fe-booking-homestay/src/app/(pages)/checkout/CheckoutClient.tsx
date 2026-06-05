@@ -6,6 +6,7 @@ import { ChevronLeft } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCheckout } from "../../../_hooks/useCheckout";
 import BookingSummary from "./_component/BookingSummary";
+import CouponSelector from "./_component/CouponSelector";
 import GuestInfor from "./_component/GuestInfor";
 import PaymentMethod from "./_component/PaymentMethod";
 import PaymentModal from "./_component/PaymentModal";
@@ -14,6 +15,7 @@ export default function CheckoutClient() {
   const { t } = useLang();
 
   const {
+    room,
     firstName,
     lastName,
     emailInput,
@@ -41,6 +43,11 @@ export default function CheckoutClient() {
     handleConfirmBooking,
     setPolicyUpdatedAt,
     validateGuestInfo,
+    // Coupon
+    appliedCouponCode,
+    couponFromUrl,
+    handleApplyCoupon,
+    handleClearCoupon,
   } = useCheckout();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -110,12 +117,6 @@ export default function CheckoutClient() {
               emailError={emailError}
             />
 
-            {/* Payment */}
-            <PaymentMethod
-              paymentMethod={paymentMethod}
-              setPaymentMethod={setPaymentMethod}
-            />
-
             {/* Request  */}
             <Card className="p-6">
               <h2 className="text-2xl mb-2 elegant-heading">
@@ -128,7 +129,24 @@ export default function CheckoutClient() {
                 onChange={(e) => setSpecialRequests(e.target.value)}
               ></textarea>
             </Card>
+
+            {/* Coupon */}
+            <CouponSelector
+              rawTotal={bookingData.rawTotal}
+              provinceId={room?.location?.provinceId}
+              onApply={handleApplyCoupon}
+              onClear={handleClearCoupon}
+              appliedCode={appliedCouponCode ?? undefined}
+              initialCode={couponFromUrl ?? undefined}
+            />
+
+            {/* Payment */}
+            <PaymentMethod
+              paymentMethod={paymentMethod}
+              setPaymentMethod={setPaymentMethod}
+            />
           </div>
+
           {/* Right  */}
           <div className="lg:col-span-1 sticky top-20">
             {/* Booking Summary  */}
@@ -145,6 +163,7 @@ export default function CheckoutClient() {
           </div>
         </div>
       </main>
+
       <PaymentModal
         open={openPopupPayment}
         onClose={() => setOpenPopupPayment(false)}

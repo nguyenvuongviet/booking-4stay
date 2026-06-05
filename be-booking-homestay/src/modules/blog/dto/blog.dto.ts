@@ -64,12 +64,6 @@ export class CreatePostDto {
   @MaxLength(255)
   metaKeywords?: string;
 
-  @ApiPropertyOptional({ example: '🎁 Nhận ưu đãi 5% khi book phòng Đà Lạt!' })
-  @IsOptional()
-  @IsString()
-  @MaxLength(500)
-  promotionBanner?: string;
-
   @ApiPropertyOptional({ example: false })
   @IsOptional()
   @IsBoolean()
@@ -137,12 +131,6 @@ export class UpdatePostDto {
   @IsString()
   @MaxLength(255)
   metaKeywords?: string;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  @MaxLength(500)
-  promotionBanner?: string;
 
   @ApiPropertyOptional()
   @IsOptional()

@@ -18,6 +18,7 @@ type BookingPayload = {
   specialRequest?: string;
   paymentMethod: PaymentMethod;
   policyUpdatedAt?: string;
+  promotionCode?: string;
 };
 
 export function usePayment(

@@ -1,10 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { eachDayOfInterval, format, subDays } from 'date-fns';
 import { PrismaService } from 'src/modules/prisma/prisma.service';
+import { PromotionHelper } from 'src/modules/promotion/promotion.helper';
 
 @Injectable()
 export class PricingHelper {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly promotionHelper: PromotionHelper,
+  ) {}
 
   async priceForRange(
     roomId: number,
@@ -75,6 +79,69 @@ export class PricingHelper {
       discountAmount: finalDiscount,
       tierName: loyalty.levels.name,
       discountPercent: percent,
+    };
+  }
+
+  /**
+   * Tính toán giảm giá theo mô hình Thác nước (Waterfall).
+   * Tầng 1: Coupon giảm trên rawTotal
+   * Tầng 2: Loyalty giảm trên giá sau coupon
+   */
+  async applyWaterfallDiscount(
+    userId: number,
+    rawTotal: number,
+    promotionCode?: string,
+    provinceId?: number,
+    options?: { tx?: any },
+  ) {
+    let afterCoupon = rawTotal;
+    let couponDiscount = 0;
+    let couponInfo: any = null;
+    let couponMessage = '';
+
+    // === Tầng 1: Coupon ===
+    if (promotionCode) {
+      const result = await this.promotionHelper.validateCoupon(
+        promotionCode,
+        userId,
+        rawTotal,
+        provinceId,
+        options,
+      );
+
+      if (result.valid) {
+        afterCoupon = result.afterCoupon;
+        couponDiscount = result.couponDiscount;
+        couponInfo = result.promotion;
+        couponMessage = result.message;
+      } else {
+        couponMessage = result.message;
+      }
+    }
+
+    // === Tầng 2: Loyalty (tính trên giá SAU coupon) ===
+    const loyaltyResult = await this.applyLoyaltyDiscount(
+      userId,
+      afterCoupon,
+      options,
+    );
+
+    return {
+      rawTotal,
+      // Tầng 1 — Coupon
+      couponDiscount,
+      couponCode: promotionCode || null,
+      couponValid: couponDiscount > 0,
+      couponMessage,
+      promotionId: couponInfo?.id || null,
+      afterCoupon,
+      // Tầng 2 — Loyalty
+      loyaltyDiscount: loyaltyResult.discountAmount,
+      tierName: loyaltyResult.tierName,
+      discountPercent: loyaltyResult.discountPercent,
+      // Tổng
+      totalDiscount: couponDiscount + loyaltyResult.discountAmount,
+      totalPrice: loyaltyResult.totalPrice,
     };
   }
 }

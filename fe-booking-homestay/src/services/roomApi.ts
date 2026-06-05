@@ -113,12 +113,14 @@ export const room_preview = async (
   roomId: number,
   checkIn: string,
   checkOut: string,
+  promotionCode?: string,
 ) => {
   try {
     const resp = await api.post(`bookings/preview`, {
       roomId,
       checkIn,
       checkOut,
+      ...(promotionCode && { promotionCode }),
     });
     return resp.data?.data || {};
   } catch (error) {

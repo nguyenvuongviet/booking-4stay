@@ -6,15 +6,16 @@ import {
 import { bookings_status } from '@prisma/client';
 import { ADMIN_EMAIL } from 'src/common/constant/app.constant';
 import { LoyaltyProgram } from 'src/helpers/loyalty.helper';
-import { MailService } from '../mail/mail.service';
-import { PrismaService } from '../prisma/prisma.service';
 import { AppConfigKey } from '../app-configs/constants/app-config.constant';
+import { MailService } from '../mail/mail.service';
+import { BookingNotificationDispatcher } from '../notification/booking-notification.dispatcher';
+import { PrismaService } from '../prisma/prisma.service';
+import { PromotionHelper } from '../promotion/promotion.helper';
 import {
   BookingMailType,
   STATUS_TO_MAIL_TYPE,
   VALID_STATUS_TRANSITIONS,
 } from './booking.constants';
-import { BookingNotificationDispatcher } from '../notification/booking-notification.dispatcher';
 
 export interface ChangeStatusOptions {
   reason?: string;
@@ -31,6 +32,7 @@ export class BookingLifecycleService {
     private readonly loyaltyProgram: LoyaltyProgram,
     private readonly mailService: MailService,
     private readonly bookingNotifications: BookingNotificationDispatcher,
+    private readonly promotionHelper: PromotionHelper,
   ) {}
 
   /**
@@ -67,14 +69,35 @@ export class BookingLifecycleService {
       include: { rooms: true },
     });
 
+    const isCancelledStatus =
+      newStatus === bookings_status.CANCELLED ||
+      newStatus === bookings_status.CANCELLED_BY_ADMIN;
+
+    const wasAlreadyCancelled =
+      booking.status === bookings_status.CANCELLED ||
+      booking.status === bookings_status.CANCELLED_BY_ADMIN;
+
+    if (isCancelledStatus && !wasAlreadyCancelled && booking.promotionId) {
+      await this.promotionHelper.refundCouponUsage(
+        booking.promotionId,
+        booking.userId,
+        booking.id,
+      );
+    }
+
     if (newStatus === bookings_status.CHECKED_OUT) {
       await this.loyaltyProgram.recalculateLoyaltyLevel(updated.userId);
+
+      // Auto Reward: Tặng coupon THANKYOU cho user sau checkout
+      this.grantAutoRewardCoupon(updated.userId).catch((err) =>
+        console.error('Auto reward coupon error:', err),
+      );
     }
 
     const notifyUser = options?.notifyUser ?? true;
     const notifyAdmin = options?.notifyAdmin ?? true;
     const isWaitingRefund = newStatus === bookings_status.WAITING_REFUND;
-    
+
     this.dispatchMail(updated, newStatus, {
       toUser: notifyUser && !isWaitingRefund,
       toAdmin: notifyAdmin,
@@ -173,7 +196,11 @@ export class BookingLifecycleService {
           }
           // Noti admin về thanh toán (fire-and-forget)
           this.bookingNotifications
-            .notifyAdminPaymentSuccess(updated.id, paidAmount, updated.guestFullName)
+            .notifyAdminPaymentSuccess(
+              updated.id,
+              paidAmount,
+              updated.guestFullName,
+            )
             .catch((err) => console.error('Admin notification error:', err));
         }
       } catch (err) {
@@ -228,6 +255,66 @@ export class BookingLifecycleService {
       );
     }
   }
+
+  /**
+   * Tự động tặng coupon THANKYOU cho user sau khi checkout thành công.
+   * Tìm coupon THANKYOU đang active, chưa hết lượt, và user chưa có.
+   */
+  private async grantAutoRewardCoupon(userId: number) {
+    const now = new Date();
+
+    const thankYouPromo = await this.prisma.promotions.findFirst({
+      where: {
+        promotionType: 'THANKYOU',
+        isActive: true,
+        isDeleted: false,
+        startDate: { lte: now },
+        endDate: { gte: now },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (!thankYouPromo) return;
+
+    // Đếm số lần user đã thực sự dùng coupon này qua bảng usages
+    const userUsageCount = await this.prisma.promotion_usages.count({
+      where: { promotionId: thankYouPromo.id, userId },
+    });
+
+    if (userUsageCount >= thankYouPromo.perUserLimit) {
+      // Đã dùng hết giới hạn số lần cho phép của coupon này
+      return;
+    }
+
+    // Kiểm tra user đã có voucher này chưa
+    const existing = await this.prisma.user_vouchers.findFirst({
+      where: { userId, promotionId: thankYouPromo.id },
+    });
+
+    if (existing) {
+      if (existing.status === 'USED') {
+        // Nếu đã dùng nhưng chưa hết giới hạn perUserLimit, khôi phục lại trạng thái AVAILABLE để dùng tiếp
+        await this.prisma.user_vouchers.update({
+          where: { id: existing.id },
+          data: { status: 'AVAILABLE', usedAt: null },
+        });
+        console.log(
+          `[AutoReward] Restored THANKYOU coupon ${thankYouPromo.code} to AVAILABLE for user ${userId} (usage: ${userUsageCount}/${thankYouPromo.perUserLimit})`,
+        );
+      }
+      return;
+    }
+
+    await this.prisma.user_vouchers.create({
+      data: {
+        userId,
+        promotionId: thankYouPromo.id,
+        status: 'AVAILABLE',
+      },
+    });
+
+    console.log(
+      `[AutoReward] Granted THANKYOU coupon ${thankYouPromo.code} to user ${userId}`,
+    );
+  }
 }
-
-

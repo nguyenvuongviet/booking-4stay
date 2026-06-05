@@ -205,6 +205,23 @@ export class BlogService {
         tags: {
           select: { tag: { select: { id: true, name: true, slug: true } } },
         },
+        blog_promotions: {
+          include: {
+            promotion: {
+              select: {
+                id: true,
+                code: true,
+                name: true,
+                discountType: true,
+                discountValue: true,
+                maxDiscount: true,
+                startDate: true,
+                endDate: true,
+                isActive: true,
+              },
+            },
+          },
+        },
         _count: {
           select: {
             comments: {
@@ -219,14 +236,24 @@ export class BlogService {
     });
 
     if (!post) {
-      throw new NotFoundException('Bài viết không tồn tại');
+      throw new NotFoundException('Đã không tìm thấy bài viết');
     }
 
+    const now = new Date();
     const formatted = {
       ...post,
       tags: post.tags.map((t) => t.tag),
       commentCount: post._count.comments,
       _count: undefined,
+      promotions: post.blog_promotions
+        .filter(
+          (bp) =>
+            bp.promotion.isActive &&
+            new Date(bp.promotion.startDate) <= now &&
+            new Date(bp.promotion.endDate) >= now,
+        )
+        .map((bp) => bp.promotion),
+      blog_promotions: undefined,
     };
     return sanitizeBlogPostData(formatted);
   }
@@ -420,7 +447,6 @@ export class BlogService {
         metaTitle: dto.metaTitle || null,
         metaDescription: dto.metaDescription || null,
         metaKeywords: dto.metaKeywords || null,
-        promotionBanner: dto.promotionBanner || null,
         isFeatured: dto.isFeatured || false,
         readingTime,
         status: blog_posts_status.DRAFT,
@@ -492,9 +518,7 @@ export class BlogService {
         ...(dto.metaKeywords !== undefined && {
           metaKeywords: dto.metaKeywords || null,
         }),
-        ...(dto.promotionBanner !== undefined && {
-          promotionBanner: dto.promotionBanner || null,
-        }),
+
         ...(dto.isFeatured !== undefined && { isFeatured: dto.isFeatured }),
         readingTime,
         updatedAt: new Date(),

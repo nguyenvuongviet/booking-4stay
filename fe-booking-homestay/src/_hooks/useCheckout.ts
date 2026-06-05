@@ -21,6 +21,7 @@ export function useCheckout() {
   const children = searchParams.get("children");
   const checkIn = searchParams.get("checkIn");
   const checkOut = searchParams.get("checkOut");
+  const couponFromUrl = searchParams.get("coupon"); // Auto-fill from Blog
   const parsedCheckIn = checkIn ? parseISO(checkIn) : null;
   const parsedCheckOut = checkOut ? parseISO(checkOut) : null;
 
@@ -28,6 +29,31 @@ export function useCheckout() {
   const [bookingPre, setBookingPre] = useState<BookingPre | null>(null);
 
   const [loading, setLoading] = useState(true);
+
+  // Coupon state
+  const [appliedCouponCode, setAppliedCouponCode] = useState<string | null>(
+    null,
+  );
+  const [couponDiscount, setCouponDiscount] = useState(0);
+
+  const fetchPreview = async (promotionCode?: string) => {
+    if (!roomId || !checkIn || !checkOut) return;
+    try {
+      const data = await room_preview(
+        Number(roomId),
+        format(parsedCheckIn!, "yyyy-MM-dd"),
+        format(parsedCheckOut!, "yyyy-MM-dd"),
+        promotionCode,
+      );
+      setBookingPre(data);
+
+      if (data.available === false) {
+        toast.error("Phòng này đã hết!");
+      }
+    } catch (error) {
+      console.error("Fetch preview failed", error);
+    }
+  };
 
   useEffect(() => {
     if (!roomId) return;
@@ -37,16 +63,7 @@ export function useCheckout() {
         const room = await room_detail(roomId);
         setRoom(room);
 
-        const data = await room_preview(
-          Number(roomId),
-          format(bookingData.checkIn, "yyyy-MM-dd"),
-          format(bookingData.checkOut, "yyyy-MM-dd"),
-        );
-        setBookingPre(data);
-
-        if (data.available === false) {
-          toast.error("Phòng này đã hết!");
-        }
+        await fetchPreview(couponFromUrl || undefined);
       } catch (error) {
         console.error("Fetch room failed", error);
       } finally {
@@ -92,6 +109,11 @@ export function useCheckout() {
     totalAmount: bookingPre?.priceSummary?.totalPrice ?? 0,
     discountPercent: bookingPre?.priceSummary?.discountPercent ?? 0,
     roomImage: room?.images?.main ?? "",
+    // Waterfall fields
+    couponDiscount: bookingPre?.priceSummary?.couponDiscount ?? 0,
+    couponCode: bookingPre?.priceSummary?.couponCode ?? null,
+    loyaltyDiscount: bookingPre?.priceSummary?.loyaltyDiscount ?? 0,
+    tierName: bookingPre?.priceSummary?.tierName ?? "",
   };
 
   const totalNights =
@@ -100,6 +122,21 @@ export function useCheckout() {
       : 0;
 
   const payment = usePayment(room, bookingData, bookingPre?.available);
+
+  // Coupon handlers
+  const handleApplyCoupon = async (code: string, discount: number) => {
+    setAppliedCouponCode(code);
+    setCouponDiscount(discount);
+    // Re-fetch preview with coupon
+    await fetchPreview(code);
+  };
+
+  const handleClearCoupon = async () => {
+    setAppliedCouponCode(null);
+    setCouponDiscount(0);
+    // Re-fetch preview without coupon
+    await fetchPreview();
+  };
 
   const confirmNow = async () => {
     if (!roomId || !checkIn || !checkOut) return;
@@ -119,6 +156,7 @@ export function useCheckout() {
         specialRequest: specialRequests,
         paymentMethod,
         policyUpdatedAt: policyUpdatedAt ?? undefined,
+        promotionCode: appliedCouponCode ?? undefined,
       })
       .finally(() => setIsLoading(false));
   };
@@ -141,6 +179,7 @@ export function useCheckout() {
         specialRequest: specialRequests,
         paymentMethod,
         policyUpdatedAt: policyUpdatedAt ?? undefined,
+        promotionCode: appliedCouponCode ?? undefined,
       })
       .finally(() => setIsLoading(false));
   };
@@ -218,5 +257,12 @@ export function useCheckout() {
     confirmLater,
     setPolicyUpdatedAt,
     validateGuestInfo,
+
+    // Coupon
+    appliedCouponCode,
+    couponDiscount,
+    couponFromUrl,
+    handleApplyCoupon,
+    handleClearCoupon,
   };
 }

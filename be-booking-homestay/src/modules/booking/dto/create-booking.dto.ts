@@ -89,8 +89,18 @@ export class CreateBookingDto {
   @IsEnum(bookings_paymentMethod)
   paymentMethod: bookings_paymentMethod;
 
-  @ApiPropertyOptional({ description: 'Thời điểm cập nhật chính sách huỷ phòng mà người dùng đã đọc' })
+  @ApiPropertyOptional({
+    description: 'Thời điểm cập nhật chính sách huỷ phòng mà người dùng đã đọc',
+  })
   @IsOptional()
   @IsString()
   policyUpdatedAt?: string;
+
+  @ApiPropertyOptional({
+    example: 'DALAT15',
+    description: 'Mã giảm giá (nếu có)',
+  })
+  @IsOptional()
+  @IsString()
+  promotionCode?: string;
 }

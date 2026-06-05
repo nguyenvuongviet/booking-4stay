@@ -1,19 +1,35 @@
 "use client";
 
+import { useAuth } from "@/context/auth-context";
+import {
+  formatDiscountBadge,
+  formatMinSpend,
+} from "@/lib/utils/promotionUtils";
 import { incrementView, type BlogPost } from "@/services/blogApi";
+import {
+  collect_coupon,
+  get_blog_coupons,
+  get_voucher_wallet,
+} from "@/services/promotionApi";
 import { motion } from "framer-motion";
 import {
   ArrowUp,
   Calendar,
+  Check,
   Clock,
+  Copy,
+  Download,
   Eye,
+  Loader2,
   MessageCircle,
   Share2,
+  Sparkles,
   Tag,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import toast from "react-hot-toast";
 import { CommentSection } from "../../_components/CommentSection";
 import { RelatedRooms } from "../../_components/RelatedRooms";
 
@@ -164,6 +180,195 @@ function PromotionBanner({ text }: { text: string }) {
         <p className="text-sm font-medium text-amber-900">{text}</p>
       </div>
     </motion.div>
+  );
+}
+
+// ==================== Blog Coupons Widget ====================
+
+interface Promotion {
+  id: number;
+  code: string;
+  name: string;
+  discountType: string;
+  discountValue: number;
+  maxDiscount?: number;
+  minOrderValue?: number;
+  endDate: string;
+}
+
+function BlogCouponsWidget({ postId }: { postId: number }) {
+  const { user, openSignIn } = useAuth();
+  const [coupons, setCoupons] = useState<Promotion[]>([]);
+  const [collectedIds, setCollectedIds] = useState<number[]>([]);
+  const [collectingIds, setCollectingIds] = useState<number[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    const loadCoupons = async () => {
+      try {
+        const data = await get_blog_coupons(postId);
+        if (active) setCoupons(data);
+      } catch (err) {
+        console.error("Error loading blog coupons:", err);
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+    loadCoupons();
+    return () => {
+      active = false;
+    };
+  }, [postId]);
+
+  useEffect(() => {
+    if (user) {
+      get_voucher_wallet("AVAILABLE")
+        .then((data) => {
+          if (Array.isArray(data)) {
+            setCollectedIds(
+              data.map((v: any) => v.promotion?.id).filter(Boolean),
+            );
+          }
+        })
+        .catch((err) => console.error("Error loading wallet:", err));
+    } else {
+      setCollectedIds([]);
+    }
+  }, [user]);
+
+  const handleCollect = async (promo: Promotion) => {
+    if (!user) {
+      openSignIn();
+      return;
+    }
+    if (collectedIds.includes(promo.id)) {
+      toast.error("Mã này đã được lưu vào ví của bạn!");
+      return;
+    }
+    setCollectingIds((prev) => [...prev, promo.id]);
+    try {
+      await collect_coupon(promo.id);
+      setCollectedIds((prev) => [...prev, promo.id]);
+      toast.success(`Đã lưu mã ${promo.code} vào ví!`);
+    } catch (err: any) {
+      const errMsg = err.response?.data?.message || "Không thể lưu mã này";
+      toast.error(errMsg);
+    } finally {
+      setCollectingIds((prev) => prev.filter((id) => id !== promo.id));
+    }
+  };
+
+  const handleCopyCode = (code: string) => {
+    navigator.clipboard.writeText(code);
+    toast.success(`Đã sao chép mã: ${code}`);
+  };
+
+  if (loading) {
+    return (
+      <div className="mt-8 p-6 bg-card border border-border/60 rounded-2xl animate-pulse space-y-4">
+        <div className="h-6 bg-muted/40 rounded w-1/3" />
+        <div className="grid md:grid-cols-2 gap-4">
+          <div className="h-24 bg-muted/30 rounded-xl" />
+          <div className="h-24 bg-muted/30 rounded-xl" />
+        </div>
+      </div>
+    );
+  }
+
+  if (coupons.length === 0) return null;
+
+  return (
+    <div className="mt-8 border-t border-border/50 pt-8">
+      <h3 className="text-xl font-bold tracking-tight mb-5 flex items-center gap-2 text-foreground">
+        <Sparkles size={20} className="text-amber-500 animate-pulse" />
+        Ưu đãi dành riêng cho bạn đọc
+      </h3>
+
+      <div className="grid md:grid-cols-2 gap-5">
+        {coupons.map((coupon) => {
+          const isCollected = collectedIds.includes(coupon.id);
+          const isCollecting = collectingIds.includes(coupon.id);
+
+          return (
+            <div
+              key={coupon.id}
+              className="relative flex items-stretch bg-linear-to-br from-card to-card/75 border border-border/60 hover:border-primary/40 rounded-2xl shadow-xs hover:shadow-md transition-all duration-300 group"
+            >
+              {/* Left Cutout */}
+              <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-4 h-4 rounded-full bg-background border border-border/60 z-10" />
+              {/* Right Cutout */}
+              <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-4 h-4 rounded-full bg-background border border-border/60 z-10" />
+
+              {/* Discount Badge Section */}
+              <div className="relative w-28 md:w-32 bg-primary/5 dark:bg-primary/10 flex flex-col justify-center items-center text-center p-4 border-r border-dashed border-border/60 select-none rounded-l-2xl overflow-hidden">
+                <span className="text-3xl font-black bg-linear-to-r from-primary to-orange-500 bg-clip-text text-transparent">
+                  {formatDiscountBadge(coupon)}
+                </span>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mt-1">
+                  MÃ GIẢM GIÁ
+                </span>
+              </div>
+
+              {/* Details Section */}
+              <div className="flex-1 p-5 flex flex-col justify-between min-w-0">
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-0.5 rounded bg-primary/10 text-primary text-[10px] font-bold uppercase">
+                      Blog Only
+                    </span>
+                    <button
+                      onClick={() => handleCopyCode(coupon.code)}
+                      className="text-xs font-mono font-bold text-foreground/80 hover:text-primary transition-colors flex items-center gap-1 border border-border/60 hover:border-primary/30 px-1.5 py-0.5 rounded bg-muted/30"
+                      title="Click để sao chép mã"
+                    >
+                      <Copy size={10} />
+                      {coupon.code}
+                    </button>
+                  </div>
+                  <h4 className="font-semibold text-sm text-foreground line-clamp-1 group-hover:text-primary transition-colors">
+                    {coupon.name}
+                  </h4>
+                  <p className="text-xs text-muted-foreground">
+                    {formatMinSpend(coupon)}
+                  </p>
+                </div>
+
+                <div className="flex items-center justify-between gap-4 mt-4">
+                  <span className="text-[10px] text-muted-foreground">
+                    HSD: {new Date(coupon.endDate).toLocaleDateString("vi-VN")}
+                  </span>
+
+                  <button
+                    onClick={() => handleCollect(coupon)}
+                    disabled={isCollected || isCollecting}
+                    className={`inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all duration-300 cursor-pointer ${
+                      isCollected
+                        ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 cursor-default"
+                        : "bg-primary text-white hover:bg-primary/90 hover:scale-105 active:scale-95 shadow-md shadow-primary/10"
+                    }`}
+                  >
+                    {isCollecting ? (
+                      <Loader2 size={12} className="animate-spin" />
+                    ) : isCollected ? (
+                      <>
+                        <Check size={12} />
+                        Đã lưu
+                      </>
+                    ) : (
+                      <>
+                        <Download size={12} />
+                        Lưu vào ví
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
@@ -341,6 +546,9 @@ export default function BlogDetailClient({
               <div className="mt-10 pt-6 border-t border-border/50">
                 <ShareButtons title={post.title} />
               </div>
+
+              {/* Coupons display */}
+              <BlogCouponsWidget postId={post.id} />
             </article>
 
             {/* Related Rooms (Article-to-Room Linking) */}

@@ -44,6 +44,8 @@ model bookings {
   children           Int?                   @default(0) @db.UnsignedInt
   rawTotalPrice      Decimal                @db.Decimal(12, 2)
   discountAmount     Decimal?               @default(0.00) @db.Decimal(12, 2)
+  promotionId        Int?                   @db.UnsignedInt
+  promotionDiscount  Decimal?               @default(0.00) @db.Decimal(12, 2)
   totalPrice         Decimal                @db.Decimal(12, 2)
   status             bookings_status        @default(PENDING)
   paymentMethod      bookings_paymentMethod @default(CASH)
@@ -74,6 +76,7 @@ model bookings {
   @@index([roomId], map: "fk_booking_room")
   @@index([isDeleted], map: "idx_bookings_isDeleted")
   @@index([userId, roomId], map: "idx_bookings_user_room")
+  @@index([promotionId], map: "idx_bookings_promotion")
 }
 
 model contacts {
@@ -99,6 +102,7 @@ model levels {
   createdAt         DateTime          @default(now()) @db.Timestamp(0)
   updatedAt         DateTime          @default(now()) @db.Timestamp(0)
   loyalty_program   loyalty_program[]
+  promotions        promotions[]
 }
 
 model loyalty_program {
@@ -309,6 +313,7 @@ model users {
   blog_posts    blog_posts[]
   blog_comments blog_comments[]
   push_subscriptions push_subscriptions[]
+  user_vouchers      user_vouchers[]
 
   @@index([email], map: "idx_users_email")
 }
@@ -516,7 +521,6 @@ model blog_posts {
   metaTitle       String?           @db.VarChar(70)
   metaDescription String?           @db.VarChar(160)
   metaKeywords    String?           @db.VarChar(255)
-  promotionBanner String?           @db.VarChar(500)
   status          blog_posts_status @default(DRAFT)
   isFeatured      Boolean           @default(false)
   viewCount       Int               @default(0) @db.UnsignedInt
@@ -527,11 +531,12 @@ model blog_posts {
   createdAt       DateTime          @default(now()) @db.Timestamp(0)
   updatedAt       DateTime          @default(now()) @db.Timestamp(0)
 
-  category blog_categories    @relation(fields: [categoryId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "blog_posts_ibfk_1")
-  author   users              @relation(fields: [authorId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "blog_posts_ibfk_2")
-  province location_provinces? @relation(fields: [provinceId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "blog_posts_ibfk_3")
-  tags     blog_post_tags[]
-  comments blog_comments[]
+  category        blog_categories    @relation(fields: [categoryId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "blog_posts_ibfk_1")
+  author          users              @relation(fields: [authorId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "blog_posts_ibfk_2")
+  province        location_provinces? @relation(fields: [provinceId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "blog_posts_ibfk_3")
+  tags            blog_post_tags[]
+  comments        blog_comments[]
+  blog_promotions blog_promotions[]
 
   @@index([categoryId], map: "fk_blog_post_category")
   @@index([authorId], map: "fk_blog_post_author")
@@ -641,3 +646,100 @@ model push_subscriptions {
 
   @@index([userId])
 }
+
+// ==================== PROMOTION / COUPON MODELS ====================
+
+model promotions {
+  id              Int              @id @default(autoincrement()) @db.UnsignedInt
+  code            String           @unique(map: "uq_promotion_code") @db.VarChar(30)
+  name            String           @db.VarChar(100)
+  promotionType   promotions_type  @default(SEASONAL)
+  discountType    discount_type
+  discountValue   Decimal          @db.Decimal(12, 2)
+  maxDiscount     Decimal?         @db.Decimal(12, 2)
+  minOrderValue   Decimal          @default(0) @db.Decimal(12, 2)
+  provinceId      Int?             @db.UnsignedInt
+  targetLevelId   Int?             @db.UnsignedInt
+  usageLimit      Int              @db.UnsignedInt
+  usedCount       Int              @default(0) @db.UnsignedInt
+  perUserLimit    Int              @default(1) @db.UnsignedInt
+  startDate       DateTime         @db.Timestamp(0)
+  endDate         DateTime         @db.Timestamp(0)
+  isPublic        Boolean          @default(true)
+  isActive        Boolean          @default(true)
+  isDeleted       Boolean          @default(false)
+  deletedAt       DateTime?        @db.Timestamp(0)
+  createdAt       DateTime         @default(now()) @db.Timestamp(0)
+  updatedAt       DateTime         @default(now()) @db.Timestamp(0)
+
+  user_vouchers    user_vouchers[]
+  promotion_usages promotion_usages[]
+  blog_promotions  blog_promotions[]
+  targetLevel      levels?          @relation(fields: [targetLevelId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_promotion_level")
+
+  @@index([code], map: "idx_promotion_code")
+  @@index([isActive, startDate, endDate], map: "idx_promotion_active_dates")
+  @@index([provinceId], map: "idx_promotion_province")
+  @@index([targetLevelId], map: "fk_promotion_level")
+}
+
+model user_vouchers {
+  id           Int            @id @default(autoincrement()) @db.UnsignedInt
+  userId       Int            @db.UnsignedInt
+  promotionId  Int            @db.UnsignedInt
+  status       voucher_status @default(AVAILABLE)
+  collectedAt  DateTime       @default(now()) @db.Timestamp(0)
+  usedAt       DateTime?      @db.Timestamp(0)
+
+  users      users      @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "user_vouchers_ibfk_1")
+  promotions promotions @relation(fields: [promotionId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "user_vouchers_ibfk_2")
+
+  @@unique([userId, promotionId], map: "uq_user_voucher")
+  @@index([userId, status], map: "idx_user_voucher_status")
+}
+
+model promotion_usages {
+  id              Int      @id @default(autoincrement()) @db.UnsignedInt
+  promotionId     Int      @db.UnsignedInt
+  userId          Int      @db.UnsignedInt
+  bookingId       Int      @unique @db.UnsignedInt
+  discountAmount  Decimal  @db.Decimal(12, 2)
+  usedAt          DateTime @default(now()) @db.Timestamp(0)
+
+  promotions promotions @relation(fields: [promotionId], references: [id], onUpdate: NoAction, map: "promotion_usages_ibfk_1")
+
+  @@index([promotionId], map: "idx_promo_usage_promotion")
+  @@index([userId], map: "idx_promo_usage_user")
+}
+
+model blog_promotions {
+  id          Int @id @default(autoincrement()) @db.UnsignedInt
+  postId      Int @db.UnsignedInt
+  promotionId Int @db.UnsignedInt
+
+  post      blog_posts @relation(fields: [postId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "blog_promotions_ibfk_1")
+  promotion promotions @relation(fields: [promotionId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "blog_promotions_ibfk_2")
+
+  @@unique([postId, promotionId], map: "uq_blog_promotion")
+  @@index([promotionId], map: "fk_blog_promotion_promotion")
+}
+
+enum promotions_type {
+  WELCOME
+  SEASONAL
+  LOYALTY
+  BLOG
+  THANKYOU
+}
+
+enum discount_type {
+  PERCENTAGE
+  FIXED_AMOUNT
+}
+
+enum voucher_status {
+  AVAILABLE
+  USED
+  EXPIRED
+}
+

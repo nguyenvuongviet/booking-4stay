@@ -1,5 +1,12 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsInt, IsNotEmpty, IsDateString, Min } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import {
+  IsDateString,
+  IsInt,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  Min,
+} from 'class-validator';
 
 export class PreCheckDto {
   @ApiProperty({ example: 1, description: 'ID của phòng cần kiểm tra giá' })
@@ -22,4 +29,12 @@ export class PreCheckDto {
   @IsDateString()
   @IsNotEmpty()
   checkOut: string;
+
+  @ApiPropertyOptional({
+    example: 'DALAT15',
+    description: 'Mã giảm giá (nếu có)',
+  })
+  @IsOptional()
+  @IsString()
+  promotionCode?: string;
 }

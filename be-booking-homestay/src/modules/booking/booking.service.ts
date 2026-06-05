@@ -19,10 +19,10 @@ import { AppConfigKey } from '../app-configs/constants/app-config.constant';
 import { MailService } from '../mail/mail.service';
 import { BookingNotificationDispatcher } from '../notification/booking-notification.dispatcher';
 import { PrismaService } from '../prisma/prisma.service';
+import { PromotionHelper } from '../promotion/promotion.helper';
 import { Role } from '../user/dto/enum.dto';
 import { BookingLifecycleService } from './booking-lifecycle.service';
 import {
-  ACTIVE_BOOKING_STATUSES,
   CANCELLABLE_STATUSES,
   daysUntilDate,
   sortPolicyDesc,
@@ -43,20 +43,21 @@ export class BookingService {
     private readonly lifecycleService: BookingLifecycleService,
     private readonly loyalty: LoyaltyProgram,
     private readonly notificationService: BookingNotificationDispatcher,
-  ) { }
+    private readonly promotionHelper: PromotionHelper,
+  ) {}
 
   /**˚
    * Xem trước thông tin đặt phòng (Pre-check).
    * Kiểm tra phòng trống, tính toán giá tiền, áp dụng ưu đãi hạng thành viên (Loyalty).
    */
   async previewBooking(userId: number, dto: PreCheckDto) {
-    const { roomId, checkIn, checkOut } = dto;
+    const { roomId, checkIn, checkOut, promotionCode } = dto;
     const { inDate, outDate } = ensureDateRange(checkIn, checkOut);
 
     const [room, isOccupied, policyConfig] = await Promise.all([
       this.prisma.rooms.findFirst({
         where: { id: roomId, isDeleted: false },
-        select: { id: true, price: true, name: true },
+        select: { id: true, price: true, name: true, provinceId: true },
       }),
       this.availability.hasOverlap(roomId, inDate, outDate),
       this.prisma.app_configs.findUnique({
@@ -72,9 +73,12 @@ export class BookingService {
       outDate,
     );
 
-    const loyaltyInfo = await this.pricing.applyLoyaltyDiscount(
+    // Sử dụng Waterfall Discount (Coupon → Loyalty)
+    const waterfallResult = await this.pricing.applyWaterfallDiscount(
       userId,
       rawTotal,
+      promotionCode,
+      room.provinceId,
     );
 
     const nights = nightsBetween(inDate, outDate);
@@ -86,10 +90,19 @@ export class BookingService {
       priceSummary: {
         averagePricePerNight: Math.round(rawTotal / nights),
         rawTotal,
-        discountAmount: loyaltyInfo.discountAmount,
-        totalPrice: loyaltyInfo.totalPrice,
-        tierName: loyaltyInfo.tierName,
-        discountPercent: loyaltyInfo.discountPercent,
+        // Tầng 1: Coupon
+        couponDiscount: waterfallResult.couponDiscount,
+        couponCode: waterfallResult.couponCode,
+        couponValid: waterfallResult.couponValid,
+        couponMessage: waterfallResult.couponMessage,
+        // Tầng 2: Loyalty
+        loyaltyDiscount: waterfallResult.loyaltyDiscount,
+        tierName: waterfallResult.tierName,
+        discountPercent: waterfallResult.discountPercent,
+        // Tổng
+        totalDiscount: waterfallResult.totalDiscount,
+        discountAmount: waterfallResult.loyaltyDiscount, // backward compat
+        totalPrice: waterfallResult.totalPrice,
       },
       cancellationPolicy: policyConfig?.value || [],
       policyUpdatedAt: policyConfig?.updatedAt || null,
@@ -115,6 +128,7 @@ export class BookingService {
       guestPhoneNumber,
       specialRequest,
       paymentMethod,
+      promotionCode,
     } = dto;
 
     const { inDate, outDate } = ensureDateRange(checkIn, checkOut);
@@ -127,6 +141,7 @@ export class BookingService {
           price: true,
           adultCapacity: true,
           childCapacity: true,
+          provinceId: true,
         },
       }),
       this.prisma.app_configs.findUnique({
@@ -148,8 +163,14 @@ export class BookingService {
       inDate,
       outDate,
     );
-    const { totalPrice, discountAmount } =
-      await this.pricing.applyLoyaltyDiscount(userId, rawTotal);
+
+    // Sử dụng Waterfall Discount (Coupon → Loyalty)
+    const waterfallResult = await this.pricing.applyWaterfallDiscount(
+      userId,
+      rawTotal,
+      promotionCode,
+      room.provinceId,
+    );
 
     const booking = await this.prisma.$transaction(async (tx) => {
       await tx.$queryRaw`SELECT id FROM rooms WHERE id = ${roomId} FOR UPDATE`;
@@ -159,7 +180,22 @@ export class BookingService {
         userId,
       });
 
-      return tx.bookings.create({
+      // Re-validate coupon trong transaction để tránh race condition
+      let finalWaterfall = waterfallResult;
+      if (promotionCode && waterfallResult.couponValid) {
+        finalWaterfall = await this.pricing.applyWaterfallDiscount(
+          userId,
+          rawTotal,
+          promotionCode,
+          room.provinceId,
+          { tx },
+        );
+        if (!finalWaterfall.couponValid) {
+          throw new BadRequestException(finalWaterfall.couponMessage);
+        }
+      }
+
+      const created = await tx.bookings.create({
         data: {
           userId,
           roomId,
@@ -172,8 +208,10 @@ export class BookingService {
           adults,
           children,
           rawTotalPrice: rawTotal,
-          discountAmount,
-          totalPrice,
+          discountAmount: finalWaterfall.loyaltyDiscount,
+          promotionId: finalWaterfall.promotionId,
+          promotionDiscount: finalWaterfall.couponDiscount,
+          totalPrice: finalWaterfall.totalPrice,
           status: bookings_status.PENDING,
           paymentMethod,
           paidAmount: 0,
@@ -182,6 +220,19 @@ export class BookingService {
         },
         include: { rooms: { include: { room_images: true } } },
       });
+
+      // Ghi nhận coupon usage trong transaction
+      if (finalWaterfall.promotionId && finalWaterfall.couponDiscount > 0) {
+        await this.promotionHelper.recordCouponUsage(
+          finalWaterfall.promotionId,
+          userId,
+          created.id,
+          finalWaterfall.couponDiscount,
+          { tx },
+        );
+      }
+
+      return created;
     });
 
     this.mailService
@@ -641,8 +692,7 @@ export class BookingService {
       // 4.5 Xử lý thông tin ngân hàng
       if (isBankInfoChanged) {
         if (bankName) updateData.bankName = bankName;
-        if (bankAccountNumber)
-          updateData.bankAccountNumber = bankAccountNumber;
+        if (bankAccountNumber) updateData.bankAccountNumber = bankAccountNumber;
         if (bankAccountName) updateData.bankAccountName = bankAccountName;
 
         if (logAction === 'UPDATE') {

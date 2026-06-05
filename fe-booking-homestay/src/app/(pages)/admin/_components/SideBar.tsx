@@ -22,6 +22,7 @@ import {
   Plus,
   Settings,
   Star,
+  Ticket,
   Users,
 } from "lucide-react";
 import Image from "next/image";
@@ -38,6 +39,7 @@ const menuItems = [
   { icon: Star, label: "Bình luận & Đánh giá", href: "/admin/reviews" },
   { icon: FileText, label: "Blog", href: "/admin/blog" },
   { icon: Gift, label: "Khách hàng Thân thiết", href: "/admin/loyalty" },
+  { icon: Ticket, label: "Mã giảm giá", href: "/admin/promotions" },
   { icon: MapPin, label: "Vị trí", href: "/admin/locations" },
   // { icon: BarChart3, label: "Báo cáo & Thống kê", href: "/admin/reports" },
   // { icon: TrendingUp, label: "Doanh thu", href: "/admin/revenue" },

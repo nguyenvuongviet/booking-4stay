@@ -7,6 +7,12 @@ export interface BookingPre {
     discountPercent: number;
     rawTotal: number;
     totalPrice: number;
+    couponDiscount?: number;
+    couponCode?: string | null;
+    couponValid?: boolean;
+    couponMessage?: string;
+    loyaltyDiscount?: number;
+    tierName?: string;
   };
   roomName: string;
   stayDetails: {

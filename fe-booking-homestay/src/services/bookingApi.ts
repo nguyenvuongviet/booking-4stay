@@ -12,6 +12,7 @@ export const create_booking = async (data: {
   specialRequest?: string;
   paymentMethod: string;
   policyUpdatedAt?: string;
+  promotionCode?: string;
 }) => {
   try {
     const resp = await api.post("/bookings", data);
