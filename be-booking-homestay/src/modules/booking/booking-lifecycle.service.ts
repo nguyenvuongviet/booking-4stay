@@ -153,8 +153,26 @@ export class BookingLifecycleService {
       });
       if (!booking) throw new NotFoundException();
 
-      const newPaidAmount = Number(booking.paidAmount) + paidAmount;
+      // Guard: không xử lý nếu booking đã ở trạng thái cuối
+      const terminalStatuses: bookings_status[] = [
+        bookings_status.CANCELLED,
+        bookings_status.CANCELLED_BY_ADMIN,
+        bookings_status.CHECKED_OUT,
+        bookings_status.REFUNDED,
+      ];
+      if (terminalStatuses.includes(booking.status as bookings_status)) {
+        console.warn(
+          `[Lifecycle] Payment received for terminal booking #${orderId} (${booking.status}). Skipping.`,
+        );
+        return booking;
+      }
+
       const total = Number(booking.totalPrice);
+      // Cap paidAmount: không cho vượt quá totalPrice (chống webhook retry cộng dồn)
+      const newPaidAmount = Math.min(
+        Number(booking.paidAmount) + paidAmount,
+        total,
+      );
       let newStatus: bookings_status = booking.status as bookings_status;
 
       if (newPaidAmount > 0 && newPaidAmount < total) {

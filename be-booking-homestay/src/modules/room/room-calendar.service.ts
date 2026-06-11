@@ -3,11 +3,11 @@ import { bookings_status } from '@prisma/client';
 import { eachDayOfInterval, endOfMonth, format, startOfMonth } from 'date-fns';
 import { ACTIVE_BOOKING_STATUSES } from '../booking/booking.constants';
 import { PrismaService } from '../prisma/prisma.service';
-import { RoomHelper } from './room.helpers';
 import {
   RoomCalendarQueryDto,
   UpdateCalendarItemDto,
 } from './dto/room-calendar.dto';
+import { RoomHelper } from './room.helpers';
 
 @Injectable()
 export class RoomCalendarService {
@@ -92,12 +92,31 @@ export class RoomCalendarService {
       });
     }
 
+    const totalDays = calendar.length;
+    const availableDays = calendar.filter(
+      (day) => day.status === 'AVAILABLE',
+    ).length;
+    const bookedDays = calendar.filter((day) => day.status === 'BOOKED').length;
+    const blockedDays = calendar.filter(
+      (day) => day.status === 'BLOCKED',
+    ).length;
+    const occupancyRate =
+      totalDays > 0 ? `${((bookedDays / totalDays) * 100).toFixed(1)}%` : '0%';
+
     return {
       roomId,
       roomName: room.name,
+      basePrice: Number(room.price),
       month: m + 1,
       year: y,
       calendar,
+      summary: {
+        totalDays,
+        availableDays,
+        bookedDays,
+        blockedDays,
+        occupancyRate,
+      },
     };
   }
 

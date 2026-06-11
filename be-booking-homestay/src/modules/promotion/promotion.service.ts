@@ -411,16 +411,16 @@ export class PromotionService {
       throw new BadRequestException('Mã giảm giá đã hết lượt sử dụng');
     }
 
-    const existing = await this.prisma.user_vouchers.findFirst({
-      where: { userId, promotionId },
-    });
-    if (existing) {
-      throw new BadRequestException('Bạn đã lưu mã này rồi');
+    try {
+      await this.prisma.user_vouchers.create({
+        data: { userId, promotionId, status: 'AVAILABLE' },
+      });
+    } catch (err: any) {
+      if (err.code === 'P2002') {
+        throw new BadRequestException('Bạn đã lưu mã này rồi');
+      }
+      throw err;
     }
-
-    await this.prisma.user_vouchers.create({
-      data: { userId, promotionId, status: 'AVAILABLE' },
-    });
 
     return { message: `Đã lưu mã ${promotion.code} vào ví` };
   }

@@ -291,17 +291,11 @@ export class PromotionHelper {
   ) {
     const prisma = options?.tx || this.prisma;
 
-    // Giảm usedCount (atomic, tối thiểu về 0)
-    const promotion = await prisma.promotions.findUnique({
-      where: { id: promotionId },
-      select: { usedCount: true },
+    // Giảm usedCount (atomic + CAS, tối thiểu về 0)
+    await prisma.promotions.updateMany({
+      where: { id: promotionId, usedCount: { gt: 0 } },
+      data: { usedCount: { decrement: 1 } },
     });
-    if (promotion && promotion.usedCount > 0) {
-      await prisma.promotions.update({
-        where: { id: promotionId },
-        data: { usedCount: { decrement: 1 } },
-      });
-    }
 
     // Xoá ghi nhận usage
     await prisma.promotion_usages.deleteMany({

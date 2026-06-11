@@ -5,6 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { bookings_status } from '@prisma/client';
+import { eachDayOfInterval, subDays } from 'date-fns';
 import {
   ADMIN_EMAIL,
   WALK_IN_GUEST_ID,
@@ -173,6 +174,8 @@ export class BookingService {
     );
 
     const booking = await this.prisma.$transaction(async (tx) => {
+      // Lock timeout: fail-fast nếu row bị lock quá 3 giây (tránh chờ vô hạn)
+      await tx.$queryRaw`SET innodb_lock_wait_timeout = 3`;
       await tx.$queryRaw`SELECT id FROM rooms WHERE id = ${roomId} FOR UPDATE`;
 
       await this.availability.assertAvailability(roomId, inDate, outDate, {
@@ -230,6 +233,21 @@ export class BookingService {
           finalWaterfall.couponDiscount,
           { tx },
         );
+      }
+
+      // INSERT booking_date_locks — DB-level unique constraint chống overbooking
+      const stayDates = eachDayOfInterval({
+        start: inDate,
+        end: subDays(outDate, 1),
+      });
+      if (stayDates.length > 0) {
+        await tx.booking_date_locks.createMany({
+          data: stayDates.map((date) => ({
+            roomId,
+            date,
+            bookingId: created.id,
+          })),
+        });
       }
 
       return created;
@@ -332,6 +350,7 @@ export class BookingService {
       }
 
       // --- Bước 2: Pessimistic Lock + Kiểm tra trùng lặp ---
+      await tx.$queryRaw`SET innodb_lock_wait_timeout = 3`;
       await tx.$queryRaw`SELECT id FROM rooms WHERE id = ${roomId} FOR UPDATE`;
       await this.availability.assertAvailability(roomId, inDate, outDate, {
         tx,
@@ -390,6 +409,21 @@ export class BookingService {
           note: note ? `[Manual] ${note}` : logParts.join(' | '),
         },
       });
+
+      // --- Bước 5: Insert booking_date_locks ---
+      const stayDates = eachDayOfInterval({
+        start: inDate,
+        end: subDays(outDate, 1),
+      });
+      if (stayDates.length > 0) {
+        await tx.booking_date_locks.createMany({
+          data: stayDates.map((date) => ({
+            roomId,
+            date,
+            bookingId: created.id,
+          })),
+        });
+      }
 
       return { ...created, accountCreated, guestUserId: userId };
     });
@@ -602,6 +636,7 @@ export class BookingService {
         this.assertRescheduleLimit(booking, role);
         this.assertRescheduleWindow(booking, role);
 
+        await tx.$queryRaw`SET innodb_lock_wait_timeout = 3`;
         await tx.$queryRaw`SELECT id FROM rooms WHERE id = ${booking.roomId} FOR UPDATE`;
 
         await this.availability.assertAvailability(
@@ -737,6 +772,28 @@ export class BookingService {
           logs: { orderBy: { createdAt: 'desc' } },
         },
       });
+
+      // Cập nhật booking_date_locks nếu ngày thay đổi
+      if (isDateChanged && updateData.checkIn && updateData.checkOut) {
+        // Xóa locks cũ
+        await tx.booking_date_locks.deleteMany({
+          where: { bookingId: id },
+        });
+        // Insert locks mới
+        const newStayDates = eachDayOfInterval({
+          start: updateData.checkIn,
+          end: subDays(updateData.checkOut, 1),
+        });
+        if (newStayDates.length > 0) {
+          await tx.booking_date_locks.createMany({
+            data: newStayDates.map((date) => ({
+              roomId: booking.roomId,
+              date,
+              bookingId: id,
+            })),
+          });
+        }
+      }
 
       let message = 'Cập nhật thành công';
       if (isDateChanged) {

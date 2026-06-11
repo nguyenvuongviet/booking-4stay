@@ -169,12 +169,22 @@ export interface CalendarDay {
   bookingDetails: { guestName: string } | null;
 }
 
+export interface CalendarSummary {
+  totalDays: number;
+  availableDays: number;
+  bookedDays: number;
+  blockedDays: number;
+  occupancyRate: string;
+}
+
 export interface RoomCalendarResponse {
   roomId: number;
   roomName: string;
+  basePrice: number;
   month: number;
   year: number;
   calendar: CalendarDay[];
+  summary: CalendarSummary;
 }
 
 export interface CalendarUpdateItem {
@@ -186,7 +196,7 @@ export interface CalendarUpdateItem {
 export async function getRoomCalendar(
   roomId: number,
   month?: number,
-  year?: number
+  year?: number,
 ): Promise<RoomCalendarResponse> {
   try {
     const res = await api.get(`/room/${roomId}/calendar`, {
@@ -201,8 +211,12 @@ export async function getRoomCalendar(
 
 export async function updateRoomCalendar(
   roomId: number,
-  updates: CalendarUpdateItem[]
-): Promise<{ message: string; updatedPrices: number; updatedAvailability: number }> {
+  updates: CalendarUpdateItem[],
+): Promise<{
+  message: string;
+  updatedPrices: number;
+  updatedAvailability: number;
+}> {
   try {
     const res = await api.put(`/room/${roomId}/calendar`, { updates });
     return res.data.data;

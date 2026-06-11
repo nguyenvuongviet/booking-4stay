@@ -1,12 +1,14 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { ModuleRef } from '@nestjs/core';
 import { Cron } from '@nestjs/schedule';
 import { bookings_status } from '@prisma/client';
-import { ADMIN_EMAIL } from 'src/common/constant/app.constant';
 import { addDays, endOfDay, startOfDay, subMinutes } from 'date-fns';
+import { ADMIN_EMAIL } from 'src/common/constant/app.constant';
 import { AppConfigsService } from '../app-configs/app-configs.service';
 import { AppConfigKey } from '../app-configs/constants/app-config.constant';
 import { MailService } from '../mail/mail.service';
 import { BookingNotificationDispatcher } from '../notification/booking-notification.dispatcher';
+import { PayosService } from '../payos/payos.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { BookingLifecycleService } from './booking-lifecycle.service';
 
@@ -20,7 +22,8 @@ export class BookingCron {
     private readonly appConfigsService: AppConfigsService,
     private readonly bookingNotifications: BookingNotificationDispatcher,
     private readonly mailService: MailService,
-  ) { }
+    private readonly moduleRef: ModuleRef,
+  ) {}
 
   /**
    * Chạy lúc 12:00 trưa mỗi ngày.
@@ -122,6 +125,16 @@ export class BookingCron {
           notifyUser: true,
         },
       );
+
+      // Giải phóng date locks
+      await this.prisma.booking_date_locks
+        .deleteMany({ where: { bookingId: b.id } })
+        .catch((err) =>
+          this.logger.error(
+            `[Cron] Delete date locks error for booking ${b.id}`,
+            err,
+          ),
+        );
     }
 
     if (expired.length) {
@@ -277,6 +290,64 @@ export class BookingCron {
     if (userSentCount || adminSentCount) {
       this.logger.log(
         `[Cron] Sent check-in reminders: user=${userSentCount}, admin=${adminSentCount}.`,
+      );
+    }
+  }
+
+  /**
+   * Chạy mỗi 5 phút.
+   * Đối soát các giao dịch thanh toán PENDING quá 10 phút với PayOS.
+   * Phòng trường hợp webhook bị mất (network issue).
+   */
+  @Cron('*/5 * * * *')
+  async reconcilePayments() {
+    const threshold = subMinutes(new Date(), 10);
+
+    const pendingTxs = await this.prisma.payment_transactions.findMany({
+      where: {
+        status: 'PENDING',
+        createdAt: { lt: threshold },
+      },
+      take: 20,
+    });
+
+    if (!pendingTxs.length) return;
+
+    let syncedCount = 0;
+    const payosService = this.moduleRef.get(PayosService, { strict: false });
+    for (const tx of pendingTxs) {
+      try {
+        const success = await payosService.verifyAndSyncPayment(
+          tx.orderCode.toString(),
+        );
+        if (success) {
+          syncedCount++;
+        }
+      } catch (err) {
+        this.logger.error(
+          `[Cron] Reconcile failed for orderCode ${tx.orderCode}:`,
+          err,
+        );
+      }
+    }
+
+    if (syncedCount > 0) {
+      this.logger.log(`[Cron] Reconciled and synced ${syncedCount} bookings.`);
+    }
+
+    // Hết hạn các giao dịch PENDING quá 30 phút
+    const expireThreshold = subMinutes(new Date(), 30);
+    const expired = await this.prisma.payment_transactions.updateMany({
+      where: {
+        status: 'PENDING',
+        createdAt: { lt: expireThreshold },
+      },
+      data: { status: 'CANCELLED' },
+    });
+
+    if (expired.count > 0) {
+      this.logger.log(
+        `[Cron] Expired ${expired.count} stale payment transactions.`,
       );
     }
   }

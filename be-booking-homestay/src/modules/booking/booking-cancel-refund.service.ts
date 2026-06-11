@@ -94,6 +94,11 @@ export class BookingCancelRefundService {
         include: { rooms: true },
       });
 
+      // Xóa date locks — giải phóng ngày cho booking khác
+      await tx.booking_date_locks.deleteMany({
+        where: { bookingId: id },
+      });
+
       if (booking.promotionId) {
         await this.promotionHelper.refundCouponUsage(
           booking.promotionId,
@@ -191,6 +196,11 @@ export class BookingCancelRefundService {
           updatedAt: new Date(),
         } as any,
         include: { rooms: true },
+      });
+
+      // Xóa date locks — giải phóng ngày cho booking khác
+      await tx.booking_date_locks.deleteMany({
+        where: { bookingId },
       });
 
       if (booking.promotionId) {
