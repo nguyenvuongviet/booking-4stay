@@ -5,14 +5,19 @@ import { useAuth } from "@/context/auth-context";
 import { useLang } from "@/context/lang-context";
 import { IUser } from "@/models/User";
 import { update_profile, upload_file } from "@/services/authApi";
-import { useEffect, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useRef, useState } from "react";
 import "react-datepicker/dist/react-datepicker.css";
 import toast from "react-hot-toast";
 import ProfileTabs from "./_component/ProfileTabs";
 
-export default function ProfilePage() {
+function ProfileContent() {
   const { t } = useLang();
   const { user, updateUser, refreshUser } = useAuth();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const tabParam = searchParams.get("tab");
+
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [avatarUrl, setAvatarUrl] = useState("/default-avatar.png");
   const [firstName, setFirstName] = useState("");
@@ -22,8 +27,19 @@ export default function ProfilePage() {
   const [country, setCountry] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [activeTab, setActiveTab] = useState("profile");
+  const [activeTab, setActiveTab] = useState(tabParam || "profile");
   const [isEditing, setIsEditing] = useState(false);
+
+  useEffect(() => {
+    if (tabParam && tabParam !== activeTab) {
+      setActiveTab(tabParam);
+    }
+  }, [tabParam]);
+
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    router.push(`/profile?tab=${tab}`);
+  };
 
   const getTierPoints = (total: number) => {
     if (total < 1000) return 1000 - total; // Lên Silver
@@ -121,7 +137,7 @@ export default function ProfilePage() {
           <ProfileTabs
             user={user}
             activeTab={activeTab}
-            setActiveTab={setActiveTab}
+            setActiveTab={handleTabChange}
             isEditing={isEditing}
             avatarUrl={avatarUrl}
             fileInputRef={fileInputRef as React.RefObject<HTMLInputElement>}
@@ -145,5 +161,19 @@ export default function ProfilePage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function ProfilePage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex h-screen items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        </div>
+      }
+    >
+      <ProfileContent />
+    </Suspense>
   );
 }

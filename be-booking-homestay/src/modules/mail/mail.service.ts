@@ -276,4 +276,31 @@ export class MailService {
       html: this.wrapTemplate(subject, body),
     });
   }
+
+  async sendSupportMail(adminEmail: string, contactData: any) {
+    const subject = `Yêu cầu hỗ trợ mới từ ${contactData.fullName}`;
+    const safeName = this.escapeHtml(contactData.fullName);
+    const safeEmail = this.escapeHtml(contactData.email);
+    const safeMessage = this.escapeHtml(contactData.message).replace(/\n/g, '<br/>');
+
+    const body = `
+      <p>Chào Admin,</p>
+      <p>Bạn vừa nhận được một yêu cầu hỗ trợ mới trên hệ thống 4Stay.</p>
+      <hr style="margin: 16px 0;" />
+      <p><b>Khách hàng:</b> ${safeName}</p>
+      <p><b>Email liên hệ:</b> ${safeEmail}</p>
+      <p><b>Nội dung:</b></p>
+      <div style="margin: 16px 0; padding: 14px; background: #fff7ed; border-left: 4px solid #FF6B00; color: #333;">
+        ${safeMessage}
+      </div>
+      <p>Vui lòng liên hệ lại với khách hàng qua email trên để hỗ trợ.</p>
+    `;
+
+    await transporter.sendMail({
+      from: `"4Stay System" <${SENDER_EMAIL}>`,
+      to: adminEmail,
+      subject: `[4Stay Support] ${subject}`,
+      html: this.wrapTemplate('Yêu cầu hỗ trợ', body),
+    });
+  }
 }

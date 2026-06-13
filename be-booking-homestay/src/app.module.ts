@@ -9,6 +9,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { BlogModule } from './modules/blog/blog.module';
 import { BookingModule } from './modules/booking/booking.module';
 import { ChatModule } from './modules/chatbot/chatbot.module';
+import { ContactModule } from './modules/contact/contact.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { FavoriteModule } from './modules/favorite/favorite.module';
 import { LocationModule } from './modules/location/location.module';
@@ -48,8 +49,9 @@ import { UserModule } from './modules/user/user.module';
     ChatModule,
     MessageModule,
     PromotionModule,
+    ContactModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService, ProtectStrategy],
 })
-export class AppModule {}
+export class AppModule { }

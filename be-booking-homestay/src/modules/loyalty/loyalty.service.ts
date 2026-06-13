@@ -6,7 +6,7 @@ import { UpdateLoyaltyLevelDto } from './dto/update-loyalty-level.dto';
 
 @Injectable()
 export class LoyaltyService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   private async ensureLevelExists(id: number) {
     const level = await this.prisma.levels.findUnique({ where: { id } });
@@ -36,6 +36,13 @@ export class LoyaltyService {
 
   async findAllLevels() {
     return await this.prisma.levels.findMany({
+      orderBy: { minPoints: 'asc' },
+    });
+  }
+
+  async findActiveLevels() {
+    return await this.prisma.levels.findMany({
+      where: { isActive: true },
       orderBy: { minPoints: 'asc' },
     });
   }

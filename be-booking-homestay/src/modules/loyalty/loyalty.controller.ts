@@ -13,17 +13,25 @@ import { CreateLoyaltyLevelDto } from './dto/create-loyalty-level.dto';
 import { UpdateLoyaltyLevelDto } from './dto/update-loyalty-level.dto';
 import { Roles } from 'src/common/decorator/roles.decorator';
 import { Role } from '../user/dto/enum.dto';
+import { Public } from 'src/common/decorator/public.decorator';
 
 @ApiTags('loyalty')
 @ApiBearerAuth('AccessToken')
 @Controller('loyalty')
 export class LoyaltyController {
-  constructor(private readonly loyaltyService: LoyaltyService) {}
+  constructor(private readonly loyaltyService: LoyaltyService) { }
 
   @Get('levels')
   @Roles(Role.ADMIN)
   findAllLevels() {
     return this.loyaltyService.findAllLevels();
+  }
+
+  @Get('levels/public')
+  @Public()
+  @ApiOperation({ summary: 'Lấy các cấp độ loyalty công khai cho khách hàng' })
+  findActiveLevels() {
+    return this.loyaltyService.findActiveLevels();
   }
 
   @Post('levels')
