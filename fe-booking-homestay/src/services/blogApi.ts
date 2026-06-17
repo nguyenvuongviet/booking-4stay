@@ -12,7 +12,6 @@ export interface BlogPost {
   metaTitle?: string;
   metaDescription?: string;
   metaKeywords?: string;
-  promotionBanner?: string;
   status: "DRAFT" | "PUBLISHED" | "ARCHIVED";
   isFeatured: boolean;
   viewCount: number;
@@ -52,6 +51,7 @@ export interface BlogComment {
   id: number;
   content: string;
   status: "PENDING" | "APPROVED" | "SPAM";
+  reportCount?: number;
   createdAt: string;
   user: {
     id: number;
@@ -74,6 +74,8 @@ export interface BlogQueryParams {
   search?: string;
   categorySlug?: string;
   tagSlug?: string;
+  sortBy?: string;
+  sortOrder?: string;
 }
 
 // ==================== Public Blog API ====================
@@ -139,5 +141,10 @@ export const createComment = async (slug: string, content: string) => {
 
 export const deleteComment = async (id: number) => {
   const res = await api.delete(`/blog/comments/${id}`);
+  return res.data?.data;
+};
+
+export const reportComment = async (id: number) => {
+  const res = await api.post(`/blog/comments/${id}/report`);
   return res.data?.data;
 };

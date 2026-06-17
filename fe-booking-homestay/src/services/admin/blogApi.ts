@@ -12,14 +12,13 @@ import type {
 export interface CreatePostData {
   title: string;
   categoryId: number;
-  provinceId?: number;
+  provinceId?: number | null;
   excerpt?: string;
   content: string;
   thumbnailUrl?: string;
   metaTitle?: string;
   metaDescription?: string;
   metaKeywords?: string;
-  promotionBanner?: string;
   isFeatured?: boolean;
   tagIds?: number[];
 }
@@ -126,6 +125,7 @@ export const getAdminComments = async (params?: {
   pageSize?: number;
   postId?: number;
   status?: string;
+  reported?: string;
 }) => {
   const res = await api.get("/admin/blog/comments", { params });
   return res.data?.data as {

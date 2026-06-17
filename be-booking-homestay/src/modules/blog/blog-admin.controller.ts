@@ -11,10 +11,8 @@ import {
   Query,
   Req,
   UploadedFile,
-  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
 import { FileInterceptor } from '@nestjs/platform-express';
 import {
   ApiBearerAuth,
@@ -25,7 +23,6 @@ import {
 } from '@nestjs/swagger';
 import { Roles } from 'src/common/decorator/roles.decorator';
 import { UploadFileDto } from 'src/common/dto/upload-file.dto';
-import { RolesGuard } from 'src/common/guard/role/roles.guard';
 import { BlogService } from './blog.service';
 import {
   ChangePostStatusDto,
@@ -40,7 +37,6 @@ import {
 
 @ApiTags('Blog (Admin)')
 @Controller('admin/blog')
-@UseGuards(AuthGuard('protect'), RolesGuard)
 @Roles('admin')
 @ApiBearerAuth()
 export class BlogAdminController {

@@ -31,8 +31,8 @@ export default function ChatWidget() {
     bottomRef,
   } = useChatbot();
 
-  // Ẩn toàn bộ widget khi đang ở trang /inbox
-  if (isChatPage(pathname)) return null;
+  // Ẩn toàn bộ widget khi đang ở trang /inbox hoặc các trang quản trị /admin
+  if (isChatPage(pathname) || pathname?.startsWith("/admin")) return null;
 
   const handleClose = () => {
     setClose(true);
@@ -45,7 +45,7 @@ export default function ChatWidget() {
   return (
     <>
       {!open && (
-        <div className="fixed bottom-8 right-6 z-50 flex flex-col items-center gap-6">
+        <div className="fixed bottom-1/12 right-6 z-50 flex flex-col items-center gap-6">
           {/* Nút 1: Inbox Realtime */}
           <button
             onClick={() => router.push("/inbox")}

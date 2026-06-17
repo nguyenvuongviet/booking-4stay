@@ -44,3 +44,11 @@ export async function fetchRelatedPosts(
   );
   return data ?? [];
 }
+
+/** Fetch danh sách bài viết mới nhất */
+export async function fetchLatestPosts(limit = 5): Promise<BlogPost[]> {
+  const data = await fetchJSON<{ items: BlogPost[] }>(
+    `/blog/posts?pageSize=${limit}`,
+  );
+  return data?.items ?? [];
+}

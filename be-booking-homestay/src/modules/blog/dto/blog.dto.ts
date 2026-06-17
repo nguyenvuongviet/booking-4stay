@@ -90,11 +90,11 @@ export class UpdatePostDto {
   @Type(() => Number)
   categoryId?: number;
 
-  @ApiPropertyOptional({ example: 1 })
+  @ApiPropertyOptional({ example: 1, nullable: true })
   @IsOptional()
   @IsInt()
   @Type(() => Number)
-  provinceId?: number;
+  provinceId?: number | null;
 
   @ApiPropertyOptional()
   @IsOptional()
@@ -244,6 +244,16 @@ export class QueryPostDto {
   @IsOptional()
   @IsEnum(blog_posts_status)
   status?: blog_posts_status;
+
+  @ApiPropertyOptional({ example: 'publishedAt' })
+  @IsOptional()
+  @IsString()
+  sortBy?: string;
+
+  @ApiPropertyOptional({ example: 'desc' })
+  @IsOptional()
+  @IsString()
+  sortOrder?: string;
 }
 
 export class QueryCommentDto {
@@ -269,4 +279,9 @@ export class QueryCommentDto {
   @IsOptional()
   @IsString()
   status?: string;
+
+  @ApiPropertyOptional({ example: 'true' })
+  @IsOptional()
+  @IsString()
+  reported?: string;
 }

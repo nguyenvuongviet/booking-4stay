@@ -18,25 +18,13 @@ interface AdminComment extends BlogComment {
   post: { id: number; title: string; slug: string };
 }
 
-const statusStyles = {
-  PENDING: "bg-yellow-50 text-yellow-700 border-yellow-200/60",
-  APPROVED: "bg-green-50 text-green-700 border-green-200/60",
-  SPAM: "bg-gray-50 text-gray-600 border-gray-200/60",
-};
-
-const statusLabels = {
-  PENDING: "Chờ duyệt",
-  APPROVED: "Đã duyệt",
-  SPAM: "Spam",
-};
-
 function CommentsListContent() {
   const searchParams = useSearchParams();
   const postId = searchParams.get("postId");
 
-  const [activeStatus, setActiveStatus] = useState<
-    "ALL" | "PENDING" | "APPROVED" | "SPAM"
-  >("ALL");
+  const [activeStatus, setActiveStatus] = useState<"ALL" | "SPAM" | "REPORTED">(
+    "ALL",
+  );
   const [comments, setComments] = useState<AdminComment[]>([]);
   const [pagination, setPagination] = useState<BlogPagination>({
     page: 1,
@@ -54,7 +42,9 @@ function CommentsListContent() {
         if (postId) {
           params.postId = Number(postId);
         }
-        if (activeStatus !== "ALL") {
+        if (activeStatus === "REPORTED") {
+          params.reported = "true";
+        } else if (activeStatus !== "ALL") {
           params.status = activeStatus;
         }
         const data = await getAdminComments(params);
@@ -75,23 +65,19 @@ function CommentsListContent() {
 
   const handleStatusChange = async (
     id: number,
-    status: "PENDING" | "APPROVED" | "SPAM",
+    status: "APPROVED" | "SPAM",
+    isClearingReports = false,
   ) => {
     try {
       await updateAdminCommentStatus(id, status);
       toast.success(
-        status === "APPROVED"
-          ? "Đã duyệt bình luận"
-          : status === "SPAM"
-            ? "Đã đánh dấu là Spam"
-            : "Đã ẩn bình luận",
+        isClearingReports
+          ? "Đã duyệt bình luận thành công!"
+          : status === "APPROVED"
+            ? "Đã khôi phục bình luận thành công!"
+            : "Đã đánh dấu là Spam",
       );
-
-      if (activeStatus !== "ALL") {
-        setActiveStatus(status);
-      } else {
-        fetchComments(pagination.page);
-      }
+      fetchComments(pagination.page);
     } catch {
       toast.error("Lỗi cập nhật trạng thái");
     }
@@ -165,8 +151,7 @@ function CommentsListContent() {
       <div className="flex border-b border-muted">
         {[
           { key: "ALL", label: "Tất cả" },
-          { key: "PENDING", label: "Chờ duyệt" },
-          { key: "APPROVED", label: "Đã duyệt" },
+          { key: "REPORTED", label: "Bị báo cáo ⚠️" },
           { key: "SPAM", label: "Spam" },
         ].map((tab) => {
           const isActive = activeStatus === tab.key;
@@ -205,99 +190,123 @@ function CommentsListContent() {
         )}
 
         {!loading &&
-          comments.map((comment) => (
-            <div
-              key={comment.id}
-              className="p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-muted/5 transition-colors group"
-            >
-              <div className="flex gap-3 min-w-0 flex-1">
-                <div className="shrink-0 self-start">
-                  {comment.user?.avatar ? (
-                    <Image
-                      src={comment.user.avatar}
-                      alt=""
-                      width={36}
-                      height={36}
-                      className="rounded-full object-cover w-9 h-9"
-                    />
-                  ) : (
-                    <div className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary">
-                      {comment.user?.firstName?.[0]}
-                    </div>
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center flex-wrap gap-2 mb-1">
-                    <span className="text-sm font-semibold">
-                      {comment.user?.firstName} {comment.user?.lastName}
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                      {new Date(comment.createdAt).toLocaleDateString("vi-VN", {
-                        day: "2-digit",
-                        month: "2-digit",
-                        year: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </span>
-                    <span
-                      className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${statusStyles[comment.status || "PENDING"]}`}
-                    >
-                      {statusLabels[comment.status || "PENDING"]}
-                    </span>
+          comments.map((comment) => {
+            const isReported =
+              comment.reportCount !== undefined &&
+              comment.reportCount > 0 &&
+              comment.status !== "SPAM";
+            return (
+              <div
+                key={comment.id}
+                className={`p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 transition-colors group ${
+                  isReported
+                    ? "bg-rose-50/20 hover:bg-rose-50/30 border-l-4 border-l-red-500"
+                    : "hover:bg-muted/5"
+                }`}
+              >
+                <div className="flex gap-3 min-w-0 flex-1">
+                  <div className="shrink-0 self-start">
+                    {comment.user?.avatar ? (
+                      <Image
+                        src={comment.user.avatar}
+                        alt=""
+                        width={36}
+                        height={36}
+                        className="rounded-full object-cover w-9 h-9"
+                      />
+                    ) : (
+                      <div className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary">
+                        {comment.user?.firstName?.[0]}
+                      </div>
+                    )}
                   </div>
-                  <p className="text-sm text-muted-foreground mb-1.5 wrap-break-word">
-                    {comment.content}
-                  </p>
-                  <Link
-                    href={`/blog/${comment.post?.slug}`}
-                    target="_blank"
-                    className="text-xs text-primary hover:underline font-medium"
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center flex-wrap gap-2 mb-1">
+                      <span className="text-sm font-semibold">
+                        {comment.user?.firstName} {comment.user?.lastName}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        {new Date(comment.createdAt).toLocaleDateString(
+                          "vi-VN",
+                          {
+                            day: "2-digit",
+                            month: "2-digit",
+                            year: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          },
+                        )}
+                      </span>
+                      {comment.status === "SPAM" && (
+                        <span className="text-[10px] font-medium px-2 py-0.5 rounded-full border bg-gray-50 text-gray-600 border-gray-200/60">
+                          Spam
+                        </span>
+                      )}
+                      {isReported && (
+                        <span
+                          className="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-rose-50 text-red-600 border-red-200/60 flex items-center gap-1 animate-pulse"
+                          title={`${comment.reportCount} lượt báo cáo`}
+                        >
+                          🚩 Bị báo cáo: {comment.reportCount} lượt
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-sm text-muted-foreground mb-1.5 wrap-break-word">
+                      {comment.content}
+                    </p>
+                    <Link
+                      href={`/blog/${comment.post?.slug}`}
+                      target="_blank"
+                      className="text-xs text-primary hover:underline font-medium"
+                    >
+                      📝 {comment.post?.title}
+                    </Link>
+                  </div>
+                </div>
+
+                {/* Action buttons */}
+                <div className="flex items-center justify-end gap-1.5 transition-all duration-200">
+                  {isReported && comment.status !== "SPAM" && (
+                    <button
+                      onClick={() =>
+                        handleStatusChange(comment.id, "APPROVED", true)
+                      }
+                      className="px-2.5 py-1 text-xs font-semibold bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-colors cursor-pointer"
+                      title="Phê duyệt bình luận (Xóa lượt báo cáo)"
+                    >
+                      Không sao
+                    </button>
+                  )}
+                  {comment.status === "SPAM" ? (
+                    <button
+                      onClick={() =>
+                        handleStatusChange(comment.id, "APPROVED", false)
+                      }
+                      className="px-2.5 py-1 text-xs font-semibold bg-green-50 text-green-700 hover:bg-green-100 border border-green-200 rounded-lg transition-colors cursor-pointer"
+                      title="Khôi phục bình luận"
+                    >
+                      Khôi phục
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => handleStatusChange(comment.id, "SPAM")}
+                      className="px-2.5 py-1 text-xs font-semibold bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200 rounded-lg transition-colors cursor-pointer"
+                      title="Đánh dấu là Spam"
+                    >
+                      Spam
+                    </button>
+                  )}
+                  <button
+                    onClick={() => handleDelete(comment.id)}
+                    className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg border border-transparent hover:border-red-200 transition-colors cursor-pointer"
+                    title="Xóa bình luận"
                   >
-                    📝 {comment.post?.title}
-                  </Link>
+                    <Trash2 size={14} />
+                  </button>
                 </div>
               </div>
-
-              {/* Action buttons */}
-              <div className="flex items-center justify-end gap-1.5 transition-all duration-200">
-                {comment.status !== "APPROVED" && (
-                  <button
-                    onClick={() => handleStatusChange(comment.id, "APPROVED")}
-                    className="px-2.5 py-1 text-xs font-semibold bg-green-50 text-green-700 hover:bg-green-100 border border-green-200 rounded-lg transition-colors cursor-pointer"
-                    title="Duyệt bình luận"
-                  >
-                    Duyệt
-                  </button>
-                )}
-                {comment.status === "APPROVED" && (
-                  <button
-                    onClick={() => handleStatusChange(comment.id, "PENDING")}
-                    className="px-2.5 py-1 text-xs font-semibold bg-yellow-50 text-yellow-700 hover:bg-yellow-100 border border-yellow-200 rounded-lg transition-colors cursor-pointer"
-                    title="Ẩn bình luận (đưa về Chờ duyệt)"
-                  >
-                    Ẩn
-                  </button>
-                )}
-                {comment.status !== "SPAM" && (
-                  <button
-                    onClick={() => handleStatusChange(comment.id, "SPAM")}
-                    className="px-2.5 py-1 text-xs font-semibold bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200 rounded-lg transition-colors cursor-pointer"
-                    title="Đánh dấu là Spam"
-                  >
-                    Spam
-                  </button>
-                )}
-                <button
-                  onClick={() => handleDelete(comment.id)}
-                  className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg border border-transparent hover:border-red-200 transition-colors cursor-pointer"
-                  title="Xóa bình luận"
-                >
-                  <Trash2 size={14} />
-                </button>
-              </div>
-            </div>
-          ))}
+            );
+          })}
       </div>
 
       {/* Pagination */}

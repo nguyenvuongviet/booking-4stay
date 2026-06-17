@@ -276,7 +276,7 @@ export default function AdminBlogPage() {
             href="/admin/blog/comments"
             className="px-4 py-2.5 rounded-xl border bg-background text-sm font-medium hover:bg-accent transition-colors"
           >
-            Comments
+            Bình luận
           </Link>
         </div>
       </div>
@@ -286,7 +286,7 @@ export default function AdminBlogPage() {
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b bg-muted/30">
+              <tr className="border-b bg-primary/3 border-primary/20">
                 <th
                   onClick={() => handleSort("createdAt")}
                   className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground cursor-pointer select-none hover:text-foreground transition-colors group"
@@ -311,7 +311,7 @@ export default function AdminBlogPage() {
                   onClick={() => handleSort("commentCount")}
                   className="text-center px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground cursor-pointer select-none hover:text-foreground transition-colors group"
                 >
-                  Comments
+                  Bình Luận
                   {renderSortIndicator("commentCount")}
                 </th>
                 <th className="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -344,7 +344,6 @@ export default function AdminBlogPage() {
                 pagedPosts.map((post) => {
                   const status =
                     STATUS_CONFIG[post.status] || STATUS_CONFIG.DRAFT;
-                  const StatusIcon = status.icon;
 
                   return (
                     <tr
@@ -421,7 +420,7 @@ export default function AdminBlogPage() {
                       <td className="px-4 py-3 text-center text-sm">
                         <Link
                           href={`/admin/blog/comments?postId=${post.id}`}
-                          className="font-semibold text-primary hover:underline"
+                          className="inline-flex items-center justify-center min-w-7 h-7 px-2.5 rounded-full font-semibold bg-primary/10 text-primary hover:bg-primary hover:text-white hover:scale-110 hover:shadow-sm transition-all duration-200"
                           title="Quản lý bình luận của bài viết này"
                         >
                           {post.commentCount || 0}

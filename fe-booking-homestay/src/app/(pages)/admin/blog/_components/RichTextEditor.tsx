@@ -57,7 +57,7 @@ export function RichTextEditor({
     editorProps: {
       attributes: {
         class:
-          "prose prose-sm max-w-none min-h-[400px] p-4 focus:outline-none prose-headings:font-bold prose-a:text-primary prose-img:rounded-xl",
+          "prose prose-sm max-w-none min-h-[400px] max-h-[500px] overflow-y-auto p-4 focus:outline-none prose-headings:font-bold prose-a:text-primary prose-img:rounded-xl",
       },
     },
   });

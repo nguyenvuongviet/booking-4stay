@@ -1,4 +1,8 @@
-import { fetchPostBySlug, fetchRelatedPosts } from "@/services/blogServer";
+import {
+  fetchLatestPosts,
+  fetchPostBySlug,
+  fetchRelatedPosts,
+} from "@/services/blogServer";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import BlogDetailClient from "./_components/BlogDetailClient";
@@ -53,14 +57,62 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function BlogDetailPage({ params }: Props) {
   const { slug } = await params;
 
-  const [post, relatedPosts] = await Promise.all([
+  const [post, rawRelatedPosts] = await Promise.all([
     fetchPostBySlug(slug),
-    fetchRelatedPosts(slug, 4),
+    fetchRelatedPosts(slug, 30),
   ]);
 
   if (!post) {
     notFound();
   }
 
-  return <BlogDetailClient post={post} relatedPosts={relatedPosts} />;
+  let relatedPosts = rawRelatedPosts;
+  if (relatedPosts.length < 3) {
+    const latestPosts = await fetchLatestPosts(30);
+    const fillCount = 3 - relatedPosts.length;
+    const additionalPosts = latestPosts
+      .filter(
+        (lp) =>
+          lp.slug !== slug && !relatedPosts.some((rp) => rp.slug === lp.slug),
+      )
+      .slice(0, fillCount);
+    relatedPosts = [...relatedPosts, ...additionalPosts];
+  }
+
+  // Generate JSON-LD Schema for BlogPosting (SEO)
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    headline: post.title,
+    image: post.thumbnailUrl ? [post.thumbnailUrl] : [],
+    datePublished: post.publishedAt || post.createdAt,
+    dateModified: post.publishedAt || post.createdAt,
+    author: post.author
+      ? {
+          "@type": "Person",
+          name: `${post.author.firstName} ${post.author.lastName}`,
+          image: post.author.avatar || undefined,
+        }
+      : undefined,
+    publisher: {
+      "@type": "Organization",
+      name: "4Stay Homestay Booking",
+      url: "https://4stay.booking.vn",
+    },
+    description: post.metaDescription || post.excerpt || post.title,
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": `https://4stay.booking.vn/blog/${slug}`,
+    },
+  };
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <BlogDetailClient post={post} relatedPosts={relatedPosts} />
+    </>
+  );
 }

@@ -41,7 +41,6 @@ export function sanitizeBlogPost(post: any) {
     metaTitle: post.metaTitle,
     metaDescription: post.metaDescription,
     metaKeywords: post.metaKeywords,
-    promotionBanner: post.promotionBanner,
     status: post.status,
     isFeatured: post.isFeatured,
     viewCount: post.viewCount,
@@ -70,11 +69,13 @@ export function sanitizeBlogPost(post: any) {
           name: post.province.name,
         }
       : null,
-    tags: Array.isArray(post.tags) ? post.tags.map((t: any) => ({
-      id: t.id ?? t.tag?.id,
-      name: t.name ?? t.tag?.name,
-      slug: t.slug ?? t.tag?.slug,
-    })) : [],
+    tags: Array.isArray(post.tags)
+      ? post.tags.map((t: any) => ({
+          id: t.id ?? t.tag?.id,
+          name: t.name ?? t.tag?.name,
+          slug: t.slug ?? t.tag?.slug,
+        }))
+      : [],
     commentCount: post.commentCount ?? undefined,
   };
 }
@@ -87,6 +88,7 @@ export function sanitizeBlogComment(comment: any) {
     userId: comment.userId,
     content: comment.content,
     status: comment.status,
+    reportCount: comment.reportCount,
     createdAt: comment.createdAt?.toISOString(),
     updatedAt: comment.updatedAt?.toISOString(),
     user: comment.user

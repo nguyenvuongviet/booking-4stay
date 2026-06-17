@@ -45,7 +45,22 @@ export class BlogService {
     const page = Math.max(1, Number(query.page) || 1);
     const pageSize = Math.max(1, Number(query.pageSize) || 10);
     const { search, categorySlug, tagSlug } = query;
-    const skip = (page - 1) * pageSize;
+
+    let skip = 0;
+    let take = pageSize;
+
+    if (search) {
+      take = pageSize;
+      skip = (page - 1) * pageSize;
+    } else {
+      if (page === 1) {
+        take = pageSize + 1;
+        skip = 0;
+      } else {
+        take = pageSize;
+        skip = pageSize + 1 + (page - 2) * pageSize;
+      }
+    }
 
     const where: any = {
       isDeleted: false,
@@ -60,20 +75,28 @@ export class BlogService {
       ];
     }
 
-    if (categorySlug) {
-      where.category = { slug: categorySlug };
-    }
+    if (categorySlug) where.category = { slug: categorySlug };
 
-    if (tagSlug) {
-      where.tags = { some: { tag: { slug: tagSlug } } };
+    if (tagSlug) where.tags = { some: { tag: { slug: tagSlug } } };
+
+    const sortBy = query.sortBy || 'publishedAt';
+    const sortOrder = query.sortOrder === 'asc' ? 'asc' : 'desc';
+
+    let orderBy: any = { publishedAt: 'desc' };
+    if (sortBy === 'viewCount') {
+      orderBy = { viewCount: sortOrder };
+    } else if (sortBy === 'isFeatured') {
+      orderBy = [{ isFeatured: sortOrder }, { publishedAt: 'desc' }];
+    } else if (sortBy === 'publishedAt') {
+      orderBy = { publishedAt: sortOrder };
     }
 
     const [items, total] = await Promise.all([
       this.prisma.blog_posts.findMany({
         where,
         skip,
-        take: pageSize,
-        orderBy: { publishedAt: 'desc' },
+        take,
+        orderBy,
         select: {
           id: true,
           title: true,
@@ -115,13 +138,23 @@ export class BlogService {
       _count: undefined,
     }));
 
+    let totalPages = 1;
+    if (search) {
+      totalPages = Math.ceil(total / pageSize);
+    } else {
+      totalPages =
+        total <= pageSize + 1
+          ? 1
+          : 1 + Math.ceil((total - (pageSize + 1)) / pageSize);
+    }
+
     return {
       items: sanitizeBlogPostData(formattedItems),
       pagination: {
         page,
-        pageSize,
+        pageSize: search ? pageSize : page === 1 ? pageSize + 1 : pageSize,
         total,
-        totalPages: Math.ceil(total / pageSize),
+        totalPages,
       },
     };
   }
@@ -144,9 +177,7 @@ export class BlogService {
       ];
     }
 
-    if (status) {
-      where.status = status;
-    }
+    if (status) where.status = status;
 
     const [items, total] = await Promise.all([
       this.prisma.blog_posts.findMany({
@@ -235,9 +266,7 @@ export class BlogService {
       },
     });
 
-    if (!post) {
-      throw new NotFoundException('Đã không tìm thấy bài viết');
-    }
+    if (!post) throw new NotFoundException('Đã không tìm thấy bài viết');
 
     const now = new Date();
     const formatted = {
@@ -276,9 +305,7 @@ export class BlogService {
       },
     });
 
-    if (!post) {
-      throw new NotFoundException('Bài viết không tồn tại');
-    }
+    if (!post) throw new NotFoundException('Bài viết không tồn tại');
 
     const formatted = {
       ...post,
@@ -335,9 +362,8 @@ export class BlogService {
       OR: [{ categoryId: currentPost.categoryId }],
     };
 
-    if (currentPost.provinceId) {
+    if (currentPost.provinceId)
       where.OR.push({ provinceId: currentPost.provinceId });
-    }
 
     const posts = await this.prisma.blog_posts.findMany({
       where,
@@ -475,15 +501,12 @@ export class BlogService {
       where: { id, isDeleted: false },
     });
 
-    if (!existing) {
-      throw new NotFoundException('Bài viết không tồn tại');
-    }
+    if (!existing) throw new NotFoundException('Bài viết không tồn tại');
 
     // Re-generate slug nếu title thay đổi
     let slug = existing.slug;
-    if (dto.title && dto.title !== existing.title) {
+    if (dto.title && dto.title !== existing.title)
       slug = await this.resolveUniqueSlug(dto.title, id);
-    }
 
     // Re-calculate readingTime nếu content thay đổi
     const content = dto.content || existing.content;
@@ -502,7 +525,7 @@ export class BlogService {
         slug,
         ...(dto.categoryId && { categoryId: dto.categoryId }),
         ...(dto.provinceId !== undefined && {
-          provinceId: dto.provinceId || null,
+          provinceId: dto.provinceId,
         }),
         excerpt,
         ...(dto.content && { content: dto.content }),
@@ -547,16 +570,13 @@ export class BlogService {
       where: { id, isDeleted: false },
     });
 
-    if (!post) {
-      throw new NotFoundException('Bài viết không tồn tại');
-    }
+    if (!post) throw new NotFoundException('Bài viết không tồn tại');
 
     const data: any = { status, updatedAt: new Date() };
 
     // Set publishedAt khi publish lần đầu
-    if (status === blog_posts_status.PUBLISHED && !post.publishedAt) {
+    if (status === blog_posts_status.PUBLISHED && !post.publishedAt)
       data.publishedAt = new Date();
-    }
 
     await this.prisma.blog_posts.update({ where: { id }, data });
 
@@ -571,9 +591,7 @@ export class BlogService {
       where: { id, isDeleted: false },
     });
 
-    if (!post) {
-      throw new NotFoundException('Bài viết không tồn tại');
-    }
+    if (!post) throw new NotFoundException('Bài viết không tồn tại');
 
     await this.prisma.blog_posts.update({
       where: { id },
@@ -591,9 +609,7 @@ export class BlogService {
       where: { slug, isDeleted: false, status: blog_posts_status.PUBLISHED },
     });
 
-    if (!post) {
-      throw new NotFoundException('Bài viết không tồn tại');
-    }
+    if (!post) throw new NotFoundException('Bài viết không tồn tại');
 
     await this.prisma.blog_posts.update({
       where: { id: post.id },
@@ -631,9 +647,7 @@ export class BlogService {
     const existing = await this.prisma.blog_categories.findFirst({
       where: { slug },
     });
-    if (existing) {
-      throw new BadRequestException('Danh mục đã tồn tại');
-    }
+    if (existing) throw new BadRequestException('Danh mục đã tồn tại');
 
     const category = await this.prisma.blog_categories.create({
       data: {
@@ -651,14 +665,10 @@ export class BlogService {
       where: { id },
     });
 
-    if (!existing) {
-      throw new NotFoundException('Danh mục không tồn tại');
-    }
+    if (!existing) throw new NotFoundException('Danh mục không tồn tại');
 
     let slug = existing.slug;
-    if (dto.name && dto.name !== existing.name) {
-      slug = generateSlug(dto.name);
-    }
+    if (dto.name && dto.name !== existing.name) slug = generateSlug(dto.name);
 
     const category = await this.prisma.blog_categories.update({
       where: { id },
@@ -684,15 +694,12 @@ export class BlogService {
       },
     });
 
-    if (!category) {
-      throw new NotFoundException('Danh mục không tồn tại');
-    }
+    if (!category) throw new NotFoundException('Danh mục không tồn tại');
 
-    if (category._count.posts > 0) {
+    if (category._count.posts > 0)
       throw new BadRequestException(
         `Không thể xóa danh mục đang có ${category._count.posts} bài viết`,
       );
-    }
 
     await this.prisma.blog_categories.delete({ where: { id } });
     return { message: 'Đã xóa danh mục' };
@@ -725,9 +732,7 @@ export class BlogService {
     const slug = generateSlug(dto.name);
 
     const existing = await this.prisma.blog_tags.findFirst({ where: { slug } });
-    if (existing) {
-      throw new BadRequestException('Tag đã tồn tại');
-    }
+    if (existing) throw new BadRequestException('Tag đã tồn tại');
 
     const tag = await this.prisma.blog_tags.create({
       data: { name: dto.name, slug },
@@ -738,9 +743,7 @@ export class BlogService {
   async deleteTag(id: number) {
     const tag = await this.prisma.blog_tags.findUnique({ where: { id } });
 
-    if (!tag) {
-      throw new NotFoundException('Tag không tồn tại');
-    }
+    if (!tag) throw new NotFoundException('Tag không tồn tại');
 
     // Xóa liên kết post_tags trước
     await this.prisma.blog_post_tags.deleteMany({ where: { tagId: id } });
@@ -764,9 +767,7 @@ export class BlogService {
       select: { id: true },
     });
 
-    if (!post) {
-      throw new NotFoundException('Bài viết không tồn tại');
-    }
+    if (!post) throw new NotFoundException('Bài viết không tồn tại');
 
     const [items, total] = await Promise.all([
       this.prisma.blog_comments.findMany({
@@ -818,9 +819,7 @@ export class BlogService {
       select: { id: true },
     });
 
-    if (!post) {
-      throw new NotFoundException('Bài viết không tồn tại');
-    }
+    if (!post) throw new NotFoundException('Bài viết không tồn tại');
 
     const comment = await this.prisma.blog_comments.create({
       data: {
@@ -851,14 +850,11 @@ export class BlogService {
       where: { id: commentId, isDeleted: false },
     });
 
-    if (!comment) {
-      throw new NotFoundException('Bình luận không tồn tại');
-    }
+    if (!comment) throw new NotFoundException('Bình luận không tồn tại');
 
     // Chỉ cho phép xóa nếu là chủ comment hoặc admin
-    if (!isAdmin && comment.userId !== userId) {
+    if (!isAdmin && comment.userId !== userId)
       throw new ForbiddenException('Bạn không có quyền xóa bình luận này');
-    }
 
     await this.prisma.blog_comments.update({
       where: { id: commentId },
@@ -871,23 +867,34 @@ export class BlogService {
   /**
    * Lấy tất cả comments (admin, phân trang + filter)
    */
-  async getAdminComments(query: QueryCommentDto & { postId?: number }) {
+  async getAdminComments(
+    query: QueryCommentDto & { postId?: number; reported?: string },
+  ) {
     const page = Math.max(1, Number(query.page) || 1);
     const pageSize = Math.max(1, Number(query.pageSize) || 10);
     const skip = (page - 1) * pageSize;
     const postId = query.postId ? Number(query.postId) : undefined;
     const status = query.status as blog_comments_status | undefined;
+    const reported = query.reported;
 
     const where: any = { isDeleted: false };
     if (postId) where.postId = postId;
-    if (status) where.status = status;
+    if (status) {
+      where.status = status;
+    } else if (reported === 'true') {
+      where.status = { not: 'SPAM' };
+    }
+    if (reported === 'true') where.reportCount = { gt: 0 };
+
+    const orderBy: any =
+      reported === 'true' ? { updatedAt: 'desc' } : { createdAt: 'desc' };
 
     const [items, total] = await Promise.all([
       this.prisma.blog_comments.findMany({
         where,
         skip,
         take: pageSize,
-        orderBy: { createdAt: 'desc' },
+        orderBy,
         include: {
           user: {
             select: {
@@ -922,13 +929,38 @@ export class BlogService {
       where: { id: commentId, isDeleted: false },
     });
 
-    if (!comment) {
-      throw new NotFoundException('Bình luận không tồn tại');
-    }
+    if (!comment) throw new NotFoundException('Bình luận không tồn tại');
+
+    const dataToUpdate: any = {
+      status,
+      updatedAt: new Date(),
+    };
+
+    if (status === 'APPROVED' || status === 'SPAM')
+      dataToUpdate.reportCount = 0;
 
     return this.prisma.blog_comments.update({
       where: { id: commentId },
-      data: { status },
+      data: dataToUpdate,
+    });
+  }
+
+  /**
+   * Báo cáo bình luận (public)
+   */
+  async reportComment(commentId: number) {
+    const comment = await this.prisma.blog_comments.findFirst({
+      where: { id: commentId, isDeleted: false },
+    });
+
+    if (!comment) throw new NotFoundException('Bình luận không tồn tại');
+
+    return this.prisma.blog_comments.update({
+      where: { id: commentId },
+      data: {
+        reportCount: { increment: 1 },
+        updatedAt: new Date(),
+      },
     });
   }
 }

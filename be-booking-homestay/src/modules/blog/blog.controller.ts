@@ -9,9 +9,7 @@ import {
   Post,
   Query,
   Req,
-  UseGuards,
 } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Public } from 'src/common/decorator/public.decorator';
 import { BlogService } from './blog.service';
@@ -23,19 +21,20 @@ import {
 
 @ApiTags('Blog (Public)')
 @Controller('blog')
-@Public()
 export class BlogController {
   constructor(private readonly blogService: BlogService) {}
 
   // ==================== POSTS ====================
 
   @Get('posts')
+  @Public()
   @ApiOperation({ summary: 'Danh sách bài viết (paginated, filter)' })
   async getPosts(@Query() query: QueryPostDto) {
     return this.blogService.getPosts(query);
   }
 
   @Get('posts/featured')
+  @Public()
   @ApiOperation({ summary: 'Bài viết nổi bật' })
   async getFeaturedPosts(@Query('limit') limit?: string) {
     const parsedLimit = limit ? parseInt(limit, 10) : 4;
@@ -45,6 +44,7 @@ export class BlogController {
   }
 
   @Get('posts/by-province/:provinceId')
+  @Public()
   @ApiOperation({ summary: 'Bài viết theo tỉnh thành (Article-to-Room)' })
   async getPostsByProvince(
     @Param('provinceId', ParseIntPipe) provinceId: number,
@@ -58,6 +58,7 @@ export class BlogController {
   }
 
   @Get('posts/related/:slug')
+  @Public()
   @ApiOperation({ summary: 'Bài viết liên quan' })
   async getRelatedPosts(
     @Param('slug') slug: string,
@@ -71,12 +72,14 @@ export class BlogController {
   }
 
   @Get('posts/:slug')
+  @Public()
   @ApiOperation({ summary: 'Chi tiết bài viết theo slug' })
   async getPostBySlug(@Param('slug') slug: string) {
     return this.blogService.getPostBySlug(slug);
   }
 
   @Patch('posts/:slug/view')
+  @Public()
   @ApiOperation({ summary: 'Tăng view count' })
   async incrementView(@Param('slug') slug: string) {
     return this.blogService.incrementView(slug);
@@ -85,6 +88,7 @@ export class BlogController {
   // ==================== CATEGORIES ====================
 
   @Get('categories')
+  @Public()
   @ApiOperation({ summary: 'Danh sách danh mục' })
   async getCategories() {
     return this.blogService.getCategories();
@@ -93,6 +97,7 @@ export class BlogController {
   // ==================== TAGS ====================
 
   @Get('tags')
+  @Public()
   @ApiOperation({ summary: 'Danh sách tags' })
   async getTags() {
     return this.blogService.getTags();
@@ -101,6 +106,7 @@ export class BlogController {
   // ==================== COMMENTS ====================
 
   @Get('posts/:slug/comments')
+  @Public()
   @ApiOperation({ summary: 'Danh sách comments theo bài viết' })
   async getComments(
     @Param('slug') slug: string,
@@ -110,7 +116,6 @@ export class BlogController {
   }
 
   @Post('posts/:slug/comments')
-  @UseGuards(AuthGuard('protect'))
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Tạo comment mới (cần đăng nhập)' })
   async createComment(
@@ -122,10 +127,16 @@ export class BlogController {
   }
 
   @Delete('comments/:id')
-  @UseGuards(AuthGuard('protect'))
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Xóa comment của mình' })
   async deleteComment(@Param('id', ParseIntPipe) id: number, @Req() req: any) {
     return this.blogService.deleteComment(id, req.user.id, false);
+  }
+
+  @Post('comments/:id/report')
+  @Public()
+  @ApiOperation({ summary: 'Báo cáo bình luận nhạy cảm/spam' })
+  async reportComment(@Param('id', ParseIntPipe) id: number) {
+    return this.blogService.reportComment(id);
   }
 }

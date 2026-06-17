@@ -228,27 +228,27 @@ model room_prices {
 }
 
 model rooms {
-  id                 Int                 @id @default(autoincrement()) @db.UnsignedInt
-  hostId             Int                 @db.UnsignedInt
-  countryId          Int?                @default(1) @db.UnsignedInt
-  provinceId         Int                 @db.UnsignedInt
-  wardId             Int?                @db.UnsignedInt
-  street             String?             @db.VarChar(255)
-  fullAddress        String?             @db.VarChar(255)
-  name               String              @db.VarChar(255)
-  description        String?             @db.Text
-  price              Decimal             @db.Decimal(12, 2)
-  adultCapacity      Int                 @db.UnsignedInt
-  childCapacity      Int                 @default(0) @db.UnsignedInt
-  status             rooms_status?       @default(AVAILABLE)
-  rating             Decimal?            @default(0.0) @db.Decimal(2, 1)
-  reviewCount        Int?                @default(0) @db.UnsignedInt
-  isDeleted          Boolean             @default(false)
-  deletedAt          DateTime?           @db.Timestamp(0)
-  latitude           Decimal?            @db.Decimal(10, 7)
-  longitude          Decimal?            @db.Decimal(10, 7)
-  createdAt          DateTime            @default(now()) @db.Timestamp(0)
-  updatedAt          DateTime            @default(now()) @db.Timestamp(0)
+  id                 Int                  @id @default(autoincrement()) @db.UnsignedInt
+  hostId             Int                  @db.UnsignedInt
+  countryId          Int?                 @default(1) @db.UnsignedInt
+  provinceId         Int                  @db.UnsignedInt
+  wardId             Int?                 @db.UnsignedInt
+  street             String?              @db.VarChar(255)
+  fullAddress        String?              @db.VarChar(255)
+  name               String               @db.VarChar(255)
+  description        String?              @db.Text
+  price              Decimal              @db.Decimal(12, 2)
+  adultCapacity      Int                  @db.UnsignedInt
+  childCapacity      Int                  @default(0) @db.UnsignedInt
+  status             rooms_status?        @default(AVAILABLE)
+  rating             Decimal?             @default(0.0) @db.Decimal(2, 1)
+  reviewCount        Int?                 @default(0) @db.UnsignedInt
+  isDeleted          Boolean              @default(false)
+  deletedAt          DateTime?            @db.Timestamp(0)
+  latitude           Decimal?             @db.Decimal(10, 7)
+  longitude          Decimal?             @db.Decimal(10, 7)
+  createdAt          DateTime             @default(now()) @db.Timestamp(0)
+  updatedAt          DateTime             @default(now()) @db.Timestamp(0)
   bookings           bookings[]
   conversations      conversations[]
   room_amenities     room_amenities[]
@@ -260,10 +260,10 @@ model rooms {
   user_favorites     user_favorites[]
   room_popularity    room_popularity?
   room_embedding     room_embeddings?
-  location_countries location_countries? @relation(fields: [countryId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_room_country")
-  users              users               @relation(fields: [hostId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "rooms_ibfk_1")
-  location_provinces location_provinces  @relation(fields: [provinceId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_room_province")
-  location_wards     location_wards?     @relation(fields: [wardId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_room_ward")
+  location_countries location_countries?  @relation(fields: [countryId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_room_country")
+  users              users                @relation(fields: [hostId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "rooms_ibfk_1")
+  location_provinces location_provinces   @relation(fields: [provinceId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_room_province")
+  location_wards     location_wards?      @relation(fields: [wardId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_room_ward")
 
   @@index([countryId], map: "fk_room_country")
   @@index([hostId], map: "fk_room_host")
@@ -283,41 +283,41 @@ model user_roles {
 }
 
 model users {
-  id                  Int              @id @default(autoincrement()) @db.UnsignedInt
-  email               String           @unique(map: "email") @db.VarChar(255)
-  password            String?          @db.VarChar(255)
-  firstName           String           @db.VarChar(255)
-  lastName            String           @db.VarChar(255)
-  phoneNumber         String?          @db.VarChar(20)
-  dateOfBirth         DateTime?        @db.Date
+  id                  Int               @id @default(autoincrement()) @db.UnsignedInt
+  email               String            @unique(map: "email") @db.VarChar(255)
+  password            String?           @db.VarChar(255)
+  firstName           String            @db.VarChar(255)
+  lastName            String            @db.VarChar(255)
+  phoneNumber         String?           @db.VarChar(20)
+  dateOfBirth         DateTime?         @db.Date
   gender              users_gender?
-  avatar              String?          @db.Text
-  country             String?          @db.VarChar(100)
-  isVerified          Boolean          @default(false)
-  isActive            Boolean          @default(false)
-  googleId            String?          @db.VarChar(255)
-  provider            users_provider   @default(LOCAL)
-  lastLogin           DateTime?        @db.Timestamp(0)
-  isDeleted           Boolean          @default(false)
-  deletedAt           DateTime?        @db.Timestamp(0)
-  createdAt           DateTime         @default(now()) @db.Timestamp(0)
-  updatedAt           DateTime         @default(now()) @db.Timestamp(0)
+  avatar              String?           @db.Text
+  country             String?           @db.VarChar(100)
+  isVerified          Boolean           @default(false)
+  isActive            Boolean           @default(false)
+  googleId            String?           @db.VarChar(255)
+  provider            users_provider    @default(LOCAL)
+  lastLogin           DateTime?         @db.Timestamp(0)
+  isDeleted           Boolean           @default(false)
+  deletedAt           DateTime?         @db.Timestamp(0)
+  createdAt           DateTime          @default(now()) @db.Timestamp(0)
+  updatedAt           DateTime          @default(now()) @db.Timestamp(0)
   bookings            bookings[]
   contacts            contacts[]
   loyalty_program     loyalty_program?
   otp_codes           otp_codes[]
-  user_favorites   user_favorites[]
-  user_preferences  user_preferences?
-  guest_conversations conversations[]  @relation("GuestConversations")
-  host_conversations  conversations[]  @relation("HostConversations")
+  user_favorites      user_favorites[]
+  user_preferences    user_preferences?
+  guest_conversations conversations[]   @relation("GuestConversations")
+  host_conversations  conversations[]   @relation("HostConversations")
   messages            messages[]
   notifications       notifications[]
 
-  reviews               reviews[]
-  rooms                 rooms[]
-  user_roles            user_roles[]
-  blog_posts    blog_posts[]
-  blog_comments blog_comments[]
+  reviews            reviews[]
+  rooms              rooms[]
+  user_roles         user_roles[]
+  blog_posts         blog_posts[]
+  blog_comments      blog_comments[]
   push_subscriptions push_subscriptions[]
   user_vouchers      user_vouchers[]
 
@@ -467,14 +467,14 @@ model user_favorites {
 }
 
 model room_popularity {
-  id                 Int      @id @default(autoincrement()) @db.UnsignedInt
-  roomId             Int      @unique @db.UnsignedInt
-  popularityScore    Decimal  @default(0) @db.Decimal(8, 3)
-  bookingCount30d    Int      @default(0) @db.UnsignedInt
-  avgRating          Decimal  @default(0) @db.Decimal(2, 1)
-  reviewCount        Int      @default(0) @db.UnsignedInt
-  recentCancelCount  Int      @default(0) @db.UnsignedInt
-  lastCalculatedAt   DateTime @default(now()) @db.Timestamp(0)
+  id                Int      @id @default(autoincrement()) @db.UnsignedInt
+  roomId            Int      @unique @db.UnsignedInt
+  popularityScore   Decimal  @default(0) @db.Decimal(8, 3)
+  bookingCount30d   Int      @default(0) @db.UnsignedInt
+  avgRating         Decimal  @default(0) @db.Decimal(2, 1)
+  reviewCount       Int      @default(0) @db.UnsignedInt
+  recentCancelCount Int      @default(0) @db.UnsignedInt
+  lastCalculatedAt  DateTime @default(now()) @db.Timestamp(0)
 
   rooms rooms @relation(fields: [roomId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "room_popularity_ibfk_1")
 
@@ -503,14 +503,14 @@ model user_preferences {
 // ==================== BLOG MODELS ====================
 
 model blog_categories {
-  id          Int      @id @default(autoincrement()) @db.UnsignedInt
-  name        String   @unique(map: "uq_blog_category_name") @db.VarChar(100)
-  slug        String   @unique(map: "uq_blog_category_slug") @db.VarChar(120)
-  description String?  @db.VarChar(500)
-  position    Int      @default(0)
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now()) @db.Timestamp(0)
-  updatedAt   DateTime @default(now()) @db.Timestamp(0)
+  id          Int          @id @default(autoincrement()) @db.UnsignedInt
+  name        String       @unique(map: "uq_blog_category_name") @db.VarChar(100)
+  slug        String       @unique(map: "uq_blog_category_slug") @db.VarChar(120)
+  description String?      @db.VarChar(500)
+  position    Int          @default(0)
+  isActive    Boolean      @default(true)
+  createdAt   DateTime     @default(now()) @db.Timestamp(0)
+  updatedAt   DateTime     @default(now()) @db.Timestamp(0)
   posts       blog_posts[]
 }
 
@@ -537,8 +537,8 @@ model blog_posts {
   createdAt       DateTime          @default(now()) @db.Timestamp(0)
   updatedAt       DateTime          @default(now()) @db.Timestamp(0)
 
-  category        blog_categories    @relation(fields: [categoryId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "blog_posts_ibfk_1")
-  author          users              @relation(fields: [authorId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "blog_posts_ibfk_2")
+  category        blog_categories     @relation(fields: [categoryId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "blog_posts_ibfk_1")
+  author          users               @relation(fields: [authorId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "blog_posts_ibfk_2")
   province        location_provinces? @relation(fields: [provinceId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "blog_posts_ibfk_3")
   tags            blog_post_tags[]
   comments        blog_comments[]
@@ -573,15 +573,16 @@ model blog_post_tags {
 }
 
 model blog_comments {
-  id        Int                  @id @default(autoincrement()) @db.UnsignedInt
-  postId    Int                  @db.UnsignedInt
-  userId    Int                  @db.UnsignedInt
-  content   String               @db.VarChar(1000)
-  status    blog_comments_status @default(PENDING)
-  isDeleted Boolean              @default(false)
-  deletedAt DateTime?            @db.Timestamp(0)
-  createdAt DateTime             @default(now()) @db.Timestamp(0)
-  updatedAt DateTime             @default(now()) @db.Timestamp(0)
+  id          Int                  @id @default(autoincrement()) @db.UnsignedInt
+  postId      Int                  @db.UnsignedInt
+  userId      Int                  @db.UnsignedInt
+  content     String               @db.VarChar(1000)
+  status      blog_comments_status @default(PENDING)
+  isDeleted   Boolean              @default(false)
+  reportCount Int                  @default(0) @db.UnsignedInt
+  deletedAt   DateTime?            @db.Timestamp(0)
+  createdAt   DateTime             @default(now()) @db.Timestamp(0)
+  updatedAt   DateTime             @default(now()) @db.Timestamp(0)
 
   post blog_posts @relation(fields: [postId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "blog_comments_ibfk_1")
   user users      @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "blog_comments_ibfk_2")
@@ -706,32 +707,32 @@ model booking_date_locks {
 // ==================== PROMOTION / COUPON MODELS ====================
 
 model promotions {
-  id              Int              @id @default(autoincrement()) @db.UnsignedInt
-  code            String           @unique(map: "uq_promotion_code") @db.VarChar(30)
-  name            String           @db.VarChar(100)
-  promotionType   promotions_type  @default(SEASONAL)
-  discountType    discount_type
-  discountValue   Decimal          @db.Decimal(12, 2)
-  maxDiscount     Decimal?         @db.Decimal(12, 2)
-  minOrderValue   Decimal          @default(0) @db.Decimal(12, 2)
-  provinceId      Int?             @db.UnsignedInt
-  targetLevelId   Int?             @db.UnsignedInt
-  usageLimit      Int              @db.UnsignedInt
-  usedCount       Int              @default(0) @db.UnsignedInt
-  perUserLimit    Int              @default(1) @db.UnsignedInt
-  startDate       DateTime         @db.Timestamp(0)
-  endDate         DateTime         @db.Timestamp(0)
-  isPublic        Boolean          @default(true)
-  isActive        Boolean          @default(true)
-  isDeleted       Boolean          @default(false)
-  deletedAt       DateTime?        @db.Timestamp(0)
-  createdAt       DateTime         @default(now()) @db.Timestamp(0)
-  updatedAt       DateTime         @default(now()) @db.Timestamp(0)
+  id            Int             @id @default(autoincrement()) @db.UnsignedInt
+  code          String          @unique(map: "uq_promotion_code") @db.VarChar(30)
+  name          String          @db.VarChar(100)
+  promotionType promotions_type @default(SEASONAL)
+  discountType  discount_type
+  discountValue Decimal         @db.Decimal(12, 2)
+  maxDiscount   Decimal?        @db.Decimal(12, 2)
+  minOrderValue Decimal         @default(0) @db.Decimal(12, 2)
+  provinceId    Int?            @db.UnsignedInt
+  targetLevelId Int?            @db.UnsignedInt
+  usageLimit    Int             @db.UnsignedInt
+  usedCount     Int             @default(0) @db.UnsignedInt
+  perUserLimit  Int             @default(1) @db.UnsignedInt
+  startDate     DateTime        @db.Timestamp(0)
+  endDate       DateTime        @db.Timestamp(0)
+  isPublic      Boolean         @default(true)
+  isActive      Boolean         @default(true)
+  isDeleted     Boolean         @default(false)
+  deletedAt     DateTime?       @db.Timestamp(0)
+  createdAt     DateTime        @default(now()) @db.Timestamp(0)
+  updatedAt     DateTime        @default(now()) @db.Timestamp(0)
 
   user_vouchers    user_vouchers[]
   promotion_usages promotion_usages[]
   blog_promotions  blog_promotions[]
-  targetLevel      levels?          @relation(fields: [targetLevelId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_promotion_level")
+  targetLevel      levels?            @relation(fields: [targetLevelId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_promotion_level")
 
   @@index([code], map: "idx_promotion_code")
   @@index([isActive, startDate, endDate], map: "idx_promotion_active_dates")
@@ -740,12 +741,12 @@ model promotions {
 }
 
 model user_vouchers {
-  id           Int            @id @default(autoincrement()) @db.UnsignedInt
-  userId       Int            @db.UnsignedInt
-  promotionId  Int            @db.UnsignedInt
-  status       voucher_status @default(AVAILABLE)
-  collectedAt  DateTime       @default(now()) @db.Timestamp(0)
-  usedAt       DateTime?      @db.Timestamp(0)
+  id          Int            @id @default(autoincrement()) @db.UnsignedInt
+  userId      Int            @db.UnsignedInt
+  promotionId Int            @db.UnsignedInt
+  status      voucher_status @default(AVAILABLE)
+  collectedAt DateTime       @default(now()) @db.Timestamp(0)
+  usedAt      DateTime?      @db.Timestamp(0)
 
   users      users      @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "user_vouchers_ibfk_1")
   promotions promotions @relation(fields: [promotionId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "user_vouchers_ibfk_2")
@@ -755,12 +756,12 @@ model user_vouchers {
 }
 
 model promotion_usages {
-  id              Int      @id @default(autoincrement()) @db.UnsignedInt
-  promotionId     Int      @db.UnsignedInt
-  userId          Int      @db.UnsignedInt
-  bookingId       Int      @unique @db.UnsignedInt
-  discountAmount  Decimal  @db.Decimal(12, 2)
-  usedAt          DateTime @default(now()) @db.Timestamp(0)
+  id             Int      @id @default(autoincrement()) @db.UnsignedInt
+  promotionId    Int      @db.UnsignedInt
+  userId         Int      @db.UnsignedInt
+  bookingId      Int      @unique @db.UnsignedInt
+  discountAmount Decimal  @db.Decimal(12, 2)
+  usedAt         DateTime @default(now()) @db.Timestamp(0)
 
   promotions promotions @relation(fields: [promotionId], references: [id], onUpdate: NoAction, map: "promotion_usages_ibfk_1")
 
@@ -798,4 +799,3 @@ enum voucher_status {
   USED
   EXPIRED
 }
-
