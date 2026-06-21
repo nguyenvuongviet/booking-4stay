@@ -97,14 +97,8 @@ export function useSearchBar(options?: UseSearchBarOptions) {
   const handleSearch = (customLocation?: string) => {
     const loc = customLocation || locationInput;
 
-    if (!loc.trim()) {
-      setError("Please enter a location");
-      locationInputRef.current?.focus();
-      return;
-    }
-
     const query = new URLSearchParams({
-      location: loc,
+      ...(loc.trim() ? { location: loc.trim() } : {}),
       ...(checkIn ? { checkIn: format(checkIn, "yyyy-MM-dd") } : {}),
       ...(checkOut ? { checkOut: format(checkOut, "yyyy-MM-dd") } : {}),
       adults: adults.toString(),

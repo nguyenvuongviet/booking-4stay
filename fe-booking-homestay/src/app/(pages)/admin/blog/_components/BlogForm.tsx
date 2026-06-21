@@ -1,7 +1,15 @@
 "use client";
 
 import type { BlogCategory, BlogTag } from "@/services/blogApi";
-import { Loader2, MapPin, Plus, Sparkles, Tag, X } from "lucide-react";
+import {
+  Loader2,
+  MapPin,
+  Plus,
+  Sparkles,
+  Tag,
+  UploadCloud,
+  X,
+} from "lucide-react";
 import React, { useState } from "react";
 import { RichTextEditor } from "./RichTextEditor";
 
@@ -398,21 +406,7 @@ export default function BlogForm({
                         </div>
                       ) : (
                         <>
-                          <svg
-                            className="w-8 h-8 mb-2 text-muted-foreground/60"
-                            aria-hidden="true"
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 20 16"
-                          >
-                            <path
-                              stroke="currentColor"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth="2"
-                              d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"
-                            />
-                          </svg>
+                          <UploadCloud className="w-8 h-8 mb-2 text-muted-foreground/60" />
                           <p className="text-xs text-muted-foreground font-semibold">
                             <span className="text-primary">
                               Click để chọn ảnh

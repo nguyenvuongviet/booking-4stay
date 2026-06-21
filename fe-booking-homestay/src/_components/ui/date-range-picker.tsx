@@ -26,6 +26,7 @@ interface DateRangePickerProps {
   onMonthChange?: (date: Date) => void;
   autoClose?: boolean;
   className?: string;
+  compact?: boolean;
 }
 
 export default function DateRangePicker({
@@ -38,6 +39,7 @@ export default function DateRangePicker({
   onMonthChange,
   autoClose = true,
   className,
+  compact = false,
 }: DateRangePickerProps) {
   const [open, setOpen] = React.useState(false);
   const [selectedRange, setSelectedRange] = React.useState<
@@ -50,8 +52,10 @@ export default function DateRangePicker({
     setSelectedRange(value);
   }, [value]);
 
-  const formatLabel = (date?: Date) =>
-    date ? format(date, "MMM dd, yyyy") : "";
+  const formatLabel = (date?: Date) => {
+    if (!date) return "";
+    return compact ? format(date, "dd/MM") : format(date, "MMM dd, yyyy");
+  };
 
   const isSoldOut = (date: Date) => {
     if (!statusMap) return false;
@@ -112,17 +116,17 @@ export default function DateRangePicker({
           variant="outline"
           className={
             className ||
-            "relative w-full h-12 px-4 bg-transparent border-none rounded-3xl hover:border-ring focus:border-ring focus:ring-2 focus:ring-accent hover:bg-transparent text-left flex items-center justify-between"
+            `relative w-full border border-border rounded-full shadow-2xs bg-card hover:border-primary/40 focus:outline-hidden focus:border-primary focus:ring-2 focus:ring-primary/20 text-left flex items-center justify-between cursor-pointer transition-all duration-300 ${compact ? "h-10 px-2.5" : "h-14 px-5 md:h-12 md:px-3 lg:h-14 lg:px-5"}`
           }
         >
           {!className && (
             <CalendarIcon
-              className="absolute left-4 top-1/2 transform -translate-y-1/2 text-primary shrink-0 drop-shadow-sm"
-              size={22}
+              className={`absolute top-1/2 transform -translate-y-1/2 text-primary shrink-0 drop-shadow-sm z-10 pointer-events-none ${compact ? "left-3" : "left-4 md:left-2.5 lg:left-4"}`}
+              size={compact ? 15 : 18}
             />
           )}
           <div
-            className={`${!className ? "ml-8" : ""} text-foreground-muted elegant-subheading truncate`}
+            className={`${!className ? (compact ? "ml-6" : "ml-8 md:ml-6 lg:ml-8") : ""} text-foreground-muted elegant-subheading truncate ${compact ? "text-xs md:text-[11px] lg:text-xs" : "text-sm md:text-[11px] lg:text-sm"}`}
           >
             {selectedRange?.from ? (
               formatLabel(selectedRange.from)

@@ -131,13 +131,13 @@ export default function NotificationList() {
       </div>
       <div className="flex gap-2 px-2 mt-1">
         <button
-          className={`text-xs ${!showUnreadOnly ? "text-primary" : "text-muted-foreground"}`}
+          className={`text-xs cursor-pointer ${!showUnreadOnly ? "text-primary" : "text-muted-foreground"}`}
           onClick={() => setShowUnreadOnly(false)}
         >
           {t("all")}
         </button>
         <button
-          className={`text-xs ${showUnreadOnly ? "text-primary" : "text-muted-foreground"}`}
+          className={`text-xs cursor-pointer ${showUnreadOnly ? "text-primary" : "text-muted-foreground"}`}
           onClick={() => setShowUnreadOnly(true)}
         >
           {t("unread")}
@@ -170,7 +170,7 @@ export default function NotificationList() {
             className={`p-3 border-b cursor-pointer ${n.read ? "" : "bg-primary/5 text-primary"} flex items-start gap-3 hover:bg-primary/10 dark:hover:bg-zinc-900 backdrop-filter backdrop-blur-sm`}
             onClick={() => handleItemClick(n)}
           >
-            <div className="flex-shrink-0 pt-0.5">{getIcon(n.type)}</div>
+            <div className="shrink-0 pt-0.5">{getIcon(n.type)}</div>
             <div className="flex-1">
               <div className="text-sm font-semibold">
                 {getTranslatedTitle(n)}
@@ -195,7 +195,7 @@ export default function NotificationList() {
           {t("load_more")}
         </button> */}
         <button
-          className="text-xs text-muted-foreground hover:text-primary"
+          className="text-xs text-muted-foreground hover:text-primary cursor-pointer"
           onClick={markAllRead}
         >
           {t("mark_all_read")}

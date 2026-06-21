@@ -57,7 +57,7 @@ export function RoomCard({
       onClick={() => {
         router.push(`/room/${room.id}?${query}&status=${room.status}`);
       }}
-      className="group cursor-pointer space-y-3"
+      className="group cursor-pointer space-y-3 bg-card border border-border/50 rounded-3xl p-3 shadow-2xs hover:shadow-md hover:border-primary/20 transition-all duration-300"
     >
       {/* Image Container */}
       <div className="relative aspect-square overflow-hidden rounded-2xl bg-secondary">
@@ -111,7 +111,7 @@ export function RoomCard({
           </div>
         </div>
 
-        <p className="text-muted-foreground text-sm flex items-center gap-1">
+        <p className="text-foreground/60 text-sm flex items-center gap-1">
           <MapPin size={14} />
           <span className="line-clamp-1">
             {room.location.fullAddress || room.location.province}
@@ -122,7 +122,7 @@ export function RoomCard({
           {(room.amenities || []).map((amenity) => (
             <div
               key={amenity.id}
-              className="elegant-subheading text-muted-foreground flex items-center gap-1"
+              className="elegant-subheading text-foreground/60 flex items-center gap-1"
             >
               <span>{getAmenityIcon(amenity)}</span>
             </div>
@@ -131,7 +131,7 @@ export function RoomCard({
 
         <div className="pt-2">
           <span className="font-bold text-base">{formatPrice(room.price)}</span>
-          <span className="text-muted-foreground text-sm font-normal">
+          <span className="text-foreground/50 text-sm font-normal">
             /{t("night")}
           </span>
         </div>

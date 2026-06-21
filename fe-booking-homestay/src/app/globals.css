@@ -573,3 +573,45 @@ body {
 .animate-aura-2 {
   animation: aura-pulse-2 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
+
+/* Custom Leaflet Room Popup Styles */
+.custom-room-popup {
+  filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.12)) !important;
+}
+div.custom-room-popup .leaflet-popup-content-wrapper {
+  padding: 0 !important;
+  border-radius: 14px !important;
+  overflow: hidden !important;
+  background: var(--card) !important;
+  box-shadow: none !important;
+}
+div.custom-room-popup .leaflet-popup-content {
+  margin: 0 !important;
+  width: 184px !important;
+}
+div.custom-room-popup .leaflet-popup-tip {
+  background: var(--card) !important;
+  box-shadow: none !important;
+}
+div.custom-room-popup .leaflet-popup-close-button {
+  top: 8px !important;
+  right: 8px !important;
+  color: white !important;
+  font-size: 11px !important;
+  background: rgba(0, 0, 0, 0.45) !important;
+  border-radius: 50% !important;
+  width: 20px !important;
+  height: 20px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+  transition: all 0.2s ease !important;
+}
+div.custom-room-popup .leaflet-popup-close-button:hover {
+  background: rgba(0, 0, 0, 0.65) !important;
+  transform: scale(1.05) !important;
+}
+div.custom-room-popup .leaflet-popup-content a {
+  text-decoration: none !important;
+}

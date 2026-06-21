@@ -180,7 +180,7 @@ export function MapPicker({
         <p className="text-xs text-destructive">{geocodeError}</p>
       )}
 
-      <div className="rounded-lg overflow-hidden border border-border shadow-sm h-[260px]">
+      <div className="rounded-lg overflow-hidden border border-border shadow-sm h-65">
         <MapContainer
           center={hasCoords ? [Number(lat), Number(lng)] : DEFAULT_CENTER}
           zoom={hasCoords ? 15 : DEFAULT_ZOOM}
@@ -188,9 +188,14 @@ export function MapPicker({
           scrollWheelZoom
         >
           <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            url="https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}"
+            subdomains={["mt0", "mt1", "mt2", "mt3"]}
+            maxZoom={20}
           />
+          {/* Custom attribution to credit Google Maps */}
+          <div className="absolute bottom-1 right-2 z-10 bg-white/70 dark:bg-black/70 px-1.5 py-0.5 rounded-sm text-[9px] text-muted-foreground pointer-events-none select-none backdrop-blur-xs font-sans">
+            © Google Maps
+          </div>
           <ClickHandler onChange={onChange} />
           {hasCoords && (
             <>

@@ -2,11 +2,10 @@
 
 import { FilterBar } from "@/_components/FilterBar";
 import Footer from "@/_components/Footer";
-import { GoogleMap } from "@/_components/GoogleMap";
 import Header from "@/_components/Header";
 import { SearchBar } from "@/_components/SearchBar";
-import WeatherBadge from "@/_components/WeatherBadge";
 import { useFavorites } from "@/_hooks/useFavorites";
+import { useWeather } from "@/_hooks/useWeather";
 import { RoomCard } from "@/app/(pages)/room/_component/RoomCard";
 import RoomListRecommendations from "@/app/(pages)/room/_component/RoomListRecommendations";
 import { useLang } from "@/context/lang-context";
@@ -16,16 +15,23 @@ import { getRooms, room_available } from "@/services/roomApi";
 import HoverScale from "@/styles/animations/HoverScale";
 import StaggerItem from "@/styles/animations/StaggerItem";
 import { motion, useSpring } from "framer-motion";
-import { Loader2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Menu } from "lucide-react";
+import dynamic from "next/dynamic";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
+
+const RoomsMap = dynamic(() => import("./_component/RoomsMap"), { ssr: false });
 
 export default function RoomsListPage() {
   const [rawRooms, setRawRooms] = useState<Room[]>([]);
   const [rooms, setRooms] = useState<Room[]>([]);
+  const [recommendedRooms, setRecommendedRooms] = useState<Room[]>([]);
+  const [mapRooms, setMapRooms] = useState<Room[]>([]);
+
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [scrolled, setScrolled] = useState(false);
   const searchParams = useSearchParams();
   const location = searchParams.get("location") || "";
@@ -38,6 +44,46 @@ export default function RoomsListPage() {
     minRating?: number[];
     sortOrder?: "asc" | "desc";
   }>({});
+
+  // Weather data for FilterBar popover
+  const weatherLat = rooms[0]?.location?.latitude;
+  const weatherLon = rooms[0]?.location?.longitude;
+  const { data: weatherData } = useWeather(weatherLat, weatherLon);
+
+  const displayRooms = useMemo(() => {
+    if (location) {
+      return mapRooms;
+    }
+    const combined = [...mapRooms];
+    recommendedRooms.forEach((recRoom: any) => {
+      if (!combined.some((r) => r.id === recRoom.id)) {
+        const item: any = {
+          id: recRoom.id,
+          name: recRoom.name,
+          description: recRoom.description,
+          price: recRoom.price,
+          adultCapacity: recRoom.adultCapacity,
+          childCapacity: recRoom.childCapacity,
+          location: {
+            id: recRoom.location?.id,
+            fullAddress: recRoom.location?.fullAddress,
+            province: recRoom.location?.province,
+            latitude: recRoom.location?.latitude,
+            longitude: recRoom.location?.longitude,
+          },
+          rating: recRoom.rating || 0,
+          reviewCount: recRoom.reviewCount || 0,
+          image: recRoom.images?.main || recRoom.image || "/default.jpg",
+          images: recRoom.images,
+          amenities: recRoom.amenities || [],
+          status: recRoom.status || "Available",
+        };
+        combined.push(item);
+      }
+    });
+    return combined;
+  }, [mapRooms, recommendedRooms, location]);
+
   const y = useSpring(scrolled ? -20 : 0, { stiffness: 120, damping: 25 });
   const scale = useSpring(scrolled ? 0.9 : 1, { stiffness: 120, damping: 25 });
 
@@ -101,16 +147,28 @@ export default function RoomsListPage() {
       setLoading(true);
 
       let roomsData: any[] = [];
-      let totalPages = 1;
+      let calculatedTotalPages = 1;
 
       const result = await getRooms(buildParams(pageParam));
       roomsData = result?.rooms || [];
-      totalPages = Math.ceil((result?.total || 0) / 6);
+      calculatedTotalPages = Math.ceil((result?.total || 0) / 6);
+      setTotalPages(calculatedTotalPages);
+
+      // Fetch all matching rooms for map (pageSize: 100)
+      const mapParams = {
+        ...buildParams(1),
+        page: 1,
+        pageSize: 100,
+      };
+      const mapResult = await getRooms(mapParams);
+      const mapRoomsData = mapResult?.rooms || [];
 
       if (latestRequestRef.current !== requestId) return;
 
       if (!roomsData.length) {
-        if (pageParam === 1) setRooms([]);
+        setRooms([]);
+        setRawRooms([]);
+        setMapRooms([]);
         setHasMore(false);
         return;
       }
@@ -138,19 +196,56 @@ export default function RoomsListPage() {
         status: "Available",
       }));
 
+      const mappedMapRooms: Room[] = mapRoomsData.map((room: any) => ({
+        id: room.id,
+        name: room.name,
+        description: room.description,
+        price: room.price,
+        adultCapacity: room.adultCapacity,
+        childCapacity: room.childCapacity,
+        location: {
+          id: room.location?.id,
+          fullAddress: room.location?.fullAddress,
+          province: room.location?.province,
+          latitude: room.location?.latitude,
+          longitude: room.location?.longitude,
+        },
+        rating: room.rating || 0,
+        reviewCount: room.reviewCount || 0,
+        image: room.images?.main || "/default.jpg",
+        images: room.images,
+        amenities: room.amenities?.map((a: any) => a.name) || [],
+        status: "Available",
+      }));
+
       let finalRooms = mappedRooms;
+      let finalMapRooms = mappedMapRooms;
 
       // Kiểm tra availability nếu có ngày checkIn/checkOut
       if (checkIn && checkOut) {
-        const availabilityResults = await Promise.all(
-          mappedRooms.map((room) =>
-            room_available(room.id, checkIn, checkOut)
-              .then((res) => ({
-                id: room.id,
-                available: res.available ?? false,
-              }))
-              .catch(() => ({ id: room.id, available: false })),
-          ),
+        const [availabilityResults, mapAvailabilityResults] = await Promise.all(
+          [
+            Promise.all(
+              mappedRooms.map((room) =>
+                room_available(room.id, checkIn, checkOut)
+                  .then((res) => ({
+                    id: room.id,
+                    available: res.available ?? false,
+                  }))
+                  .catch(() => ({ id: room.id, available: false })),
+              ),
+            ),
+            Promise.all(
+              mappedMapRooms.map((room) =>
+                room_available(room.id, checkIn, checkOut)
+                  .then((res) => ({
+                    id: room.id,
+                    available: res.available ?? false,
+                  }))
+                  .catch(() => ({ id: room.id, available: false })),
+              ),
+            ),
+          ],
         );
 
         finalRooms = mappedRooms.map((room) => {
@@ -160,17 +255,20 @@ export default function RoomsListPage() {
             status: found?.available ? "Available" : "Sold out",
           };
         });
+
+        finalMapRooms = mappedMapRooms.map((room) => {
+          const found = mapAvailabilityResults.find((r) => r.id === room.id);
+          return {
+            ...room,
+            status: found?.available ? "Available" : "Sold out",
+          };
+        });
       }
 
-      setRawRooms((prev) => {
-        const merged = pageParam === 1 ? finalRooms : [...prev, ...finalRooms];
-
-        return merged.filter(
-          (r, i, arr) => i === arr.findIndex((x) => x.id === r.id),
-        );
-      });
-
-      setHasMore(pageParam < totalPages);
+      // Pagination replaces the array rather than merging it
+      setRawRooms(finalRooms);
+      setMapRooms(finalMapRooms);
+      setHasMore(pageParam < calculatedTotalPages);
     } catch (err) {
       console.error("Error loading rooms:", err);
     } finally {
@@ -216,33 +314,41 @@ export default function RoomsListPage() {
     setRooms(result);
   }, [rawRooms, filters]);
 
+  // Load rooms when page changes
   useEffect(() => {
     loadRooms(page);
-  }, [page, location, adults, children]);
+  }, [page]);
 
+  // Reset page to 1 when search options or filters change
+  const prevParamsRef = useRef({
+    location,
+    adults,
+    children,
+    filters,
+    checkIn,
+    checkOut,
+  });
   useEffect(() => {
-    setRooms([]);
-    setPage(1);
-    setHasMore(true);
-    loadRooms(1);
-  }, [location, adults, children, filters, checkIn ?? null, checkOut ?? null]);
+    const prev = prevParamsRef.current;
+    const current = { location, adults, children, filters, checkIn, checkOut };
 
-  useEffect(() => {
-    const handleScroll = () => {
-      if (loading || !hasMore || isFetchingRef.current) return;
+    const changed =
+      prev.location !== current.location ||
+      prev.adults !== current.adults ||
+      prev.children !== current.children ||
+      JSON.stringify(prev.filters) !== JSON.stringify(current.filters) ||
+      prev.checkIn !== current.checkIn ||
+      prev.checkOut !== current.checkOut;
 
-      const scrollTop = window.scrollY;
-      const scrollHeight = document.documentElement.scrollHeight;
-      const clientHeight = window.innerHeight;
-
-      if (scrollTop + clientHeight >= scrollHeight - 1500) {
-        setPage((prev) => prev + 1);
+    if (changed) {
+      prevParamsRef.current = current;
+      if (page !== 1) {
+        setPage(1);
+      } else {
+        loadRooms(1);
       }
-    };
-
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [loading, hasMore]);
+    }
+  }, [location, adults, children, filters, checkIn, checkOut, page]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -275,6 +381,85 @@ export default function RoomsListPage() {
     });
   }, [location]);
 
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setPage(newPage);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
+  const renderPageNumbers = () => {
+    const pages = [];
+    const maxVisible = 5;
+
+    if (totalPages <= maxVisible) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      pages.push(1);
+      const start = Math.max(2, page - 1);
+      const end = Math.min(totalPages - 1, page + 1);
+
+      if (start > 2) {
+        pages.push("ellipsis-1");
+      }
+
+      for (let i = start; i <= end; i++) {
+        pages.push(i);
+      }
+
+      if (end < totalPages - 1) {
+        pages.push("ellipsis-2");
+      }
+
+      pages.push(totalPages);
+    }
+
+    return pages.map((p, idx) => {
+      if (typeof p === "string") {
+        return (
+          <span
+            key={`ellipsis-${idx}`}
+            className="px-3 py-2 text text-sm select-none"
+          >
+            ...
+          </span>
+        );
+      }
+
+      const isActive = p === page;
+      return (
+        <button
+          key={`page-${p}`}
+          onClick={() => handlePageChange(p)}
+          className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-semibold transition-all cursor-pointer active:scale-90
+            ${
+              isActive
+                ? "bg-primary text-background shadow-md"
+                : "hover:bg-primary/20 border border-transparent hover:border-primary/20 text-foreground"
+            }`}
+        >
+          {p}
+        </button>
+      );
+    });
+  };
+
+  const RoomSkeleton = () => (
+    <div className="border border-border/40 rounded-3xl overflow-hidden animate-pulse bg-card">
+      <div className="bg-primary/10 aspect-4/3 w-full" />
+      <div className="p-4 space-y-3">
+        <div className="h-4 bg-primary/10 rounded-md w-3/4" />
+        <div className="h-3 bg-primary/10 rounded-md w-1/2" />
+        <div className="flex justify-between items-center pt-2">
+          <div className="h-4 bg-primary/10 rounded-md w-1/3" />
+          <div className="h-4 bg-primary/10 rounded-md w-1/6" />
+        </div>
+      </div>
+    </div>
+  );
+
   // Favorites
   const roomIds = useMemo(() => rooms.map((r) => r.id), [rooms]);
   const { isFavorited, toggle } = useFavorites(roomIds);
@@ -282,47 +467,101 @@ export default function RoomsListPage() {
   return (
     <div className="min-h-screen bg-background dark:bg-black">
       <Header />
-      <main className="max-w-9xl container mx-auto space-y-12 mb:pt-36 sm:pt-40 px-3 pb-10 sm:px-4 md:px-6 lg:px-8">
+      <main className="max-w-9xl container mx-auto pt-28 lg:pt-64 px-3 pb-10 sm:px-4 md:px-6 lg:px-8">
+        {/* SearchBar placeholder to prevent layout shift on mobile/tablet */}
+        <div
+          className={`transition-all duration-500 ease-in-out lg:hidden ${scrolled ? "h-0 opacity-0 mb-0 pointer-events-none" : "h-14 mb-8"}`}
+        />
+
         <motion.div
-          layoutId="search-bar"
+          layout
+          transition={{
+            type: "spring",
+            stiffness: 160,
+            damping: 24,
+            mass: 0.8,
+          }}
           className={`
-            fixed left-1/2 -translate-x-1/2 z-50 
-          w-[95%] sm:w-full max-w-4xl 
-            transition-all duration-300
-            ${scrolled ? "top-1 scale-90" : "top-22 scale-100"}
-        `}
-          transition={{ layout: { duration: 0.35, ease: "easeInOut" } }}
+            fixed z-50 bg-transparent border-none py-0 mx-auto
+            ${
+              scrolled
+                ? "top-10 -translate-y-1/2 translate-x-0 left-16 right-28 md:left-25 md:right-40 lg:left-40 lg:right-45 flex justify-center scale-95 lg:scale-90"
+                : "top-28 lg:top-32 left-0 right-0 translate-x-0 translate-y-0 w-full container px-3 sm:px-4 md:px-2 lg:px-8 max-w-9xl scale-100 md:scale-105 lg:scale-100"
+            }
+          `}
         >
-          <SearchBar compact={scrolled} />
+          <motion.div
+            layout
+            transition={{
+              type: "spring",
+              stiffness: 160,
+              damping: 24,
+              mass: 0.8,
+            }}
+            className={
+              scrolled
+                ? "w-full max-w-xs md:max-w-xl lg:max-w-2xl"
+                : "w-full max-w-[92%] sm:max-w-[85%] md:max-w-2xl lg:max-w-4xl xl:max-w-5xl mx-auto"
+            }
+          >
+            <SearchBar compact={scrolled} />
+          </motion.div>
         </motion.div>
-        <FilterBar onFilterChange={setFilters} />
-        <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
-          {/* Map */}
-          <div className="w-full lg:w-1/4 sticky lg:top-18 self-start">
-            <div className="space-y-4">
-              {location && (
-                <WeatherBadge
-                  location={location}
-                  lat={rooms[0]?.location?.latitude}
-                  lon={rooms[0]?.location?.longitude}
-                />
-              )}
-              <div className="h-[calc(100vh-200px)] overflow-hidden rounded-lg shadow-md">
-                <GoogleMap
-                  lat={location ? fallbackCenter?.[0] : undefined}
-                  lng={location ? fallbackCenter?.[1] : undefined}
-                  address={location ? `${location}, Việt Nam` : "Việt Nam"}
-                  zoom={location ? 12 : 5}
-                  showOpenButton={false}
-                />
-              </div>
+
+        {/* Mobile FilterBar (Sticky under Header containing SearchBar) - No background or borders to prevent separated layer appearance */}
+        <div
+          className={`lg:hidden sticky z-30 py-2 -mx-3 px-3 transition-all duration-500 ${scrolled ? "top-20" : "top-34"}`}
+        >
+          <FilterBar
+            filters={filters}
+            onFilterChange={setFilters}
+            weatherData={location ? weatherData : undefined}
+            weatherLocation={location || undefined}
+          />
+        </div>
+
+        <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 mt-6 lg:mt-0">
+          {/* Left Column (Desktop Filters & Map/Weather) */}
+          <div className="w-full lg:w-100 xl:w-120 shrink-0 sticky lg:top-28 self-start space-y-4">
+            {/* Desktop FilterBar Card - No background card class or borders, directly floating */}
+            <div className="hidden lg:block p-0">
+              <h3 className="text-xs font-bold uppercase tracking-wider mb-3 text-foreground/50 flex items-center gap-2 px-1">
+                <Menu className="w-4 h-4 text-primary" />
+                {t("langCode") === "en"
+                  ? "Filters & Sorting"
+                  : "Bộ lọc & Sắp xếp"}
+              </h3>
+              <FilterBar
+                filters={filters}
+                onFilterChange={setFilters}
+                weatherData={location ? weatherData : undefined}
+                weatherLocation={location || undefined}
+              />
+            </div>
+
+            <div className="h-80 sm:h-100 lg:h-120 xl:h-140 overflow-hidden rounded-2xl border border-border/60 shadow-md">
+              <RoomsMap
+                rooms={displayRooms}
+                center={location ? fallbackCenter : null}
+                zoom={location ? 12 : 5}
+              />
             </div>
           </div>
-          <div className="w-full lg:w-3/4 mt-4 lg:mt-0">
-            {/* Recommendation sections — chỉ hiện khi chưa search */}
-            {!location && <RoomListRecommendations />}
-            {rooms.length > 0 && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 lg:gap-6 mb-6">
+          <div className="w-full lg:flex-1 min-w-0 mt-4 lg:mt-0">
+            {/* Recommendation sections — chỉ hiện khi chưa search và đang ở trang 1 */}
+            {!location && page === 1 && (
+              <RoomListRecommendations onRoomsLoaded={setRecommendedRooms} />
+            )}
+
+            {loading ? (
+              /* Beautiful premium card skeleton screens when loading */
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-1 sm:gap-2 lg:gap-3 mb-6">
+                {[...Array(6)].map((_, index) => (
+                  <RoomSkeleton key={`sk-${index}`} />
+                ))}
+              </div>
+            ) : rooms.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-1 sm:gap-2 lg:gap-3 mb-6">
                 {rooms.map((room, index) => (
                   <StaggerItem index={index} key={`${room.id}-${index}`}>
                     <HoverScale>
@@ -335,9 +574,7 @@ export default function RoomsListPage() {
                   </StaggerItem>
                 ))}
               </div>
-            )}
-
-            {!loading && rooms.length === 0 && (
+            ) : (
               <div className="flex flex-col items-center justify-center py-20 text-center">
                 <img src="/empty.svg" className="w-48" />
 
@@ -345,39 +582,37 @@ export default function RoomsListPage() {
                   Không tìm thấy phòng
                 </h2>
 
-                <p className="text-muted text-sm mt-2 max-w-md">
+                <p className="text-foreground/50 text-sm mt-2 max-w-md">
                   Hãy thử điều chỉnh bộ lọc hoặc chọn một vị trí khác.
                 </p>
               </div>
             )}
 
-            {loading && (
-              <div className="flex items-center justify-center py-6">
-                <div className="flex items-center gap-3 text-muted">
-                  <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                  <span className="text-sm">{t("loading more rooms...")}</span>
-                </div>
-              </div>
-            )}
+            {/* Pagination UI */}
+            {!loading && totalPages > 1 && (
+              <div className="flex justify-center items-center gap-2 mt-8 py-4 border-t border-border/40">
+                {/* Previous Button */}
+                <button
+                  onClick={() => handlePageChange(page - 1)}
+                  disabled={page === 1}
+                  className="p-2.5 rounded-full border border-border/60 bg-card text-foreground hover:text-primary hover:border-primary/30 transition-all cursor-pointer disabled:opacity-40 disabled:pointer-events-none active:scale-95 shadow-2xs hover:shadow-md flex items-center justify-center"
+                  aria-label="Previous Page"
+                >
+                  <ChevronLeft size={16} />
+                </button>
 
-            {!hasMore && !loading && rooms.length > 0 && (
-              <div className="flex items-center justify-center py-2">
-                <div className="text-center text-muted">
-                  <p className="text-sm ">
-                    {t("You{'ve'} reached the end of the results")}
-                  </p>
-                  <p className="text-xs mt-1">
-                    {rooms.length > 1
-                      ? t("totalRooms").replace(
-                          "{count}",
-                          rooms.length.toString(),
-                        )
-                      : t("totalRoom").replace(
-                          "{count}",
-                          rooms.length.toString(),
-                        )}
-                  </p>
-                </div>
+                {/* Page Numbers */}
+                {renderPageNumbers()}
+
+                {/* Next Button */}
+                <button
+                  onClick={() => handlePageChange(page + 1)}
+                  disabled={page === totalPages}
+                  className="p-2.5 rounded-full border border-border/60 bg-card text-foreground hover:text-primary hover:border-primary/30 transition-all cursor-pointer disabled:opacity-40 disabled:pointer-events-none active:scale-95 shadow-2xs hover:shadow-md flex items-center justify-center"
+                  aria-label="Next Page"
+                >
+                  <ChevronRight size={16} />
+                </button>
               </div>
             )}
           </div>

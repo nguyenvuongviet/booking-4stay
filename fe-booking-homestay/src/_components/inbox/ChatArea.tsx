@@ -2,7 +2,7 @@
 
 import { getImageUrl, getPartner } from "@/_helper/chat.helper";
 import { IConversation, IMessage } from "@/types/chat";
-import { ArrowLeft, Send, Smile, Sparkles } from "lucide-react";
+import { ArrowLeft, Info, Send, Smile, Sparkles } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useRef } from "react";
 import MessageBubble from "./MessageBubble";
@@ -126,19 +126,7 @@ export default function ChatArea({
               title="Thông tin liên hệ"
             >
               <span className="hidden sm:inline">Thông tin</span>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-4 w-4"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <circle cx="12" cy="12" r="10" />
-                <path d="M12 16v-4M12 8h.01" />
-              </svg>
+              <Info className="h-4 w-4" />
             </button>
           )}
         </div>
