@@ -42,27 +42,52 @@ export default function Header() {
   const [openMenu, setOpenMenu] = useState(false);
   const [openMobileMenu, setOpenMobileMenu] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isSearchActiveInHeader, setIsSearchActiveInHeader] = useState(false);
   const pathname = usePathname();
   const { t } = useLang();
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
+      if (typeof window !== "undefined") {
+        const scrollY = window.scrollY;
+        setIsScrolled(scrollY > 50);
+
+        if (pathname === "/") {
+          const placeholder = document.getElementById("searchbar-placeholder");
+          const header = document.querySelector("header");
+          if (placeholder) {
+            const rect = placeholder.getBoundingClientRect();
+            const headerHeight = header ? header.offsetHeight : 89;
+            setIsSearchActiveInHeader(rect.top <= headerHeight);
+          } else {
+            setIsSearchActiveInHeader(false);
+          }
+        } else if (pathname === "/room") {
+          setIsSearchActiveInHeader(scrollY > 50);
+        } else {
+          setIsSearchActiveInHeader(false);
+        }
+      }
     };
+
+    handleScroll();
+
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  }, [pathname]);
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-40 transition-all duration-500 ${
+      className={`fixed top-0 left-0 right-0 z-40 transition-all duration-500 border-b ${
         isScrolled
-          ? "py-2 bg-white/80 dark:bg-black/80 backdrop-blur-xl border-b border-white/20 shadow-lg"
-          : "py-4 bg-transparent"
+          ? "py-3 bg-white/80 dark:bg-black/80 backdrop-blur-xl border-white/20 shadow-lg"
+          : pathname === "/"
+            ? "py-3 bg-transparent border-transparent"
+            : "py-3 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-xl border-border/80 shadow-xs"
       }`}
     >
       <div
-        className={`max-w-7xl mx-auto transition-all duration-500 ${pathname === "/room" && isScrolled ? "px-4 sm:px-6 lg:px-8" : "px-6 lg:px-8"}`}
+        className={`max-w-7xl mx-auto transition-all duration-500 ${(pathname === "/room" || pathname === "/") && isSearchActiveInHeader ? "px-4 sm:px-6 lg:px-8" : "px-6 lg:px-8"}`}
       >
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
@@ -79,7 +104,10 @@ export default function Header() {
               </div>
               <span
                 className={`elegant-heading text-2xl tracking-tighter transition-all duration-500 ${
-                  pathname === "/room" && isScrolled ? "hidden lg:block" : ""
+                  (pathname === "/room" || pathname === "/") &&
+                  isSearchActiveInHeader
+                    ? "hidden lg:block"
+                    : ""
                 } ${
                   !isScrolled && pathname === "/"
                     ? "text-white"
@@ -92,7 +120,7 @@ export default function Header() {
           </div>
 
           <nav
-            className={`hidden md:flex items-center space-x-10 transition-all duration-500 ${pathname === "/room" && isScrolled ? "opacity-0 pointer-events-none scale-90 w-0 overflow-hidden" : "opacity-100"}`}
+            className={`hidden md:flex items-center space-x-10 transition-all duration-500 ${isSearchActiveInHeader ? "opacity-0 pointer-events-none scale-90 w-0 overflow-hidden" : "opacity-100"}`}
           >
             {[
               { label: t("home"), href: "/" },
@@ -141,7 +169,7 @@ export default function Header() {
                       </PopoverTrigger>
 
                       <PopoverContent
-                        className="w-96 p-2 bg-white/90 dark:bg-black/90 backdrop-blur-2xl shadow-2xl rounded-xl border border-white/20 z-999"
+                        className="w-72 sm:w-96 p-1.5 bg-white/90 dark:bg-black/90 backdrop-blur-2xl shadow-2xl rounded-xl border border-white/20 z-999"
                         align="end"
                         sideOffset={8}
                       >
@@ -164,7 +192,7 @@ export default function Header() {
                           size="sm"
                         />
                         <span
-                          className={`hidden ${pathname === "/room" && isScrolled ? "lg:block" : "sm:block"} elegant-subheading text-xs font-bold px-2 ${
+                          className={`hidden ${(pathname === "/" || pathname === "/room") && isSearchActiveInHeader ? "lg:block" : "sm:block"} elegant-subheading text-xs font-bold px-2 ${
                             !isScrolled && pathname === "/"
                               ? "text-white"
                               : "text-foreground"
@@ -176,22 +204,24 @@ export default function Header() {
                     </PopoverTrigger>
 
                     <PopoverContent
-                      className="w-72 p-3 bg-white/90 dark:bg-black/90 backdrop-blur-2xl shadow-2xl rounded-3xl border border-white/20 z-999"
+                      className="w-48 sm:w-72 p-1 sm:p-2 bg-white/90 dark:bg-black/90 backdrop-blur-2xl shadow-2xl rounded-3xl border border-white/20 z-999"
                       align="end"
                       sideOffset={8}
                     >
-                      <div className="px-4 py-4 mb-2 bg-primary/5 rounded-2xl border border-primary/10">
-                        <p className="text-sm font-bold text-foreground truncate">
+                      <div className="px-2 py-2 mb-1 bg-primary/5 rounded-xl border border-primary/10">
+                        <p className="text-[11px] sm:text-sm font-bold text-foreground truncate">
                           {user.firstName} {user.lastName}
                         </p>
-                        <p className="text-[10px] text-muted-foreground uppercase tracking-widest mt-1">
+                        <p className="text-[8px] sm:text-[10px] text-muted-foreground uppercase tracking-widest mt-0.5">
                           {user.email || "Explorer"}
                         </p>
                       </div>
 
-                      {/* Navigation links (only visible on mobile below md breakpoint AND when scrolled) */}
-                      {isScrolled && (
-                        <div className="md:hidden space-y-1 pb-2 mb-2 border-b border-gray-100 dark:border-white/10">
+                      {/* Navigation links (only visible on mobile below 600px AND when scrolled) */}
+                      {(pathname === "/" || pathname === "/room"
+                        ? isSearchActiveInHeader
+                        : isScrolled) && (
+                        <div className="min-[600px]:hidden space-y-0.5 pb-1 mb-1 border-b border-gray-100 dark:border-white/10">
                           {[
                             { label: t("home"), href: "/" },
                             { label: t("Rooms"), href: "/room" },
@@ -202,53 +232,53 @@ export default function Header() {
                               key={item.href}
                               href={item.href}
                               onClick={() => setOpenMenu(false)}
-                              className="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-foreground hover:bg-primary/10 rounded-xl transition-all duration-200"
+                              className="flex items-center gap-1.5 px-2 py-1.5 sm:px-3.5 sm:py-2.5 text-[11px] sm:text-sm font-semibold text-foreground hover:bg-primary/10 rounded-xl transition-all duration-200"
                             >
-                              <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+                              <span className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-primary" />
                               {item.label}
                             </Link>
                           ))}
                         </div>
                       )}
 
-                      <div className="space-y-1">
+                      <div className="space-y-0.5">
                         <Link
                           href="/profile"
                           onClick={() => setOpenMenu(false)}
-                          className="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-foreground hover:bg-primary/10 rounded-xl transition-all duration-200"
+                          className="flex items-center gap-1.5 px-2 py-1.5 sm:px-3.5 sm:py-2.5 text-[11px] sm:text-sm font-semibold text-foreground hover:bg-primary/10 rounded-xl transition-all duration-200"
                         >
-                          <UserIcon className="w-4 h-4 text-primary" />
+                          <UserIcon className="w-3 h-3 sm:w-4 sm:h-4 text-primary" />
                           {t("myProfile")}
                         </Link>
                         <Link
                           href="/booking"
                           onClick={() => setOpenMenu(false)}
-                          className="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-foreground hover:bg-primary/10 rounded-xl transition-all duration-200"
+                          className="flex items-center gap-1.5 px-2 py-1.5 sm:px-3.5 sm:py-2.5 text-[11px] sm:text-sm font-semibold text-foreground hover:bg-primary/10 rounded-xl transition-all duration-200"
                         >
-                          <CalendarDays className="w-4 h-4 text-primary" />
+                          <CalendarDays className="w-3 sm:w-4 h-4 text-primary" />
                           {t("myBookings")}
                         </Link>
                         <button
-                          className="flex items-center gap-3 w-full text-left px-4 py-3 text-sm font-semibold text-foreground hover:bg-primary/10 rounded-xl transition-all duration-200 cursor-pointer"
+                          className="flex items-center gap-1.5 w-full text-left px-2 py-1.5 sm:px-3.5 sm:py-2.5 text-[11px] sm:text-sm font-semibold text-foreground hover:bg-primary/10 rounded-xl transition-all duration-200 cursor-pointer"
                           onClick={() => {
                             openNewPassword();
                             setOpenMenu(false);
                           }}
                         >
-                          <KeyRound className="w-4 h-4 text-primary" />
+                          <KeyRound className="w-3 h-3 sm:w-4 sm:h-4 text-primary" />
                           {t("changePassword")}
                         </button>
                       </div>
 
-                      <div className="mt-2 pt-2 border-t border-gray-100 dark:border-white/10">
+                      <div className="mt-1 pt-1 border-t border-gray-100 dark:border-white/10">
                         <button
-                          className="flex items-center gap-3 w-full text-left px-4 py-3 text-sm font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition-all duration-200 cursor-pointer"
+                          className="flex items-center gap-1.5 w-full text-left px-2 py-1.5 sm:px-3.5 sm:py-2.5 text-[11px] sm:text-sm font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition-all duration-200 cursor-pointer"
                           onClick={() => {
                             logout();
                             setOpenMenu(false);
                           }}
                         >
-                          <LogOut className="w-4 h-4" />
+                          <LogOut className="w-3 h-3 sm:w-4 sm:h-4" />
                           {t("logout")}
                         </button>
                       </div>
@@ -283,13 +313,15 @@ export default function Header() {
                       </PopoverTrigger>
 
                       <PopoverContent
-                        className="w-72 p-3 bg-white/90 dark:bg-black/90 backdrop-blur-2xl shadow-2xl rounded-3xl border border-white/20 z-999"
+                        className="w-44 sm:w-72 p-1 sm:p-2 bg-white/90 dark:bg-black/90 backdrop-blur-2xl shadow-2xl rounded-3xl border border-white/20 z-999"
                         align="end"
                         sideOffset={8}
                       >
-                        {/* Navigation links (only visible on mobile below md breakpoint when scrolled) */}
-                        {isScrolled && (
-                          <div className="md:hidden space-y-1 pb-2 mb-2 border-b border-gray-100 dark:border-white/10">
+                        {/* Navigation links (only visible on mobile below 600px when scrolled) */}
+                        {(pathname === "/" || pathname === "/room"
+                          ? isSearchActiveInHeader
+                          : isScrolled) && (
+                          <div className="min-[600px]:hidden space-y-0.5 pb-1 mb-1 border-b border-gray-100 dark:border-white/10">
                             {[
                               { label: t("home"), href: "/" },
                               { label: t("Rooms"), href: "/room" },
@@ -300,9 +332,9 @@ export default function Header() {
                                 key={item.href}
                                 href={item.href}
                                 onClick={() => setOpenMenu(false)}
-                                className="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-foreground hover:bg-primary/10 rounded-xl transition-all duration-200"
+                                className="flex items-center gap-1.5 px-2 py-1.5 sm:px-3.5 sm:py-2.5 text-[11px] sm:text-sm font-semibold text-foreground hover:bg-primary/10 rounded-xl transition-all duration-200"
                               >
-                                <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+                                <span className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-primary" />
                                 {item.label}
                               </Link>
                             ))}
@@ -312,13 +344,13 @@ export default function Header() {
                         {/* Sign In Button inside menu */}
                         <div className="p-1">
                           <Button
-                            className="w-full rounded-xl py-5 font-bold transition-all duration-300 shadow-md flex items-center justify-center gap-2"
+                            className="w-full rounded-xl py-3 sm:py-4 text-[11px] sm:text-sm font-bold transition-all duration-300 shadow-md flex items-center justify-center gap-2"
                             onClick={() => {
                               openSignIn();
                               setOpenMenu(false);
                             }}
                           >
-                            <KeyRound className="w-4 h-4" />
+                            <KeyRound className="w-3 h-3 sm:w-4 sm:h-4" />
                             {t("signIn")}
                           </Button>
                         </div>
@@ -331,16 +363,22 @@ export default function Header() {
 
             {/* Standalone Hamburger Menu */}
             <div
-              className={`${isScrolled ? "hidden md:flex" : "md:hidden flex"} items-center`}
+              className={`items-center ${
+                pathname === "/" || pathname === "/room"
+                  ? isSearchActiveInHeader
+                    ? "hidden min-[600px]:flex"
+                    : "flex md:hidden"
+                  : "hidden min-[600px]:flex md:hidden"
+              }`}
             >
               <Popover open={openMobileMenu} onOpenChange={setOpenMobileMenu}>
                 <PopoverTrigger asChild>
                   <button
                     type="button"
-                    className={`p-2 rounded-full transition-all duration-300 border bg-white/10 ${
+                    className={`relative flex items-center p-2 rounded-full cursor-pointer bg-white/10 border transition-all duration-300 hover:shadow-md ${
                       !isScrolled && pathname === "/"
                         ? "border-white/20 hover:bg-white/20 text-white hover:text-white"
-                        : "text-foreground hover:bg-secondary border-border"
+                        : "border-border text-foreground"
                     }`}
                   >
                     <Menu size={20} />
@@ -348,11 +386,11 @@ export default function Header() {
                 </PopoverTrigger>
 
                 <PopoverContent
-                  className="w-72 p-3 bg-white/90 dark:bg-black/90 backdrop-blur-2xl shadow-2xl rounded-3xl border border-white/20 z-999"
+                  className="w-40 sm:w-64 p-1 sm:p-2 bg-white/90 dark:bg-black/90 backdrop-blur-2xl shadow-2xl rounded-3xl border border-white/20 z-999"
                   align="end"
                   sideOffset={8}
                 >
-                  <div className="space-y-1">
+                  <div className="space-y-0.5">
                     {[
                       { label: t("home"), href: "/" },
                       { label: t("Rooms"), href: "/room" },
@@ -363,9 +401,9 @@ export default function Header() {
                         key={item.href}
                         href={item.href}
                         onClick={() => setOpenMobileMenu(false)}
-                        className="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-foreground hover:bg-primary/10 rounded-xl transition-all duration-200"
+                        className="flex items-center gap-1.5 px-2 py-1.5 sm:px-3 sm:py-2 text-[11px] sm:text-sm font-semibold text-foreground hover:bg-primary/10 rounded-xl transition-all duration-200"
                       >
-                        <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+                        <span className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-primary" />
                         {item.label}
                       </Link>
                     ))}

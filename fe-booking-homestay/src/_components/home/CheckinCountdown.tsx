@@ -68,7 +68,7 @@ export default function CheckinCountdown() {
     return null;
 
   return (
-    <section className="py-6 bg-background">
+    <section className="py-4 sm:py-6 bg-background">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-5">
         {/* === Action Needed Alerts === */}
         {actionNeeded.length > 0 && (
@@ -95,7 +95,7 @@ export default function CheckinCountdown() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Plane size={18} className="text-primary" />
-                <h3 className="font-bold text-foreground">
+                <h3 className="font-bold text-sm sm:text-base text-foreground">
                   Chuyến đi sắp tới của bạn
                 </h3>
               </div>
@@ -107,7 +107,7 @@ export default function CheckinCountdown() {
               </Link>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
               {upcoming.map((booking) => (
                 <CountdownCard key={booking.id} booking={booking} />
               ))}

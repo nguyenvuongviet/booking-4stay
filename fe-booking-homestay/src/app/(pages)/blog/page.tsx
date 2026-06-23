@@ -747,10 +747,10 @@ function BlogListingPage() {
 
       {/* Search + Categories Section */}
       <section
-        className={`sticky top-18 z-30 transition-all duration-300 ${
+        className={`sticky top-22 z-30 transition-all duration-300 ${
           isSearchSticky
-            ? "bg-background/95 dark:bg-background/98 backdrop-blur-md border-b border-primary/10 shadow-md shadow-primary/5"
-            : "bg-transparent"
+            ? "bg-background/95 dark:bg-background/98 backdrop-blur-md border-b border-primary/10 shadow-md shadow-primary/5 mt-0"
+            : "bg-transparent mt-8 sm:mt-12"
         }`}
       >
         <div

@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from "react";
-import { ReviewItem } from "./ReviewItem";
-import { ReviewItem as ReviewItemType } from "@/models/Review";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { get_review } from "@/services/roomApi";
 import { useLang } from "@/context/lang-context";
+import { ReviewItem as ReviewItemType } from "@/models/Review";
+import { get_review } from "@/services/roomApi";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { ReviewItem } from "./ReviewItem";
 
 interface Props {
   roomId?: number | string;
@@ -74,7 +74,9 @@ export const ReviewList: React.FC<Props> = ({ roomId, pageSize = 3 }) => {
 
   return (
     <div className="rounded-xl border p-4 bg-white shadow-sm">
-      <h3 className="text-lg elegant-sans">{t("Reviews")} ({total})</h3>
+      <h3 className="text-lg elegant-sans">
+        {t("Reviews")} ({total})
+      </h3>
 
       <div className="space-y-4">
         {reviews.map((r) => (
@@ -88,13 +90,13 @@ export const ReviewList: React.FC<Props> = ({ roomId, pageSize = 3 }) => {
           <button
             disabled={page <= 1}
             onClick={() => setPage((p) => p - 1)}
-            className={`flex items-center gap-1 px-3 py-1.5 rounded-md text-sm transition-all ${
+            className={`flex items-center gap-1 px-3 py-1.5 rounded-md text-sm transition-all cursor-pointer ${
               page <= 1
                 ? "text-gray-400 border-gray-200 cursor-not-allowed"
                 : "text-gray-700 border-gray-300 hover:bg-gray-100"
             }`}
           >
-            <ChevronLeft size={20} className="text-muted-foreground"/>
+            <ChevronLeft size={20} className="text-muted-foreground" />
           </button>
 
           {/* Số trang */}
@@ -106,7 +108,7 @@ export const ReviewList: React.FC<Props> = ({ roomId, pageSize = 3 }) => {
                 <button
                   key={pageNumber}
                   onClick={() => setPage(pageNumber)}
-                  className={`w-8 h-8 rounded-md text-sm font-medium transition-all ${
+                  className={`w-8 h-8 rounded-md text-sm font-medium transition-all cursor-pointer ${
                     isActive
                       ? "bg-primary text-white shadow"
                       : "text-gray-700 hover:bg-gray-100"
@@ -122,13 +124,13 @@ export const ReviewList: React.FC<Props> = ({ roomId, pageSize = 3 }) => {
           <button
             disabled={page >= totalPages}
             onClick={() => setPage((p) => p + 1)}
-            className={`flex items-center gap-1 px-3 py-1.5 rounded-md text-sm transition-all ${
+            className={`flex items-center gap-1 px-3 py-1.5 rounded-md text-sm transition-all cursor-pointer ${
               page >= totalPages
                 ? "text-gray-400 border-gray-200 cursor-not-allowed"
                 : "text-gray-700 border-gray-300 hover:bg-gray-100"
             }`}
           >
-            <ChevronRight size={20} className="text-muted-foreground"/>
+            <ChevronRight size={20} className="text-muted-foreground" />
           </button>
         </div>
       )}

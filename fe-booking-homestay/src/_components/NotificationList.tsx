@@ -108,14 +108,14 @@ export default function NotificationList() {
   };
 
   const iconMap: Partial<Record<Noti["type"], React.ReactElement>> = {
-    BOOKING_CREATED: <CheckCircle2 className="text-green-500" size={20} />,
-    BOOKING_CONFIRMED: <CheckCheck className="text-green-500" size={20} />,
-    BOOKING_CANCELLED: <XCircle className="text-red-500" size={20} />,
-    PAYMENT_SUCCESS: <CreditCard className="text-blue-500" size={20} />,
-    CHECKIN_REMINDER: <Calendar className="text-purple-500" size={20} />,
-    BOOKING_REFUNDED: <CreditCard className="text-green-500" size={20} />,
+    BOOKING_CREATED: <CheckCircle2 className="text-green-500 w-3.5 h-3.5 sm:w-5 sm:h-5" />,
+    BOOKING_CONFIRMED: <CheckCheck className="text-green-500 w-3.5 h-3.5 sm:w-5 sm:h-5" />,
+    BOOKING_CANCELLED: <XCircle className="text-red-500 w-3.5 h-3.5 sm:w-5 sm:h-5" />,
+    PAYMENT_SUCCESS: <CreditCard className="text-blue-500 w-3.5 h-3.5 sm:w-5 sm:h-5" />,
+    CHECKIN_REMINDER: <Calendar className="text-purple-500 w-3.5 h-3.5 sm:w-5 sm:h-5" />,
+    BOOKING_REFUNDED: <CreditCard className="text-green-500 w-3.5 h-3.5 sm:w-5 sm:h-5" />,
   };
-  const defaultIcon = <Bell className="text-gray-500" size={20} />;
+  const defaultIcon = <Bell className="text-gray-500 w-3.5 h-3.5 sm:w-5 sm:h-5" />;
 
   const getIcon = (type: Noti["type"]) => {
     return iconMap[type] || defaultIcon;
@@ -123,30 +123,30 @@ export default function NotificationList() {
 
   return (
     <div>
-      <div className="flex items-center justify-between px-2 py-1">
-        <strong>{t("notification")}</strong>
-        <div className="text-xs text-muted-foreground">
+      <div className="flex items-center justify-between px-2 py-0.5 sm:py-1 text-[11px] sm:text-sm">
+        <strong className="font-bold">{t("notification")}</strong>
+        <div className="text-[9px] sm:text-xs text-muted-foreground">
           {t("unread_count", { count: userUnreadCount })}
         </div>
       </div>
-      <div className="flex gap-2 px-2 mt-1">
+      <div className="flex gap-2 px-2 mt-0.5 sm:mt-1">
         <button
-          className={`text-xs cursor-pointer ${!showUnreadOnly ? "text-primary" : "text-muted-foreground"}`}
+          className={`text-[9px] sm:text-xs cursor-pointer font-semibold ${!showUnreadOnly ? "text-primary" : "text-muted-foreground"}`}
           onClick={() => setShowUnreadOnly(false)}
         >
           {t("all")}
         </button>
         <button
-          className={`text-xs cursor-pointer ${showUnreadOnly ? "text-primary" : "text-muted-foreground"}`}
+          className={`text-[9px] sm:text-xs cursor-pointer font-semibold ${showUnreadOnly ? "text-primary" : "text-muted-foreground"}`}
           onClick={() => setShowUnreadOnly(true)}
         >
           {t("unread")}
         </button>
       </div>
 
-      <div className="mt-2 max-h-80 overflow-auto beautiful-scrollbar">
+      <div className="mt-1 sm:mt-2 max-h-48 sm:max-h-80 overflow-auto beautiful-scrollbar">
         {userNotifications.length === 0 && (
-          <div className="p-4 text-sm text-muted-foreground  text-center">
+          <div className="p-3 text-[10px] sm:text-sm text-muted-foreground text-center">
             {t("no_notifications")}
           </div>
         )}
@@ -154,7 +154,7 @@ export default function NotificationList() {
         {userNotifications.length !== 0 &&
           showUnreadOnly &&
           userUnreadCount === 0 && (
-            <div className="p-4 text-sm text-muted-foreground text-center">
+            <div className="p-3 text-[10px] sm:text-sm text-muted-foreground text-center">
               {t("no_notifications")}
             </div>
           )}
@@ -167,18 +167,18 @@ export default function NotificationList() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
-            className={`p-3 border-b cursor-pointer ${n.read ? "" : "bg-primary/5 text-primary"} flex items-start gap-3 hover:bg-primary/10 dark:hover:bg-zinc-900 backdrop-filter backdrop-blur-sm`}
+            className={`p-1.5 sm:p-3 border-b cursor-pointer ${n.read ? "" : "bg-primary/5 text-primary"} flex items-start gap-2 sm:gap-3 hover:bg-primary/10 dark:hover:bg-zinc-900 backdrop-filter backdrop-blur-sm`}
             onClick={() => handleItemClick(n)}
           >
             <div className="shrink-0 pt-0.5">{getIcon(n.type)}</div>
-            <div className="flex-1">
-              <div className="text-sm font-semibold">
+            <div className="flex-1 min-w-0">
+              <div className="text-[11px] sm:text-sm font-semibold truncate">
                 {getTranslatedTitle(n)}
               </div>
-              <div className="text-xs text-muted-foreground mt-1">
+              <div className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1 wrap-break-word line-clamp-2">
                 {getTranslatedBody(n)}
               </div>
-              <div className="text-[10px] text-muted-foreground mt-1">
+              <div className="text-[8px] sm:text-[10px] text-muted-foreground mt-0.5 sm:mt-1">
                 {new Date(n.createdAt).toLocaleString()}
               </div>
             </div>
@@ -186,16 +186,9 @@ export default function NotificationList() {
         ))}
       </div>
 
-      <div className="flex items-center justify-end px-2 pt-2">
-        {/* <button
-          className="text-xs text-primary disabled:text-muted-foreground"
-          onClick={fetchMoreNotifications}
-          disabled={!hasMore}
-        >
-          {t("load_more")}
-        </button> */}
+      <div className="flex items-center justify-end px-2 pt-1 sm:pt-2">
         <button
-          className="text-xs text-muted-foreground hover:text-primary cursor-pointer"
+          className="text-[9px] sm:text-xs text-muted-foreground hover:text-primary cursor-pointer font-semibold"
           onClick={markAllRead}
         >
           {t("mark_all_read")}

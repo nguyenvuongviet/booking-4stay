@@ -32,7 +32,7 @@ export default function SimilarRooms({ roomId }: Props) {
     (async () => {
       setLoading(true);
       try {
-        const data = await getSimilarRooms(roomId, 6);
+        const data = await getSimilarRooms(roomId, 4);
         setRooms(data);
       } catch (err) {
         console.error("Error fetching similar rooms:", err);
@@ -63,53 +63,57 @@ export default function SimilarRooms({ roomId }: Props) {
         <h2 className="text-xl elegant-heading">Phòng tương tự</h2>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {rooms.map((room: any) => (
           <div
             key={room.id}
-            className="group cursor-pointer"
+            className="group cursor-pointer bg-card border border-border/50 rounded-2xl p-2.5 shadow-2xs hover:shadow-md hover:border-primary/20 transition-all duration-300 flex flex-col justify-between"
             onClick={() => router.push(`/room/${room.id}`)}
           >
-            <div className="relative aspect-4/3 overflow-hidden rounded-xl mb-2">
-              <Image
-                src={room.images?.main || "/default.jpg"}
-                alt={room.name}
-                fill
-                sizes="(max-width: 640px) 50vw, 33vw"
-                className="object-cover transition-transform duration-500 group-hover:scale-105"
-              />
-              <button
-                className={`absolute top-2 right-2 p-1.5 rounded-full backdrop-blur-sm transition-all duration-300 ${
-                  isFavorited(room.id)
-                    ? "bg-white text-red-500"
-                    : "bg-black/20 text-white hover:bg-white hover:text-red-500"
-                }`}
-                onClick={(e) => handleToggleFavorite(e, room.id)}
-              >
-                <Heart
-                  size={14}
-                  className={
-                    isFavorited(room.id) ? "fill-red-500 text-red-500" : ""
-                  }
+            <div>
+              <div className="relative aspect-4/3 overflow-hidden rounded-xl mb-3">
+                <Image
+                  src={room.images?.main || "/default.jpg"}
+                  alt={room.name}
+                  fill
+                  sizes="(max-width: 640px) 50vw, 25vw"
+                  className="object-cover transition-transform duration-500 group-hover:scale-105"
                 />
-              </button>
-            </div>
-            <div className="space-y-1">
-              <div className="flex justify-between items-start">
-                <h3 className="font-semibold text-sm text-foreground line-clamp-1">
-                  {room.name}
-                </h3>
-                <div className="flex items-center gap-0.5 shrink-0">
-                  <Star className="text-yellow-400 fill-current" size={12} />
-                  <span className="text-xs font-medium">{room.rating}</span>
-                </div>
+                <button
+                  className={`absolute top-2 right-2 p-1.5 rounded-full backdrop-blur-sm transition-all duration-300 ${
+                    isFavorited(room.id)
+                      ? "bg-white text-red-500"
+                      : "bg-black/20 text-white hover:bg-white hover:text-red-500"
+                  }`}
+                  onClick={(e) => handleToggleFavorite(e, room.id)}
+                >
+                  <Heart
+                    size={14}
+                    className={
+                      isFavorited(room.id) ? "fill-red-500 text-red-500" : ""
+                    }
+                  />
+                </button>
               </div>
-              <p className="text-muted-foreground text-xs flex items-center gap-1">
-                <MapPin size={11} />
-                <span className="line-clamp-1">
-                  {room.location?.fullAddress || room.location?.province}
-                </span>
-              </p>
+              <div className="space-y-1">
+                <div className="flex justify-between items-start gap-1">
+                  <h3 className="font-semibold text-sm text-foreground line-clamp-1">
+                    {room.name}
+                  </h3>
+                  <div className="flex items-center gap-0.5 shrink-0">
+                    <Star className="text-yellow-400 fill-current" size={12} />
+                    <span className="text-xs font-medium">{room.rating}</span>
+                  </div>
+                </div>
+                <p className="text-muted-foreground text-[11px] flex items-center gap-1">
+                  <MapPin size={10} />
+                  <span className="line-clamp-1">
+                    {room.location?.fullAddress || room.location?.province}
+                  </span>
+                </p>
+              </div>
+            </div>
+            <div className="pt-2 mt-auto">
               <p className="font-bold text-sm">
                 {formatPrice(room.price)}
                 <span className="text-muted-foreground text-xs font-normal">

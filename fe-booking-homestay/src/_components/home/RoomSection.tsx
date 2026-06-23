@@ -37,14 +37,14 @@ export default function RoomSection({ rooms }: { rooms: Room[] }) {
   };
 
   return (
-    <section className="pt-28 bg-background">
+    <section className="pt-8 sm:pt-14 bg-background">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-end mb-12">
+        <div className="flex justify-between items-end mb-6 sm:mb-12">
           <div>
-            <ScrollScale className="elegant-heading text-4xl text-foreground mb-2">
+            <ScrollScale className="elegant-heading text-2xl sm:text-3xl md:text-4xl text-foreground mb-1 md:mb-2">
               Các phòng phổ biến
             </ScrollScale>
-            <ScrollFade className="elegant-subheading text-lg text-muted-foreground">
+            <ScrollFade className="elegant-subheading text-xs sm:text-sm md:text-lg text-muted-foreground">
               Được đặt nhiều và đánh giá cao bởi khách hàng
             </ScrollFade>
           </div>
@@ -58,98 +58,107 @@ export default function RoomSection({ rooms }: { rooms: Room[] }) {
           </Button>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-10">
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-1.5 sm:gap-3 md:gap-5 lg:gap-6">
           {rooms.map((room, index) => (
             <StaggerItem index={index} key={room.id}>
               <div
-                className="group cursor-pointer"
+                className="group cursor-pointer bg-card border border-border/50 rounded-3xl p-3 shadow-2xs hover:shadow-md hover:border-primary/20 transition-all duration-300 flex flex-col justify-between h-full"
                 onClick={() => router.push(`/room/${room.id}`)}
               >
-                <div className="relative aspect-square overflow-hidden rounded-2xl mb-4">
-                  <Image
-                    src={room.images?.main || "/default.jpg"}
-                    alt={room.name}
-                    fill
-                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                    className="object-cover transition-transform duration-500 group-hover:scale-105"
-                  />
-
-                  {/* Heart Button */}
-                  <button
-                    className={`absolute top-3 right-3 p-2 rounded-full backdrop-blur-sm transition-all duration-300 ${
-                      isFavorited(room.id)
-                        ? "bg-white text-red-500"
-                        : "bg-white/70 text-gray-700 hover:bg-white"
-                    }`}
-                    onClick={(e) => handleToggleFavorite(e, room.id)}
-                  >
-                    <Heart
-                      size={18}
-                      className={
-                        isFavorited(room.id) ? "fill-red-500 text-red-500" : ""
-                      }
+                <div>
+                  <div className="relative aspect-square overflow-hidden rounded-2xl mb-3">
+                    <Image
+                      src={room.images?.main || "/default.jpg"}
+                      alt={room.name}
+                      fill
+                      sizes="(max-width: 640px) 50vw, (max-width: 1024px) 50vw, 33vw"
+                      className="object-cover transition-transform duration-500 group-hover:scale-105"
                     />
-                  </button>
 
-                  {/* Urgency Badges */}
-                  {(room as any).badges?.length > 0 && (
-                    <div className="absolute top-3 left-3 px-3 py-1 bg-black/60 backdrop-blur-sm rounded-full shadow-md">
-                      <span className="text-xs font-semibold text-white">
-                        {(room as any).badges[0]}
-                      </span>
-                    </div>
-                  )}
-                  {!(room as any).badges?.length &&
-                    room.rating &&
-                    room.rating >= 4.8 && (
-                      <div className="absolute top-3 left-3 px-3 py-1 bg-red-500/80 rounded-full shadow-md">
-                        <span className="text-xs font-semibold text-white uppercase tracking-wider">
-                          {t("Trending")}
+                    {/* Heart Button */}
+                    <button
+                      className={`absolute top-3 right-3 p-2 rounded-full backdrop-blur-sm transition-all duration-300 cursor-pointer z-10 ${
+                        isFavorited(room.id)
+                          ? "bg-white text-red-500 shadow-md"
+                          : "bg-black/20 text-white hover:bg-white hover:text-red-500 shadow-sm"
+                      }`}
+                      onClick={(e) => handleToggleFavorite(e, room.id)}
+                    >
+                      <Heart
+                        size={18}
+                        className={
+                          isFavorited(room.id)
+                            ? "fill-red-500 text-red-500"
+                            : ""
+                        }
+                      />
+                    </button>
+
+                    {/* Urgency Badges */}
+                    {(room as any).badges?.length > 0 && (
+                      <div className="absolute top-3 left-3 px-3 py-1 bg-black/60 backdrop-blur-sm rounded-full shadow-md z-10">
+                        <span className="text-[10px] font-semibold text-white">
+                          {(room as any).badges[0]}
                         </span>
                       </div>
                     )}
-                </div>
+                    {!(room as any).badges?.length &&
+                      room.rating &&
+                      room.rating >= 4.8 && (
+                        <div className="absolute top-3 left-3 px-3 py-1 bg-red-500/80 rounded-full shadow-md z-10">
+                          <span className="text-[10px] font-semibold text-white uppercase tracking-wider">
+                            {t("Trending")}
+                          </span>
+                        </div>
+                      )}
+                  </div>
 
-                <div className="space-y-1">
-                  <div className="flex justify-between items-start">
-                    <h3 className="font-semibold text-base text-foreground line-clamp-1">
-                      {room.name}
-                    </h3>
-                    <div className="flex items-center gap-1 shrink-0">
-                      <Star
-                        className="text-yellow-400 fill-current"
-                        size={16}
-                      />
-                      <span className="text-sm font-medium">{room.rating}</span>
+                  <div className="space-y-1">
+                    <div className="flex justify-between items-start gap-1">
+                      <h3 className="font-bold text-sm sm:text-base text-foreground line-clamp-1 group-hover:text-primary transition-colors">
+                        {room.name}
+                      </h3>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <Star
+                          className="text-yellow-400 fill-current"
+                          size={14}
+                        />
+                        <span className="text-xs sm:text-sm font-medium">
+                          {room.rating}
+                        </span>
+                      </div>
+                    </div>
+
+                    <p className="text-muted-foreground text-xs sm:text-sm flex items-center gap-1">
+                      <MapPin size={12} className="shrink-0" />
+                      <span className="line-clamp-1">
+                        {room.location.fullAddress || room.location.province}
+                      </span>
+                    </p>
+
+                    <div className="flex items-center gap-1.5 mb-2 h-4 overflow-hidden">
+                      {(room.amenities || []).slice(0, 3).map((amenity) => (
+                        <div
+                          key={amenity.id}
+                          className="text-muted-foreground flex items-center"
+                          title={amenity.name}
+                        >
+                          <span className="text-sm sm:text-base">
+                            {getAmenityIcon(amenity.name)}
+                          </span>
+                        </div>
+                      ))}
                     </div>
                   </div>
+                </div>
 
-                  <p className="text-muted-foreground text-sm flex items-center gap-1">
-                    <MapPin size={14} />
-                    <span className="line-clamp-1">
-                      {room.location.fullAddress || room.location.province}
-                    </span>
-                  </p>
-
-                  <div className="flex items-center gap-2 mb-4 h-4">
-                    {(room.amenities || []).map((amenity) => (
-                      <div
-                        key={amenity.id}
-                        className="elegant-subheading text-muted-foreground flex items-center gap-1"
-                      >
-                        <span>{getAmenityIcon(amenity.name)}</span>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="pt-2">
-                    <span className="font-bold text-base">
-                      {formatPrice(room.price)}
-                    </span>
-                    <span className="text-muted-foreground text-sm font-normal">
-                      /{t("night")}
-                    </span>
-                  </div>
+                <div className="pt-2 border-t border-border/40 mt-auto flex items-baseline gap-1">
+                  <span className="font-bold text-sm sm:text-base">
+                    {formatPrice(room.price)}
+                  </span>
+                  <span className="text-muted-foreground text-xs font-normal">
+                    /{t("night")}
+                  </span>
                 </div>
               </div>
             </StaggerItem>

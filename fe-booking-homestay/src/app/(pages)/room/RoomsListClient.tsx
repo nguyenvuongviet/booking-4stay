@@ -14,7 +14,7 @@ import { searchProvince } from "@/services/locationApi";
 import { getRooms, room_available } from "@/services/roomApi";
 import HoverScale from "@/styles/animations/HoverScale";
 import StaggerItem from "@/styles/animations/StaggerItem";
-import { motion, useSpring } from "framer-motion";
+import { useSpring } from "framer-motion";
 import { ChevronLeft, ChevronRight, Menu } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useSearchParams } from "next/navigation";
@@ -473,40 +473,7 @@ export default function RoomsListPage() {
           className={`transition-all duration-500 ease-in-out lg:hidden ${scrolled ? "h-0 opacity-0 mb-0 pointer-events-none" : "h-14 mb-8"}`}
         />
 
-        <motion.div
-          layout
-          transition={{
-            type: "spring",
-            stiffness: 160,
-            damping: 24,
-            mass: 0.8,
-          }}
-          className={`
-            fixed z-50 bg-transparent border-none py-0 mx-auto
-            ${
-              scrolled
-                ? "top-10 -translate-y-1/2 translate-x-0 left-16 right-28 md:left-25 md:right-40 lg:left-40 lg:right-45 flex justify-center scale-95 lg:scale-90"
-                : "top-28 lg:top-32 left-0 right-0 translate-x-0 translate-y-0 w-full container px-3 sm:px-4 md:px-2 lg:px-8 max-w-9xl scale-100 md:scale-105 lg:scale-100"
-            }
-          `}
-        >
-          <motion.div
-            layout
-            transition={{
-              type: "spring",
-              stiffness: 160,
-              damping: 24,
-              mass: 0.8,
-            }}
-            className={
-              scrolled
-                ? "w-full max-w-xs md:max-w-xl lg:max-w-2xl"
-                : "w-full max-w-[92%] sm:max-w-[85%] md:max-w-2xl lg:max-w-4xl xl:max-w-5xl mx-auto"
-            }
-          >
-            <SearchBar compact={scrolled} />
-          </motion.div>
-        </motion.div>
+        <SearchBar stickyType="rooms" scrolled={scrolled} />
 
         {/* Mobile FilterBar (Sticky under Header containing SearchBar) - No background or borders to prevent separated layer appearance */}
         <div

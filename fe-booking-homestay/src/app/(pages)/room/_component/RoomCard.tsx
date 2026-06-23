@@ -86,7 +86,7 @@ export function RoomCard({
         {/* Favorite Button */}
         <button
           onClick={handleFavoriteClick}
-          className={`absolute top-3 right-3 p-2 rounded-full backdrop-blur-md transition-all duration-300 ${
+          className={`absolute top-3 right-3 p-2 rounded-full backdrop-blur-md transition-all duration-300 cursor-pointer ${
             isFavorited
               ? "bg-white text-red-500"
               : "bg-black/20 text-white hover:bg-white hover:text-red-500"

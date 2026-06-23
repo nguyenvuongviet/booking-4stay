@@ -2,6 +2,7 @@
 
 import Footer from "@/_components/Footer";
 import Header from "@/_components/Header";
+import { SearchBar } from "@/_components/SearchBar";
 import AvailableSoonSection from "@/_components/home/AvailableSoonSection";
 import CheckinCountdown from "@/_components/home/CheckinCountdown";
 import ForYouSection from "@/_components/home/ForYouSection";
@@ -9,13 +10,11 @@ import HeroSection from "@/_components/home/HeroSection";
 import PopularDestinations from "@/_components/home/PopularDestinations";
 import RecentlyViewedSection from "@/_components/home/RecentlyViewedSection";
 import RoomSection from "@/_components/home/RoomSection";
-import { useAuth } from "@/context/auth-context";
 import { getLocation } from "@/services/locationApi";
 import { getPopularRooms, PopularRoom } from "@/services/recommendationApi";
 import { Suspense, useEffect, useState } from "react";
 
 export default function HomePage() {
-  const { user } = useAuth();
   const [rooms, setRooms] = useState<PopularRoom[]>([]);
   const [locations, setLocations] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -70,8 +69,11 @@ export default function HomePage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background ">
+    <div className="min-h-screen bg-background relative">
       <Header />
+
+      <SearchBar stickyType="home" />
+
       <Suspense
         fallback={<div className="h-screen bg-black/20 animate-pulse" />}
       >

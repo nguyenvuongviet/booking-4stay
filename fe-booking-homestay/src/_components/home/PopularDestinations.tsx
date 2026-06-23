@@ -18,21 +18,21 @@ export default function PopularDestinations({
   const { t } = useLang();
 
   return (
-    <section className="pt-32 pb-40 bg-background">
+    <section className="pt-16 pb-20 sm:pt-32 sm:pb-40 bg-background">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-end mb-12">
+        <div className="flex justify-between items-end mb-6 sm:mb-12">
           <div>
-            <ScrollScale className="elegant-heading text-4xl text-foreground mb-2">
+            <ScrollScale className="elegant-heading text-2xl sm:text-3xl md:text-4xl text-foreground mb-1 md:mb-2">
               {t("Popular Destinations")}
             </ScrollScale>
-            <ScrollFade className="elegant-subheading text-lg text-muted-foreground">
+            <ScrollFade className="elegant-subheading text-xs sm:text-sm md:text-lg text-muted-foreground">
               {t("Explore the most sought-after travel destinations")}
             </ScrollFade>
           </div>
         </div>
 
         {locations.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4 md:gap-6 lg:gap-8">
             {locations.slice(0, 3).map((loc, index) => (
               <BlurInScroll key={loc.id} delay={index * 120}>
                 <HoverScale>
@@ -48,7 +48,7 @@ export default function PopularDestinations({
                       <img
                         src={loc.imageUrl || "/default-location.jpg"}
                         alt={loc.name}
-                        className="w-full h-72 object-cover"
+                        className="w-full h-52 sm:h-72 object-cover"
                       />
                       {index === 0 && (
                         <div className="absolute top-3 left-3 px-3 py-1 bg-red-500/80 rounded-full shadow-md">

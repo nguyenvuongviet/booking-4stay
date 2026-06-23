@@ -27,6 +27,7 @@ interface DateRangePickerProps {
   autoClose?: boolean;
   className?: string;
   compact?: boolean;
+  variant?: "default" | "transparent";
 }
 
 export default function DateRangePicker({
@@ -40,7 +41,9 @@ export default function DateRangePicker({
   autoClose = true,
   className,
   compact = false,
+  variant = "default",
 }: DateRangePickerProps) {
+  const isTransparent = variant === "transparent";
   const [open, setOpen] = React.useState(false);
   const [selectedRange, setSelectedRange] = React.useState<
     DateRange | undefined
@@ -112,45 +115,69 @@ export default function DateRangePicker({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          className={
-            className ||
-            `relative w-full border border-border rounded-full shadow-2xs bg-card hover:border-primary/40 focus:outline-hidden focus:border-primary focus:ring-2 focus:ring-primary/20 text-left flex items-center justify-between cursor-pointer transition-all duration-300 ${compact ? "h-10 px-2.5" : "h-14 px-5 md:h-12 md:px-3 lg:h-14 lg:px-5"}`
-          }
-        >
-          {!className && (
+        {className ? (
+          <button
+            type="button"
+            className={`${className} w-full text-left bg-transparent border-none outline-none focus:outline-none focus:ring-0 focus-visible:ring-0 p-0 cursor-pointer select-none`}
+          >
+            <div className="text-foreground elegant-subheading truncate text-xs sm:text-sm md:text-[11px] lg:text-sm">
+              {selectedRange?.from ? (
+                formatLabel(selectedRange.from)
+              ) : (
+                <span className="text-white/40">{t("checkIn")}</span>
+              )}
+              <span className="text-white/40"> - </span>{" "}
+              {selectedRange?.to ? (
+                formatLabel(selectedRange.to)
+              ) : (
+                <span className="text-white/40">{t("checkOut")}</span>
+              )}
+            </div>
+          </button>
+        ) : (
+          <button
+            type="button"
+            className={`relative w-full rounded-full text-left flex items-center justify-between cursor-pointer transition-all duration-300 ${compact ? "h-10 px-2.5" : "h-14 px-5 md:h-12 md:px-3 lg:h-14 lg:px-5"} ${
+              isTransparent
+                ? "border border-white/20 bg-transparent hover:bg-white/10 shadow-none focus:outline-hidden"
+                : "border border-border shadow-2xs bg-card hover:border-primary/40 focus:outline-hidden focus:border-primary focus:ring-2 focus:ring-primary/20"
+            }`}
+          >
             <CalendarIcon
-              className={`absolute top-1/2 transform -translate-y-1/2 text-primary shrink-0 drop-shadow-sm z-10 pointer-events-none ${compact ? "left-3" : "left-4 md:left-2.5 lg:left-4"}`}
+              className={`absolute top-1/2 transform -translate-y-1/2 shrink-0 drop-shadow-sm z-10 pointer-events-none ${compact ? "left-3" : "left-4 md:left-2.5 lg:left-4"} ${isTransparent ? "text-accent" : "text-primary"}`}
               size={compact ? 15 : 18}
             />
-          )}
-          <div
-            className={`${!className ? (compact ? "ml-6" : "ml-8 md:ml-6 lg:ml-8") : ""} text-foreground-muted elegant-subheading truncate ${compact ? "text-xs md:text-[11px] lg:text-xs" : "text-sm md:text-[11px] lg:text-sm"}`}
-          >
-            {selectedRange?.from ? (
-              formatLabel(selectedRange.from)
-            ) : (
-              <span className={className ? "text-white/40 " : "text-muted "}>
-                {t("checkIn")}
-              </span>
-            )}
-            <span className={className ? "text-white/40" : "text-muted"}>
-              {" "}
-              -{" "}
-            </span>{" "}
-            {selectedRange?.to ? (
-              formatLabel(selectedRange.to)
-            ) : (
-              <span className={className ? "text-white/40" : "text-muted"}>
-                {t("checkOut")}
-              </span>
-            )}
-          </div>
-        </Button>
+            <div
+              className={`ml-8 md:ml-6 lg:ml-8 elegant-subheading truncate ${compact ? "text-xs md:text-[11px] lg:text-xs" : "text-sm md:text-[11px] lg:text-sm"} ${isTransparent ? "text-white" : "text-foreground"}`}
+            >
+              {selectedRange?.from ? (
+                formatLabel(selectedRange.from)
+              ) : (
+                <span
+                  className={isTransparent ? "text-white/50" : "text-muted"}
+                >
+                  {t("checkIn")}
+                </span>
+              )}
+              <span className={isTransparent ? "text-white/50" : "text-muted"}>
+                {" "}
+                -{" "}
+              </span>{" "}
+              {selectedRange?.to ? (
+                formatLabel(selectedRange.to)
+              ) : (
+                <span
+                  className={isTransparent ? "text-white/50" : "text-muted"}
+                >
+                  {t("checkOut")}
+                </span>
+              )}
+            </div>
+          </button>
+        )}
       </PopoverTrigger>
 
-      <PopoverContent className="w-auto p-2 bg-white/90 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl">
+      <PopoverContent className="w-auto p-2 bg-white/90 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl z-1050">
         <div className="flex flex-col sm:flex-row gap-2">
           {[0, 1].map((i) => (
             <Calendar
@@ -185,7 +212,7 @@ export default function DateRangePicker({
                 [&_.rdp-day_selected:hover]:bg-primary/90
                 [&_.rdp-day_range_middle]:bg-primary/20 
                 [&_.rdp-day_range_middle:hover]:bg-primary/40
-                [&_.rdp-day_start]:rounded-l-full [&_.rdp-day_end]:rounded-r-full
+                [&_.rdp-day_start]:rounded-l-md [&_.rdp-day_end]:rounded-r-md
                 [&_.rdp-day_outside]:hidden
                 transition-colors duration-200
               `}
