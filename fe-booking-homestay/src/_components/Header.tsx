@@ -125,7 +125,7 @@ export default function Header() {
             {[
               { label: t("home"), href: "/" },
               { label: t("Rooms"), href: "/room" },
-              { label: "Blog", href: "/blog" },
+              { label: "Bài viết", href: "/blog" },
               { label: t("contact"), href: "/contact" },
             ].map((item) => (
               <Link
@@ -225,7 +225,7 @@ export default function Header() {
                           {[
                             { label: t("home"), href: "/" },
                             { label: t("Rooms"), href: "/room" },
-                            { label: "Blog", href: "/blog" },
+                            { label: "Bài viết", href: "/blog" },
                             { label: t("contact"), href: "/contact" },
                           ].map((item) => (
                             <Link
@@ -325,7 +325,7 @@ export default function Header() {
                             {[
                               { label: t("home"), href: "/" },
                               { label: t("Rooms"), href: "/room" },
-                              { label: "Blog", href: "/blog" },
+                              { label: "Bài viết", href: "/blog" },
                               { label: t("contact"), href: "/contact" },
                             ].map((item) => (
                               <Link
@@ -368,7 +368,7 @@ export default function Header() {
                   ? isSearchActiveInHeader
                     ? "hidden min-[600px]:flex"
                     : "flex md:hidden"
-                  : "hidden min-[600px]:flex md:hidden"
+                  : "flex md:hidden"
               }`}
             >
               <Popover open={openMobileMenu} onOpenChange={setOpenMobileMenu}>
@@ -394,7 +394,7 @@ export default function Header() {
                     {[
                       { label: t("home"), href: "/" },
                       { label: t("Rooms"), href: "/room" },
-                      { label: "Blog", href: "/blog" },
+                      { label: "Bài viết", href: "/blog" },
                       { label: t("contact"), href: "/contact" },
                     ].map((item) => (
                       <Link

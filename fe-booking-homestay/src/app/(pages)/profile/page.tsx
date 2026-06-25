@@ -41,14 +41,6 @@ function ProfileContent() {
     router.push(`/profile?tab=${tab}`);
   };
 
-  const getTierPoints = (total: number) => {
-    if (total < 1000) return 1000 - total; // Lên Silver
-    if (total < 3000) return 3000 - total; // Lên Gold
-    if (total < 10000) return 10000 - total; // Lên Platinum
-    if (total < 30000) return 30000 - total; // Lên Diamond
-    return 0; // Đã đạt mức tối đa
-  };
-
   const handleSubmit = async () => {
     if (!user) return;
     try {
@@ -156,7 +148,6 @@ function ProfileContent() {
             handleSubmit={handleSubmit}
             handleEditClick={handleEditClick}
             handleAvatarUpload={handleAvatarUpload}
-            getTierPoints={getTierPoints}
           />
         </div>
       </main>

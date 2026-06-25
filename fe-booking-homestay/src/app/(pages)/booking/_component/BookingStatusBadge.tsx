@@ -15,68 +15,73 @@ import React from "react";
 interface BookingStatusBadgeProps {
   status: BookingStatus;
   className?: string;
+  size?: "sm" | "md";
 }
 
 export const BookingStatusBadge: React.FC<BookingStatusBadgeProps> = ({
   status,
   className = "",
+  size = "md",
 }) => {
   const { t } = useLang();
+
+  const iconClass = size === "sm" ? "w-3 h-3" : "w-3.5 h-3.5";
 
   const getStatusConfig = () => {
     switch (status) {
       case BookingStatus.PENDING:
         return {
-          icon: <Clock className="w-3.5 h-3.5" />,
+          icon: <Clock className={iconClass} />,
           bg: "bg-amber-500/10 border-amber-500/20",
           text: "text-amber-600 dark:text-amber-400",
           label: "Chờ thanh toán",
         };
       case BookingStatus.CHECKED_IN:
         return {
-          icon: <DoorOpen className="w-3.5 h-3.5" />,
+          icon: <DoorOpen className={iconClass} />,
           bg: "bg-blue-500/10 border-blue-500/20",
           text: "text-blue-600 dark:text-blue-400",
           label: "Đã nhận phòng",
         };
       case BookingStatus.CONFIRMED:
         return {
-          icon: <CheckCircle2 className="w-3.5 h-3.5" />,
+          icon: <CheckCircle2 className={iconClass} />,
           bg: "bg-emerald-500/10 border-emerald-500/20",
           text: "text-emerald-600 dark:text-emerald-400",
           label: "Đã xác nhận",
         };
       case BookingStatus.PARTIALLY_PAID:
         return {
-          icon: <Coins className="w-3.5 h-3.5" />,
+          icon: <Coins className={iconClass} />,
           bg: "bg-teal-500/10 border-teal-500/20",
           text: "text-teal-600 dark:text-teal-400",
           label: "Đã cọc (30%)",
         };
-      case BookingStatus.CANCELLED || BookingStatus.CANCELLED_BY_ADMIN:
+      case BookingStatus.CANCELLED:
+      case BookingStatus.CANCELLED_BY_ADMIN:
         return {
-          icon: <XCircle className="w-3.5 h-3.5" />,
+          icon: <XCircle className={iconClass} />,
           bg: "bg-rose-500/10 border-rose-500/20",
           text: "text-rose-600 dark:text-rose-400",
           label: "Đã hủy",
         };
       case BookingStatus.CHECKED_OUT:
         return {
-          icon: <LogOut className="w-3.5 h-3.5" />,
+          icon: <LogOut className={iconClass} />,
           bg: "bg-slate-500/10 border-slate-500/20",
           text: "text-slate-600 dark:text-slate-400",
           label: "Đã trả phòng",
         };
       case BookingStatus.WAITING_REFUND:
         return {
-          icon: <RefreshCw className="w-3.5 h-3.5 animate-spin" />,
+          icon: <RefreshCw className={`${iconClass} animate-spin`} />,
           bg: "bg-orange-500/10 border-orange-500/20",
           text: "text-orange-600 dark:text-orange-400",
           label: "Đang chờ hoàn tiền",
         };
       case BookingStatus.REFUNDED:
         return {
-          icon: <DollarSign className="w-3.5 h-3.5" />,
+          icon: <DollarSign className={iconClass} />,
           bg: "bg-pink-500/10 border-pink-500/20",
           text: "text-pink-600 dark:text-pink-400",
           label: "Đã hoàn tiền",
@@ -93,9 +98,14 @@ export const BookingStatusBadge: React.FC<BookingStatusBadgeProps> = ({
 
   const { icon, bg, text, label } = getStatusConfig();
 
+  const sizeClasses =
+    size === "sm"
+      ? "px-2 py-0.5 text-[9px] gap-1"
+      : "px-4 py-1.5 text-[11px] gap-2";
+
   return (
     <div
-      className={`px-4 py-1.5 rounded-full flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider backdrop-blur-md border transition-all duration-300 ${bg} ${text} ${className}`}
+      className={`rounded-full inline-flex items-center font-bold uppercase tracking-wider backdrop-blur-md border transition-all duration-300 ${bg} ${text} ${sizeClasses} ${className}`}
     >
       {icon}
       <span>{label}</span>

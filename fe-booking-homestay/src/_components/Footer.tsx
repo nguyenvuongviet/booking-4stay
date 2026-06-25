@@ -14,7 +14,7 @@ export default function Footer() {
   return (
     <footer className="bg-[#0a0a0a] text-white pt-24 pb-12 overflow-hidden relative">
       {/* Decorative background element */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[300px] bg-primary/5 blur-[120px] rounded-full z-0" />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-250 h-75 bg-primary/5 blur-[120px] rounded-full z-0" />
 
       <div className="max-w-7xl mx-auto px-6 lg:px-8 relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16 mb-20">
@@ -54,17 +54,17 @@ export default function Footer() {
             </h4>
             <ul className="space-y-4">
               {[
-                "Phòng & Căn hộ",
-                "Tiện ích nổi bật",
-                "Địa điểm phổ biến",
-                "Cẩm nang du lịch",
+                { name: "Phòng & Căn hộ", href: "/room" },
+                { name: "Tiện ích nổi bật", href: "/room" },
+                { name: "Địa điểm phổ biến", href: "/room" },
+                { name: "Cẩm nang du lịch", href: "/blog" },
               ].map((link) => (
-                <li key={link}>
+                <li key={link.name}>
                   <Link
-                    href="#"
+                    href={link.href}
                     className="text-white/50 hover:text-primary transition-colors text-sm font-medium"
                   >
-                    {link}
+                    {link.name}
                   </Link>
                 </li>
               ))}
@@ -78,17 +78,17 @@ export default function Footer() {
             </h4>
             <ul className="space-y-4">
               {[
-                "Về chúng tôi",
-                "Chính sách bảo mật",
-                "Điều khoản sử dụng",
-                "Liên hệ hợp tác",
+                { name: "Về chúng tôi", href: "/contact" },
+                { name: "Chính sách bảo mật", href: "/contact" },
+                { name: "Điều khoản sử dụng", href: "/contact" },
+                { name: "Liên hệ hợp tác", href: "/contact" },
               ].map((link) => (
-                <li key={link}>
+                <li key={link.name}>
                   <Link
-                    href="#"
+                    href={link.href}
                     className="text-white/50 hover:text-primary transition-colors text-sm font-medium"
                   >
-                    {link}
+                    {link.name}
                   </Link>
                 </li>
               ))}
@@ -106,20 +106,30 @@ export default function Footer() {
                   <MapPin size={18} className="text-primary" />
                 </div>
                 <span className="text-white/50 text-sm leading-snug">
-                  123 Đường du lịch, Quận 1, TP. Hồ Chí Minh
+                  01 Đ. Võ Văn Ngân, Linh Chiểu, Thủ Đức, TP.HCM
                 </span>
               </li>
               <li className="flex items-center gap-4">
                 <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
                   <Phone size={18} className="text-primary" />
                 </div>
-                <span className="text-white/50 text-sm">+84 (123) 456 789</span>
+                <a
+                  href="tel:19004789"
+                  className="text-white/50 hover:text-primary transition-colors text-sm font-medium"
+                >
+                  1900 4789
+                </a>
               </li>
               <li className="flex items-center gap-4">
                 <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
                   <Mail size={18} className="text-primary" />
                 </div>
-                <span className="text-white/50 text-sm">contact@4stay.com</span>
+                <a
+                  href="mailto:support@4stay.vn"
+                  className="text-white/50 hover:text-primary transition-colors text-sm font-medium"
+                >
+                  support@4stay.vn
+                </a>
               </li>
             </ul>
           </div>
@@ -128,17 +138,17 @@ export default function Footer() {
         {/* Bottom Bar */}
         <div className="pt-12 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6">
           <p className="text-white/30 text-xs font-medium">
-            © 2025 The 4Stay HomeStay. All rights reserved.
+            © 2026 The 4Stay HomeStay. All rights reserved.
           </p>
           <div className="flex gap-8">
             <Link
-              href="#"
+              href="/"
               className="text-white/30 hover:text-white transition-colors text-xs font-medium"
             >
               Sơ đồ trang
             </Link>
             <Link
-              href="#"
+              href="/contact"
               className="text-white/30 hover:text-white transition-colors text-xs font-medium"
             >
               Quyền riêng tư
