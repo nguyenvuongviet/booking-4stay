@@ -85,20 +85,25 @@ export default function ForYouSection() {
                     className="object-cover transition-transform duration-500 group-hover:scale-105"
                   />
                   {/* Boost tags */}
-                  {room.boostTags?.length > 0 && (
-                    <div className="absolute top-2 left-2 flex flex-col gap-1 z-10">
-                      {room.boostTags
+                  <div className="absolute top-2 left-2 flex flex-col gap-1 z-10">
+                    {room.status === "MAINTENANCE" && (
+                      <span className="px-2 py-0.5 bg-red-600 rounded-full text-[9px] font-extrabold text-white uppercase tracking-wider shadow-md flex items-center justify-center text-center">
+                        Bảo trì
+                      </span>
+                    )}
+                    {room.status !== "MAINTENANCE" &&
+                      room.boostTags?.length > 0 &&
+                      room.boostTags
                         .slice(0, 2)
                         .map((tag: string, i: number) => (
                           <span
                             key={i}
-                            className="px-2 py-0.5 bg-orange-500/90 backdrop-blur-sm rounded-full text-[9px] font-semibold text-white"
+                            className="px-2 py-0.5 bg-orange-500/90 backdrop-blur-sm rounded-full text-[9px] font-semibold text-white flex items-center justify-center text-center"
                           >
                             {tag}
                           </span>
                         ))}
-                    </div>
-                  )}
+                  </div>
                   {/* Match score badge */}
                   {room.matchScore && (
                     <div className="absolute bottom-2 left-2 px-2.5 py-1 bg-purple-500/90 backdrop-blur-sm rounded-full z-10">

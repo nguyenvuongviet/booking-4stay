@@ -4,7 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { bookings_status } from '@prisma/client';
+import { bookings_status, rooms_status } from '@prisma/client';
 import { eachDayOfInterval, subDays } from 'date-fns';
 import {
   ADMIN_EMAIL,
@@ -58,7 +58,13 @@ export class BookingService {
     const [room, isOccupied, policyConfig] = await Promise.all([
       this.prisma.rooms.findFirst({
         where: { id: roomId, isDeleted: false },
-        select: { id: true, price: true, name: true, provinceId: true },
+        select: {
+          id: true,
+          price: true,
+          name: true,
+          provinceId: true,
+          status: true,
+        },
       }),
       this.availability.hasOverlap(roomId, inDate, outDate),
       this.prisma.app_configs.findUnique({
@@ -66,6 +72,35 @@ export class BookingService {
       }),
     ]);
     if (!room) throw new NotFoundException('Phòng không tồn tại');
+
+    if (room.status === rooms_status.MAINTENANCE) {
+      return {
+        available: false,
+        roomName: room.name,
+        stayDetails: {
+          checkIn: inDate,
+          checkOut: outDate,
+          nights: nightsBetween(inDate, outDate),
+        },
+        priceSummary: {
+          averagePricePerNight: 0,
+          rawTotal: 0,
+          couponDiscount: 0,
+          couponCode: null,
+          couponValid: false,
+          couponMessage: null,
+          loyaltyDiscount: 0,
+          tierName: null,
+          discountPercent: 0,
+          totalDiscount: 0,
+          discountAmount: 0,
+          totalPrice: 0,
+        },
+        cancellationPolicy: policyConfig?.value || [],
+        policyUpdatedAt: policyConfig?.updatedAt || null,
+        message: 'Phòng đang bị khóa hoặc đang bảo trì, không thể đặt phòng',
+      };
+    }
 
     const rawTotal = await this.pricing.priceForRange(
       roomId,
@@ -143,6 +178,7 @@ export class BookingService {
           adultCapacity: true,
           childCapacity: true,
           provinceId: true,
+          status: true,
         },
       }),
       this.prisma.app_configs.findUnique({
@@ -154,6 +190,11 @@ export class BookingService {
       ),
     ]);
     if (!room) throw new BadRequestException('Phòng không tồn tại');
+    if (room.status === rooms_status.MAINTENANCE) {
+      throw new BadRequestException(
+        'Phòng đang bị khóa hoặc đang bảo trì, không thể đặt phòng',
+      );
+    }
 
     this.validateCapacity(room, adults, children);
     this.validatePolicyVersion(dto.policyUpdatedAt, policyConfig);
@@ -311,6 +352,7 @@ export class BookingService {
           price: true,
           adultCapacity: true,
           childCapacity: true,
+          status: true,
         },
       }),
       this.prisma.app_configs.findUnique({
@@ -318,6 +360,11 @@ export class BookingService {
       }),
     ]);
     if (!room) throw new BadRequestException('Phòng không tồn tại');
+    if (room.status === rooms_status.MAINTENANCE) {
+      throw new BadRequestException(
+        'Phòng đang bị khóa hoặc đang bảo trì, không thể đặt phòng',
+      );
+    }
 
     this.validateCapacity(room, adults, children);
 

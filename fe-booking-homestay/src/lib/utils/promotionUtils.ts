@@ -18,11 +18,11 @@ export interface PromotionBase {
 export function formatDiscount(promo: PromotionBase): string {
   if (promo.discountType === "PERCENTAGE") {
     const maxPart = promo.maxDiscount
-      ? ` (tối đa ${Number(promo.maxDiscount).toLocaleString()}đ)`
+      ? ` (tối đa ${Number(promo.maxDiscount).toLocaleString("vi-VN")}đ)`
       : "";
     return `${Number(promo.discountValue)}%${maxPart}`;
   }
-  return `${Number(promo.discountValue).toLocaleString()}đ`;
+  return `${Number(promo.discountValue).toLocaleString("vi-VN")}đ`;
 }
 
 /**
@@ -35,9 +35,9 @@ export function formatDiscountBadge(promo: PromotionBase): string {
   }
   const val = Number(promo.discountValue);
   if (val >= 1000) {
-    return `${(val / 1000).toLocaleString()}k`;
+    return `${(val / 1000).toLocaleString("vi-VN")}k`;
   }
-  return `${val.toLocaleString()}đ`;
+  return `${val.toLocaleString("vi-VN")}đ`;
 }
 
 /**
@@ -49,8 +49,8 @@ export function formatMinSpend(promo: PromotionBase): string {
   if (minVal === 0) return "Không yêu cầu tối thiểu";
   const formatted =
     minVal >= 1000000
-      ? `${(minVal / 1000000).toLocaleString()}M`
-      : `${(minVal / 1000).toLocaleString()}k`;
+      ? `${(minVal / 1000000).toLocaleString("vi-VN")}M`
+      : `${(minVal / 1000).toLocaleString("vi-VN")}k`;
   return `Đơn tối thiểu ${formatted}`;
 }
 

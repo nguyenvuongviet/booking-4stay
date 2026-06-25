@@ -89,7 +89,9 @@ export interface CreateRoomDto {
   longitude?: number;
 }
 
-export interface UpdateRoomDto extends Partial<CreateRoomDto> {}
+export interface UpdateRoomDto extends Partial<CreateRoomDto> {
+  status?: "AVAILABLE" | "BOOKED" | "MAINTENANCE" | string;
+}
 
 export interface Amenity {
   id: number;

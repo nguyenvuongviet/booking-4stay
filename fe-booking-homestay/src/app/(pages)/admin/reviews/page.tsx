@@ -5,14 +5,15 @@ import { Card } from "@/_components/ui/card";
 import { Input } from "@/_components/ui/input";
 import { UserAvatar } from "@/_components/UserAvatar";
 import { formatDate } from "@/lib/utils/date";
-import { ExternalLink, Search, Star, Trash2 } from "lucide-react";
-import Link from "next/link";
+import { Search, Star, Trash2 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { Pagination } from "../_components/Pagination";
 import { RefreshButton } from "../_components/RefreshButton";
 import { StarRating } from "../_components/StarRating";
 import { useReviewList } from "./_hooks/useReviewList";
 
 export default function ReviewsPage() {
+  const router = useRouter();
   const {
     loading,
     filtered,
@@ -44,7 +45,7 @@ export default function ReviewsPage() {
 
       <Card className="p-4 rounded-xl shadow-sm">
         <div className="flex flex-wrap gap-4 items-center">
-          <div className="relative flex-1 min-w-[260px]">
+          <div className="relative flex-1 min-w-65">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 text-gray-400" />
             <Input
               placeholder="Tìm theo tên khách hoặc nội dung đánh giá..."
@@ -99,53 +100,66 @@ export default function ReviewsPage() {
         </div>
       )}
 
-      <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {paged.map((review) => (
           <Card
             key={review.id}
-            className="p-5 rounded-xl shadow-sm hover:shadow-md transition"
+            onClick={() => {
+              if (review.bookingId) {
+                router.push(`/admin/bookings/${review.bookingId}`);
+              }
+            }}
+            className={`p-5 rounded-xl border border-slate-100 dark:border-slate-800/80 shadow-xs flex flex-col justify-between transition-all duration-300 ${
+              review.bookingId
+                ? "cursor-pointer hover:border-primary/40 hover:shadow-md hover:-translate-y-0.5"
+                : ""
+            }`}
           >
-            <div className="flex flex-col md:flex-row justify-between gap-4">
-              <div className="flex gap-4 items-start md:w-[25%]">
-                <UserAvatar
-                  size="lg"
-                  avatarUrl={review.user?.avatar}
-                  fullName={review.user?.name}
-                />
-
-                <div>
-                  <p className="font-semibold">{review.user?.name}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {formatDate(review.createdAt)}
-                  </p>
+            <div className="space-y-4">
+              {/* Header: User Info & Stars */}
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex gap-3 items-center">
+                  <UserAvatar
+                    size="md"
+                    avatarUrl={review.user?.avatar}
+                    fullName={review.user?.name}
+                  />
+                  <div>
+                    <p className="font-semibold text-sm text-foreground line-clamp-1">
+                      {review.user?.name}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground">
+                      {formatDate(review.createdAt)}
+                    </p>
+                  </div>
+                </div>
+                <div className="shrink-0">
+                  <StarRating value={Math.round(Number(review.rating))} />
                 </div>
               </div>
 
-              <div className="flex-1 text-gray-800 text-sm leading-relaxed">
+              {/* Comment Body */}
+              <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed line-clamp-4 wrap-break-word">
                 {review.comment}
-              </div>
+              </p>
+            </div>
 
-              <div className="flex flex-col items-end justify-between gap-3 md:w-24">
-                <StarRating value={Math.round(Number(review.rating))} />
+            {/* Footer */}
+            <div className="flex items-center justify-between pt-3 mt-4 border-t border-border/40">
+              <span className="text-[11px] text-muted-foreground font-medium">
+                {review.bookingId ? `Mã đặt phòng: #${review.bookingId}` : ""}
+              </span>
 
-                <div className="flex gap-2">
-                  {review.bookingId && (
-                    <Link
-                      href={`/admin/bookings/${review.bookingId}`}
-                      className="p-2 hover:bg-gray-100 rounded transition"
-                    >
-                      <ExternalLink className="w-4 h-4 text-gray-600" />
-                    </Link>
-                  )}
-
-                  <button
-                    onClick={() => removeReview(review.id)}
-                    className="p-2 hover:bg-red-100 rounded transition cursor-pointer"
-                  >
-                    <Trash2 className="w-4 h-4 text-red-600" />
-                  </button>
-                </div>
-              </div>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  removeReview(review.id);
+                }}
+                className="p-1.5 hover:bg-red-50 dark:hover:bg-red-950/20 text-muted-foreground hover:text-red-600 rounded-lg transition-colors cursor-pointer"
+                title="Xóa đánh giá"
+              >
+                <Trash2 className="w-4 h-4 text-red-600" />
+              </button>
             </div>
           </Card>
         ))}

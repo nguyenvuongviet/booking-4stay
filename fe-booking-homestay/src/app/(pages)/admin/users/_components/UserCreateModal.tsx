@@ -243,7 +243,7 @@ export function UserCreateModal({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="USER">USER</SelectItem>
-                <SelectItem value="HOST">HOST</SelectItem>
+                {/* <SelectItem value="HOST">HOST</SelectItem> */}
                 <SelectItem value="ADMIN">ADMIN</SelectItem>
               </SelectContent>
             </Select>

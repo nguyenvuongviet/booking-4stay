@@ -43,7 +43,7 @@ export function LocationList({
         {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((i) => (
           <div
             key={i}
-            className="h-24 bg-white/5 rounded-2xl animate-pulse backdrop-blur-md border border-white/10"
+            className="h-24 bg-slate-100 dark:bg-slate-800/50 rounded-2xl animate-pulse border border-slate-200 dark:border-slate-800"
           />
         ))}
       </div>
@@ -52,7 +52,7 @@ export function LocationList({
 
   if (filteredList.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 text-muted-foreground bg-white/5 rounded-3xl border border-dashed border-white/20 backdrop-blur-sm">
+      <div className="flex flex-col items-center justify-center py-20 text-muted-foreground bg-slate-50/50 dark:bg-slate-900/50 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700">
         <MapPin className="w-16 h-16 opacity-20 mb-4 animate-bounce text-cyan-500" />
         <p className="text-xl font-bold bg-clip-text text-transparent bg-linear-to-r from-cyan-500 to-blue-500">
           Không tìm thấy dữ liệu nào.

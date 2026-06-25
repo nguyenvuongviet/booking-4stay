@@ -4,6 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { rooms_status } from '@prisma/client';
 import { eachDayOfInterval, format, startOfDay, subDays } from 'date-fns';
 import { AvailabilityHelper } from 'src/helpers/availability.helper';
 import { PricingHelper } from 'src/helpers/pricing.helper';
@@ -149,10 +150,14 @@ export class BookingQueryService {
 
     const room = await this.prisma.rooms.findFirst({
       where: { id: roomId, isDeleted: false },
-      select: { id: true, price: true },
+      select: { id: true, price: true, status: true },
     });
     if (!room)
       throw new NotFoundException('Phòng không tồn tại hoặc đã bị xóa');
+
+    if (room.status === rooms_status.MAINTENANCE) {
+      return { roomId, available: false, totalAmount: null };
+    }
 
     const isOccupied = await this.availability.hasOverlap(
       roomId,
@@ -222,5 +227,4 @@ export class BookingQueryService {
       days: sortedDays,
     };
   }
-
 }

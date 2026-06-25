@@ -3,11 +3,13 @@
 import { Badge } from "@/_components/ui/badge";
 import { Button } from "@/_components/ui/button";
 import { Card } from "@/_components/ui/card";
+import { useToast } from "@/_components/ui/use-toast";
+import { updateRoom } from "@/services/admin/roomsApi";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@radix-ui/react-tabs";
-import { ArrowLeft, Calendar, Pencil, Trash2 } from "lucide-react";
+import { ArrowLeft, Lock, Pencil, Trash2, Unlock } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { use, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, use, useState } from "react";
 import CalendarGrid from "../../_components/calendar/CalendarGrid";
 import { RefreshButton } from "../../_components/RefreshButton";
 import { RoomFormModal } from "../_components/RoomFormModal";
@@ -19,15 +21,18 @@ import RoomBookingsTab from "./room-tabs/RoomBookingsTab";
 import RoomImagesTab from "./room-tabs/RoomImagesTab";
 import RoomInfoTab from "./room-tabs/RoomInfoTab";
 import RoomReviewsTab from "./room-tabs/RoomReviewsTab";
+import RoomStatsTab from "./room-tabs/RoomStatsTab";
 
-export default function RoomDetailPage({
-  params,
-}: {
-  params: Promise<{ id: number | string }>;
-}) {
-  const { id } = use(params);
+function RoomDetailContent({ id }: { id: number | string }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const currentTab = searchParams.get("tab") || "calendar";
 
+  const handleTabChange = (value: string) => {
+    router.push(`/admin/rooms/${id}?tab=${value}`, { scroll: false });
+  };
+
+  const { toast } = useToast();
   const {
     room,
     bookings,
@@ -44,8 +49,34 @@ export default function RoomDetailPage({
   const [openEditRoom, setOpenEditRoom] = useState(false);
   const [openAmenities, setOpenAmenities] = useState(false);
   const [openBeds, setOpenBeds] = useState(false);
-  const [isOpen, setIsOpen] = useState(true);
+  const [updatingStatus, setUpdatingStatus] = useState(false);
   const defaultPrice = room?.price || 0;
+
+  const handleToggleStatus = async () => {
+    if (!room) return;
+    const isMaintenance = room.status === "MAINTENANCE";
+    const newStatus = isMaintenance ? "AVAILABLE" : "MAINTENANCE";
+    const actionText = isMaintenance ? "mở khóa" : "khóa";
+
+    try {
+      setUpdatingStatus(true);
+      await updateRoom(Number(id), { status: newStatus });
+      toast({
+        variant: "success",
+        title: `${isMaintenance ? "Mở khóa" : "Khóa"} phòng thành công`,
+        description: `Phòng ${room.name} đã được ${actionText}.`,
+      });
+      reload();
+    } catch (err: any) {
+      toast({
+        variant: "destructive",
+        title: `Không thể ${actionText} phòng`,
+        description: err?.response?.data?.message || err.message,
+      });
+    } finally {
+      setUpdatingStatus(false);
+    }
+  };
 
   const handleOpenAmenities = () => {
     if (!room) return;
@@ -107,7 +138,13 @@ export default function RoomDetailPage({
                       : "bg-red-100 text-red-700"
                 }
               >
-                {room.status}
+                {room.status === "AVAILABLE"
+                  ? "Sẵn sàng"
+                  : room.status === "BOOKED"
+                    ? "Đang đặt"
+                    : room.status === "MAINTENANCE"
+                      ? "Đang khóa (Bảo trì)"
+                      : room.status}
               </Badge>
             </div>
           </div>
@@ -115,11 +152,35 @@ export default function RoomDetailPage({
 
         <div className="flex gap-2">
           <RefreshButton onRefresh={reload} />
-          <Button variant="outline" onClick={() => setOpenEditRoom(true)}>
+          <Button
+            variant="outline"
+            onClick={handleToggleStatus}
+            disabled={updatingStatus}
+            className={`cursor-pointer ${
+              room.status === "MAINTENANCE"
+                ? "border-emerald-200 hover:border-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 font-semibold"
+                : "border-amber-200 hover:border-amber-500 hover:bg-amber-50 dark:hover:bg-amber-950/30 text-amber-600 dark:text-amber-400 font-semibold"
+            }`}
+          >
+            {room.status === "MAINTENANCE" ? (
+              <>
+                <Unlock className="w-4 h-4 mr-1" /> Mở khóa
+              </>
+            ) : (
+              <>
+                <Lock className="w-4 h-4 mr-1" /> Khóa phòng
+              </>
+            )}
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => setOpenEditRoom(true)}
+            className="cursor-pointer"
+          >
             <Pencil className="w-4 h-4 mr-1" /> Chỉnh sửa
           </Button>
           <Button
-            className="bg-red-500/70 backdrop-blur-md hover:bg-red-600/70 text-white"
+            className="bg-red-500/70 backdrop-blur-md hover:bg-red-600/70 text-white cursor-pointer"
             onClick={handleDelete}
           >
             <Trash2 className="w-4 h-4 mr-1" /> Xoá
@@ -127,46 +188,43 @@ export default function RoomDetailPage({
         </div>
       </div>
 
-      <details className="shadow rounded-2xl p-3 bg-card px-6">
-        <summary className="cursor-pointer font-semibold">
-          <Calendar className="w-6 h-6 inline-block mx-2" /> Lịch phòng
-        </summary>
-        <div className="mt-4">
-          <CalendarGrid
-            roomId={room.id}
-            soldOutDates={soldOutDates}
-            defaultPrice={defaultPrice}
-            roomPriceDates={roomPrices}
-            bookings={bookings}
-          />
-        </div>
-      </details>
-
-      <Tabs defaultValue="info">
-        <TabsList className="grid grid-cols-4 w-full h-12 backdrop-blur-md bg-white/30 border border-white/20 shadow-sm rounded-2xl p-1 mb-5">
+      <Tabs value={currentTab} onValueChange={handleTabChange}>
+        <TabsList className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 w-full h-auto backdrop-blur-md bg-white/30 border border-white/20 shadow-sm rounded-2xl p-1.5 gap-1.5 mb-5">
           <TabsTrigger
-            className="data-[state=active]:bg-white/80 data-[state=active]:shadow-lg data-[state=active]:backdrop-blur-xl data-[state=active]:text-black bg-white/10 text-gray-700 rounded-xl font-medium transition-all hover:bg-white/20 cursor-pointer"
+            className="data-[state=active]:bg-white/80 data-[state=active]:shadow-lg data-[state=active]:backdrop-blur-xl data-[state=active]:text-black bg-white/10 text-gray-700 rounded-xl font-medium py-2.5 lg:py-0 transition-all hover:bg-white/20 cursor-pointer"
+            value="calendar"
+          >
+            Lịch phòng
+          </TabsTrigger>
+          <TabsTrigger
+            className="data-[state=active]:bg-white/80 data-[state=active]:shadow-lg data-[state=active]:backdrop-blur-xl data-[state=active]:text-black bg-white/10 text-gray-700 rounded-xl font-medium py-2.5 lg:py-0 transition-all hover:bg-white/20 cursor-pointer"
             value="info"
           >
             Thông tin
           </TabsTrigger>
           <TabsTrigger
-            className="data-[state=active]:bg-white/80 data-[state=active]:shadow-lg data-[state=active]:backdrop-blur-xl data-[state=active]:text-black bg-white/10 text-gray-700 rounded-xl font-medium transition-all hover:bg-white/20 cursor-pointer"
+            className="data-[state=active]:bg-white/80 data-[state=active]:shadow-lg data-[state=active]:backdrop-blur-xl data-[state=active]:text-black bg-white/10 text-gray-700 rounded-xl font-medium py-2.5 lg:py-0 transition-all hover:bg-white/20 cursor-pointer"
             value="bookings"
           >
             Đặt phòng ({bookings.length})
           </TabsTrigger>
           <TabsTrigger
-            className="data-[state=active]:bg-white/80 data-[state=active]:shadow-lg data-[state=active]:backdrop-blur-xl data-[state=active]:text-black bg-white/10 text-gray-700 rounded-xl font-medium transition-all hover:bg-white/20 cursor-pointer"
+            className="data-[state=active]:bg-white/80 data-[state=active]:shadow-lg data-[state=active]:backdrop-blur-xl data-[state=active]:text-black bg-white/10 text-gray-700 rounded-xl font-medium py-2.5 lg:py-0 transition-all hover:bg-white/20 cursor-pointer"
             value="reviews"
           >
             Đánh giá ({reviews.length})
           </TabsTrigger>
           <TabsTrigger
-            className="data-[state=active]:bg-white/80 data-[state=active]:shadow-lg data-[state=active]:backdrop-blur-xl data-[state=active]:text-black bg-white/10 text-gray-700 rounded-xl font-medium transition-all hover:bg-white/20 cursor-pointer"
+            className="data-[state=active]:bg-white/80 data-[state=active]:shadow-lg data-[state=active]:backdrop-blur-xl data-[state=active]:text-black bg-white/10 text-gray-700 rounded-xl font-medium py-2.5 lg:py-0 transition-all hover:bg-white/20 cursor-pointer"
             value="images"
           >
             Hình ảnh
+          </TabsTrigger>
+          <TabsTrigger
+            className="data-[state=active]:bg-white/80 data-[state=active]:shadow-lg data-[state=active]:backdrop-blur-xl data-[state=active]:text-black bg-white/10 text-gray-700 rounded-xl font-medium py-2.5 lg:py-0 transition-all hover:bg-white/20 cursor-pointer"
+            value="stats"
+          >
+            Thống kê
           </TabsTrigger>
         </TabsList>
 
@@ -182,12 +240,28 @@ export default function RoomDetailPage({
           <RoomBookingsTab bookings={bookings} />
         </TabsContent>
 
+        <TabsContent value="calendar">
+          <Card className="p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 bg-card">
+            <CalendarGrid
+              roomId={room.id}
+              soldOutDates={soldOutDates}
+              defaultPrice={defaultPrice}
+              roomPriceDates={roomPrices}
+              bookings={bookings}
+            />
+          </Card>
+        </TabsContent>
+
         <TabsContent value="reviews">
           <RoomReviewsTab reviews={reviews} />
         </TabsContent>
 
         <TabsContent value="images">
           <RoomImagesTab room={room} reload={reload} />
+        </TabsContent>
+
+        <TabsContent value="stats">
+          <RoomStatsTab bookings={bookings} />
         </TabsContent>
       </Tabs>
 
@@ -226,5 +300,24 @@ export default function RoomDetailPage({
         loading={extras.loadingBeds}
       />
     </div>
+  );
+}
+
+export default function RoomDetailPage({
+  params,
+}: {
+  params: Promise<{ id: number | string }>;
+}) {
+  const { id } = use(params);
+  return (
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full"></div>
+        </div>
+      }
+    >
+      <RoomDetailContent id={id} />
+    </Suspense>
   );
 }

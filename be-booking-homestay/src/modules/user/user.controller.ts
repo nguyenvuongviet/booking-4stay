@@ -22,7 +22,7 @@ import {
 import { Roles } from 'src/common/decorator/roles.decorator';
 import { UploadFileDto } from 'src/common/dto/upload-file.dto';
 import { Role } from '../user/dto/enum.dto';
-
+import { ChangePasswordDto } from './dto/change-password.dto';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UserFilterDto } from './dto/filter-user.dto';
 import { UpdateUserAdminDto } from './dto/update-user-admin.dto';
@@ -39,6 +39,19 @@ export class UserController {
   async update(@Body() updateUserDto: UpdateUserDto, @Req() req: Request) {
     const user = req['user'];
     return await this.userService.update(+user.id, updateUserDto);
+  }
+
+  @Patch('change-password')
+  async changePassword(
+    @Body() changePasswordDto: ChangePasswordDto,
+    @Req() req: Request,
+  ) {
+    const user = req['user'];
+    return await this.userService.changePassword(
+      +user.id,
+      changePasswordDto.oldPassword,
+      changePasswordDto.newPassword,
+    );
   }
 
   @Post('/avatar-cloudinary')

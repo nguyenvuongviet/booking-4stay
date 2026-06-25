@@ -265,6 +265,14 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
   };
 
   const handleMobileBookClick = () => {
+    if (room?.status === "MAINTENANCE") {
+      toast.error(
+        t("langCode") === "en"
+          ? "This room is under maintenance and cannot be booked."
+          : "Phòng đang bảo trì, không thể đặt phòng.",
+      );
+      return;
+    }
     if (available === false) {
       toast.error("This room is sold out. Please choose other dates.");
       return;
@@ -644,6 +652,23 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
           {/* Right Column - Booking Card */}
           <div className="lg:col-span-1 sticky top-24" id="booking-card">
             <Card className="p-5 sticky top-24">
+              {room.status === "MAINTENANCE" && (
+                <div className="p-4 mb-4 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/40 rounded-2xl text-xs text-red-700 dark:text-red-400">
+                  <p className="font-bold flex items-center gap-1.5 mb-1 text-red-800 dark:text-red-300">
+                    <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                    <span>
+                      {t("langCode") === "en"
+                        ? "Temporarily Locked"
+                        : "Phòng đang bị khóa / bảo trì"}
+                    </span>
+                  </p>
+                  <span>
+                    {t("langCode") === "en"
+                      ? "This room is currently under maintenance or locked. You cannot book it at this time."
+                      : "Phòng này đang tạm khóa để bảo trì. Bạn không thể đặt phòng vào thời điểm này."}
+                  </span>
+                </div>
+              )}
               <div
                 className={`mb-3.5 space-y-1.5 transition-opacity duration-200 ${checkingPreview ? "opacity-60 pointer-events-none" : ""}`}
               >
@@ -823,6 +848,14 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
               {/* Select Room Button */}
               <Button
                 onClick={() => {
+                  if (room.status === "MAINTENANCE") {
+                    toast.error(
+                      t("langCode") === "en"
+                        ? "This room is under maintenance and cannot be booked."
+                        : "Phòng đang bảo trì, không thể đặt phòng.",
+                    );
+                    return;
+                  }
                   if (available === false) {
                     toast.error(
                       "This room is sold out. Please choose other dates.",
@@ -836,10 +869,13 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
                   }
                 }}
                 disabled={
-                  available === false || checkingPreview || checkingAvailability
+                  room.status === "MAINTENANCE" ||
+                  available === false ||
+                  checkingPreview ||
+                  checkingAvailability
                 }
                 className={`w-full h-10 rounded-3xl mb-3 mt-3 hover:bg-primary/80 cursor-pointer ${
-                  available === false
+                  room.status === "MAINTENANCE" || available === false
                     ? "bg-muted cursor-not-allowed hover:bg-muted"
                     : ""
                 }`}
@@ -851,9 +887,13 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
                   ? t("langCode") === "en"
                     ? "Loading..."
                     : "Đang tải..."
-                  : available === false
-                    ? t("sold out")
-                    : t("Select")}
+                  : room.status === "MAINTENANCE"
+                    ? t("langCode") === "en"
+                      ? "Under Maintenance"
+                      : "Đang bảo trì"
+                    : available === false
+                      ? t("sold out")
+                      : t("Select")}
               </Button>
 
               {/* Check-in/out */}
@@ -939,18 +979,22 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
 
         <button
           onClick={handleMobileBookClick}
-          disabled={available === false}
+          disabled={room.status === "MAINTENANCE" || available === false}
           className={`rounded-full bg-primary hover:bg-primary/90 text-white font-bold text-sm px-6 py-2.5 shadow-md shadow-primary/10 active:scale-95 transition-all cursor-pointer ${
-            available === false
+            room.status === "MAINTENANCE" || available === false
               ? "bg-muted cursor-not-allowed hover:bg-muted"
               : ""
           }`}
         >
-          {available === false
-            ? t("sold out")
-            : checkIn && checkOut
-              ? t("Select")
-              : t("selectDate")}
+          {room.status === "MAINTENANCE"
+            ? t("langCode") === "en"
+              ? "Under Maintenance"
+              : "Đang bảo trì"
+            : available === false
+              ? t("sold out")
+              : checkIn && checkOut
+                ? t("Select")
+                : t("selectDate")}
         </button>
       </div>
     </div>

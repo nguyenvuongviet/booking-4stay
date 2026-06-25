@@ -1,448 +1,119 @@
 "use client";
 
-import { Button } from "@/_components/ui/button";
-import { Card } from "@/_components/ui/card";
-import { Input } from "@/_components/ui/input";
-import { AppConfigKey } from "@/constants/app.constant";
-import { useAuth } from "@/context/auth-context";
-import { AppConfig, appConfigApi } from "@/services/admin/appConfigApi";
-import {
-  Bell,
-  Lock,
-  Plus,
-  RefreshCw,
-  Save,
-  Settings,
-  Trash2,
-  User,
-} from "lucide-react";
-import { useEffect, useState } from "react";
-import toast from "react-hot-toast";
+import { Lock, Settings, User } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
+import AccountTab from "./_components/AccountTab";
+import NotificationsTab from "./_components/NotificationsTab";
+import SecurityTab from "./_components/SecurityTab";
+import SystemConfigTab from "./_components/SystemConfigTab";
 
-export default function SettingsPage() {
-  const [activeTab, setActiveTab] = useState("account");
-  const [appConfigs, setAppConfigs] = useState<AppConfig[]>([]);
-  const [loadingConfigs, setLoadingConfigs] = useState(false);
-
-  const { user, updateUser } = useAuth();
+function SettingsContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get("tab");
+  const [activeTab, setActiveTab] = useState(tabParam || "account");
 
   useEffect(() => {
-    if (activeTab === "system") {
-      fetchConfigs();
+    if (
+      tabParam &&
+      ["account", "security", "system", "notifications"].includes(tabParam)
+    ) {
+      setActiveTab(tabParam);
     }
-  }, [activeTab]);
+  }, [tabParam]);
 
-  const fetchConfigs = async () => {
-    setLoadingConfigs(true);
-    try {
-      const data = await appConfigApi.getAllConfigs();
-      setAppConfigs(data);
-    } catch (error) {
-      toast.error("Không thể tải cấu hình hệ thống");
-    } finally {
-      setLoadingConfigs(false);
-    }
-  };
-
-  const handleConfigChange = (key: string, value: any) => {
-    setAppConfigs((prev) =>
-      prev.map((c) => (c.key === key ? { ...c, value } : c)),
-    );
-  };
-
-  const saveConfig = async (key: string) => {
-    const config = appConfigs.find((c) => c.key === key);
-    if (!config) return;
-
-    try {
-      await appConfigApi.updateConfig(key, config.value);
-      toast.success(`Đã cập nhật cấu hình ${key}`);
-      fetchConfigs();
-    } catch (error) {
-      toast.error("Lỗi khi cập nhật cấu hình");
-    }
-  };
-
-  const [profile, setProfile] = useState({
-    fullName: user ? `${user.firstName} ${user.lastName}` : "",
-    email: user?.email ?? "",
-    phoneNumber: user?.phoneNumber ?? "",
-    location: "TP. Hồ Chí Minh, Việt Nam",
-  });
-
-  const handleProfileChange = (key: string, value: string) => {
-    setProfile((prev) => ({ ...prev, [key]: value }));
-  };
-
-  const saveProfile = () => {
-    console.log("Saving profile:", profile);
-
-    updateUser({
-      ...user!,
-      firstName: profile.fullName.split(" ")[0],
-      lastName: profile.fullName.split(" ").slice(1).join(" "),
-      phoneNumber: profile.phoneNumber,
-    });
-
-    toast.success("Cập nhật tài khoản thành công!");
+  const handleTabChange = (tabId: string) => {
+    setActiveTab(tabId);
+    router.push(`/admin/settings?tab=${tabId}`);
   };
 
   return (
-    <div className="space-y-8">
-      <div className="flex items-center justify-between pb-4 border-b">
-        <div>
-          <h1 className="text-3xl font-bold">Cài đặt hệ thống</h1>
-          <p className="text-muted-foreground mt-1">
-            Quản lý tài khoản admin và cấu hình hệ thống
-          </p>
-        </div>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Cài đặt hệ thống</h1>
+        <p className="text-muted-foreground mt-1">
+          Quản lý tài khoản admin, cấu hình vận hành và các thiết lập khác.
+        </p>
       </div>
 
-      <div className="flex gap-3 border-b pb-1">
-        {[
-          { id: "account", label: "Tài khoản", icon: User },
-          { id: "security", label: "Bảo mật", icon: Lock },
-          { id: "system", label: "Cấu hình hệ thống", icon: Settings },
-          { id: "notifications", label: "Thông báo", icon: Bell },
-        ].map((tab) => {
-          const Icon = tab.icon;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-4 py-3 border-b-2 text-sm font-medium transition-all cursor-pointer ${
-                activeTab === tab.id
-                  ? "border-primary text-primary"
-                  : "border-transparent text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <Icon className="w-4 h-4" />
-              {tab.label}
-            </button>
-          );
-        })}
-      </div>
-
-      {activeTab === "account" && (
-        <Card className="p-8 max-w-2xl border shadow-sm">
-          <h2 className="text-xl font-semibold mb-6">Thông tin tài khoản</h2>
-          <div className="space-y-5">
-            <div>
-              <label className="text-sm font-medium">Họ và tên</label>
-              <Input
-                value={profile.fullName}
-                onChange={(e) =>
-                  handleProfileChange("fullName", e.target.value)
-                }
-                className="mt-2"
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium">Email</label>
-              <Input
-                type="email"
-                value={profile.email}
-                disabled
-                className="mt-2 bg-muted cursor-not-allowed"
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium">Số điện thoại</label>
-              <Input
-                value={profile.phoneNumber}
-                onChange={(e) =>
-                  handleProfileChange("phoneNumber", e.target.value)
-                }
-                className="mt-2"
-              />
-            </div>
-
-            <div>
-              <label className="text-sm font-medium">Vị trí</label>
-              <Input
-                value={profile.location}
-                onChange={(e) =>
-                  handleProfileChange("location", e.target.value)
-                }
-                className="mt-2"
-              />
-            </div>
-
-            <Button
-              onClick={saveProfile}
-              className="bg-primary hover:bg-primary/90 gap-2 rounded-lg h-11"
-            >
-              <Save className="w-4 h-4" />
-              Lưu thay đổi
-            </Button>
-          </div>
-        </Card>
-      )}
-
-      {activeTab === "security" && (
-        <Card className="p-8 max-w-2xl border shadow-sm">
-          <h2 className="text-xl font-semibold mb-6">Bảo mật tài khoản</h2>
-
-          <div className="space-y-6">
-            <div>
-              <h3 className="font-medium mb-4">Đổi mật khẩu</h3>
-              <div className="space-y-4">
-                <Input type="password" placeholder="Mật khẩu hiện tại" />
-                <Input type="password" placeholder="Mật khẩu mới" />
-                <Input type="password" placeholder="Xác nhận mật khẩu mới" />
-                <Button className="bg-primary hover:bg-primary/90 gap-2 rounded-lg h-11">
-                  <Save className="w-4 h-4" />
-                  Cập nhật mật khẩu
-                </Button>
-              </div>
-            </div>
-
-            <div className="border-t pt-6">
-              <h3 className="font-medium mb-4">Xác thực hai yếu tố</h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                Tăng bảo mật khi đăng nhập bằng mã OTP
-              </p>
-              <Button variant="outline">Kích hoạt 2FA</Button>
-            </div>
-          </div>
-        </Card>
-      )}
-
-      {activeTab === "system" && (
-        <div className="space-y-6 max-w-3xl">
-          <div className="flex justify-between items-center bg-muted/30 p-4 rounded-lg mb-4">
-            <h2 className="text-lg font-semibold flex items-center gap-2">
-              <Settings className="w-5 h-5 text-primary" />
-              Cấu hình vận hành
-            </h2>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={fetchConfigs}
-              disabled={loadingConfigs}
-              className="gap-2"
-            >
-              <RefreshCw
-                className={`w-4 h-4 ${loadingConfigs ? "animate-spin" : ""}`}
-              />
-              Làm mới
-            </Button>
-          </div>
-
-          <Card className="p-6 shadow-sm border-primary/20">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h3 className="text-md font-bold">
-                  Thời gian hết hạn thanh toán
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  Số phút tối đa khách được giữ chỗ chờ thanh toán trước khi hệ
-                  thống tự động hủy đơn (Mặc định: 30 phút).
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-4 max-w-md">
-              <div className="relative flex-1">
-                <Input
-                  type="number"
-                  min="5"
-                  max="1440"
-                  value={
-                    appConfigs.find(
-                      (c) => c.key === AppConfigKey.BOOKING_EXPIRY_MINUTES,
-                    )?.value || 30
-                  }
-                  onChange={(e) =>
-                    handleConfigChange(
-                      AppConfigKey.BOOKING_EXPIRY_MINUTES,
-                      parseInt(e.target.value),
-                    )
-                  }
-                  className="pr-12 text-lg font-medium"
-                />
-                <div className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-medium">
-                  phút
-                </div>
-              </div>
-              <Button
-                onClick={() => saveConfig(AppConfigKey.BOOKING_EXPIRY_MINUTES)}
-                className="bg-primary hover:bg-primary/90 h-11"
+      <div className="flex flex-col md:flex-row gap-8 mt-8">
+        {/* Settings Sidebar */}
+        <div className="w-full md:w-64 shrink-0 flex flex-row md:flex-col gap-1 overflow-x-auto md:overflow-x-visible pb-2 md:pb-0 border-b md:border-b-0 md:border-r border-border/80">
+          {[
+            {
+              id: "account",
+              label: "Tài khoản",
+              description: "Hồ sơ cá nhân của bạn",
+              icon: User,
+            },
+            {
+              id: "security",
+              label: "Bảo mật",
+              description: "Mật khẩu và bảo mật",
+              icon: Lock,
+            },
+            {
+              id: "system",
+              label: "Cấu hình hệ thống",
+              description: "Cấu hình chính sách & vận hành",
+              icon: Settings,
+            },
+            // {
+            //   id: "notifications",
+            //   label: "Thông báo",
+            //   description: "Quản lý nhận tin thông báo",
+            //   icon: Bell,
+            // },
+          ].map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => handleTabChange(tab.id)}
+                className={`flex flex-col items-start text-left px-4 py-3 rounded-xl transition-all cursor-pointer w-full group ${
+                  isActive
+                    ? "bg-primary/10 text-primary font-semibold shadow-2xs"
+                    : "text-slate-600 dark:text-slate-300 hover:bg-primary/5 hover:text-primary"
+                }`}
               >
-                Cập nhật
-              </Button>
-            </div>
-          </Card>
-
-          <Card className="p-6 shadow-sm border-primary/20">
-            <h3 className="text-md font-bold mb-4">
-              Chính sách phí phạt hủy phòng
-            </h3>
-            <p className="text-sm text-muted-foreground mb-6">
-              Cấu hình các mốc thời gian và tỷ lệ hoàn tiền tương ứng cho khách
-              hàng khi thực hiện huỷ đơn.
-            </p>
-
-            <div className="space-y-4">
-              <div className="grid grid-cols-12 gap-4 text-xs font-bold uppercase tracking-wider text-muted-foreground pb-2 border-b">
-                <div className="col-span-5">Huỷ trước (ngày)</div>
-                <div className="col-span-5">Hoàn tiền (%)</div>
-                <div className="col-span-2 text-right">Thao tác</div>
-              </div>
-
-              {(
-                appConfigs.find(
-                  (c) => c.key === AppConfigKey.CANCELLATION_POLICY,
-                )?.value || []
-              ).map((rule: any, index: number) => (
-                <div
-                  key={index}
-                  className="grid grid-cols-12 gap-4 items-center animate-in fade-in slide-in-from-top-1"
-                >
-                  <div className="col-span-5 relative">
-                    <Input
-                      type="number"
-                      value={rule.daysBefore}
-                      onChange={(e) => {
-                        const newValue = [
-                          ...(appConfigs.find(
-                            (c) => c.key === AppConfigKey.CANCELLATION_POLICY,
-                          )?.value || []),
-                        ];
-                        newValue[index].daysBefore = parseInt(e.target.value);
-                        handleConfigChange(
-                          AppConfigKey.CANCELLATION_POLICY,
-                          newValue,
-                        );
-                      }}
-                      className="pr-12"
-                    />
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
-                      ngày
-                    </div>
-                  </div>
-                  <div className="col-span-5 relative">
-                    <Input
-                      type="number"
-                      value={rule.refundPercent * 100}
-                      onChange={(e) => {
-                        const newValue = [
-                          ...(appConfigs.find(
-                            (c) => c.key === AppConfigKey.CANCELLATION_POLICY,
-                          )?.value || []),
-                        ];
-                        newValue[index].refundPercent =
-                          parseInt(e.target.value) / 100;
-                        handleConfigChange(
-                          AppConfigKey.CANCELLATION_POLICY,
-                          newValue,
-                        );
-                      }}
-                      className="pr-8"
-                    />
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
-                      %
-                    </div>
-                  </div>
-                  <div className="col-span-2 text-right">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                      onClick={() => {
-                        const newValue = (
-                          appConfigs.find(
-                            (c) => c.key === AppConfigKey.CANCELLATION_POLICY,
-                          )?.value || []
-                        ).filter((_: any, i: number) => i !== index);
-                        handleConfigChange(
-                          AppConfigKey.CANCELLATION_POLICY,
-                          newValue,
-                        );
-                      }}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
+                <div className="flex items-center gap-2.5 text-sm">
+                  <Icon
+                    className={`w-4 h-4 ${isActive ? "text-primary" : "text-slate-400 group-hover:text-primary"}`}
+                  />
+                  <span>{tab.label}</span>
                 </div>
-              ))}
-
-              <div className="pt-4 flex justify-between items-center">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-2"
-                  onClick={() => {
-                    const currentPolicy =
-                      appConfigs.find(
-                        (c) => c.key === AppConfigKey.CANCELLATION_POLICY,
-                      )?.value || [];
-                    handleConfigChange(AppConfigKey.CANCELLATION_POLICY, [
-                      ...currentPolicy,
-                      { daysBefore: 1, refundPercent: 0 },
-                    ]);
-                  }}
-                >
-                  <Plus className="w-4 h-4" /> Thêm mốc
-                </Button>
-
-                <Button
-                  onClick={() => saveConfig(AppConfigKey.CANCELLATION_POLICY)}
-                  className="bg-primary hover:bg-primary/90"
-                >
-                  Lưu chính sách huỷ
-                </Button>
-              </div>
-            </div>
-          </Card>
-
-          <Card className="p-6 shadow-sm opacity-60">
-            <h2 className="text-lg font-semibold mb-4 text-muted-foreground">
-              Các cấu hình khác (Sắp ra mắt)
-            </h2>
-            <div className="space-y-4">
-              <div className="p-3 bg-muted rounded border border-dashed flex justify-between items-center">
-                <span className="text-sm font-medium">
-                  Cấu hình Email Marketing
+                <span className="hidden md:block text-[11px] text-muted-foreground mt-0.5 font-normal">
+                  {tab.description}
                 </span>
-                <span className="text-xs bg-muted-foreground/20 px-2 py-1 rounded">
-                  Locked
-                </span>
-              </div>
-            </div>
-          </Card>
+              </button>
+            );
+          })}
         </div>
-      )}
 
-      {activeTab === "notifications" && (
-        <Card className="p-6 max-w-2xl shadow-sm">
-          <h2 className="text-xl font-semibold mb-6">Cài đặt thông báo</h2>
-
-          <div className="space-y-3">
-            {[
-              "Đặt phòng mới",
-              "Tin nhắn từ khách",
-              "Đánh giá mới",
-              "Thanh toán thành công",
-              "Báo cáo hệ thống",
-              "Cảnh báo bảo mật",
-            ].map((label) => (
-              <div
-                key={label}
-                className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/40"
-              >
-                <p>{label}</p>
-                <input type="checkbox" defaultChecked />
-              </div>
-            ))}
-          </div>
-
-          <Button className="mt-4 bg-primary hover:bg-primary/90 gap-2">
-            <Save className="w-4 h-4" />
-            Lưu cài đặt
-          </Button>
-        </Card>
-      )}
+        {/* Content Panel */}
+        <div className="flex-1 min-w-0">
+          {activeTab === "account" && <AccountTab />}
+          {activeTab === "security" && <SecurityTab />}
+          {activeTab === "system" && <SystemConfigTab />}
+          {activeTab === "notifications" && <NotificationsTab />}
+        </div>
+      </div>
     </div>
+  );
+}
+
+export default function SettingsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex h-100 items-center justify-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      }
+    >
+      <SettingsContent />
+    </Suspense>
   );
 }

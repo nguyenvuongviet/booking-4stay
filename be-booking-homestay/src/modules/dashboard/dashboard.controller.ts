@@ -11,6 +11,11 @@ import { DashboardService } from './dashboard.service';
 export class DashboardController {
   constructor(private readonly dashboardService: DashboardService) {}
 
+  @Get('summary')
+  async getSummary() {
+    return this.dashboardService.getDashboardSummary();
+  }
+
   @Get('stats')
   async getStats() {
     return this.dashboardService.getDashboardStats();

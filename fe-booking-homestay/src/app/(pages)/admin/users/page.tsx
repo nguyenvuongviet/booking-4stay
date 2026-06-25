@@ -1,21 +1,36 @@
 "use client";
 
-import { UserCreateModal } from "@/app/(pages)/admin/users/_components/UserCreateModal";
 import { Badge } from "@/_components/ui/badge";
 import { Button } from "@/_components/ui/button";
 import { Card } from "@/_components/ui/card";
 import { Input } from "@/_components/ui/input";
 import { useToast } from "@/_components/ui/use-toast";
 import { UserAvatar } from "@/_components/UserAvatar";
+import { UserCreateModal } from "@/app/(pages)/admin/users/_components/UserCreateModal";
 import { formatDate } from "@/lib/utils/date";
 import { handleDeleteEntity } from "@/lib/utils/handleDelete";
-import { createUser, deleteUser, getAllUsers } from "@/services/admin/usersApi";
+import {
+  createUser,
+  deleteUser,
+  getAllUsers,
+  updateUser,
+} from "@/services/admin/usersApi";
 import type { CreateUserDto, User } from "@/types/user";
-import { Eye, Filter, Plus, Search, Trash2 } from "lucide-react";
-import Link from "next/link";
+import {
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
+  Filter,
+  Lock,
+  Plus,
+  Search,
+  Trash2,
+  Unlock,
+} from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { RefreshButton } from "../_components/RefreshButton";
 import { Pagination } from "../_components/Pagination";
+import { RefreshButton } from "../_components/RefreshButton";
 
 function getStatusColor(status: "active" | "inactive") {
   return status === "active"
@@ -34,6 +49,7 @@ function getRoleColor(role: "USER" | "HOST" | "ADMIN" | string) {
 }
 
 export default function UsersPage() {
+  const router = useRouter();
   const { toast } = useToast();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -45,6 +61,25 @@ export default function UsersPage() {
   const [statusFilter, setStatusFilter] = useState<
     "all" | "active" | "inactive"
   >("all");
+
+  const [sortBy, setSortBy] = useState<"createdAt" | null>(null);
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc" | null>(null);
+
+  const toggleSort = (column: "createdAt") => {
+    if (sortBy !== column) {
+      setSortBy(column);
+      setSortOrder("desc");
+    } else {
+      if (sortOrder === "desc") {
+        setSortOrder("asc");
+      } else if (sortOrder === "asc") {
+        setSortBy(null);
+        setSortOrder(null);
+      } else {
+        setSortOrder("desc");
+      }
+    }
+  };
 
   const [openUserModal, setOpenUserModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -77,20 +112,34 @@ export default function UsersPage() {
 
   const filteredUsers = useMemo(() => {
     const q = searchTerm.trim().toLowerCase();
-    return users.filter((u) => {
-      const uRole = (u.roles?.[0] || "USER") as "USER" | "HOST" | "ADMIN";
+    let data = users.filter((u) => {
+      const userRoles =
+        u.roles && u.roles.length > 0
+          ? u.roles.map((r) => r.toUpperCase())
+          : ["USER"];
       const status = u.isActive ? "active" : "inactive";
       const phone = u.phoneNumber?.toLowerCase() ?? "";
 
       const matchesSearch =
         !q || u.email.toLowerCase().includes(q) || phone.includes(q);
 
-      const matchesRole = roleFilter === "all" || uRole === roleFilter;
+      const matchesRole =
+        roleFilter === "all" || userRoles.includes(roleFilter.toUpperCase());
       const matchesStatus = statusFilter === "all" || status === statusFilter;
 
       return matchesSearch && matchesRole && matchesStatus;
     });
-  }, [users, searchTerm, roleFilter, statusFilter]);
+
+    if (sortBy === "createdAt" && sortOrder) {
+      data.sort((a, b) => {
+        const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return sortOrder === "asc" ? timeA - timeB : timeB - timeA;
+      });
+    }
+
+    return data;
+  }, [users, searchTerm, roleFilter, statusFilter, sortBy, sortOrder]);
 
   const handleOpenUserModal = (user?: User) => {
     setSelectedUser(user || null);
@@ -123,8 +172,31 @@ export default function UsersPage() {
       () => deleteUser(id),
       () => {
         setUsers((prev) => prev.filter((u) => u.id !== id));
-      }
+      },
     );
+  };
+
+  const handleToggleActive = async (user: User) => {
+    const newStatus = !user.isActive;
+    const actionName = newStatus ? "mở khóa" : "khóa";
+    try {
+      await updateUser(user.id, { isActive: newStatus });
+      toast({
+        variant: "success",
+        title: `${newStatus ? "Mở khóa" : "Khóa"} tài khoản thành công`,
+        description: `Tài khoản ${user.email} đã được ${actionName}.`,
+      });
+      setUsers((prev) =>
+        prev.map((u) => (u.id === user.id ? { ...u, isActive: newStatus } : u)),
+      );
+    } catch (err: any) {
+      toast({
+        variant: "destructive",
+        title: `Không thể ${actionName} tài khoản`,
+        description:
+          err?.response?.data?.message || err?.message || "Vui lòng thử lại.",
+      });
+    }
   };
 
   const [page, setPage] = useState(1);
@@ -218,30 +290,47 @@ export default function UsersPage() {
                   <th className="text-left py-4 px-4 font-semibold text-warm-900">
                     Vai trò
                   </th>
-                  <th className="text-left py-4 px-4 font-semibold text-warm-900">
-                    Ngày tham gia
+                  <th
+                    className={`text-left py-4 px-4 font-semibold cursor-pointer transition-colors select-none hover:bg-warm-100 dark:hover:bg-warm-800 ${
+                      sortBy === "createdAt"
+                        ? "text-primary dark:text-sky-400 font-bold"
+                        : "text-warm-900"
+                    }`}
+                    onClick={() => toggleSort("createdAt")}
+                  >
+                    <div className="flex items-center gap-1">
+                      Ngày tham gia{" "}
+                      {sortBy === "createdAt" && sortOrder === "asc" ? (
+                        <ArrowUp className="w-4 h-4 text-primary dark:text-sky-400" />
+                      ) : sortBy === "createdAt" && sortOrder === "desc" ? (
+                        <ArrowDown className="w-4 h-4 text-primary dark:text-sky-400" />
+                      ) : (
+                        <ArrowUpDown className="w-4 h-4 text-warm-400" />
+                      )}
+                    </div>
                   </th>
                   <th className="text-left py-4 px-4 font-semibold text-warm-900">
                     Trạng thái
                   </th>
-                  <th className="text-left py-4 px-4 font-semibold text-warm-900">
+                  <th className="text-center py-4 px-4 font-semibold text-warm-900">
                     Hành động
                   </th>
                 </tr>
               </thead>
               <tbody>
-                {filteredUsers.map((u) => {
-                  const role = (u.roles?.[0] || "USER").toUpperCase() as
-                    | "USER"
-                    | "HOST"
-                    | "ADMIN";
+                {pagedUsers.map((u) => {
+                  const userRoles =
+                    u.roles && u.roles.length > 0
+                      ? u.roles.map((r) => r.toUpperCase())
+                      : ["USER"];
                   const status = u.isActive ? "active" : "inactive";
                   const createdAt = formatDate(u.createdAt);
 
                   return (
                     <tr
                       key={u.id}
-                      className="border-b border-warm-100 hover:bg-warm-50 transition-colors align-middle"
+                      className="border-b border-warm-100 hover:bg-sky-100/50 dark:hover:bg-slate-800/80 hover:shadow-sm cursor-pointer transition-all duration-150 align-middle"
+                      onClick={() => router.push(`/admin/users/${u.id}`)}
                     >
                       <td className="py-2">
                         <div className="flex justify-center items-center">
@@ -257,13 +346,19 @@ export default function UsersPage() {
                         {u.phoneNumber ?? "–"}
                       </td>
                       <td className="py-4 px-4">
-                        <Badge className={getRoleColor(role)}>
-                          {role === "USER"
-                            ? "Khách hàng"
-                            : role === "HOST"
-                            ? "Chủ nhà"
-                            : "Quản trị viên"}
-                        </Badge>
+                        <div className="flex flex-wrap gap-1">
+                          {userRoles.map((role) => (
+                            <Badge key={role} className={getRoleColor(role)}>
+                              {role === "USER"
+                                ? "Khách hàng"
+                                : role === "HOST"
+                                  ? "Chủ nhà"
+                                  : role === "ADMIN"
+                                    ? "Quản trị viên"
+                                    : role}
+                            </Badge>
+                          ))}
+                        </div>
                       </td>
                       <td className="py-4 px-4 text-warm-700">{createdAt}</td>
                       <td className="py-4 px-4">
@@ -273,22 +368,38 @@ export default function UsersPage() {
                             : "Không hoạt động"}
                         </Badge>
                       </td>
-                      <td className="py-4 px-4">
-                        <div className="flex gap-2 justify-start">
-                          <Link href={`/admin/users/${u.id}`}>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="text-warm-600 hover:text-warm-700"
-                            >
-                              <Eye className="w-4 h-4" />
-                            </Button>
-                          </Link>
+                      <td
+                        className="py-4 px-4 text-center"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <div className="flex gap-2 justify-center">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleToggleActive(u)}
+                            className={`transition-all duration-150 active:scale-95 cursor-pointer ${
+                              u.isActive
+                                ? "text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
+                                : "text-amber-600 hover:text-amber-700 hover:bg-amber-50 dark:hover:bg-amber-950/30"
+                            }`}
+                            title={
+                              u.isActive
+                                ? "Khóa tài khoản"
+                                : "Mở khóa tài khoản"
+                            }
+                          >
+                            {u.isActive ? (
+                              <Unlock className="w-4 h-4" />
+                            ) : (
+                              <Lock className="w-4 h-4" />
+                            )}
+                          </Button>
                           <Button
                             variant="ghost"
                             size="icon"
                             onClick={() => handleDelete(u.id, u.email)}
-                            className="text-red-600 hover:text-red-700"
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30 transition-all duration-150 active:scale-95 cursor-pointer"
+                            title="Xóa tài khoản"
                           >
                             <Trash2 className="w-4 h-4" />
                           </Button>

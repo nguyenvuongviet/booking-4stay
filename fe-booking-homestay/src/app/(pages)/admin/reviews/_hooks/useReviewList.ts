@@ -12,7 +12,7 @@ export function useReviewList() {
   const [ratingFilter, setRatingFilter] = useState<number | null>(null);
   const [sortType, setSortType] = useState<"newest" | "oldest">("newest");
 
-  const pageSize = 6;
+  const pageSize = 9;
   const [page, setPage] = useState(1);
 
   async function load() {
@@ -42,7 +42,7 @@ export function useReviewList() {
       data = data.filter(
         (r) =>
           r.user?.name?.toLowerCase().includes(s) ||
-          r.comment?.toLowerCase().includes(s)
+          r.comment?.toLowerCase().includes(s),
       );
     }
 
@@ -53,7 +53,7 @@ export function useReviewList() {
     data.sort((a, b) =>
       sortType === "newest"
         ? +new Date(b.createdAt) - +new Date(a.createdAt)
-        : +new Date(a.createdAt) - +new Date(b.createdAt)
+        : +new Date(a.createdAt) - +new Date(b.createdAt),
     );
 
     return data;

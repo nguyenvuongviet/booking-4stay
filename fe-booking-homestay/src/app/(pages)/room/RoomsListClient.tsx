@@ -193,7 +193,7 @@ export default function RoomsListPage() {
         image: room.images?.main || "/default.jpg",
         images: room.images,
         amenities: room.amenities?.map((a: any) => a.name) || [],
-        status: "Available",
+        status: room.status || "Available",
       }));
 
       const mappedMapRooms: Room[] = mapRoomsData.map((room: any) => ({
@@ -215,7 +215,7 @@ export default function RoomsListPage() {
         image: room.images?.main || "/default.jpg",
         images: room.images,
         amenities: room.amenities?.map((a: any) => a.name) || [],
-        status: "Available",
+        status: room.status || "Available",
       }));
 
       let finalRooms = mappedRooms;
@@ -249,6 +249,7 @@ export default function RoomsListPage() {
         );
 
         finalRooms = mappedRooms.map((room) => {
+          if (room.status === "MAINTENANCE") return room;
           const found = availabilityResults.find((r) => r.id === room.id);
           return {
             ...room,
@@ -257,6 +258,7 @@ export default function RoomsListPage() {
         });
 
         finalMapRooms = mappedMapRooms.map((room) => {
+          if (room.status === "MAINTENANCE") return room;
           const found = mapAvailabilityResults.find((r) => r.id === room.id);
           return {
             ...room,

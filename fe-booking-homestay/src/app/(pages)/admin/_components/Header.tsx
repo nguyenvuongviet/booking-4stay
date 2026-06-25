@@ -7,6 +7,7 @@ import {
   PopoverTrigger,
 } from "@/_components/ui/popover";
 import { toast } from "@/_components/ui/use-toast";
+import { STORAGE_KEYS } from "@/constants";
 import { useAuth } from "@/context/auth-context";
 import { useNotifications } from "@/context/notification-context";
 import { Bell, Lock, LogOut, Settings, User } from "lucide-react";
@@ -27,7 +28,7 @@ function AdminNotificationBadge() {
   ).length;
   if (!unreadCount) return null;
   return (
-    <span className="absolute -top-0 -right-0 inline-flex items-center justify-center w-4 h-4 rounded-full bg-red-500 text-white text-[10px]">
+    <span className="absolute top-1 right-1 inline-flex items-center justify-center w-4 h-4 rounded-full bg-red-500 text-white text-[10px]">
       {unreadCount > 9 ? "9+" : unreadCount}
     </span>
   );
@@ -35,7 +36,7 @@ function AdminNotificationBadge() {
 
 export function AdminHeader() {
   const router = useRouter();
-  const { user, logout } = useAuth();
+  const { user, setUser } = useAuth();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
 
@@ -59,25 +60,26 @@ export function AdminHeader() {
   const email = user?.email ?? "admin@4stay.com";
 
   const handleLogout = () => {
-    logout();
+    localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
+    setUser(null);
     toast({
       title: "Đăng xuất thành công",
       description: "Hẹn gặp lại bạn 👋",
       variant: "success",
     });
-    router.push("/auth/login");
+    window.location.href = "/auth/login";
   };
 
   return (
     <header className="h-20 bg-card border-b border-border flex items-center justify-end px-6 z-40">
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3">
         <Popover>
           <PopoverTrigger asChild>
             <button
-              className="relative p-2 hover:bg-muted/80 rounded-lg transition-colors cursor-pointer"
+              className="relative w-12 h-12 flex items-center justify-center border border-border/80 hover:bg-primary/10 hover:border-primary/30 text-foreground hover:text-primary data-[state=open]:border-primary data-[state=open]:bg-primary/5 data-[state=open]:text-primary rounded-full transition-all cursor-pointer"
               aria-label="Thông báo"
             >
-              <Bell className="w-5 h-5 text-foreground" />
+              <Bell className="w-5 h-5" />
               <AdminNotificationBadge />
             </button>
           </PopoverTrigger>
@@ -93,7 +95,11 @@ export function AdminHeader() {
         <div className="relative" ref={menuRef}>
           <button
             onClick={() => setShowProfileMenu((s) => !s)}
-            className="flex items-center gap-2 px-3 py-2 hover:bg-muted/80 rounded-xl transition-colors cursor-pointer"
+            className={`flex items-center gap-2.5 pl-2 pr-5 h-12 border rounded-full transition-all cursor-pointer ${
+              showProfileMenu
+                ? "border-primary bg-primary/5 text-primary"
+                : "border-border/80 hover:bg-primary/10 hover:border-primary/30 hover:text-primary text-slate-700 dark:text-slate-200"
+            }`}
             aria-haspopup="menu"
             aria-expanded={showProfileMenu}
           >
@@ -102,7 +108,7 @@ export function AdminHeader() {
               fullName={displayName}
               size="md"
             />
-            <span className="text-sm font-medium max-w-40 truncate">
+            <span className="text-sm font-semibold max-w-40 truncate">
               {displayName}
             </span>
           </button>
@@ -121,22 +127,31 @@ export function AdminHeader() {
 
               <div className="p-1.5 space-y-1">
                 <button
-                  // onClick={() => router.push(`/admin/users/${user?.id}`)}
-                  className="w-full flex items-center gap-3 px-2 py-2 text-sm hover:bg-muted rounded-lg transition-colors cursor-pointer"
+                  onClick={() => {
+                    router.push("/admin/settings?tab=account");
+                    setShowProfileMenu(false);
+                  }}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium hover:bg-primary/10 hover:text-primary rounded-lg transition-all duration-150 cursor-pointer text-slate-700 dark:text-slate-200"
                 >
                   <User className="w-4 h-4" />
                   <span>Hồ sơ</span>
                 </button>
                 <button
-                  // onClick={() => router.push("/admin/change-password")}
-                  className="w-full flex items-center gap-3 px-2 py-2 text-sm hover:bg-muted rounded-lg transition-colors cursor-pointer"
+                  onClick={() => {
+                    router.push("/admin/settings?tab=security");
+                    setShowProfileMenu(false);
+                  }}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium hover:bg-primary/10 hover:text-primary rounded-lg transition-all duration-150 cursor-pointer text-slate-700 dark:text-slate-200"
                 >
                   <Lock className="w-4 h-4" />
                   <span>Đổi mật khẩu</span>
                 </button>
                 <button
-                  // onClick={() => router.push("/admin/settings")}
-                  className="w-full flex items-center gap-3 px-2 py-2 text-sm hover:bg-muted rounded-lg transition-colors cursor-pointer"
+                  onClick={() => {
+                    router.push("/admin/settings?tab=system");
+                    setShowProfileMenu(false);
+                  }}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium hover:bg-primary/10 hover:text-primary rounded-lg transition-all duration-150 cursor-pointer text-slate-700 dark:text-slate-200"
                 >
                   <Settings className="w-4 h-4" />
                   <span>Cài đặt</span>
@@ -146,7 +161,7 @@ export function AdminHeader() {
               <div className="p-1.5 border-t border-border">
                 <button
                   onClick={handleLogout}
-                  className="w-full flex items-center gap-3 px-2 py-2 text-sm text-red-500 hover:bg-muted rounded-lg transition-colors cursor-pointer"
+                  className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-lg transition-all duration-150 cursor-pointer"
                 >
                   <LogOut className="w-4 h-4" />
                   <span>Đăng xuất</span>

@@ -123,6 +123,11 @@ export default function FavoritesTab() {
                 sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                 className="object-cover transition-transform duration-500 group-hover:scale-105"
               />
+              {room.status === "MAINTENANCE" && (
+                <div className="absolute bottom-3 left-3 px-2.5 py-1 bg-red-600 text-white text-[10px] font-extrabold rounded-full shadow-md uppercase tracking-wider flex items-center justify-center text-center">
+                  Bảo trì
+                </div>
+              )}
               <button
                 onClick={(e) => handleRemoveFavorite(e, room.id)}
                 className="absolute top-3 right-3 p-2 rounded-full bg-white/95 dark:bg-slate-950/95 text-red-500 shadow-md hover:scale-110 transition-transform cursor-pointer"

@@ -36,12 +36,12 @@ export function LocationCard({
   return (
     <motion.div
       whileHover={{ y: -4, scale: 1.02 }}
-      className="group relative bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-4.5 hover:border-primary/50 transition-all duration-300 hover:shadow-2xl hover:shadow-primary/10"
+      className="group relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4.5 hover:border-primary/50 transition-all duration-300 hover:shadow-lg"
     >
       <div className="flex items-start justify-between gap-4">
         <div className="flex gap-4 min-w-0">
           <div
-            className="relative w-16 h-16 shrink-0 rounded-2xl overflow-hidden cursor-pointer shadow-xl border border-white/5"
+            className="relative w-16 h-16 shrink-0 rounded-2xl overflow-hidden cursor-pointer shadow-md border border-slate-100 dark:border-slate-800"
             onClick={isProvince ? handlePick : undefined}
           >
             {isProvince && item.imageUrl ? (
@@ -108,15 +108,15 @@ export function LocationCard({
         <div className="flex flex-col gap-1.5 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-2 group-hover:translate-x-0">
           <button
             onClick={() => onEdit(item)}
-            className="p-2.5 bg-white/5 hover:bg-primary/20 hover:text-primary rounded-xl border border-white/5 transition-all active:scale-90 shadow-lg cursor-pointer"
+            className="p-2 bg-slate-50 dark:bg-slate-800 hover:bg-primary/10 hover:text-primary rounded-lg border border-slate-200 dark:border-slate-700 transition-all active:scale-90 shadow-xs cursor-pointer text-slate-650 dark:text-slate-400"
           >
-            <Eye className="w-4.5 h-4.5" />
+            <Eye className="w-4 h-4" />
           </button>
           <button
             onClick={() => onDelete(type, item.id)}
-            className="p-2.5 bg-white/5 hover:bg-red-500/20 hover:text-red-500 rounded-xl border border-white/5 transition-all active:scale-90 shadow-lg cursor-pointer"
+            className="p-2 bg-slate-50 dark:bg-slate-800 hover:bg-red-50 dark:hover:bg-red-950/20 hover:text-red-550 rounded-lg border border-slate-200 dark:border-slate-700 transition-all active:scale-90 shadow-xs cursor-pointer text-red-500"
           >
-            <Trash2 className="w-4.5 h-4.5" />
+            <Trash2 className="w-4 h-4" />
           </button>
         </div>
       </div>

@@ -3,6 +3,7 @@
 import { Button } from "@/_components/ui/button";
 import { formatExpiryDate } from "@/lib/utils/promotionUtils";
 import { Pencil, Trash } from "lucide-react";
+import { useMemo, useState } from "react";
 import { FancySwitch } from "../../_components/ui/fancy-switch";
 
 interface Promotion {
@@ -46,6 +47,30 @@ export default function PromotionTable({
   onDelete,
   onToggle,
 }: Props) {
+  const [sortField, setSortField] = useState<
+    "discountValue" | "minOrderValue" | "maxDiscount" | null
+  >(null);
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+
+  const handleSort = (
+    field: "discountValue" | "minOrderValue" | "maxDiscount",
+  ) => {
+    if (sortField === field) {
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(field);
+      setSortOrder("asc");
+    }
+  };
+
+  const sortedItems = useMemo(() => {
+    if (!sortField) return items;
+    return [...items].sort((a: any, b: any) => {
+      const valA = Number(a[sortField]) || 0;
+      const valB = Number(b[sortField]) || 0;
+      return sortOrder === "asc" ? valA - valB : valB - valA;
+    });
+  }, [items, sortField, sortOrder]);
   const getPromoTypeBadge = (type: string) => {
     switch (type) {
       case "WELCOME":
@@ -66,22 +91,24 @@ export default function PromotionTable({
   const getDiscountDisplay = (promo: Promotion) => {
     const val = Number(promo.discountValue);
     if (promo.discountType === "PERCENTAGE") {
-      return (
-        <span className="font-semibold text-primary">
-          {val}%
-          {promo.maxDiscount && (
-            <span className="block text-[10px] text-muted-foreground font-normal">
-              tối đa {Number(promo.maxDiscount).toLocaleString()}đ
-            </span>
-          )}
-        </span>
-      );
+      return <span className="font-semibold text-primary">{val}%</span>;
     }
     return (
       <span className="font-semibold text-emerald-600 dark:text-emerald-400">
-        {val.toLocaleString()}đ
+        {val.toLocaleString("vi-VN")}đ
       </span>
     );
+  };
+
+  const getMaxDiscountDisplay = (promo: Promotion) => {
+    if (promo.discountType === "PERCENTAGE" && promo.maxDiscount) {
+      return (
+        <span className="text-slate-650 dark:text-slate-300 font-medium">
+          tối đa {Number(promo.maxDiscount).toLocaleString("vi-VN")}đ
+        </span>
+      );
+    }
+    return <span className="text-slate-400">—</span>;
   };
 
   const getStatusBadge = (startDate: string, endDate: string) => {
@@ -110,6 +137,26 @@ export default function PromotionTable({
     );
   };
 
+  const renderSortHeader = (
+    label: string,
+    field: "discountValue" | "minOrderValue" | "maxDiscount",
+  ) => {
+    const isCurrent = sortField === field;
+    return (
+      <th
+        className="py-3.5 px-4 text-left font-semibold cursor-pointer select-none hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+        onClick={() => handleSort(field)}
+      >
+        <div className="flex items-center gap-1.5">
+          <span>{label}</span>
+          <span className="text-[10px] text-muted-foreground/60 font-mono">
+            {isCurrent ? (sortOrder === "asc" ? "▲" : "▼") : "↕"}
+          </span>
+        </div>
+      </th>
+    );
+  };
+
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-20 space-y-4">
@@ -127,10 +174,9 @@ export default function PromotionTable({
             <th className="py-3.5 px-4 text-left font-semibold">Mã</th>
             <th className="py-3.5 px-4 text-left font-semibold">Chiến dịch</th>
             <th className="py-3.5 px-4 text-left font-semibold">Loại</th>
-            <th className="py-3.5 px-4 text-left font-semibold">Mức giảm</th>
-            <th className="py-3.5 px-4 text-left font-semibold">
-              Đơn tối thiểu
-            </th>
+            {renderSortHeader("Mức giảm", "discountValue")}
+            {renderSortHeader("Giảm tối đa", "maxDiscount")}
+            {renderSortHeader("Đơn tối thiểu", "minOrderValue")}
             <th className="py-3.5 px-4 text-left font-semibold">Lượt dùng</th>
             <th className="py-3.5 px-4 text-left font-semibold">Hiệu lực</th>
             <th className="py-3.5 px-4 text-center font-semibold">Public</th>
@@ -139,7 +185,7 @@ export default function PromotionTable({
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-          {items.map((promo) => (
+          {sortedItems.map((promo) => (
             <tr
               key={promo.id}
               className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors"
@@ -162,9 +208,10 @@ export default function PromotionTable({
                 </span>
               </td>
               <td className="py-4 px-4">{getDiscountDisplay(promo)}</td>
+              <td className="py-4 px-4">{getMaxDiscountDisplay(promo)}</td>
               <td className="py-4 px-4 text-slate-600 dark:text-slate-300">
                 {Number(promo.minOrderValue) > 0
-                  ? `${Number(promo.minOrderValue).toLocaleString()}đ`
+                  ? `${Number(promo.minOrderValue).toLocaleString("vi-VN")}đ`
                   : "0đ"}
               </td>
               <td className="py-4 px-4">
@@ -253,7 +300,7 @@ export default function PromotionTable({
           {items.length === 0 && (
             <tr>
               <td
-                colSpan={10}
+                colSpan={11}
                 className="py-12 text-center text-slate-500 dark:text-slate-400"
               >
                 Không tìm thấy mã giảm giá nào.

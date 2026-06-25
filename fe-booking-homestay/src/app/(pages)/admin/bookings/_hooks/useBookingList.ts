@@ -16,8 +16,29 @@ export function useBookingList() {
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
 
-  const [sortCheckIn, setSortCheckIn] = useState<"asc" | "desc" | null>(null);
-  const [sortTotal, setSortTotal] = useState<"asc" | "desc" | null>(null);
+  const [sortBy, setSortBy] = useState<
+    "checkIn" | "checkOut" | "nights" | "guests" | "total" | null
+  >(null);
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc" | null>(null);
+
+  const toggleSort = useCallback(
+    (column: "checkIn" | "checkOut" | "nights" | "guests" | "total") => {
+      if (sortBy !== column) {
+        setSortBy(column);
+        setSortOrder("desc");
+      } else {
+        if (sortOrder === "desc") {
+          setSortOrder("asc");
+        } else if (sortOrder === "asc") {
+          setSortBy(null);
+          setSortOrder(null);
+        } else {
+          setSortOrder("desc");
+        }
+      }
+    },
+    [sortBy, sortOrder],
+  );
 
   const pageSize = 6;
   const [page, setPage] = useState(1);
@@ -88,23 +109,36 @@ export function useBookingList() {
 
       return searchMatch && filterMatch && dateFromMatch && dateToMatch;
     });
-    if (sortCheckIn) {
-      data.sort((a, b) =>
-        sortCheckIn === "asc"
-          ? +new Date(a.checkIn) - +new Date(b.checkIn)
-          : +new Date(b.checkIn) - +new Date(a.checkIn),
-      );
-    }
-    if (sortTotal) {
-      data.sort((a, b) =>
-        sortTotal === "asc"
-          ? (a.totalAmount ?? 0) - (b.totalAmount ?? 0)
-          : (b.totalAmount ?? 0) - (a.totalAmount ?? 0),
-      );
+    if (sortBy && sortOrder) {
+      data.sort((a, b) => {
+        let valA: any;
+        let valB: any;
+
+        if (sortBy === "checkIn") {
+          valA = new Date(a.checkIn).getTime();
+          valB = new Date(b.checkIn).getTime();
+        } else if (sortBy === "checkOut") {
+          valA = new Date(a.checkOut).getTime();
+          valB = new Date(b.checkOut).getTime();
+        } else if (sortBy === "nights") {
+          valA = getNights(a.checkIn, a.checkOut);
+          valB = getNights(b.checkIn, b.checkOut);
+        } else if (sortBy === "guests") {
+          valA = (a.adults ?? 0) + (a.children ?? 0);
+          valB = (b.adults ?? 0) + (b.children ?? 0);
+        } else if (sortBy === "total") {
+          valA = a.totalAmount ?? 0;
+          valB = b.totalAmount ?? 0;
+        }
+
+        if (valA < valB) return sortOrder === "asc" ? -1 : 1;
+        if (valA > valB) return sortOrder === "asc" ? 1 : -1;
+        return 0;
+      });
     }
 
     return data;
-  }, [raw, searchTerm, statusFilter, dateRange, sortCheckIn, sortTotal]);
+  }, [raw, searchTerm, statusFilter, dateRange, sortBy, sortOrder]);
 
   const pageCount = Math.max(1, Math.ceil(processed.length / pageSize));
   const paged = processed.slice((page - 1) * pageSize, page * pageSize);
@@ -129,11 +163,9 @@ export function useBookingList() {
     dateRange,
     setDateRange,
 
-    sortCheckIn,
-    setSortCheckIn,
-
-    sortTotal,
-    setSortTotal,
+    sortBy,
+    sortOrder,
+    toggleSort,
 
     refresh,
     getNights,

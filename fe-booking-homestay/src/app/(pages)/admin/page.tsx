@@ -1,40 +1,25 @@
 "use client";
 
 import { Button } from "@/_components/ui/button";
-import { Card } from "@/_components/ui/card";
-import { useEffect, useState } from "react";
-
 import {
-  BookingStatusSummary,
-  DashboardStats,
-  getBookingStatusSummary,
-  getDashboardRevenue,
-  getDashboardStats,
-  getPopularRooms,
-  getRecentDashboardBookings,
-  PopularRoomItem,
-  RecentBookingItem,
+  DashboardSummary,
   RevenueByMonth,
+  getDashboardRevenue,
+  getDashboardSummary,
 } from "@/services/admin/dashboardApi";
-import { Calendar, DoorOpen, Download, Eye, Users, Wallet } from "lucide-react";
-import Link from "next/link";
+import { AlertCircle, Download } from "lucide-react";
+import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Cell,
-  Legend,
-  Pie,
-  PieChart,
-  ResponsiveContainer,
-  Tooltip as RTooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
 import { RefreshButton } from "./_components/RefreshButton";
-import { StatCard } from "./_components/stat-card";
-import { exportCSV, exportJSON } from "./_utils/export";
+
+// Import subcomponents
+import { DetailedTabbedWidget } from "./_components/dashboard/DetailedTabbedWidget";
+import { GeographicalPerformance } from "./_components/dashboard/GeographicalPerformance";
+import { KPIHighlights } from "./_components/dashboard/KPIHighlights";
+import { RevenueTrendChart } from "./_components/dashboard/RevenueTrendChart";
+import { StatusBreakdownPie } from "./_components/dashboard/StatusBreakdownPie";
+import { TodayPulse } from "./_components/dashboard/TodayPulse";
+import { UrgentActionCenter } from "./_components/dashboard/UrgentActionCenter";
 
 const BOOKING_STATUS_COLORS: Record<string, { label: string; color: string }> =
   {
@@ -44,422 +29,284 @@ const BOOKING_STATUS_COLORS: Record<string, { label: string; color: string }> =
     CHECKED_IN: { label: "Đã nhận phòng", color: "#06b6d4" },
     CHECKED_OUT: { label: "Đã trả phòng", color: "#0ea5e9" },
     CANCELLED: { label: "Đã hủy", color: "#ef4444" },
+    CANCELLED_BY_ADMIN: { label: "Hủy bởi Admin", color: "#b91c1c" },
     WAITING_REFUND: { label: "Chờ hoàn tiền", color: "#8b5cf6" },
     REFUNDED: { label: "Đã hoàn tiền", color: "#6b7280" },
   };
 
 export default function AdminDashboardPage() {
-  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [summary, setSummary] = useState<DashboardSummary | null>(null);
   const [revenue, setRevenue] = useState<RevenueByMonth[]>([]);
-  const [status, setStatus] = useState<BookingStatusSummary[]>([]);
-  const [recent, setRecent] = useState<RecentBookingItem[]>([]);
-  const [popular, setPopular] = useState<PopularRoomItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+
   const currentYear = new Date().getFullYear();
   const [year, setYear] = useState(currentYear);
-  const [statusMonth, setStatusMonth] = useState<number | "all">("all");
-  const [statusYear, setStatusYear] = useState<number>(currentYear);
 
-  const load = async () => {
+  const loadData = async () => {
     setLoading(true);
     setError(false);
-
     try {
-      const [statsRes, revenueRes, statusRes, recentRes, popularRes] =
-        await Promise.all([
-          getDashboardStats(),
-          getDashboardRevenue(year),
-          getBookingStatusSummary(),
-          getRecentDashboardBookings(),
-          getPopularRooms(),
-        ]);
-      setStats(statsRes);
-      setRevenue(revenueRes);
-      setStatus(statusRes);
-      setRecent(recentRes);
-      setPopular(popularRes);
+      const [sumRes, revRes] = await Promise.all([
+        getDashboardSummary(),
+        getDashboardRevenue(year),
+      ]);
+      setSummary(sumRes);
+      setRevenue(revRes);
     } catch (err) {
       console.error("Dashboard Load Error:", err);
       setError(true);
-      toast.error("Không thể tải dashboard");
+      toast.error("Không thể tải thông tin tổng quan");
     } finally {
       setLoading(false);
     }
   };
 
-  const loadRevenue = async (selectedYear: number) => {
+  const loadRevenueOnly = async (selectedYear: number) => {
     try {
       const data = await getDashboardRevenue(selectedYear);
       setRevenue(data);
     } catch {
-      toast.error("Không thể tải biểu đồ theo năm");
+      toast.error("Không thể tải biểu đồ doanh thu theo năm");
     }
   };
-
-  const loadStatus = async (y: number, m: number | "all") => {
-    try {
-      const res = await getBookingStatusSummary(y, m === "all" ? undefined : m);
-      setStatus(res);
-    } catch {
-      toast.error("Không thể tải tỷ lệ trạng thái booking");
-    }
-  };
-
-  const totalStatusCount = status.reduce((sum, s) => sum + s.count, 0);
 
   useEffect(() => {
-    load();
+    loadData();
   }, []);
 
   useEffect(() => {
-    loadRevenue(year);
+    if (!loading) {
+      loadRevenueOnly(year);
+    }
   }, [year]);
 
-  useEffect(() => {
-    loadStatus(statusYear, statusMonth);
-  }, [statusYear, statusMonth]);
-
-  if (loading)
+  if (loading) {
     return (
-      <div className="p-10 text-center animate-pulse">Đang tải dữ liệu...</div>
-    );
-  if (error || !stats)
-    return (
-      <div className="p-10 text-center">
-        <p className="text-red-500 mb-4">Lỗi tải dữ liệu Dashboard</p>
-        <Button onClick={load}>Thử lại</Button>
+      <div className="flex flex-col items-center justify-center min-h-125 space-y-4">
+        <div className="w-12 h-12 border-4 border-sky-500 border-t-transparent rounded-full animate-spin"></div>
+        <p className="text-gray-500 font-medium animate-pulse">
+          Đang thu thập và phân tích dữ liệu hệ thống...
+        </p>
       </div>
     );
+  }
 
-  const chartData = revenue.map((m) => ({
-    month: m.month,
-    revenue: Number(m.revenue ?? 0),
-    bookings: Number(m.bookings ?? 0),
-  }));
+  if (error || !summary) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-125 space-y-4 text-center">
+        <AlertCircle className="w-16 h-16 text-red-500 animate-bounce" />
+        <h3 className="text-xl font-bold text-gray-800">
+          Đã xảy ra lỗi khi tải dữ liệu
+        </h3>
+        <p className="text-gray-500 max-w-md">
+          Vui lòng kiểm tra lại kết nối mạng hoặc liên hệ bộ phận hỗ trợ kỹ
+          thuật.
+        </p>
+        <Button
+          onClick={loadData}
+          className="px-6 py-2 bg-sky-500 hover:bg-sky-600 text-white rounded-lg shadow-lg"
+        >
+          Thử lại
+        </Button>
+      </div>
+    );
+  }
 
-  const handleExport = (data: any) => {
-    const { stats, revenue, status, recent, popular } = data;
+  const {
+    overviewCards,
+    todayOperations,
+    pendingActions,
+    bookingStatusBreakdown,
+    provinceDistribution,
+    topRooms,
+    recentBookings,
+    recentReviews,
+  } = summary;
 
-    toast.success("Đang chuẩn bị file báo cáo...");
+  const selectedYearRevenueTotal = revenue.reduce(
+    (sum, m) => sum + Number(m.revenue ?? 0),
+    0,
+  );
 
-    exportCSV("revenue_by_month", revenue);
-    exportCSV("booking_status_summary", status);
-    exportCSV("recent_bookings", recent);
-    exportCSV("popular_rooms", popular);
+  const handleExportReport = () => {
+    toast.success("Đang chuẩn bị xuất báo cáo chi tiết...");
+    const csvRows: string[] = [];
+    csvRows.push("\uFEFF"); // UTF-8 BOM
 
-    exportJSON("dashboard_full_report", data);
+    // Header
+    csvRows.push(
+      `"BÁO CÁO HOẠT ĐỘNG HỆ THỐNG HOMESTAY 4STAY - NGÀY ${new Date().toLocaleDateString("vi-VN")}"`,
+    );
+    csvRows.push("");
+
+    // Section 1: KPI Cards
+    csvRows.push(`"1. CHỈ SỐ HOẠT ĐỘNG CHÍNH (THÁNG NÀY)"`);
+    csvRows.push(`"Chỉ số","Giá trị","Tăng trưởng MoM"`);
+    csvRows.push(
+      `"Doanh thu thực tế","${overviewCards.totalRevenue.toLocaleString()} ₫","${overviewCards.revenueChangePercent.toFixed(1)}%"`,
+    );
+    csvRows.push(
+      `"Số đơn đặt phòng","${overviewCards.totalBookings} đơn","${overviewCards.bookingsChangePercent.toFixed(1)}%"`,
+    );
+    csvRows.push(
+      `"Tỷ lệ lấp đầy phòng","${overviewCards.occupancyRate.toFixed(1)}%","${overviewCards.occupancyRateChangePercent.toFixed(1)}% (chênh lệch)"`,
+    );
+    csvRows.push(
+      `"Đánh giá trung bình","${overviewCards.averageRating.toFixed(1)} sao (${overviewCards.totalReviews} đánh giá)","-"`,
+    );
+    csvRows.push("");
+
+    // Section 2: Operations Today
+    csvRows.push(`"2. TÌNH HÌNH VẬN HÀNH HÔM NAY"`);
+    csvRows.push(`"Hoạt động","Số lượng"`);
+    csvRows.push(
+      `"Số lượt Check-in hôm nay","${todayOperations.checkInsToday} lượt"`,
+    );
+    csvRows.push(
+      `"Số lượt Check-out hôm nay","${todayOperations.checkOutsToday} lượt"`,
+    );
+    csvRows.push(
+      `"Số khách đang ở tại homestay","${todayOperations.currentlyStaying} khách"`,
+    );
+    csvRows.push(
+      `"Số đơn mới tạo hôm nay","${todayOperations.newBookingsToday} đơn"`,
+    );
+    csvRows.push("");
+
+    // Section 3: Revenue Year Breakdown
+    csvRows.push(`"3. DOANH THU THEO THÁNG (NĂM ${year})"`);
+    csvRows.push(`"Tháng","Số lượt đặt","Doanh thu (₫)","% Đóng góp"`);
+    revenue.forEach((m) => {
+      const percent =
+        selectedYearRevenueTotal > 0
+          ? ((Number(m.revenue) / selectedYearRevenueTotal) * 100).toFixed(1) +
+            "%"
+          : "0%";
+      csvRows.push(
+        `"${m.month}","${m.bookings} đơn","${Number(m.revenue)}","${percent}"`,
+      );
+    });
+    csvRows.push("");
+
+    // Section 4: Geographical
+    csvRows.push(`"4. DOANH THU THEO TỈNH THÀNH (TOP ĐIỂM ĐẾN)"`);
+    csvRows.push(`"Tỉnh thành","Số lượt đặt","Doanh thu (₫)"`);
+    provinceDistribution.forEach((p) => {
+      csvRows.push(`"${p.provinceName}","${p.bookings} lượt","${p.revenue}"`);
+    });
+    csvRows.push("");
+
+    // Section 5: Top Homestays
+    csvRows.push(`"5. TOP HOMESTAY DOANH THU CAO NHẤT"`);
+    csvRows.push(`"Homestay","Số lượt đặt","Doanh thu (₫)","Đánh giá sao"`);
+    topRooms.forEach((r) => {
+      csvRows.push(
+        `"${r.roomName}","${r.bookings} lượt","${r.revenue}","${r.rating.toFixed(1)} sao"`,
+      );
+    });
+
+    const csvContent = csvRows.join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.setAttribute(
+      "download",
+      `bao_cao_4stay_${new Date().toISOString().slice(0, 10)}.csv`,
+    );
+    link.click();
+    toast.success("Báo cáo đã được tải xuống!");
   };
 
   return (
-    <div className="space-y-6">
-      <header className="flex justify-between items-center border-b pb-4">
+    <div className="space-y-6 pb-12">
+      {/* HEADER SECTION */}
+      <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-gray-100 pb-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Tổng quan</h1>
-          <p className="text-muted-foreground mt-1">
-            Tổng quan hoạt động hệ thống 4Stay.
+          <h1 className="text-3xl font-extrabold tracking-tight bg-linear-to-r from-slate-900 to-sky-700 bg-clip-text text-transparent">
+            Trang tổng quan
+          </h1>
+          <p className="text-muted-foreground mt-1 text-sm">
+            Hệ thống quản lý Homestay PMS & Báo cáo hiệu năng vận hành 4Stay.
           </p>
         </div>
 
-        <div className="flex gap-3">
-          <RefreshButton onRefresh={load} />
+        <div className="flex items-center gap-3">
+          <RefreshButton
+            onRefresh={loadData}
+            className="border-gray-200 shadow-sm"
+          />
           <Button
-            onClick={() =>
-              handleExport({ stats, revenue, status, recent, popular })
-            }
+            onClick={handleExportReport}
+            className="flex items-center gap-2 bg-sky-600 hover:bg-sky-700 text-white rounded-lg shadow-md hover:shadow-lg transition-all"
           >
-            <Download className="w-4 h-4 mr-2" />
-            Xuất báo cáo
+            <Download className="w-4 h-4" />
+            Xuất báo cáo chi tiết
           </Button>
         </div>
       </header>
 
-      <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
-        <StatCard
-          icon={Users}
-          label="Người dùng"
-          value={stats!.totalUsers.toLocaleString()}
-        />
-        <StatCard
-          icon={DoorOpen}
-          label="Số phòng"
-          value={stats!.totalRooms.toLocaleString()}
-        />
-        <StatCard
-          icon={Calendar}
-          label="Lượt đặt"
-          value={stats!.totalBookings.toLocaleString()}
-        />
-        <StatCard
-          icon={Wallet}
-          label="Doanh thu"
-          value={(stats!.totalRevenue ?? 0).toLocaleString() + " ₫"}
-        />
-      </section>
+      {/* TODAY OPERATION PULSE */}
+      <TodayPulse
+        checkInsToday={todayOperations.checkInsToday}
+        checkOutsToday={todayOperations.checkOutsToday}
+        currentlyStaying={todayOperations.currentlyStaying}
+        newBookingsToday={todayOperations.newBookingsToday}
+      />
 
-      <section className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        <Card className="xl:col-span-2 p-8 bg-white/70 backdrop-blur-md rounded-xl shadow-2xl border border-gray-100">
-          <div className="flex justify-between items-start mb-6">
-            <div>
-              <h2 className="text-2xl font-bold text-gray-800">
-                Doanh thu & Lượt đặt theo tháng
-              </h2>
-              <p className="text-sm text-gray-500 mt-1">
-                Tổng quan hiệu suất kinh doanh theo năm.
-              </p>
-            </div>
+      {/* CORE KPI SECTION */}
+      <KPIHighlights
+        totalRevenue={overviewCards.totalRevenue}
+        revenueChangePercent={overviewCards.revenueChangePercent}
+        totalBookings={overviewCards.totalBookings}
+        bookingsChangePercent={overviewCards.bookingsChangePercent}
+        occupancyRate={overviewCards.occupancyRate}
+        occupancyRateChangePercent={overviewCards.occupancyRateChangePercent}
+        averageRating={overviewCards.averageRating}
+        totalReviews={overviewCards.totalReviews}
+      />
 
-            <div className="flex items-center space-x-2">
-              <span className="text-sm text-gray-600 font-medium">Năm:</span>
-              <select
-                className="h-10 pl-4 pr-8 border border-gray-300 rounded-lg shadow-sm"
-                value={year}
-                onChange={(e) => setYear(Number(e.target.value))}
-              >
-                {Array.from({ length: 5 }).map((_, i) => {
-                  const y = currentYear - i;
-                  return (
-                    <option key={y} value={y}>
-                      {y}
-                    </option>
-                  );
-                })}
-              </select>
-            </div>
-          </div>
+      {/* URGENT ACTIONS & PIE CHART */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <div className="xl:col-span-2">
+          <UrgentActionCenter
+            pendingConfirmationCount={pendingActions.pendingConfirmationCount}
+            waitingRefundCount={pendingActions.waitingRefundCount}
+            partiallyPaidCount={pendingActions.partiallyPaidCount}
+          />
+        </div>
+        <div>
+          <StatusBreakdownPie
+            bookingStatusBreakdown={bookingStatusBreakdown}
+            statusColors={BOOKING_STATUS_COLORS}
+          />
+        </div>
+      </div>
 
-          <div className="h-[380px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={chartData}
-                margin={{ top: 30, right: 30, left: 10, bottom: 10 }}
-              >
-                <CartesianGrid strokeDasharray="4 4" vertical={false} />
-                <XAxis dataKey="month" />
-                <YAxis
-                  yAxisId="left"
-                  tickFormatter={(v) => (v / 1_000_000).toFixed(1) + " tr"}
-                />
-                <YAxis
-                  yAxisId="right"
-                  orientation="right"
-                  tickFormatter={(v) => v.toLocaleString()}
-                />
-                <RTooltip />
-                <Legend iconType="circle" />
+      {/* DUAL ANALYTICS CHARTS SECTION */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <div className="xl:col-span-2">
+          <RevenueTrendChart
+            revenue={revenue}
+            year={year}
+            onYearChange={setYear}
+            currentYear={currentYear}
+          />
+        </div>
+        <div>
+          <GeographicalPerformance
+            provinceDistribution={provinceDistribution}
+          />
+        </div>
+      </div>
 
-                <Bar
-                  yAxisId="left"
-                  dataKey="revenue"
-                  fill="#0ea5e9"
-                  radius={[6, 6, 0, 0]}
-                />
-                <Bar
-                  yAxisId="right"
-                  dataKey="bookings"
-                  fill="#10b981"
-                  radius={[6, 6, 0, 0]}
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </Card>
-
-        <Card className="p-6 shadow-sm border">
-          <h2 className="text-xl font-semibold mb-4">
-            Tỷ lệ trạng thái booking
-          </h2>
-
-          <div className="flex flex-col lg:flex-row lg:items-start gap-6">
-            <div className="lg:w-2/3 w-full">
-              <div className="flex items-center gap-3">
-                {/* Filter năm */}
-                <select
-                  className="h-9 px-3 border rounded-md"
-                  value={statusYear}
-                  onChange={(e) => setStatusYear(Number(e.target.value))}
-                >
-                  {Array.from({ length: 5 }).map((_, i) => {
-                    const y = currentYear - i;
-                    return (
-                      <option key={y} value={y}>
-                        {y}
-                      </option>
-                    );
-                  })}
-                </select>
-
-                {/* Filter tháng */}
-                <select
-                  className="h-9 px-3 border rounded-md"
-                  value={statusMonth}
-                  onChange={(e) =>
-                    setStatusMonth(
-                      e.target.value === "all" ? "all" : Number(e.target.value),
-                    )
-                  }
-                >
-                  <option value="all">Cả năm</option>
-                  {Array.from({ length: 12 }).map((_, i) => (
-                    <option key={i + 1} value={i + 1}>
-                      Tháng {i + 1}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              {totalStatusCount === 0 ? (
-                <div className="flex items-center justify-center h-[260px] text-gray-500">
-                  Không có dữ liệu cho khoảng thời gian đã chọn
-                </div>
-              ) : (
-                <ResponsiveContainer width="100%" height={260}>
-                  <PieChart>
-                    <Pie
-                      data={status}
-                      dataKey="count"
-                      nameKey="status"
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={55}
-                      outerRadius={90}
-                      paddingAngle={2}
-                      stroke="white"
-                      strokeWidth={2}
-                    >
-                      {status.map((item) => (
-                        <Cell
-                          key={item.status}
-                          fill={BOOKING_STATUS_COLORS[item.status].color}
-                        />
-                      ))}
-                    </Pie>
-
-                    <RTooltip
-                      formatter={(value: any, name, entry: any) => {
-                        const s = entry?.payload?.status;
-                        return [
-                          `${value} lượt`,
-                          BOOKING_STATUS_COLORS[s]?.label ?? s,
-                        ];
-                      }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-              )}
-            </div>
-            <div className="flex flex-wrap gap-3 text-sm justify-center lg:flex-col lg:justify-start">
-              {status.map((item) => (
-                <div key={item.status} className="flex items-center gap-2">
-                  <span
-                    className="w-3 h-3 rounded-sm"
-                    style={{
-                      backgroundColor: BOOKING_STATUS_COLORS[item.status].color,
-                    }}
-                  />
-                  <span className="font-medium">
-                    {BOOKING_STATUS_COLORS[item.status].label}
-                  </span>
-                  <span className="text-gray-500">({item.count})</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </Card>
-      </section>
-
-      <section>
-        <Card className="p-6 shadow-sm border">
-          <h2 className="text-xl font-semibold mb-4">Đặt phòng gần đây</h2>
-
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b text-muted-foreground bg-muted/20 text-left">
-                  <th className="py-2 px-3">ID</th>
-                  <th className="py-2 px-3">Khách</th>
-                  <th className="py-2 px-3">Phòng</th>
-                  <th className="py-2 px-3">Tổng</th>
-                  <th className="py-2 px-3">Trạng thái</th>
-                  <th className="py-2 px-3">Ngày tạo</th>
-                  <th className="py-2 px-3">Chi tiết</th>
-                </tr>
-              </thead>
-              <tbody>
-                {recent.map((b) => (
-                  <tr key={b.id} className="border-b hover:bg-muted/40">
-                    <td className="p-2">{b.id}</td>
-                    <td className="p-2">{b.userName}</td>
-                    <td className="p-2">{b.roomName}</td>
-                    <td className="p-2 text-primary font-semibold">
-                      {b.total.toLocaleString()}₫
-                    </td>
-                    <td className="p-2">
-                      <span
-                        className="px-2 py-1 text-xs rounded-full"
-                        style={{
-                          backgroundColor:
-                            BOOKING_STATUS_COLORS[b.status].color + "20",
-                          color: BOOKING_STATUS_COLORS[b.status].color,
-                        }}
-                      >
-                        {BOOKING_STATUS_COLORS[b.status].label}
-                      </span>
-                    </td>
-                    <td className="p-2 text-muted-foreground">
-                      {new Date(b.createdAt).toLocaleDateString("vi-VN")}
-                    </td>
-                    <td className="p-2">
-                      <Link href={`/admin/bookings/${b.id}`}>
-                        <Button variant="ghost" size="icon">
-                          <Eye className="w-4 h-4" />
-                        </Button>
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </Card>
-      </section>
-
-      <section>
-        <Card className="p-6 shadow-sm border">
-          <h2 className="text-xl font-semibold mb-4">Phòng phổ biến</h2>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {popular.map((room, i) => (
-              <Link key={i} href={`/admin/rooms/${room.roomId}`}>
-                <div
-                  key={i}
-                  className="border rounded-xl p-4 bg-card shadow-sm hover:shadow-md transition-shadow"
-                >
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-semibold">{room.roomName}</h3>
-                    <span
-                      className={`text-xs px-2 py-1 rounded-full ${
-                        i < 3
-                          ? "bg-yellow-100 text-yellow-700"
-                          : "bg-muted text-foreground"
-                      }`}
-                    >
-                      TOP {i + 1}
-                    </span>
-                  </div>
-
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {room.bookings} lượt đặt
-                  </p>
-
-                  <p className="font-semibold text-sm text-green-600 mt-2">
-                    Doanh thu: {room.revenue.toLocaleString()}₫
-                  </p>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </Card>
-      </section>
+      {/* DETAILED TABBED WIDGET SECTION */}
+      <DetailedTabbedWidget
+        recentBookings={recentBookings}
+        recentReviews={recentReviews}
+        topRooms={topRooms}
+        statusColors={BOOKING_STATUS_COLORS}
+      />
     </div>
   );
 }
