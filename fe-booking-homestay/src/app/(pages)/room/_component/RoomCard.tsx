@@ -70,14 +70,19 @@ export function RoomCard({
         />
 
         {/* Badges */}
-        <div className="absolute top-3 left-3 flex flex-col gap-2">
+        <div className="absolute top-3 left-3 flex flex-col gap-2 z-10">
+          {room.status === "MAINTENANCE" && (
+            <div className="bg-red-600 text-white text-[10px] font-extrabold px-3 py-1.5 rounded-full shadow-md uppercase tracking-wider flex items-center justify-center text-center">
+              Bảo trì
+            </div>
+          )}
           {isGuestFavorite && (
-            <div className="bg-white/90 backdrop-blur-md text-black text-[10px] font-bold px-3 py-1.5 rounded-full shadow-sm uppercase tracking-wider">
+            <div className="bg-white/90 backdrop-blur-md text-black text-[10px] font-bold px-3 py-1.5 rounded-full shadow-sm uppercase tracking-wider flex items-center justify-center text-center">
               Phổ biến
             </div>
           )}
           {room.status === "Sold out" && (
-            <div className="bg-red-500 text-white text-[10px] font-bold px-3 py-1.5 rounded-full shadow-sm uppercase tracking-wider animate-pulse">
+            <div className="bg-red-500 text-white text-[10px] font-bold px-3 py-1.5 rounded-full shadow-sm uppercase tracking-wider animate-pulse flex items-center justify-center text-center">
               {t("sold out")}
             </div>
           )}

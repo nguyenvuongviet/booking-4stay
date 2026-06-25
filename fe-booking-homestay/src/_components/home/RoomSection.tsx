@@ -95,17 +95,26 @@ export default function RoomSection({ rooms }: { rooms: Room[] }) {
                     </button>
 
                     {/* Urgency Badges */}
-                    {(room as any).badges?.length > 0 && (
-                      <div className="absolute top-3 left-3 px-3 py-1 bg-black/60 backdrop-blur-sm rounded-full shadow-md z-10">
-                        <span className="text-[10px] font-semibold text-white">
-                          {(room as any).badges[0]}
+                    {room.status === "MAINTENANCE" && (
+                      <div className="absolute top-3 left-3 px-3 py-1 bg-red-600 rounded-full shadow-md z-10 flex items-center justify-center text-center">
+                        <span className="text-[10px] font-extrabold text-white uppercase tracking-wider">
+                          Bảo trì
                         </span>
                       </div>
                     )}
-                    {!(room as any).badges?.length &&
+                    {room.status !== "MAINTENANCE" &&
+                      (room as any).badges?.length > 0 && (
+                        <div className="absolute top-3 left-3 px-3 py-1 bg-black/60 backdrop-blur-sm rounded-full shadow-md z-10 flex items-center justify-center text-center">
+                          <span className="text-[10px] font-semibold text-white">
+                            {(room as any).badges[0]}
+                          </span>
+                        </div>
+                      )}
+                    {room.status !== "MAINTENANCE" &&
+                      !(room as any).badges?.length &&
                       room.rating &&
                       room.rating >= 4.8 && (
-                        <div className="absolute top-3 left-3 px-3 py-1 bg-red-500/80 rounded-full shadow-md z-10">
+                        <div className="absolute top-3 left-3 px-3 py-1 bg-red-500/80 rounded-full shadow-md z-10 flex items-center justify-center text-center">
                           <span className="text-[10px] font-semibold text-white uppercase tracking-wider">
                             {t("Trending")}
                           </span>

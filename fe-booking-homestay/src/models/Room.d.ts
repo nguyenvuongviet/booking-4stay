@@ -31,7 +31,7 @@ export interface Room {
     isMain: boolean;
   }[];
   amenities?: Amenity[];
-  status?: "Available" | "Sold out";
+  status?: "Available" | "Sold out" | "MAINTENANCE" | string;
   host?: {
     id: number;
     name: string;

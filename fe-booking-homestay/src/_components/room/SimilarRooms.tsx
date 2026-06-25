@@ -79,6 +79,13 @@ export default function SimilarRooms({ roomId }: Props) {
                   sizes="(max-width: 640px) 50vw, 25vw"
                   className="object-cover transition-transform duration-500 group-hover:scale-105"
                 />
+                {room.status === "MAINTENANCE" && (
+                  <div className="absolute bottom-2 left-2 px-2.5 py-1 bg-red-600 rounded-full z-10 shadow-md flex items-center justify-center text-center">
+                    <span className="text-[10px] font-extrabold text-white uppercase tracking-wider">
+                      Bảo trì
+                    </span>
+                  </div>
+                )}
                 <button
                   className={`absolute top-2 right-2 p-1.5 rounded-full backdrop-blur-sm transition-all duration-300 ${
                     isFavorited(room.id)

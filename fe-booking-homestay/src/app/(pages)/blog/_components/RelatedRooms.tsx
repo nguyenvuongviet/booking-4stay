@@ -20,6 +20,7 @@ interface SimpleRoom {
   rating: number;
   images?: { main?: string };
   location?: { province?: string };
+  status?: string;
 }
 
 export function RelatedRooms({
@@ -154,6 +155,11 @@ export function RelatedRooms({
                     />
                   ) : (
                     <div className="w-full h-full bg-linear-to-br from-primary/10 to-accent/20" />
+                  )}
+                  {room.status === "MAINTENANCE" && (
+                    <div className="absolute top-2 left-2 px-2 py-0.5 bg-red-600 rounded-full text-[9px] font-extrabold text-white uppercase tracking-wider shadow-md z-10 flex items-center justify-center text-center">
+                      Bảo trì
+                    </div>
                   )}
                 </div>
                 <div className="p-2.5 flex-1 flex flex-col justify-between min-h-17.5">

@@ -135,6 +135,11 @@ export default function RoomsMap({
                       sizes="184px"
                       className="object-cover transition-transform duration-500 group-hover/popup-card:scale-105"
                     />
+                    {room.status === "MAINTENANCE" && (
+                      <div className="absolute top-2 right-2 z-20 flex items-center justify-center text-center bg-red-600 text-white px-1.5 py-0.5 rounded-md text-[8px] font-extrabold shadow-md uppercase tracking-wider">
+                        Bảo trì
+                      </div>
+                    )}
                     {room.rating !== undefined && room.rating > 0 && (
                       <div className="absolute top-2 left-2 z-10 flex items-center gap-0.5 text-[9px] font-bold bg-background/90 backdrop-blur-xs text-amber-500 px-1.5 py-0.5 rounded-md shadow-xs">
                         <Star

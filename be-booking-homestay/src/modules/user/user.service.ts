@@ -219,36 +219,45 @@ export class UserService {
 
     const dob = dateOfBirth ? new Date(dateOfBirth) : undefined;
 
-    const [user, role] = await Promise.all([
-      this.prismaService.users.findFirst({
-        where: { id, isDeleted: false },
-        include: { loyalty_program: true },
-      }),
-      this.prismaService.roles.findUnique({
-        where: { name: roleName },
-      }),
-    ]);
+    const userPromise = this.prismaService.users.findFirst({
+      where: { id, isDeleted: false },
+      include: { loyalty_program: true },
+    });
+
+    const rolePromise = roleName
+      ? this.prismaService.roles.findUnique({
+          where: { name: roleName },
+        })
+      : Promise.resolve(null);
+
+    const [user, role] = await Promise.all([userPromise, rolePromise]);
 
     if (!user) throw new BadRequestException('Người dùng không tồn tại');
 
-    if (!role)
+    if (roleName && !role) {
       throw new BadRequestException(`Vai trò '${roleName}' không tồn tại`);
+    }
+
+    const updateData: Prisma.usersUpdateInput = {
+      firstName,
+      lastName,
+      phoneNumber,
+      dateOfBirth: dob,
+      gender,
+      country,
+      isActive,
+    };
+
+    if (role) {
+      updateData.user_roles = {
+        deleteMany: {},
+        create: { roleId: role.id },
+      };
+    }
 
     const newUser = await this.prismaService.users.update({
       where: { id },
-      data: {
-        firstName,
-        lastName,
-        phoneNumber,
-        dateOfBirth: dob,
-        gender,
-        country,
-        isActive,
-        user_roles: {
-          deleteMany: {},
-          create: { roleId: role.id },
-        },
-      },
+      data: updateData,
       include: {
         user_roles: { include: { roles: true } },
         loyalty_program: { include: { levels: true } },
@@ -277,6 +286,34 @@ export class UserService {
     });
 
     return { message: 'Xoá người dùng thành công' };
+  }
+
+  async changePassword(id: number, oldPassword: string, newPassword: string) {
+    const user = await this.prismaService.users.findUnique({
+      where: { id },
+    });
+
+    if (!user) {
+      throw new BadRequestException('Người dùng không tồn tại');
+    }
+
+    if (!user.password) {
+      throw new BadRequestException('Tài khoản chưa thiết lập mật khẩu');
+    }
+
+    const isPasswordMatch = await bcrypt.compare(oldPassword, user.password);
+    if (!isPasswordMatch) {
+      throw new BadRequestException('Mật khẩu hiện tại không chính xác');
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    await this.prismaService.users.update({
+      where: { id },
+      data: { password: hashedPassword },
+    });
+
+    return { message: 'Đổi mật khẩu thành công' };
   }
 
   async avatarCloudinary(id: number, file: Express.Multer.File) {

@@ -8,21 +8,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/_components/ui/dialog";
-import { Input } from "@/_components/ui/input";
 import { Textarea } from "@/_components/ui/textarea";
 import {
   adminForceCancel,
   CancelPreviewResult,
   getCancelPreview,
 } from "@/services/admin/bookingsApi";
-import {
-  AlertTriangle,
-  Ban,
-  Calculator,
-  Clock,
-  Loader2,
-  Shield,
-} from "lucide-react";
+import { Ban, Calculator, Clock, Loader2, Shield } from "lucide-react";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
@@ -44,21 +36,16 @@ export function SmartCancelDialog({
   const [preview, setPreview] = useState<CancelPreviewResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [reason, setReason] = useState("");
-  const [useOverride, setUseOverride] = useState(false);
-  const [overrideAmount, setOverrideAmount] = useState<number | "">("");
 
   useEffect(() => {
     if (open && bookingId) {
       setLoading(true);
       setError(null);
       setReason("");
-      setUseOverride(false);
-      setOverrideAmount("");
 
       getCancelPreview(bookingId)
         .then((data) => {
           setPreview(data);
-          setOverrideAmount(data.suggestedRefundAmount);
         })
         .catch((err) => {
           setError(
@@ -74,11 +61,7 @@ export function SmartCancelDialog({
     if (!bookingId) return;
     setSubmitting(true);
     try {
-      const finalOverride =
-        useOverride && overrideAmount !== ""
-          ? Number(overrideAmount)
-          : undefined;
-      await adminForceCancel(bookingId, reason || "Admin huỷ đơn", finalOverride);
+      await adminForceCancel(bookingId, reason || "Admin huỷ đơn");
       toast.success("Huỷ đơn đặt phòng thành công");
       onSuccess();
       onClose();
@@ -103,7 +86,7 @@ export function SmartCancelDialog({
 
   return (
     <Dialog open={open} onOpenChange={(val) => !val && onClose()}>
-      <DialogContent className="sm:max-w-[540px] p-0 overflow-hidden bg-white rounded-2xl max-h-[90vh] flex flex-col">
+      <DialogContent className="sm:max-w-135 p-0 overflow-hidden bg-white rounded-2xl max-h-[90vh] flex flex-col">
         {/* Header */}
         <div className="p-6 pb-4 shrink-0">
           <DialogHeader>
@@ -213,9 +196,7 @@ export function SmartCancelDialog({
                                 : ""
                             }`}
                           >
-                            <span>
-                              ≥ {rule.daysBefore} ngày trước check-in
-                            </span>
+                            <span>≥ {rule.daysBefore} ngày trước check-in</span>
                             <span>
                               Hoàn {Math.round(rule.refundPercent * 100)}%
                             </span>
@@ -245,54 +226,6 @@ export function SmartCancelDialog({
                 </div>
               </div>
 
-              {/* Override Option */}
-              <div className="space-y-3">
-                <label className="flex items-start gap-3 cursor-pointer bg-blue-50 p-4 rounded-xl border border-blue-100 hover:bg-blue-100/50 transition">
-                  <input
-                    type="checkbox"
-                    checked={useOverride}
-                    onChange={(e) => setUseOverride(e.target.checked)}
-                    className="mt-0.5 w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                  />
-                  <div className="space-y-1">
-                    <span className="text-sm font-bold text-blue-900">
-                      Ghi đè số tiền hoàn trả (Admin Override)
-                    </span>
-                    <p className="text-xs text-blue-700">
-                      Nhập số tiền hoàn trả khác với gợi ý của hệ thống.
-                    </p>
-                  </div>
-                </label>
-
-                {useOverride && (
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-medium">
-                      VND
-                    </span>
-                    <Input
-                      type="number"
-                      value={overrideAmount}
-                      onChange={(e) =>
-                        setOverrideAmount(
-                          e.target.value ? Number(e.target.value) : "",
-                        )
-                      }
-                      placeholder="Nhập số tiền hoàn trả"
-                      max={preview.paidAmount}
-                      className="pl-12 h-11 rounded-xl border-blue-200 focus:ring-blue-500 font-bold"
-                    />
-                    {overrideAmount !== "" &&
-                      Number(overrideAmount) > preview.paidAmount && (
-                        <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
-                          <AlertTriangle className="w-3 h-3" />
-                          Không thể hoàn nhiều hơn số tiền đã thanh toán (
-                          {preview.paidAmount.toLocaleString()}₫)
-                        </p>
-                      )}
-                  </div>
-                )}
-              </div>
-
               {/* Reason */}
               <div className="space-y-2">
                 <label className="text-sm font-bold text-gray-700">
@@ -302,7 +235,7 @@ export function SmartCancelDialog({
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
                   placeholder="Ví dụ: Khách yêu cầu huỷ, sự cố kỹ thuật..."
-                  className="min-h-[80px] rounded-xl border-gray-200 focus:ring-red-500"
+                  className="min-h-20 rounded-xl border-gray-200 focus:ring-red-500"
                 />
               </div>
             </>
@@ -321,14 +254,7 @@ export function SmartCancelDialog({
           </Button>
           <Button
             onClick={handleConfirm}
-            disabled={
-              submitting ||
-              loading ||
-              !preview ||
-              (useOverride &&
-                (overrideAmount === "" ||
-                  Number(overrideAmount) > (preview?.paidAmount || 0)))
-            }
+            disabled={submitting || loading || !preview}
             className="rounded-full font-bold px-6 bg-red-600 hover:bg-red-700 text-white"
           >
             {submitting ? (

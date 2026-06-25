@@ -29,13 +29,13 @@ export default function LocationsPage() {
   };
 
   return (
-    <div className="space-y-4 max-w-[1600px] mx-auto">
+    <div className="space-y-4 max-w-400 mx-auto">
       <LocationHeader
         onRefresh={state.fetchData}
         onAdd={() => setOpenAdd(true)}
       />
 
-      <div className="bg-white/5 backdrop-blur-xl border border-white/10 p-2 rounded-2xl shadow-xl">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl shadow-sm">
         <LocationFilters
           {...state}
           provinces={state.provinces}
@@ -45,7 +45,7 @@ export default function LocationsPage() {
         />
       </div>
 
-      <div className="bg-white/5 backdrop-blur-xl border border-white/10 p-3 rounded-2xl">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm">
         <LocationList
           loading={state.loading}
           filteredList={state.filteredList}

@@ -168,16 +168,23 @@ export default function RoomListRecommendations({
           priority
           className="object-cover transition-transform duration-500 group-hover:scale-105"
         />
-        {room.matchScore && (
+        {room.status === "MAINTENANCE" && (
+          <div className="absolute top-1.5 left-1.5 px-2 py-0.5 bg-red-600 rounded-full z-10 shadow-md flex items-center justify-center text-center">
+            <span className="text-[9px] font-extrabold text-white uppercase tracking-wider">
+              Bảo trì
+            </span>
+          </div>
+        )}
+        {room.status !== "MAINTENANCE" && room.matchScore && (
           <div className="absolute bottom-1.5 left-1.5 px-2 py-0.5 bg-purple-500/90 backdrop-blur-sm rounded-full">
             <span className="text-[9px] font-bold text-white">
               ✨ {room.matchScore}% phù hợp
             </span>
           </div>
         )}
-        {room.boostTags?.length > 0 && (
-          <div className="absolute top-1.5 left-1.5">
-            <span className="px-2 py-0.5 bg-orange-500/90 backdrop-blur-sm rounded-full text-[9px] font-semibold text-white">
+        {room.status !== "MAINTENANCE" && room.boostTags?.length > 0 && (
+          <div className="absolute top-1.5 left-1.5 px-2 py-0.5 bg-orange-500/90 backdrop-blur-sm rounded-full flex items-center justify-center text-center">
+            <span className="text-[9px] font-semibold text-white">
               {room.boostTags[0]}
             </span>
           </div>

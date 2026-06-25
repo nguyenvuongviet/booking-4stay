@@ -26,16 +26,9 @@ export function LocationFilters({
   ];
 
   const parentOptions =
-    dataType === "Province"
-      ? countries
-      : dataType === "Ward"
-        ? provinces
-        : [];
+    dataType === "Province" ? countries : dataType === "Ward" ? provinces : [];
 
-  const parentLabel =
-    dataType === "Province"
-      ? "Quốc gia"
-      : "Tỉnh/Thành phố";
+  const parentLabel = dataType === "Province" ? "Quốc gia" : "Tỉnh/Thành phố";
 
   const parentOptionsForCombobox = [
     { value: "all", label: `Tất cả ${parentLabel}` },
@@ -44,7 +37,7 @@ export function LocationFilters({
 
   return (
     <div className="space-y-4">
-      <div className="flex p-1.5 bg-muted/20 backdrop-blur-md rounded-2xl border border-white/10 w-full sm:w-fit overflow-x-auto no-scrollbar shadow-inner">
+      <div className="flex p-1 bg-slate-100 dark:bg-slate-800/60 rounded-xl w-full sm:w-fit overflow-x-auto no-scrollbar border border-slate-200/50 dark:border-slate-700/50">
         {types.map((t) => (
           <button
             key={t.id}
@@ -53,15 +46,15 @@ export function LocationFilters({
               clearFilters();
             }}
             className={`
-              relative px-5 py-2.5 rounded-xl text-xs font-black transition-all duration-300
+              relative px-4 py-2 rounded-lg text-xs font-semibold transition-all duration-300
               flex items-center gap-2 z-10 whitespace-nowrap cursor-pointer
-              ${dataType === t.id ? "text-primary-foreground shadow-lg" : "text-muted-foreground hover:text-foreground"}
+              ${dataType === t.id ? "text-white shadow-xs" : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"}
             `}
           >
             {dataType === t.id && (
               <motion.div
                 layoutId="activeTab"
-                className="absolute inset-0 bg-primary rounded-xl -z-10 shadow-lg shadow-primary/20"
+                className="absolute inset-0 bg-primary rounded-lg -z-10 shadow-xs shadow-primary/10"
                 transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
               />
             )}
@@ -71,9 +64,9 @@ export function LocationFilters({
         ))}
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-3">
+      <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1 group">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-primary transition-colors" />
           <Input
             placeholder={`Tìm kiếm tên ${
               types.find((t) => t.id === dataType)?.label.toLowerCase() ||
@@ -81,12 +74,12 @@ export function LocationFilters({
             }...`}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-11 h-11 rounded-2xl bg-white/5 border-white/10 focus:ring-primary/20 hover:bg-white/10 transition-colors"
+            className="w-full pl-11 h-10 rounded-xl border border-slate-300 bg-white hover:border-slate-400 focus:border-primary focus:ring-1 focus:ring-primary shadow-xs transition-all placeholder:text-slate-400 dark:bg-slate-900 dark:border-slate-700"
           />
         </div>
 
         {dataType !== "Country" && (
-          <div className="flex-1 lg:max-w-[240px]">
+          <div className="sm:w-60">
             <Combobox
               options={parentOptionsForCombobox}
               value={
@@ -96,7 +89,7 @@ export function LocationFilters({
               }
               onChange={(val) => setSelectedParent(val === "all" ? "all" : val)}
               placeholder={`Theo ${parentLabel}`}
-              className="h-11 rounded-2xl bg-white/5 border-white/10 focus:ring-primary/20 hover:bg-white/10 transition-colors"
+              className="h-10 rounded-xl border border-slate-300 bg-white hover:border-slate-400 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary shadow-xs transition-all cursor-pointer dark:bg-slate-900 dark:border-slate-700"
             />
           </div>
         )}
@@ -107,7 +100,7 @@ export function LocationFilters({
           <Button
             variant="ghost"
             onClick={clearFilters}
-            className="h-11 rounded-2xl px-6 text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all font-bold cursor-pointer"
+            className="h-10 rounded-xl px-6 text-red-500 hover:text-red-650 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all font-semibold cursor-pointer"
           >
             <X className="w-4 h-4 mr-2" />
             <span className="hidden sm:inline">Xóa bộ lọc</span>

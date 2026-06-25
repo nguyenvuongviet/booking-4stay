@@ -7,15 +7,16 @@ import { Booking } from "@/types/booking";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import {
+  ArrowDown,
+  ArrowUp,
   ArrowUpDown,
   Baby,
   Download,
-  Eye,
   Filter,
   Search,
   Users,
 } from "lucide-react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { DateRange } from "react-day-picker";
 import { DateRangePicker } from "../../../_components/DateRangePicker";
@@ -26,11 +27,32 @@ interface Props {
 }
 
 export default function RoomBookingsTab({ bookings }: Props) {
+  const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
-  const [sortCheckIn, setSortCheckIn] = useState<"asc" | "desc" | null>(null);
-  const [sortTotal, setSortTotal] = useState<"asc" | "desc" | null>(null);
+  const [sortBy, setSortBy] = useState<
+    "checkIn" | "checkOut" | "nights" | "guests" | "total" | null
+  >(null);
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc" | null>(null);
+
+  const toggleSort = (
+    column: "checkIn" | "checkOut" | "nights" | "guests" | "total",
+  ) => {
+    if (sortBy !== column) {
+      setSortBy(column);
+      setSortOrder("desc");
+    } else {
+      if (sortOrder === "desc") {
+        setSortOrder("asc");
+      } else if (sortOrder === "asc") {
+        setSortBy(null);
+        setSortOrder(null);
+      } else {
+        setSortOrder("desc");
+      }
+    }
+  };
 
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
 
@@ -73,22 +95,35 @@ export default function RoomBookingsTab({ bookings }: Props) {
     }
     if (dateRange?.to)
       data = data.filter((b) => new Date(b.checkIn) <= new Date(dateRange.to!));
-    if (sortCheckIn) {
-      data.sort((a, b) =>
-        sortCheckIn === "asc"
-          ? +new Date(a.checkIn) - +new Date(b.checkIn)
-          : +new Date(b.checkIn) - +new Date(a.checkIn),
-      );
-    }
-    if (sortTotal) {
-      data.sort((a, b) =>
-        sortTotal === "asc"
-          ? (a.totalAmount ?? 0) - (b.totalAmount ?? 0)
-          : (b.totalAmount ?? 0) - (a.totalAmount ?? 0),
-      );
+    if (sortBy && sortOrder) {
+      data.sort((a, b) => {
+        let valA: any;
+        let valB: any;
+
+        if (sortBy === "checkIn") {
+          valA = new Date(a.checkIn).getTime();
+          valB = new Date(b.checkIn).getTime();
+        } else if (sortBy === "checkOut") {
+          valA = new Date(a.checkOut).getTime();
+          valB = new Date(b.checkOut).getTime();
+        } else if (sortBy === "nights") {
+          valA = getNights(a.checkIn, a.checkOut);
+          valB = getNights(b.checkIn, b.checkOut);
+        } else if (sortBy === "guests") {
+          valA = (a.adults ?? 0) + (a.children ?? 0);
+          valB = (b.adults ?? 0) + (b.children ?? 0);
+        } else if (sortBy === "total") {
+          valA = a.totalAmount ?? 0;
+          valB = b.totalAmount ?? 0;
+        }
+
+        if (valA < valB) return sortOrder === "asc" ? -1 : 1;
+        if (valA > valB) return sortOrder === "asc" ? 1 : -1;
+        return 0;
+      });
     }
     return data;
-  }, [bookings, searchTerm, statusFilter, dateRange, sortCheckIn, sortTotal]);
+  }, [bookings, searchTerm, statusFilter, dateRange, sortBy, sortOrder]);
 
   const pageCount = Math.max(1, Math.ceil(processed.length / pageSize));
   const paged = processed.slice((page - 1) * pageSize, page * pageSize);
@@ -145,7 +180,7 @@ export default function RoomBookingsTab({ bookings }: Props) {
       <Card className="p-4 rounded-xl shadow-sm">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div className="flex flex-wrap items-center gap-4 w-full">
-            <div className="relative flex-1 min-w-[250px] max-w-[380px]">
+            <div className="relative flex-1 min-w-62.5 max-w-95">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 text-muted-foreground" />
               <input
                 placeholder="Search guest name or email…"
@@ -161,7 +196,7 @@ export default function RoomBookingsTab({ bookings }: Props) {
             <div className="flex items-center gap-2">
               <Filter className="w-4 h-4 text-muted-foreground" />
               <select
-                className="h-10 px-3 border rounded-lg"
+                className="h-10 px-3 border rounded-lg cursor-pointer"
                 value={statusFilter}
                 onChange={(e) => {
                   setStatusFilter(e.target.value);
@@ -177,7 +212,7 @@ export default function RoomBookingsTab({ bookings }: Props) {
               </select>
             </div>
 
-            <div className="min-w-[260px]">
+            <div className="min-w-65">
               <DateRangePicker value={dateRange} onChange={setDateRange} />
             </div>
           </div>
@@ -198,42 +233,113 @@ export default function RoomBookingsTab({ bookings }: Props) {
               <tr className="border-b text-sm">
                 <th className="py-3 px-4 text-left font-semibold">Khách</th>
                 <th
-                  className="py-3 px-4 text-center font-semibold cursor-pointer"
-                  onClick={() =>
-                    setSortCheckIn(sortCheckIn === "asc" ? "desc" : "asc")
-                  }
+                  className={`py-3 px-4 text-center cursor-pointer font-semibold transition-colors select-none hover:bg-slate-50 dark:hover:bg-slate-800 ${
+                    sortBy === "checkIn"
+                      ? "text-primary dark:text-sky-400 font-bold"
+                      : ""
+                  }`}
+                  onClick={() => toggleSort("checkIn")}
                 >
                   <div className="flex items-center justify-center gap-1">
-                    Ngày vào <ArrowUpDown className="w-4 h-4" />
+                    Ngày vào{" "}
+                    {sortBy === "checkIn" && sortOrder === "asc" ? (
+                      <ArrowUp className="w-4 h-4 text-primary dark:text-sky-400" />
+                    ) : sortBy === "checkIn" && sortOrder === "desc" ? (
+                      <ArrowDown className="w-4 h-4 text-primary dark:text-sky-400" />
+                    ) : (
+                      <ArrowUpDown className="w-4 h-4 text-slate-400" />
+                    )}
                   </div>
                 </th>
-                <th className="py-3 px-4 text-center font-semibold">Ngày ra</th>
-                <th className="py-3 px-4 text-center font-semibold">Số đêm</th>
-                <th className="py-3 px-4 text-center font-semibold">
-                  Số khách
-                </th>
                 <th
-                  className="py-3 px-4 text-center font-semibold cursor-pointer"
-                  onClick={() =>
-                    setSortTotal(sortTotal === "asc" ? "desc" : "asc")
-                  }
+                  className={`py-3 px-4 text-center cursor-pointer font-semibold transition-colors select-none hover:bg-slate-50 dark:hover:bg-slate-800 ${
+                    sortBy === "checkOut"
+                      ? "text-primary dark:text-sky-400 font-bold"
+                      : ""
+                  }`}
+                  onClick={() => toggleSort("checkOut")}
                 >
                   <div className="flex items-center justify-center gap-1">
-                    Tổng tiền <ArrowUpDown className="w-4 h-4" />
+                    Ngày ra{" "}
+                    {sortBy === "checkOut" && sortOrder === "asc" ? (
+                      <ArrowUp className="w-4 h-4 text-primary dark:text-sky-400" />
+                    ) : sortBy === "checkOut" && sortOrder === "desc" ? (
+                      <ArrowDown className="w-4 h-4 text-primary dark:text-sky-400" />
+                    ) : (
+                      <ArrowUpDown className="w-4 h-4 text-slate-400" />
+                    )}
+                  </div>
+                </th>
+                <th
+                  className={`py-3 px-4 text-center cursor-pointer font-semibold transition-colors select-none hover:bg-slate-50 dark:hover:bg-slate-800 ${
+                    sortBy === "nights"
+                      ? "text-primary dark:text-sky-400 font-bold"
+                      : ""
+                  }`}
+                  onClick={() => toggleSort("nights")}
+                >
+                  <div className="flex items-center justify-center gap-1">
+                    Số đêm{" "}
+                    {sortBy === "nights" && sortOrder === "asc" ? (
+                      <ArrowUp className="w-4 h-4 text-primary dark:text-sky-400" />
+                    ) : sortBy === "nights" && sortOrder === "desc" ? (
+                      <ArrowDown className="w-4 h-4 text-primary dark:text-sky-400" />
+                    ) : (
+                      <ArrowUpDown className="w-4 h-4 text-slate-400" />
+                    )}
+                  </div>
+                </th>
+                <th
+                  className={`py-3 px-4 text-center cursor-pointer font-semibold transition-colors select-none hover:bg-slate-50 dark:hover:bg-slate-800 ${
+                    sortBy === "guests"
+                      ? "text-primary dark:text-sky-400 font-bold"
+                      : ""
+                  }`}
+                  onClick={() => toggleSort("guests")}
+                >
+                  <div className="flex items-center justify-center gap-1">
+                    Số khách{" "}
+                    {sortBy === "guests" && sortOrder === "asc" ? (
+                      <ArrowUp className="w-4 h-4 text-primary dark:text-sky-400" />
+                    ) : sortBy === "guests" && sortOrder === "desc" ? (
+                      <ArrowDown className="w-4 h-4 text-primary dark:text-sky-400" />
+                    ) : (
+                      <ArrowUpDown className="w-4 h-4 text-slate-400" />
+                    )}
+                  </div>
+                </th>
+                <th
+                  className={`py-3 px-4 text-center cursor-pointer font-semibold transition-colors select-none hover:bg-slate-50 dark:hover:bg-slate-800 ${
+                    sortBy === "total"
+                      ? "text-primary dark:text-sky-400 font-bold"
+                      : ""
+                  }`}
+                  onClick={() => toggleSort("total")}
+                >
+                  <div className="flex items-center justify-center gap-1">
+                    Tổng tiền{" "}
+                    {sortBy === "total" && sortOrder === "asc" ? (
+                      <ArrowUp className="w-4 h-4 text-primary dark:text-sky-400" />
+                    ) : sortBy === "total" && sortOrder === "desc" ? (
+                      <ArrowDown className="w-4 h-4 text-primary dark:text-sky-400" />
+                    ) : (
+                      <ArrowUpDown className="w-4 h-4 text-slate-400" />
+                    )}
                   </div>
                 </th>
                 <th className="py-3 px-4 text-center font-semibold">
                   Trạng thái
-                </th>
-                <th className="py-3 px-4 text-center font-semibold">
-                  Chi tiết
                 </th>
               </tr>
             </thead>
 
             <tbody>
               {paged.map((b) => (
-                <tr key={b.id} className="border-b hover:bg-gray-50">
+                <tr
+                  key={b.id}
+                  className="border-b hover:bg-sky-100/50 dark:hover:bg-slate-800/80 hover:shadow-sm cursor-pointer transition-all duration-150"
+                  onClick={() => router.push(`/admin/bookings/${b.id}`)}
+                >
                   <td className="py-4 px-4">
                     <p className="font-medium">{b.guestInfo.fullName}</p>
                     <p className="text-xs text-muted-foreground">
@@ -266,13 +372,6 @@ export default function RoomBookingsTab({ bookings }: Props) {
                     >
                       {b.status}
                     </span>
-                  </td>
-                  <td className="py-4 px-4 text-center">
-                    <Link href={`/admin/bookings/${b.id}`}>
-                      <Button variant="ghost" size="icon">
-                        <Eye className="w-4 h-4" />
-                      </Button>
-                    </Link>
                   </td>
                 </tr>
               ))}

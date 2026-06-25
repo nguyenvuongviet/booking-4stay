@@ -200,7 +200,7 @@ export default function CalendarGrid({
   );
 
   return (
-    <div className="flex flex-col lg:flex-row w-full items-start gap-4">
+    <div className="flex flex-col lg:flex-row w-full items-start lg:items-stretch gap-4">
       <div
         className={cn(
           "transition-all duration-300 w-full",
@@ -218,7 +218,7 @@ export default function CalendarGrid({
           </p>
 
           <div className="overflow-x-auto pb-4">
-            <div className="min-w-[700px]">
+            <div className="min-w-175">
               {/* Week */}
               <div className="grid grid-cols-7 mb-2 text-center elegant-sans text-primary">
                 {[
@@ -279,10 +279,10 @@ export default function CalendarGrid({
       {mode === "pricing" && (
         <div
           className={cn(
-            "shrink-0 bg-card lg:sticky lg:top-0 h-auto lg:h-screen overflow-y-auto rounded-xl lg:rounded-none shadow-sm lg:shadow-none border border-gray-100 lg:border-none transition-all duration-300",
+            "shrink-0 bg-card lg:sticky lg:top-0 h-auto lg:h-full min-h-125 overflow-y-auto rounded-xl lg:rounded-none shadow-sm lg:shadow-none border border-gray-100 lg:border-none transition-all duration-300",
             selectedDates.length > 0
-              ? "w-full lg:w-[380px] opacity-100"
-              : "w-0 lg:w-[380px] opacity-100",
+              ? "w-full lg:w-95 opacity-100"
+              : "w-0 lg:w-95 opacity-100",
           )}
         >
           <EditPanel

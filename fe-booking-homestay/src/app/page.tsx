@@ -53,7 +53,13 @@ export default function HomePage() {
     <div className="min-h-screen bg-background relative">
       <Header />
 
-      <SearchBar stickyType="home" />
+      <Suspense
+        fallback={
+          <div className="h-20 w-full animate-pulse bg-slate-100 dark:bg-slate-800" />
+        }
+      >
+        <SearchBar stickyType="home" />
+      </Suspense>
 
       <Suspense
         fallback={<div className="h-screen bg-black/20 animate-pulse" />}

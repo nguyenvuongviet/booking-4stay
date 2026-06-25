@@ -51,28 +51,35 @@ export default function AdminBlogPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
   const [sortBy, setSortBy] = useState<
-    "createdAt" | "viewCount" | "commentCount"
+    "createdAt" | "viewCount" | "commentCount" | null
   >("createdAt");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc" | null>("desc");
   const [sortFilter, setSortFilter] = useState<string>("createdAt-desc");
 
   const [page, setPage] = useState(1);
   const pageSize = 10;
 
   const handleSort = (field: "createdAt" | "viewCount" | "commentCount") => {
-    let newOrder: "asc" | "desc" = "desc";
     if (sortBy === field) {
-      newOrder = sortOrder === "desc" ? "asc" : "desc";
+      if (sortOrder === "desc") {
+        setSortOrder("asc");
+        setSortFilter(`${field}-asc`);
+      } else {
+        setSortBy(null);
+        setSortOrder(null);
+        setSortFilter("none");
+      }
+    } else {
+      setSortBy(field);
+      setSortOrder("desc");
+      setSortFilter(`${field}-desc`);
     }
-    setSortBy(field);
-    setSortOrder(newOrder);
-    setSortFilter(`${field}-${newOrder}`);
   };
 
   const renderSortIndicator = (
     field: "createdAt" | "viewCount" | "commentCount",
   ) => {
-    if (sortBy !== field) {
+    if (sortBy !== field || !sortOrder) {
       return (
         <ArrowUpDown
           size={12}
@@ -117,6 +124,10 @@ export default function AdminBlogPage() {
 
   const processedPosts = useMemo(() => {
     let data = [...posts];
+
+    if (!sortBy || !sortOrder) {
+      return data;
+    }
 
     // Sort
     data.sort((a, b) => {
@@ -178,10 +189,12 @@ export default function AdminBlogPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between pb-4 border-b gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Quản lý Blog</h1>
-          <p className="text-sm text-muted-foreground mt-1">
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+            Quản lý Blog
+          </h1>
+          <p className="text-gray-600 dark:text-slate-400 mt-1">
             {processedPosts.length} bài viết
           </p>
         </div>
@@ -189,14 +202,14 @@ export default function AdminBlogPage() {
           <button
             onClick={() => fetchPosts()}
             disabled={loading}
-            className="p-2.5 rounded-xl border bg-background hover:bg-accent transition-colors disabled:opacity-50"
+            className="p-2.5 rounded-xl border bg-background hover:bg-accent transition-colors disabled:opacity-50 cursor-pointer"
             title="Làm mới"
           >
             <RotateCw size={18} className={loading ? "animate-spin" : ""} />
           </button>
           <Link
             href="/admin/blog/create"
-            className="inline-flex items-center gap-2 px-4 py-2.5 bg-primary text-white rounded-xl font-medium hover:bg-primary/90 transition-all shadow-sm"
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-primary text-white rounded-xl font-medium hover:bg-primary/90 transition-all shadow-sm cursor-pointer"
           >
             <Plus size={18} />
             Viết bài mới
@@ -251,12 +264,18 @@ export default function AdminBlogPage() {
           onChange={(e) => {
             const val = e.target.value;
             setSortFilter(val);
-            const [field, order] = val.split("-");
-            setSortBy(field as any);
-            setSortOrder(order as "asc" | "desc");
+            if (val === "none") {
+              setSortBy(null);
+              setSortOrder(null);
+            } else {
+              const [field, order] = val.split("-");
+              setSortBy(field as any);
+              setSortOrder(order as "asc" | "desc");
+            }
           }}
           className="px-4 py-2.5 rounded-xl border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 cursor-pointer"
         >
+          <option value="none">Không sắp xếp</option>
           <option value="createdAt-desc">Mới nhất</option>
           <option value="createdAt-asc">Cũ nhất</option>
           <option value="viewCount-desc">Lượt xem: Nhiều nhất</option>

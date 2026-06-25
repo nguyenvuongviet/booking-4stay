@@ -1,4 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
+import { rooms_status } from '@prisma/client';
 import { startOfDay } from 'date-fns';
 import { ACTIVE_BOOKING_STATUSES } from 'src/modules/booking/booking.constants';
 import { PrismaService } from 'src/modules/prisma/prisma.service';
@@ -14,6 +15,13 @@ export class AvailabilityHelper {
     options?: { tx?: any; excludeBookingId?: number },
   ): Promise<boolean> {
     const prisma = options?.tx || this.prisma;
+
+    const room = await prisma.rooms.findFirst({
+      where: { id: roomId },
+      select: { status: true },
+    });
+    if (room?.status === rooms_status.MAINTENANCE) return true;
+
     const excludeFilter = options?.excludeBookingId
       ? { id: { not: options.excludeBookingId } }
       : {};
@@ -56,6 +64,17 @@ export class AvailabilityHelper {
     options?: { tx?: any; excludeBookingId?: number; userId?: number },
   ): Promise<void> {
     const prisma = options?.tx || this.prisma;
+
+    const room = await prisma.rooms.findFirst({
+      where: { id: roomId },
+      select: { status: true },
+    });
+    if (room?.status === rooms_status.MAINTENANCE) {
+      throw new BadRequestException(
+        'Phòng đang bị khóa hoặc đang bảo trì, không thể đặt phòng',
+      );
+    }
+
     const excludeFilter = options?.excludeBookingId
       ? { id: { not: options.excludeBookingId } }
       : {};

@@ -57,7 +57,7 @@ export default function ManualBookingPage() {
   }
 
   return (
-    <div className="max-w-[1400px] mx-auto pb-20">
+    <div className="max-w-350 mx-auto pb-20">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 pb-6 border-b border-gray-100">
         <div>

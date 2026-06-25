@@ -29,14 +29,14 @@ export class BookingCron {
    * Chạy lúc 12:00 trưa mỗi ngày.
    * Tự động quét và chuyển các đơn từ CHECKED_IN sang CHECKED_OUT nếu hôm nay là ngày trả phòng.
    */
-  @Cron('0 12 * * *', { timeZone: 'Asia/Ho_Chi_Minh' })
+  @Cron('*/5 * * * * *', { timeZone: 'Asia/Ho_Chi_Minh' })
   async handleAutoCheckOut() {
     const today = startOfDay(new Date());
     const checkouts = await this.prisma.bookings.findMany({
       where: {
         isDeleted: false,
         status: bookings_status.CHECKED_IN,
-        checkOut: { gte: today, lt: endOfDay(today) },
+        checkOut: { lte: endOfDay(today) },
       },
       select: { id: true },
     });
@@ -62,7 +62,7 @@ export class BookingCron {
    * Chạy lúc 14:00 chiều mỗi ngày.
    * Tự động quét và chuyển các đơn từ CONFIRMED/PARTIALLY_PAID sang CHECKED_IN nếu hôm nay là ngày nhận phòng.
    */
-  @Cron('0 14 * * *', { timeZone: 'Asia/Ho_Chi_Minh' })
+  @Cron('*/5 * * * * *', { timeZone: 'Asia/Ho_Chi_Minh' })
   async handleAutoCheckIn() {
     const today = startOfDay(new Date());
 
@@ -72,7 +72,7 @@ export class BookingCron {
         status: {
           in: [bookings_status.CONFIRMED, bookings_status.PARTIALLY_PAID],
         },
-        checkIn: { gte: today, lt: endOfDay(today) },
+        checkIn: { lte: endOfDay(today) },
       },
       select: { id: true },
     });

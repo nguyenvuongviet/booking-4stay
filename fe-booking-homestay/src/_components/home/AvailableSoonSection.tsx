@@ -18,6 +18,7 @@ interface AvailableRoom {
   rating: number;
   images?: { main: string };
   location?: { fullAddress?: string; province?: string };
+  status?: string;
 }
 
 export default function AvailableSoonSection() {
@@ -93,12 +94,20 @@ export default function AvailableSoonSection() {
                     sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
                     className="object-cover transition-transform duration-500 group-hover:scale-105"
                   />
-                  {/* Available badge */}
-                  <div className="absolute bottom-2 left-2 px-2.5 py-1 bg-emerald-500/90 backdrop-blur-sm rounded-full z-10">
-                    <span className="text-[10px] font-bold text-white uppercase tracking-wider">
-                      Còn trống
-                    </span>
-                  </div>
+                  {/* Status badges */}
+                  {room.status === "MAINTENANCE" ? (
+                    <div className="absolute bottom-2 left-2 px-2.5 py-1 bg-red-600 rounded-full z-10 shadow-md flex items-center justify-center text-center">
+                      <span className="text-[10px] font-extrabold text-white uppercase tracking-wider">
+                        Bảo trì
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="absolute bottom-2 left-2 px-2.5 py-1 bg-emerald-500/90 backdrop-blur-sm rounded-full z-10 shadow-md flex items-center justify-center text-center">
+                      <span className="text-[10px] font-extrabold text-white uppercase tracking-wider">
+                        Còn trống
+                      </span>
+                    </div>
+                  )}
                   {/* Heart */}
                   <button
                     className={`absolute top-2 right-2 p-1.5 rounded-full backdrop-blur-sm transition-all duration-300 cursor-pointer z-10 ${
