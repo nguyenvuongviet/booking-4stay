@@ -152,4 +152,13 @@ export class RecommendationController {
       message: 'Đã tính lại Popularity Score + User Preferences thành công',
     };
   }
+
+  @Get('popular-destinations')
+  getPopularDestinations(
+    @Query('limit') limit?: string,
+  ) {
+    return this.recommendationService.getPopularDestinations(
+      Number(limit) || 10,
+    );
+  }
 }

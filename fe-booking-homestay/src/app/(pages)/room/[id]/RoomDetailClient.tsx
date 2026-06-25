@@ -539,7 +539,7 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
                     className="flex-1 flex items-center justify-center gap-2 rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold text-sm px-6 py-3.5 shadow-lg shadow-primary/10 active:scale-95 transition-all cursor-pointer"
                   >
                     <MessageSquare className="w-4.5 h-4.5" />
-                    Nhắn tin với Host
+                    Nhắn tin với Chủ phòng
                   </button>
                   <a
                     href={

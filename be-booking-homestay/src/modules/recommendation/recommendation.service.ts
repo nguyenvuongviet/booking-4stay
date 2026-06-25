@@ -3,6 +3,7 @@ import { subDays } from 'date-fns';
 import { sanitizeRoom } from 'src/utils/sanitize/room.sanitize';
 import { PrismaService } from '../prisma/prisma.service';
 import { RecommendationCacheService } from './recommendation-cache.service';
+import { v2 as cloudinary } from 'cloudinary';
 
 const ROOM_INCLUDE = {
   room_images: true,
@@ -103,5 +104,94 @@ export class RecommendationService {
       badges.push('⭐ Được khách yêu thích');
     }
     return badges;
+  }
+
+  getImageUrl(publicId?: string | null): string | null {
+    if (!publicId) return null;
+
+    return cloudinary.url(publicId, {
+      secure: true,
+    });
+  }
+
+  async getPopularDestinations(limit = 10) {
+    const provinces = await this.prisma.location_provinces.findMany({
+      where: {
+        isDeleted: false,
+      },
+      include: {
+        rooms: {
+          where: {
+            isDeleted: false,
+          },
+          include: {
+            bookings: {
+              where: {
+                status: {
+                  in: [
+                    'CONFIRMED',
+                    'CHECKED_IN',
+                    'CHECKED_OUT',
+                  ],
+                },
+              },
+            },
+            room_images: {
+              where: {
+                isMain: true,
+              },
+              take: 1,
+            },
+          },
+        },
+      },
+    });
+
+    const result = provinces
+      .map((province) => {
+        const roomCount = province.rooms.length;
+
+        const bookingCount = province.rooms.reduce(
+          (sum, room) => sum + room.bookings.length,
+          0,
+        );
+
+        const avgRating =
+          roomCount > 0
+            ? province.rooms.reduce(
+              (sum, room) => sum + Number(room.rating || 0),
+              0,
+            ) / roomCount
+            : 0;
+
+        const publicId =
+          province.imageUrl ||
+          province.rooms[0]?.room_images[0]?.imageUrl;
+
+        const coverImage = this.getImageUrl(publicId);
+
+        console.log({
+          publicId,
+          coverImage,
+        });
+
+
+        return {
+          id: province.id,
+          name: province.name,
+          imageUrl: coverImage,
+          roomCount,
+          bookingCount,
+          avgRating: Number(avgRating.toFixed(1)),
+          popularityScore:
+            roomCount * 5 + bookingCount * 2 + avgRating,
+        };
+      })
+      .sort(
+        (a, b) => b.popularityScore - a.popularityScore,
+      )
+      .slice(0, limit);
+
+    return result;
   }
 }
