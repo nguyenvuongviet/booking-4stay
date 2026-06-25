@@ -21,11 +21,12 @@ import {
 } from '@nestjs/swagger';
 import { Roles } from 'src/common/decorator/roles.decorator';
 import { UploadFileDto } from 'src/common/dto/upload-file.dto';
-import { uploadLocalConfig } from 'src/config/upload-local.config';
+import { Role } from '../user/dto/enum.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 import { CreateUserDto } from './dto/create-user.dto';
+import { UserFilterDto } from './dto/filter-user.dto';
 import { UpdateUserAdminDto } from './dto/update-user-admin.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { UserFilterDto } from './dto/filter-user.dto';
 import { UserService } from './user.service';
 
 @ApiTags('user')
@@ -40,19 +41,17 @@ export class UserController {
     return await this.userService.update(+user.id, updateUserDto);
   }
 
-  @Post('/avatar-local')
-  @UseInterceptors(uploadLocalConfig('images', 'avatar', 2))
-  @ApiConsumes('multipart/form-data')
-  @ApiBody({
-    description: 'Upload file',
-    type: UploadFileDto,
-  })
-  async avatarLocal(
+  @Patch('change-password')
+  async changePassword(
+    @Body() changePasswordDto: ChangePasswordDto,
     @Req() req: Request,
-    @UploadedFile() file: Express.Multer.File,
   ) {
     const user = req['user'];
-    return await this.userService.avatarLocal(+user.id, file);
+    return await this.userService.changePassword(
+      +user.id,
+      changePasswordDto.oldPassword,
+      changePasswordDto.newPassword,
+    );
   }
 
   @Post('/avatar-cloudinary')
@@ -71,39 +70,39 @@ export class UserController {
   }
 
   @Post('admin/create')
-  @Roles('ADMIN')
+  @Roles(Role.ADMIN)
   @ApiBody({ type: CreateUserDto })
   async create(@Body() createUserDto: CreateUserDto) {
     return await this.userService.create(createUserDto);
   }
 
   @Get('admin/list-roles')
-  @Roles('ADMIN')
+  @Roles(Role.ADMIN)
   async listRoles() {
     return await this.userService.listRoles();
   }
 
   @Get('admin/all')
-  @Roles('ADMIN')
+  @Roles(Role.ADMIN)
   async findAll() {
     return await this.userService.findAll();
   }
 
   @Get('admin/all-filtered')
-  @Roles('ADMIN')
+  @Roles(Role.ADMIN)
   async findAllFiltered(@Query() query: UserFilterDto) {
     return await this.userService.findAllFiltered(query);
   }
 
   @Get('admin/profile/:id')
-  @Roles('ADMIN')
+  @Roles(Role.ADMIN)
   @ApiParam({ name: 'id', type: String, description: 'User ID', example: '1' })
   async findOne(@Param('id') id: string) {
     return await this.userService.findOne(+id);
   }
 
   @Patch('admin/update/:id')
-  @Roles('ADMIN')
+  @Roles(Role.ADMIN)
   @ApiParam({ name: 'id', type: String, description: 'User ID', example: '1' })
   @ApiBody({ type: UpdateUserAdminDto })
   async adminUpdate(
@@ -114,25 +113,10 @@ export class UserController {
   }
 
   @Delete('admin/delete/:id')
-  @Roles('ADMIN')
+  @Roles(Role.ADMIN)
   @ApiParam({ name: 'id', type: String, description: 'User ID', example: '1' })
   async delete(@Param('id') id: string) {
     return await this.userService.delete(+id);
-  }
-
-  @Post('admin/:id/avatar-local')
-  @UseInterceptors(uploadLocalConfig('images', 'avatar', 2))
-  @ApiParam({ name: 'id', type: String, description: 'User ID', example: '1' })
-  @ApiConsumes('multipart/form-data')
-  @ApiBody({
-    description: 'Upload file',
-    type: UploadFileDto,
-  })
-  async adminAvatarLocal(
-    @Param('id') id: string,
-    @UploadedFile() file: Express.Multer.File,
-  ) {
-    return await this.userService.avatarLocal(+id, file);
   }
 
   @Post('admin/:id/avatar-cloudinary')

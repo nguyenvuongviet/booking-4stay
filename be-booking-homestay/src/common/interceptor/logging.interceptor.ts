@@ -3,6 +3,7 @@ import {
   NestInterceptor,
   ExecutionContext,
   CallHandler,
+  Logger,
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
@@ -11,6 +12,8 @@ import chalk from 'chalk';
 
 @Injectable()
 export class LoggingInterceptor implements NestInterceptor {
+  private readonly logger = new Logger(LoggingInterceptor.name);
+
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     const req = context.switchToHttp().getRequest();
     const res = context.switchToHttp().getResponse();
@@ -18,9 +21,7 @@ export class LoggingInterceptor implements NestInterceptor {
     const url = req.originalUrl || req.url;
     const now = Date.now();
 
-    const timestamp = new Date().toLocaleString('vi-VN', {
-      timeZone: 'Asia/Ho_Chi_Minh',
-    });
+    const timestamp = new Date().toLocaleString('en-GB').replace(',', '');
     const methodColor = this.getMethodColor(method);
     const statusCode = res.statusCode;
 
@@ -29,7 +30,7 @@ export class LoggingInterceptor implements NestInterceptor {
         const responseTime = Date.now() - now;
         const statusColor = this.getStatusColor(statusCode);
 
-        console.log(
+        this.logger.log(
           `${chalk.gray(`[${timestamp}]`)} ` +
             `${methodColor(`${method.padEnd(6)}`)} ${chalk.white(url)} ` +
             `${statusColor(`${statusCode}`)} ${chalk.yellow(`${responseTime}ms`)}`,

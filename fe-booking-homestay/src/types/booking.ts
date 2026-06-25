@@ -35,6 +35,18 @@ interface Review {
   bookingId: number;
 }
 
+export enum BookingStatus {
+  PENDING = "PENDING",
+  CONFIRMED = "CONFIRMED",
+  CANCELLED = "CANCELLED",
+  CANCELLED_BY_ADMIN = "CANCELLED_BY_ADMIN",
+  CHECKED_IN = "CHECKED_IN",
+  CHECKED_OUT = "CHECKED_OUT",
+  PARTIALLY_PAID = "PARTIALLY_PAID",
+  WAITING_REFUND = "WAITING_REFUND",
+  REFUNDED = "REFUNDED",
+}
+
 export interface Booking {
   id: number;
   user: UserBooking;
@@ -43,19 +55,13 @@ export interface Booking {
   children: number;
   checkIn: string;
   checkOut: string;
-  status:
-    | "PENDING"
-    | "PARTIALLY_PAID"
-    | "CONFIRMED"
-    | "CHECKED_IN"
-    | "CHECKED_OUT"
-    | "CANCELLED"
-    | "WAITING_REFUND"
-    | "REFUNDED";
+  status: BookingStatus;
   totalAmount?: number;
   cancelReason?: string | null;
   paymentMethod?: string;
   paidAmount?: number;
+  refundAmount?: number;
+  cancellationFee?: number;
   createdAt: string;
   updatedAt: string;
   review: Review;

@@ -1,10 +1,11 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
 import { MailService } from '../mail/mail.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { VerifyOtpDto } from './dto/verifyOtp.dto';
 
 @Injectable()
 export class OtpService {
+  private readonly logger = new Logger(OtpService.name);
   private readonly OTP_LENGTH = 6;
   private readonly OTP_EXPIRY_MS = 5 * 60 * 1000; // 5 phút
 
@@ -39,12 +40,12 @@ export class OtpService {
       this.mailService
         .sendOtpMail(email, otp, type)
         .catch((error) =>
-          console.log(`Lỗi gửi email OTP cho ${email}: ${error.message}`),
+          this.logger.error(`Lỗi gửi email OTP cho ${email}`, error.stack),
         );
 
       console.log(`OTP cho ${email}: ${otp}`);
     } catch (error) {
-      console.log(`Lỗi tạo OTP cho ${email}: ${error.message}`);
+      this.logger.error(`Lỗi tạo OTP cho ${email}`, error.stack);
       throw new BadRequestException('Không thể tạo OTP. Vui lòng thử lại.');
     }
   }
@@ -75,7 +76,7 @@ export class OtpService {
 
       return { success: true, message: 'OTP hợp lệ!' };
     } catch (error) {
-      console.log(`Lỗi xác thực OTP cho ${email}: ${error.message}`);
+      this.logger.error(`Lỗi xác thực OTP cho ${email}`, error.stack);
       throw error instanceof BadRequestException
         ? error
         : new BadRequestException('Lỗi khi xác thực OTP. Vui lòng thử lại.');

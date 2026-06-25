@@ -34,6 +34,64 @@ export interface PopularRoomItem {
   revenue: number;
 }
 
+export interface DashboardSummary {
+  overviewCards: {
+    totalRevenue: number;
+    revenueChangePercent: number;
+    totalBookings: number;
+    bookingsChangePercent: number;
+    occupancyRate: number;
+    occupancyRateChangePercent: number;
+    averageRating: number;
+    totalReviews: number;
+  };
+  todayOperations: {
+    checkInsToday: number;
+    checkOutsToday: number;
+    newBookingsToday: number;
+    currentlyStaying: number;
+  };
+  pendingActions: {
+    pendingConfirmationCount: number;
+    waitingRefundCount: number;
+    partiallyPaidCount: number;
+  };
+  bookingStatusBreakdown: { status: string; count: number }[];
+  provinceDistribution: {
+    provinceName: string;
+    bookings: number;
+    revenue: number;
+  }[];
+  topRooms: {
+    roomId: number;
+    roomName: string;
+    rating: number;
+    imageUrl: string | null;
+    bookings: number;
+    revenue: number;
+  }[];
+  recentBookings: {
+    id: number;
+    userName: string;
+    userAvatar: string | null;
+    roomName: string;
+    total: number;
+    status: string;
+    checkIn: string;
+    checkOut: string;
+    createdAt: string;
+  }[];
+  recentReviews: {
+    id: number;
+    userName: string;
+    avatar: string | null;
+    roomName: string;
+    rating: number;
+    comment: string;
+    createdAt: string;
+  }[];
+}
+
 export const getDashboardStats = async (): Promise<DashboardStats> => {
   try {
     const resp = await api.get("/admin/dashboard/stats");
@@ -45,7 +103,7 @@ export const getDashboardStats = async (): Promise<DashboardStats> => {
 };
 
 export const getDashboardRevenue = async (
-  year?: number
+  year?: number,
 ): Promise<RevenueByMonth[]> => {
   try {
     const resp = await api.get("/admin/dashboard/revenue", {
@@ -60,7 +118,7 @@ export const getDashboardRevenue = async (
 
 export const getBookingStatusSummary = async (
   year?: number,
-  month?: number
+  month?: number,
 ): Promise<BookingStatusSummary[]> => {
   try {
     const resp = await api.get("/admin/dashboard/bookings-status", {
@@ -74,7 +132,7 @@ export const getBookingStatusSummary = async (
 };
 
 export const getRecentDashboardBookings = async (
-  limit = 5
+  limit = 5,
 ): Promise<RecentBookingItem[]> => {
   try {
     const resp = await api.get("/admin/dashboard/recent-bookings", {
@@ -88,7 +146,7 @@ export const getRecentDashboardBookings = async (
 };
 
 export const getPopularRooms = async (
-  limit = 5
+  limit = 5,
 ): Promise<PopularRoomItem[]> => {
   try {
     const resp = await api.get("/admin/dashboard/popular-rooms", {
@@ -97,6 +155,16 @@ export const getPopularRooms = async (
     return resp.data.data;
   } catch (error) {
     console.error("GetPopularRooms Error:", error);
+    throw error;
+  }
+};
+
+export const getDashboardSummary = async (): Promise<DashboardSummary> => {
+  try {
+    const resp = await api.get("/admin/dashboard/summary");
+    return resp.data.data;
+  } catch (error) {
+    console.error("GetDashboardSummary Error:", error);
     throw error;
   }
 };

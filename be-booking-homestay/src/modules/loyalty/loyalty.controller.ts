@@ -11,29 +11,37 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { LoyaltyService } from './loyalty.service';
 import { CreateLoyaltyLevelDto } from './dto/create-loyalty-level.dto';
 import { UpdateLoyaltyLevelDto } from './dto/update-loyalty-level.dto';
-import { UpdateUserLoyaltyDto } from './dto/update-user-loyalty.dto';
 import { Roles } from 'src/common/decorator/roles.decorator';
+import { Role } from '../user/dto/enum.dto';
+import { Public } from 'src/common/decorator/public.decorator';
 
 @ApiTags('loyalty')
 @ApiBearerAuth('AccessToken')
 @Controller('loyalty')
 export class LoyaltyController {
-  constructor(private readonly loyaltyService: LoyaltyService) {}
+  constructor(private readonly loyaltyService: LoyaltyService) { }
 
   @Get('levels')
-  @Roles('ADMIN')
+  @Roles(Role.ADMIN)
   findAllLevels() {
     return this.loyaltyService.findAllLevels();
   }
 
+  @Get('levels/public')
+  @Public()
+  @ApiOperation({ summary: 'Lấy các cấp độ loyalty công khai cho khách hàng' })
+  findActiveLevels() {
+    return this.loyaltyService.findActiveLevels();
+  }
+
   @Post('levels')
-  @Roles('ADMIN')
+  @Roles(Role.ADMIN)
   createLevel(@Body() dto: CreateLoyaltyLevelDto) {
     return this.loyaltyService.createLevel(dto);
   }
 
   @Patch('levels/:id')
-  @Roles('ADMIN')
+  @Roles(Role.ADMIN)
   updateLevel(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateLoyaltyLevelDto,
@@ -42,35 +50,21 @@ export class LoyaltyController {
   }
 
   @Patch('levels/:id/toggle-active')
-  @Roles('ADMIN')
+  @Roles(Role.ADMIN)
   toggleActive(@Param('id', ParseIntPipe) id: number) {
     return this.loyaltyService.toggleActive(id);
   }
 
   @Post('recompute')
-  @Roles('ADMIN')
+  @Roles(Role.ADMIN)
   @ApiOperation({ summary: 'Cập nhật thông tin cấp độ loyalty (Admin)' })
   async recomputeLevels() {
     return this.loyaltyService.recomputeAllUserLevels();
   }
 
   @Get('users/all')
-  @Roles('ADMIN')
+  @Roles(Role.ADMIN)
   findAllUserLoyalty() {
     return this.loyaltyService.findAllUserLoyalty();
-  }
-
-  @Get('user/:userId')
-  findUserLoyalty(@Param('userId', ParseIntPipe) userId: number) {
-    return this.loyaltyService.findUserLoyalty(userId);
-  }
-
-  @Patch('user/:userId')
-  @Roles('ADMIN')
-  updateUserLoyalty(
-    @Param('userId', ParseIntPipe) userId: number,
-    @Body() dto: UpdateUserLoyaltyDto,
-  ) {
-    return this.loyaltyService.updateUserLoyalty(userId, dto);
   }
 }

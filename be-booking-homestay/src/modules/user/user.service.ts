@@ -1,9 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
-import * as fs from 'fs';
-import * as path from 'path';
-import { PORT } from 'src/common/constant/app.constant';
 import { LoyaltyProgram } from 'src/helpers/loyalty.helper';
 import { sanitizeUserData } from 'src/utils/sanitize/user.sanitize';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
@@ -117,13 +114,10 @@ export class UserService {
       }),
     ]);
 
-    if (!role) {
+    if (!role)
       throw new BadRequestException(`Vai trò '${roleName}' không tồn tại`);
-    }
 
-    if (existingUser) {
-      throw new BadRequestException('Email đã tồn tại!');
-    }
+    if (existingUser) throw new BadRequestException('Email đã tồn tại!');
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -208,8 +202,6 @@ export class UserService {
       },
     });
 
-    console.log({ newUser });
-
     return sanitizeUserData(newUser);
   }
 
@@ -227,39 +219,45 @@ export class UserService {
 
     const dob = dateOfBirth ? new Date(dateOfBirth) : undefined;
 
-    const [user, role] = await Promise.all([
-      this.prismaService.users.findFirst({
-        where: { id, isDeleted: false },
-        include: { loyalty_program: true },
-      }),
-      this.prismaService.roles.findUnique({
-        where: { name: roleName },
-      }),
-    ]);
+    const userPromise = this.prismaService.users.findFirst({
+      where: { id, isDeleted: false },
+      include: { loyalty_program: true },
+    });
 
-    if (!user) {
-      throw new BadRequestException('Người dùng không tồn tại');
+    const rolePromise = roleName
+      ? this.prismaService.roles.findUnique({
+          where: { name: roleName },
+        })
+      : Promise.resolve(null);
+
+    const [user, role] = await Promise.all([userPromise, rolePromise]);
+
+    if (!user) throw new BadRequestException('Người dùng không tồn tại');
+
+    if (roleName && !role) {
+      throw new BadRequestException(`Vai trò '${roleName}' không tồn tại`);
     }
 
-    if (!role) {
-      throw new BadRequestException(`Vai trò '${roleName}' không tồn tại`);
+    const updateData: Prisma.usersUpdateInput = {
+      firstName,
+      lastName,
+      phoneNumber,
+      dateOfBirth: dob,
+      gender,
+      country,
+      isActive,
+    };
+
+    if (role) {
+      updateData.user_roles = {
+        deleteMany: {},
+        create: { roleId: role.id },
+      };
     }
 
     const newUser = await this.prismaService.users.update({
       where: { id },
-      data: {
-        firstName,
-        lastName,
-        phoneNumber,
-        dateOfBirth: dob,
-        gender,
-        country,
-        isActive,
-        user_roles: {
-          deleteMany: {},
-          create: { roleId: role.id },
-        },
-      },
+      data: updateData,
       include: {
         user_roles: { include: { roles: true } },
         loyalty_program: { include: { levels: true } },
@@ -275,9 +273,8 @@ export class UserService {
       select: { id: true, email: true },
     });
 
-    if (!userExist) {
+    if (!userExist)
       throw new BadRequestException('Người dùng không tồn tại hoặc đã bị xoá');
-    }
 
     await this.prismaService.users.update({
       where: { id },
@@ -291,47 +288,41 @@ export class UserService {
     return { message: 'Xoá người dùng thành công' };
   }
 
-  async avatarLocal(id: number, file: Express.Multer.File) {
-    if (!file || !file.filename) {
-      throw new BadRequestException('Không có file được upload');
-    }
-    const user = await this.prismaService.users.findFirst({
-      where: { id, isDeleted: false },
+  async changePassword(id: number, oldPassword: string, newPassword: string) {
+    const user = await this.prismaService.users.findUnique({
+      where: { id },
     });
 
     if (!user) {
       throw new BadRequestException('Người dùng không tồn tại');
     }
 
-    if (user.avatar) {
-      const oldFilePath = path.join('./', 'public/images/avatar', user.avatar);
-      if (fs.existsSync(oldFilePath)) {
-        fs.unlinkSync(oldFilePath);
-      }
+    if (!user.password) {
+      throw new BadRequestException('Tài khoản chưa thiết lập mật khẩu');
     }
+
+    const isPasswordMatch = await bcrypt.compare(oldPassword, user.password);
+    if (!isPasswordMatch) {
+      throw new BadRequestException('Mật khẩu hiện tại không chính xác');
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
     await this.prismaService.users.update({
       where: { id },
-      data: { avatar: file.filename },
+      data: { password: hashedPassword },
     });
 
-    return {
-      message: 'Upload ảnh phòng thành công',
-      filename: file.filename,
-      imgUrl: `http://localhost:${PORT}/public/images/avatar/${file.filename}`,
-    };
+    return { message: 'Đổi mật khẩu thành công' };
   }
 
   async avatarCloudinary(id: number, file: Express.Multer.File) {
-    if (!file) {
-      throw new BadRequestException('Không có file được upload');
-    }
-
+    if (!file) throw new BadRequestException('Không có file được upload');
     const user = await this.prismaService.users.findFirst({
       where: { id, isDeleted: false },
     });
 
     if (!user) throw new BadRequestException('Người dùng không tồn tại');
-
     if (user.avatar) await this.cloudinaryService.deleteImage(user.avatar);
 
     const uploadResult: any = await this.cloudinaryService.uploadImage(

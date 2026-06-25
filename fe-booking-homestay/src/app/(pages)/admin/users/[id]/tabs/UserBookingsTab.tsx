@@ -1,8 +1,8 @@
 "use client";
 
 import { Pagination } from "@/app/(pages)/admin/_components/Pagination";
-import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
+import { Badge } from "@/_components/ui/badge";
+import { Card } from "@/_components/ui/card";
 import { formatDate } from "@/lib/utils/date";
 import { getBookingUser } from "@/services/admin/usersApi";
 import { Booking } from "@/types/booking";
@@ -13,7 +13,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   getStatusColorClasses,
   translateStatus,
-} from "../../../_utils/color-utils";
+} from "@/constants/booking-status";
 
 export default function UserReviewsTab({
   userId,
@@ -93,7 +93,7 @@ export default function UserReviewsTab({
 
                     <Badge
                       className={`${getStatusColorClasses(
-                        b.status
+                        b.status,
                       )} px-3 py-1 text-sm font-semibold rounded-full`}
                     >
                       {translateStatus(b.status)}

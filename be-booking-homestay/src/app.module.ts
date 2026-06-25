@@ -1,31 +1,35 @@
 import { Module } from '@nestjs/common';
-import { ServeStaticModule } from '@nestjs/serve-static';
-import { join } from 'path';
+import { ScheduleModule } from '@nestjs/schedule';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ProtectStrategy } from './common/guard/protect/protect.strategy';
+import { AmenityModule } from './modules/amenity/amenity.module';
+import { AppConfigsModule } from './modules/app-configs/app-configs.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { BlogModule } from './modules/blog/blog.module';
+import { BookingModule } from './modules/booking/booking.module';
+import { ChatModule } from './modules/chatbot/chatbot.module';
+import { ContactModule } from './modules/contact/contact.module';
+import { DashboardModule } from './modules/dashboard/dashboard.module';
+import { FavoriteModule } from './modules/favorite/favorite.module';
 import { LocationModule } from './modules/location/location.module';
 import { LoyaltyModule } from './modules/loyalty/loyalty.module';
+import { MessageModule } from './modules/message/message.module';
+import { NotificationModule } from './modules/notification/notification.module';
 import { OtpModule } from './modules/otp/otp.module';
+import { PayosModule } from './modules/payos/payos.module';
 import { PrismaService } from './modules/prisma/prisma.service';
+import { PromotionModule } from './modules/promotion/promotion.module';
+import { RecommendationModule } from './modules/recommendation/recommendation.module';
+import { ReviewModule } from './modules/review/review.module';
 import { RoomModule } from './modules/room/room.module';
 import { TokenModule } from './modules/token/token.module';
 import { UserModule } from './modules/user/user.module';
-import { BookingModule } from './modules/booking/booking.module';
-import { ReviewModule } from './modules/review/review.module';
-import { VNPayModule } from './modules/payment/vnpay.module';
-import { AmenityModule } from './modules/amenity/amenity.module';
-import { DashboardModule } from './modules/dashboard/dashboard.module';
-import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
     ScheduleModule.forRoot(),
-    ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', 'public'),
-      serveRoot: '/public',
-    }), // xem ảnh local được lưu trong thư mục public
+    AppConfigsModule,
     AuthModule,
     TokenModule,
     OtpModule,
@@ -35,11 +39,19 @@ import { ScheduleModule } from '@nestjs/schedule';
     RoomModule,
     BookingModule,
     ReviewModule,
-    VNPayModule,
+    PayosModule,
     AmenityModule,
     DashboardModule,
+    FavoriteModule,
+    RecommendationModule,
+    BlogModule,
+    NotificationModule,
+    ChatModule,
+    MessageModule,
+    PromotionModule,
+    ContactModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService, ProtectStrategy],
 })
-export class AppModule {}
+export class AppModule { }

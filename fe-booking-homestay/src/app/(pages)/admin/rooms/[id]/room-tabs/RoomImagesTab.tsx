@@ -1,7 +1,7 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Button } from "@/_components/ui/button";
+import { Card } from "@/_components/ui/card";
 import {
   deleteRoomImages,
   setMainImage,
@@ -54,7 +54,7 @@ export default function RoomImagesTab({ room, reload }: RoomImagesTabProps) {
 
   useEffect(() => {
     const sorted = [...room.images.gallery].sort(
-      (a, b) => Number(b.isMain) - Number(a.isMain)
+      (a, b) => Number(b.isMain) - Number(a.isMain),
     );
     setImages(sorted);
   }, [room]);
@@ -86,7 +86,7 @@ export default function RoomImagesTab({ room, reload }: RoomImagesTabProps) {
     setImages(reordered);
     await updateOrder(
       room.id,
-      reordered.map((i) => i.id)
+      reordered.map((i) => i.id),
     );
   }
 
@@ -99,7 +99,7 @@ export default function RoomImagesTab({ room, reload }: RoomImagesTabProps) {
 
   function toggleSelect(id: number) {
     setSelected((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
     );
   }
 

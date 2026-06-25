@@ -1,18 +1,17 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { UserAvatar } from "@/components/UserAvatar";
+import { Badge } from "@/_components/ui/badge";
+import { Card } from "@/_components/ui/card";
+import { Input } from "@/_components/ui/input";
+import { UserAvatar } from "@/_components/UserAvatar";
 import {
   getAllUserLoyalty,
   getLoyaltyLevels,
   LoyaltyLevel,
   LoyaltyUserProgram,
 } from "@/services/admin/loyaltyApi";
-import { ChevronDown, ChevronRight, ChevronUp, Search } from "lucide-react";
-import Link from "next/link";
+import { ChevronDown, ChevronUp, Search } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { Pagination } from "../../_components/Pagination";
@@ -24,6 +23,7 @@ export default function LoyaltyUsersTab({
 }: {
   refreshKey: number;
 }) {
+  const router = useRouter();
   const [users, setUsers] = useState<LoyaltyUserProgram[]>([]);
   const [levels, setLevels] = useState<LoyaltyLevel[]>([]);
   const [keyword, setKeyword] = useState("");
@@ -98,30 +98,30 @@ export default function LoyaltyUsersTab({
         !kw ||
         u.user.email.toLowerCase().includes(kw) ||
         fullName.includes(kw) ||
-        u.level.toLowerCase().includes(kw);
+        u.level.name.toLowerCase().includes(kw);
 
       const matchesLevel =
-        levelFilter === "ALL" || u.level.toUpperCase() === levelFilter;
+        levelFilter === "ALL" || u.level.name.toUpperCase() === levelFilter;
 
       return matchesKeyword && matchesLevel;
     });
     if (sortPoints) {
       data.sort((a, b) =>
-        sortPoints === "asc" ? a.points - b.points : b.points - a.points
+        sortPoints === "asc" ? a.points - b.points : b.points - a.points,
       );
     }
     if (sortBookings) {
       data.sort((a, b) =>
         sortBookings === "asc"
           ? a.totalBookings - b.totalBookings
-          : b.totalBookings - a.totalBookings
+          : b.totalBookings - a.totalBookings,
       );
     }
     if (sortNights) {
       data.sort((a, b) =>
         sortNights === "asc"
           ? a.totalNights - b.totalNights
-          : b.totalNights - a.totalNights
+          : b.totalNights - a.totalNights,
       );
     }
 
@@ -133,33 +133,35 @@ export default function LoyaltyUsersTab({
 
   return (
     <Card className="p-6 rounded-xl shadow-sm space-y-6">
-      <p className="text-base text-muted-foreground mt-1">
-        Danh sách cấp độ khách hàng thân thiết.
-      </p>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <p className="text-base font-medium text-slate-800 mt-1">
+          Danh sách cấp độ khách hàng thân thiết.
+        </p>
 
-      <div className="flex flex-col md:flex-row md:items-center gap-4">
-        <div className="relative max-w-sm flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 text-gray-400" />
-          <Input
-            className="pl-10 rounded-lg"
-            placeholder="Tìm email / tên / cấp độ..."
-            value={keyword}
-            onChange={(e) => setKeyword(e.target.value)}
-          />
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          <div className="relative w-full sm:w-80">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <Input
+              className="pl-10 rounded-lg border border-slate-300 bg-white hover:border-slate-400 focus:border-primary focus:ring-1 focus:ring-primary shadow-xs transition-all placeholder:text-slate-400"
+              placeholder="Tìm email / tên / cấp độ..."
+              value={keyword}
+              onChange={(e) => setKeyword(e.target.value)}
+            />
+          </div>
+
+          <select
+            value={levelFilter}
+            onChange={(e) => setLevelFilter(e.target.value)}
+            className="h-10 px-3 border border-slate-300 rounded-lg text-sm bg-white shadow-xs hover:border-slate-400 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all cursor-pointer"
+          >
+            <option value="ALL">Tất cả cấp độ</option>
+            {levels.map((lv) => (
+              <option key={lv.id} value={lv.name.toUpperCase()}>
+                {lv.name}
+              </option>
+            ))}
+          </select>
         </div>
-
-        <select
-          value={levelFilter}
-          onChange={(e) => setLevelFilter(e.target.value)}
-          className="h-10 px-3 border rounded-lg text-sm bg-white shadow-sm"
-        >
-          <option value="ALL">Tất cả cấp độ</option>
-          {levels.map((lv) => (
-            <option key={lv.id} value={lv.name.toUpperCase()}>
-              {lv.name}
-            </option>
-          ))}
-        </select>
       </div>
 
       <div className="overflow-x-auto rounded-xl border border-gray-200">
@@ -168,6 +170,10 @@ export default function LoyaltyUsersTab({
             <tr className="border-b bg-gray-50 text-left">
               <th className="py-3 px-4 font-medium text-gray-700">User</th>
               <th className="py-3 px-4 font-medium text-gray-700">Level</th>
+              <th className="py-3 px-4 font-medium text-gray-700">Quyền lợi</th>
+              <th className="py-3 px-4 font-medium text-gray-700">
+                Ngày thăng cấp
+              </th>
 
               <th
                 className="py-3 px-4 font-medium text-gray-700 cursor-pointer"
@@ -195,8 +201,6 @@ export default function LoyaltyUsersTab({
                   Số đêm {sortedIcon(sortNights)}
                 </div>
               </th>
-
-              <th className="py-3 px-4 w-10"></th>
             </tr>
           </thead>
 
@@ -204,7 +208,8 @@ export default function LoyaltyUsersTab({
             {paged.map((u) => (
               <tr
                 key={u.id}
-                className="border-b hover:bg-gray-50 transition-colors"
+                className="border-b hover:bg-primary/5 hover:text-slate-900 transition-colors cursor-pointer"
+                onClick={() => router.push(`/admin/users/${u.user.id}`)}
               >
                 <td className="py-4 px-4">
                   <div className="flex items-center gap-3">
@@ -223,32 +228,37 @@ export default function LoyaltyUsersTab({
                 </td>
 
                 <td className="py-4 px-4">
-                  <Badge className={levelColor(u.level)}>{u.level}</Badge>
+                  <Badge className={levelColor(u.level.name)}>
+                    {u.level.name}
+                  </Badge>
                 </td>
-
+                <td className="py-4 px-4">
+                  <div className="text-sm font-medium text-primary">
+                    Giảm {u.level.discountPercent}%
+                  </div>
+                  <div className="text-[10px] text-gray-400">
+                    Tối đa{" "}
+                    {Number(u.level.maxDiscountAmount).toLocaleString("vi-VN")}đ
+                  </div>
+                </td>
+                <td className="py-4 px-4 text-gray-500 text-xs">
+                  {u.lastUpgradeDate
+                    ? new Intl.DateTimeFormat("vi-VN").format(
+                        new Date(u.lastUpgradeDate),
+                      )
+                    : "—"}
+                </td>
                 <td className="py-4 px-4 font-semibold">
-                  {u.points.toLocaleString()}
+                  {Number(u.points).toLocaleString("vi-VN")}
                 </td>
                 <td className="py-4 px-4 text-center">{u.totalBookings}</td>
                 <td className="py-4 px-4 text-center">{u.totalNights}</td>
-
-                <td className="py-4 px-4 text-center">
-                  <Link href={`/admin/users/${u.user.id}`}>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="hover:bg-gray-200"
-                    >
-                      <ChevronRight className="w-4 h-4" />
-                    </Button>
-                  </Link>
-                </td>
               </tr>
             ))}
 
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={6} className="py-10 text-center text-gray-500">
+                <td colSpan={7} className="py-10 text-center text-gray-500">
                   Không tìm thấy người dùng phù hợp.
                 </td>
               </tr>

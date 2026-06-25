@@ -5,7 +5,7 @@ export interface RoomImage {
 }
 
 export interface Room {
-  id: string | number;
+  id: number;
   name: string;
   description?: string;
   price: number;
@@ -15,6 +15,7 @@ export interface Room {
     id?: string;
     fullAddress?: string;
     province?: string;
+    provinceId?: number;
     latitude?: string | number;
     longitude?: string | number;
   };
@@ -24,9 +25,15 @@ export interface Room {
     main: string;
     gallery: RoomImage[];
   };
+  room_images?: {
+    id: number;
+    imageUrl: string;
+    isMain: boolean;
+  }[];
   amenities?: Amenity[];
-  status?: "Available" | "Sold out";
+  status?: "Available" | "Sold out" | "MAINTENANCE" | string;
   host?: {
+    id: number;
     name: string;
     avatar: string;
     email: string;

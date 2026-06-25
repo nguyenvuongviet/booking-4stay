@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  ForbiddenException,
   Get,
   Param,
   ParseIntPipe,
@@ -12,21 +13,44 @@ import {
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Public } from 'src/common/decorator/public.decorator';
 import { Roles } from 'src/common/decorator/roles.decorator';
+import { Role } from '../user/dto/enum.dto';
+import { BookingCancelRefundService } from './booking-cancel-refund.service';
+import { BookingQueryService } from './booking-query.service';
 import { BookingService } from './booking.service';
 import { CancelBookingDto } from './dto/cancel-booking.dto';
 import { CreateBookingDto } from './dto/create-booking.dto';
+import { CreateManualBookingDto } from './dto/create-manual-booking.dto';
 import { ListBookingQuery } from './dto/list-booking.query';
+import { PreCheckDto } from './dto/preCheck-booking.dto';
 import { RoomAvailabilityDto } from './dto/room-availability.dto';
+import { UpdateBookingDto } from './dto/update-booking.dto';
 
 @ApiTags('bookings')
 @Controller('bookings')
 export class BookingController {
-  constructor(private readonly bookingService: BookingService) {}
+  constructor(
+    private readonly bookingService: BookingService,
+    private readonly queryService: BookingQueryService,
+    private readonly cancelRefundService: BookingCancelRefundService,
+  ) {}
 
   @Get('unavailable-days')
   @Public()
-  async getUnavailableDays(@Query('roomId', ParseIntPipe) roomId: number) {
-    return this.bookingService.getUnavailableDays(roomId);
+  async getUnavailableDays(
+    @Query('roomId', ParseIntPipe) roomId: number,
+    @Query('excludeBookingId') excludeBookingId?: number,
+  ) {
+    return this.queryService.getUnavailableDays(
+      roomId,
+      excludeBookingId ? +excludeBookingId : undefined,
+    );
+  }
+
+  @Post('/preview')
+  @ApiBearerAuth('AccessToken')
+  async preview(@Req() req: Request, @Body() dto: PreCheckDto) {
+    const user = req['user'];
+    return this.bookingService.previewBooking(+user.id, dto);
   }
 
   @Post('/')
@@ -40,7 +64,7 @@ export class BookingController {
   @ApiBearerAuth('AccessToken')
   async myBookings(@Req() req: Request, @Query() q: ListBookingQuery) {
     const user = req['user'];
-    return this.bookingService.listMine(+user.id, q);
+    return this.queryService.listMine(+user.id, q);
   }
 
   @Patch('/:id/cancel')
@@ -51,7 +75,47 @@ export class BookingController {
     @Req() req: Request,
   ) {
     const user = req['user'];
-    return this.bookingService.cancel(id, +user.id, user.role, dto);
+    const roles = user.user_roles?.map((ur) => ur.roles?.name) || [];
+    const role = roles.includes(Role.ADMIN) ? Role.ADMIN : Role.USER;
+    return this.cancelRefundService.cancel(id, +user.id, role, dto);
+  }
+
+  @Patch('/:id')
+  @ApiBearerAuth('AccessToken')
+  async update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateBookingDto,
+    @Req() req: Request,
+  ) {
+    const user = req['user'];
+    const roles = user.user_roles?.map((ur) => ur.roles?.name) || [];
+    const role = roles.includes(Role.ADMIN) ? Role.ADMIN : Role.USER;
+    return this.bookingService.update(id, +user.id, role, dto);
+  }
+
+  @Get('/:id/cancel-preview')
+  @ApiBearerAuth('AccessToken')
+  async cancelPreview(
+    @Param('id', ParseIntPipe) id: number,
+    @Req() req: Request,
+  ) {
+    const user = req['user'];
+    if (!user) throw new ForbiddenException('Bạn cần đăng nhập');
+    const roles = user.user_roles?.map((ur) => ur.roles?.name) || [];
+    const role = roles.includes(Role.ADMIN) ? Role.ADMIN : Role.USER;
+
+    return this.cancelRefundService.previewCancellation(id, +user.id, role);
+  }
+
+  @Patch('/:id/confirm-refund-difference')
+  @Roles(Role.ADMIN)
+  @ApiBearerAuth('AccessToken')
+  async confirmRefundDifference(
+    @Param('id', ParseIntPipe) id: number,
+    @Req() req: Request,
+  ) {
+    const user = req['user'];
+    return this.cancelRefundService.confirmRefundDifference(id, +user.id);
   }
 
   @Get('/:id')
@@ -61,20 +125,27 @@ export class BookingController {
     const isAdmin =
       user &&
       Array.isArray(user.user_roles) &&
-      user.user_roles.some((ur) => ur.roles && ur.roles.name === 'ADMIN');
-    const roleForService = isAdmin ? 'ADMIN' : null;
-    return this.bookingService.detail(
-      id,
-      user ? +user.id : null,
-      roleForService,
-    );
+      user.user_roles.some((ur) => ur.roles && ur.roles.name === Role.ADMIN);
+    const roleForService = isAdmin ? Role.ADMIN : null;
+    return this.queryService.detail(id, user ? +user.id : null, roleForService);
   }
 
   @Get('/admin/all')
-  @Roles('ADMIN')
+  @Roles(Role.ADMIN)
   @ApiBearerAuth('AccessToken')
   async adminList(@Query() q: ListBookingQuery) {
-    return this.bookingService.listAll(q);
+    return this.queryService.listAll(q);
+  }
+
+  @Post('/admin/manual')
+  @Roles(Role.ADMIN)
+  @ApiBearerAuth('AccessToken')
+  async createManualBooking(
+    @Req() req: Request,
+    @Body() dto: CreateManualBookingDto,
+  ) {
+    const user = req['user'];
+    return this.bookingService.adminCreateManualBooking(+user.id, dto);
   }
 
   @Get('rooms/:id/availability')
@@ -83,40 +154,46 @@ export class BookingController {
     @Param('id', ParseIntPipe) id: number,
     @Query() q: RoomAvailabilityDto,
   ) {
-    return this.bookingService.roomAvailability(id, q);
+    return this.queryService.roomAvailability(id, q);
   }
 
   @Get('rooms/:roomId/')
-  @Roles('ADMIN')
+  @Roles(Role.ADMIN)
   @ApiBearerAuth('AccessToken')
   async listByRoom(@Param('roomId', ParseIntPipe) roomId: number) {
-    return this.bookingService.listByRoom(roomId);
+    return this.queryService.listByRoom(roomId);
   }
 
   @Get('users/:userId')
-  @Roles('ADMIN')
+  @Roles(Role.ADMIN)
   @ApiBearerAuth('AccessToken')
   async listByUser(@Param('userId', ParseIntPipe) userId: number) {
-    return this.bookingService.listByUser(userId);
+    return this.queryService.listByUser(userId);
   }
 
-  @Patch('/:id/accept')
-  @Roles('ADMIN')
+  @Patch('/:id/admin-cancel')
+  @Roles(Role.ADMIN)
   @ApiBearerAuth('AccessToken')
-  async acceptBooking(
+  async adminCancelBooking(
     @Param('id', ParseIntPipe) id: number,
-    @Body() dto: { paidAmount: number },
+    @Body() dto: CancelBookingDto & { overrideRefundAmount?: number },
+    @Req() req: Request,
   ) {
-    return this.bookingService.adminAcceptBooking(id, dto);
+    const user = req['user'];
+    return this.cancelRefundService.adminForceCancel(id, +user.id, dto);
   }
 
-  @Patch('/:id/reject')
-  @Roles('ADMIN')
+  @Patch('/:id/refund')
+  @Roles(Role.ADMIN)
   @ApiBearerAuth('AccessToken')
-  async rejectBooking(
+  async confirmRefund(
     @Param('id', ParseIntPipe) id: number,
-    @Body() dto: CancelBookingDto,
+    @Body() dto: { refundAmount: number; refundEvidence?: string },
   ) {
-    return this.bookingService.adminRejectBooking(id, dto);
+    return this.cancelRefundService.adminConfirmRefund(
+      id,
+      dto.refundAmount,
+      dto.refundEvidence,
+    );
   }
 }

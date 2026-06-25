@@ -27,4 +27,14 @@ export class CreateProvinceDto {
     return value?.trim().toUpperCase();
   })
   code?: string;
+
+  @ApiPropertyOptional({ example: 10.776, description: 'Vĩ độ' })
+  @IsNumber()
+  @IsOptional()
+  latitude?: number;
+
+  @ApiPropertyOptional({ example: 106.701, description: 'Kinh độ' })
+  @IsNumber()
+  @IsOptional()
+  longitude?: number;
 }

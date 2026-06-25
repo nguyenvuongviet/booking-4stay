@@ -1,16 +1,19 @@
-import { Toaster as ShadcnToaster } from "@/components/ui/toaster";
-import { GOOGLE_CLIENT_ID } from "@/constants/app.constant";
+import { Toaster as ShadcnToaster } from "@/_components/ui/toaster";
+
+import ChatWidget from "@/_components/chatbot/ChatWidget";
+import GoogleAuthProviderWrapper from "@/_components/providers/GoogleAuthProviderWrapper";
 import { AuthProvider } from "@/context/auth-context";
+import { ChatProvider } from "@/context/ChatContext";
+import { LangProvider } from "@/context/lang-context";
+import { NotificationProvider } from "@/context/notification-context";
 import PageTransition from "@/styles/animations/PageTransition";
-import { GoogleOAuthProvider } from "@react-oauth/google";
 import type { Metadata } from "next";
-import { Fira_Mono, Lora,Lexend } from "next/font/google";
+import { Fira_Mono, Lexend, Lora } from "next/font/google";
 import { Toaster as HotToaster } from "react-hot-toast";
 import "./globals.css";
-import { LangProvider } from "@/context/lang-context";
 
 const lexend = Lexend({
- subsets: ["latin", "latin-ext"],
+  subsets: ["latin", "latin-ext"],
   variable: "--font-sans",
   weight: ["400", "500", "600", "700"],
 });
@@ -43,11 +46,18 @@ export default function RootLayout({
         className={`${lexend.variable} ${firaMono.variable} ${lora.variable} antialiased`}
       >
         <LangProvider>
-          <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID ?? ""}>
+          <GoogleAuthProviderWrapper>
             <PageTransition>
-              <AuthProvider>{children}</AuthProvider>
+              <AuthProvider>
+                <NotificationProvider>
+                  <ChatProvider>
+                    {children}
+                    <ChatWidget />
+                  </ChatProvider>
+                </NotificationProvider>
+              </AuthProvider>
             </PageTransition>
-          </GoogleOAuthProvider>
+          </GoogleAuthProviderWrapper>
           <ShadcnToaster />
           <HotToaster
             toastOptions={{ duration: 4000 }}

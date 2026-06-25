@@ -1,14 +1,14 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Button } from "@/_components/ui/button";
+import { Card } from "@/_components/ui/card";
 import {
   getLoyaltyLevels,
   LoyaltyLevel,
   toggleLevelActive,
 } from "@/services/admin/loyaltyApi";
-import { Pencil, Plus } from "lucide-react";
-import { useEffect, useState } from "react";
+import { ChevronDown, ChevronUp, Pencil, Plus } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { FancySwitch } from "../../_components/ui/fancy-switch";
 import LevelModal from "./LevelModal";
@@ -23,13 +23,32 @@ export default function LoyaltyLevelsTab({
   const [modalOpen, setModalOpen] = useState(false);
   const [editLevel, setEditLevel] = useState<LoyaltyLevel | null>(null);
 
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+
   const load = async () => {
     try {
       const data = await getLoyaltyLevels();
-      setLevels(data.sort((a, b) => a.minPoints - b.minPoints));
+      setLevels(data);
     } catch {
       toast.error("Không thể tải danh sách cấp độ");
     }
+  };
+
+  const toggleSort = () => {
+    setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+  };
+
+  const sortedLevels = useMemo(() => {
+    return [...levels].sort((a, b) => {
+      return sortOrder === "asc"
+        ? a.minPoints - b.minPoints
+        : b.minPoints - a.minPoints;
+    });
+  }, [levels, sortOrder]);
+
+  const sortedIcon = (order: "asc" | "desc") => {
+    if (order === "asc") return <ChevronUp className="w-4 h-4" />;
+    return <ChevronDown className="w-4 h-4" />;
   };
 
   useEffect(() => {
@@ -56,31 +75,52 @@ export default function LoyaltyLevelsTab({
           </div>
         </div>
 
-        <div className="overflow-x-auto rounded-xl border bg-white shadow-sm">
+        <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-muted/30 border-b text-muted-foreground">
-                <th className="py-3 px-4 text-left font-semibold">
+              <tr className="border-b bg-gray-50 text-left">
+                <th className="py-3 px-4 font-medium text-gray-700">
                   Tên Cấp độ
                 </th>
-                <th className="py-3 px-4 text-left font-semibold">
-                  Điểm tối thiểu
+                <th
+                  className="py-3 px-4 font-medium text-gray-700 cursor-pointer select-none"
+                  onClick={toggleSort}
+                >
+                  <div className="flex items-center gap-1">
+                    Điểm tối thiểu {sortedIcon(sortOrder)}
+                  </div>
                 </th>
-                <th className="py-3 px-4 text-left font-semibold">Mô tả</th>
-                <th className="py-3 px-4 text-center font-semibold">Active</th>
+                <th className="py-3 px-4 font-medium text-gray-700">
+                  Giảm giá (%)
+                </th>
+                <th className="py-3 px-4 font-medium text-gray-700">
+                  Giảm tối đa
+                </th>
+                <th className="py-3 px-4 font-medium text-gray-700">Mô tả</th>
+                <th className="py-3 px-4 font-medium text-gray-700 text-center">
+                  Active
+                </th>
                 <th className="py-3 px-4 text-center w-12"></th>
               </tr>
             </thead>
 
             <tbody>
-              {levels.map((lv) => (
+              {sortedLevels.map((lv) => (
                 <tr
                   key={lv.id}
                   className="border-b hover:bg-muted/10 transition-colors"
                 >
                   <td className="py-4 px-4 font-medium">{lv.name}</td>
-                  <td className="py-4 px-4">{lv.minPoints}</td>
-                  <td className="py-4 px-4 text-muted-foreground">
+                  <td className="py-4 px-4">
+                    {Number(lv.minPoints).toLocaleString("vi-VN")}
+                  </td>
+                  <td className="py-4 px-4 font-semibold text-primary">
+                    {lv.discountPercent}%
+                  </td>
+                  <td className="py-4 px-4">
+                    {Number(lv.maxDiscountAmount).toLocaleString("vi-VN")} đ
+                  </td>
+                  <td className="py-4 px-4 text-muted-foreground text-xs max-w-50 truncate">
                     {lv.description || "—"}
                   </td>
 

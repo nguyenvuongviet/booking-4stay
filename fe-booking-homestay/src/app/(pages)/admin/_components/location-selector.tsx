@@ -1,19 +1,19 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@/_components/ui/button";
 import {
   Command,
   CommandEmpty,
   CommandGroup,
+  CommandInput,
   CommandItem,
   CommandList,
-} from "@/components/ui/command";
-import { Input } from "@/components/ui/input";
+} from "@/_components/ui/command";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover";
+} from "@/_components/ui/popover";
 import { cn } from "@/lib/utils";
 import { Check, ChevronsUpDown, X } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -23,7 +23,6 @@ interface Props {
   value?: Partial<{
     countryId: any;
     provinceId: any;
-    districtId: any;
     wardId: any;
   }>;
   onChange: (val: any) => void;
@@ -39,25 +38,22 @@ export function LocationSelector({
     update,
     countries,
     provinces,
-    districts,
     wards,
   } = useLocationSelector(value);
 
   const [openStates, setOpenStates] = useState({
     countryId: false,
     provinceId: false,
-    districtId: false,
     wardId: false,
   });
   const [searchValue, setSearchValue] = useState("");
+
   useEffect(() => {
     if (!autoFocus) return;
     if (value) {
       if (value.countryId && !value.provinceId) {
         setOpenStates((prev) => ({ ...prev, provinceId: true }));
-      } else if (value.provinceId && !value.districtId) {
-        setOpenStates((prev) => ({ ...prev, districtId: true }));
-      } else if (value.districtId && !value.wardId) {
+      } else if (value.provinceId && !value.wardId) {
         setOpenStates((prev) => ({ ...prev, wardId: true }));
       }
     }
@@ -71,15 +67,18 @@ export function LocationSelector({
     };
     if (key === "countryId") {
       newLoc.provinceId = null;
-      newLoc.districtId = null;
       newLoc.wardId = null;
     } else if (key === "provinceId") {
-      newLoc.districtId = null;
-      newLoc.wardId = null;
-    } else if (key === "districtId") {
       newLoc.wardId = null;
     }
-    onChange(newLoc);
+
+    const selectedProv = provinces.find((p) => p.id === Number(newLoc.provinceId));
+    const selectedWard = wards.find((w) => w.id === Number(newLoc.wardId));
+    onChange({
+      ...newLoc,
+      _provinceName: selectedProv?.name || null,
+      _wardName: selectedWard?.name || null,
+    });
   };
 
   const handleSelect = (key: keyof typeof loc, id: number) => {
@@ -89,8 +88,6 @@ export function LocationSelector({
     if (key === "countryId") {
       setOpenStates((prev) => ({ ...prev, provinceId: true }));
     } else if (key === "provinceId") {
-      setOpenStates((prev) => ({ ...prev, districtId: true }));
-    } else if (key === "districtId") {
       setOpenStates((prev) => ({ ...prev, wardId: true }));
     }
   };
@@ -98,17 +95,12 @@ export function LocationSelector({
   const handleClear = (key: keyof typeof loc) => {
     handleChange(key, null);
     setSearchValue("");
-
     setOpenStates((prev) => ({ ...prev, [key]: false }));
 
     if (key === "countryId") {
       handleChange("provinceId", null);
-      handleChange("districtId", null);
       handleChange("wardId", null);
     } else if (key === "provinceId") {
-      handleChange("districtId", null);
-      handleChange("wardId", null);
-    } else if (key === "districtId") {
       handleChange("wardId", null);
     }
   };
@@ -118,13 +110,13 @@ export function LocationSelector({
     label: string,
     items: any[],
     selected: any,
-    isDisabled: boolean
+    isDisabled: boolean,
   ) => {
     const selectedObj = items.find((i) => i.id === Number(selected));
     const currentOpen = openStates[key];
 
     const filteredItems = items.filter((item) =>
-      item.name.toLowerCase().includes(searchValue.toLowerCase())
+      item.name.toLowerCase().includes(searchValue.toLowerCase()),
     );
 
     return (
@@ -137,7 +129,7 @@ export function LocationSelector({
         <div
           className={cn(
             "relative",
-            isDisabled && "opacity-50 pointer-events-none"
+            isDisabled && "opacity-50 pointer-events-none",
           )}
         >
           <PopoverTrigger asChild>
@@ -147,7 +139,7 @@ export function LocationSelector({
               aria-expanded={currentOpen}
               className={cn(
                 "w-full justify-between h-10",
-                isDisabled && "bg-muted"
+                isDisabled && "bg-muted",
               )}
               disabled={isDisabled}
               onClick={() => {
@@ -172,18 +164,19 @@ export function LocationSelector({
           )}
         </div>
 
-        <PopoverContent className="w-full p-0 max-w-[calc(100vw-32px)] sm:max-w-md">
-          <Command>
-            <div className="p-1 border-b">
-              <Input
-                placeholder={`Tìm kiếm ${label.toLowerCase()}...`}
-                value={searchValue}
-                onChange={(e) => setSearchValue(e.target.value)}
-                className="border-none focus-visible:ring-0"
-              />
-            </div>
+        <PopoverContent className="w-[300px] p-0" align="start">
+          <Command
+            shouldFilter={false}
+            className="w-full"
+            onWheel={(e) => e.stopPropagation()}
+          >
+            <CommandInput
+              placeholder={`Tìm kiếm ${label.toLowerCase()}...`}
+              value={searchValue}
+              onValueChange={setSearchValue}
+            />
 
-            <CommandList className="max-h-60 overflow-y-auto">
+            <CommandList className="max-h-[300px] overflow-y-auto overflow-x-hidden">
               {filteredItems.length === 0 ? (
                 <CommandEmpty>Không tìm thấy.</CommandEmpty>
               ) : (
@@ -197,7 +190,7 @@ export function LocationSelector({
                       <Check
                         className={cn(
                           "w-4 h-4 mr-2",
-                          selected === item.id ? "opacity-100" : "opacity-0"
+                          selected === item.id ? "opacity-100" : "opacity-0",
                         )}
                       />
                       {item.name}
@@ -213,34 +206,27 @@ export function LocationSelector({
   };
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
       {buildCombo(
         "countryId",
         "Chọn quốc gia",
         countries,
         loc.countryId,
-        false
+        false,
       )}
       {buildCombo(
         "provinceId",
         "Chọn tỉnh / thành",
         provinces,
         loc.provinceId,
-        !loc.countryId
-      )}
-      {buildCombo(
-        "districtId",
-        "Chọn quận / huyện",
-        districts,
-        loc.districtId,
-        !loc.provinceId
+        !loc.countryId,
       )}
       {buildCombo(
         "wardId",
         "Chọn phường / xã",
         wards,
         loc.wardId,
-        !loc.districtId
+        !loc.provinceId,
       )}
     </div>
   );

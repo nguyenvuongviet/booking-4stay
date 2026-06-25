@@ -1,12 +1,6 @@
 -- -------------------------------------------------------------
--- TablePlus 6.7.4(642)
---
--- https://tableplus.com/
---
--- Database: db_booking_homestay
--- Generation Time: 2025-11-30 13:05:06.4000
+-- Database Seed Data for Booking Homestay (Optimized & Idempotent)
 -- -------------------------------------------------------------
-
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -17,135 +11,84 @@
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
+-- 1. Roles
+INSERT IGNORE INTO `roles` (`id`, `name`, `description`, `isActive`) VALUES
+(1, 'USER', 'Người dùng đặt phòng', 1),
+(2, 'HOST', 'Chủ homestay quản lý phòng', 1),
+(3, 'ADMIN', 'Quản trị hệ thống', 1);
 
-INSERT INTO `amenities` (`id`, `name`, `description`, `category`, `isDeleted`, `deletedAt`, `createdAt`, `updatedAt`) VALUES
-(1, 'Wifi', 'Internet tốc độ cao', 'BASIC', 0, NULL, '2025-10-02 02:46:13', '2025-10-02 02:46:13'),
-(2, 'Air Conditioner', 'Điều hòa nhiệt độ', 'BASIC', 0, NULL, '2025-10-02 02:46:13', '2025-10-02 02:46:13'),
-(3, 'Heating', 'Máy sưởi', 'BASIC', 0, NULL, '2025-10-02 02:46:13', '2025-10-02 02:46:13'),
-(4, 'Television', 'TV màn hình phẳng', 'BASIC', 0, NULL, '2025-10-02 02:46:13', '2025-10-02 02:46:13'),
-(5, 'Refrigerator', 'Tủ lạnh', 'BASIC', 0, NULL, '2025-10-02 02:46:13', '2025-10-02 02:46:13'),
-(6, 'Microwave', 'Lò vi sóng', 'BASIC', 0, NULL, '2025-10-02 02:46:13', '2025-10-02 02:46:13'),
-(7, 'Kitchen', 'Khu bếp riêng', 'BASIC', 0, NULL, '2025-10-02 02:46:13', '2025-10-02 02:46:13'),
-(8, 'Washing Machine', 'Máy giặt', 'BASIC', 0, NULL, '2025-10-02 02:46:13', '2025-10-02 02:46:13'),
-(9, 'Iron', 'Bàn ủi', 'BASIC', 0, NULL, '2025-10-02 02:46:13', '2025-10-02 02:46:13'),
-(10, 'Hair Dryer', 'Máy sấy tóc', 'BASIC', 0, NULL, '2025-10-02 02:46:13', '2025-10-02 02:46:13'),
-(11, 'Shower', 'Vòi sen', 'BATHROOM', 0, NULL, '2025-10-02 02:46:13', '2025-10-02 02:46:13'),
-(12, 'Bath Tub', 'Bồn tắm', 'BATHROOM', 0, NULL, '2025-10-02 02:46:13', '2025-10-02 02:46:13'),
-(13, 'Toiletries', 'Đồ vệ sinh cá nhân miễn phí', 'BATHROOM', 0, NULL, '2025-10-02 02:46:13', '2025-10-02 02:46:13'),
-(14, 'Toilet Paper', 'Giấy vệ sinh', 'BATHROOM', 0, NULL, '2025-10-02 02:46:13', '2025-10-02 02:46:13'),
-(15, 'Wardrobe', 'Tủ quần áo', 'BEDROOM', 0, NULL, '2025-10-02 02:46:13', '2025-10-02 02:46:13'),
-(16, 'Desk', 'Bàn làm việc', 'BEDROOM', 0, NULL, '2025-10-02 02:46:13', '2025-10-02 02:46:13'),
-(17, 'Sofa Bed', 'Ghế sofa giường', 'BEDROOM', 0, NULL, '2025-10-02 02:46:13', '2025-10-02 02:46:13'),
-(18, 'Balcony', 'Ban công riêng', 'COMMON', 0, NULL, '2025-10-02 02:46:13', '2025-10-02 02:46:13'),
-(19, 'Parking', 'Bãi đỗ xe', 'COMMON', 0, NULL, '2025-10-02 02:46:13', '2025-10-02 02:46:13'),
-(20, 'Elevator', 'Thang máy', 'COMMON', 0, NULL, '2025-10-02 02:46:13', '2025-10-02 02:46:13'),
-(21, 'Swimming Pool', 'Hồ bơi', 'COMMON', 0, NULL, '2025-10-02 02:46:13', '2025-10-02 02:46:13'),
-(22, 'Gym', 'Phòng tập thể dục', 'COMMON', 0, NULL, '2025-10-02 02:46:13', '2025-10-02 02:46:13'),
-(23, 'Breakfast', 'Bữa sáng miễn phí', 'COMMON', 0, NULL, '2025-10-02 02:46:13', '2025-10-02 02:46:13'),
-(24, 'Coffee Maker', 'Máy pha cà phê', 'COMMON', 0, NULL, '2025-10-02 02:46:13', '2025-10-02 02:46:13'),
-(25, 'Fan', 'Quạt máy', 'COMMON', 0, NULL, '2025-10-02 02:46:13', '2025-10-02 02:46:13');
+-- 2. Users (Password: 123456)
+INSERT IGNORE INTO `users` (`id`, `email`, `password`, `firstName`, `lastName`, `phoneNumber`, `isVerified`, `isActive`, `provider`, `avatar`) VALUES
+(1, 'admin@gmail.com', '$2b$10$ch/gepo7MiSD7MCZ9PpW0uSI.upAxnfdSvrbMLmrtzhY7.tZ0fKj6', 'Admin', 'Vuong Viet', '0901234567', 1, 1, 'LOCAL', '4stay/avatars/j4slezbrbdehcomrhje8'),
+(2, 'user@gmail.com', '$2b$10$ch/gepo7MiSD7MCZ9PpW0uSI.upAxnfdSvrbMLmrtzhY7.tZ0fKj6', 'Customer', 'Demo', '0907654321', 1, 1, 'LOCAL', '4stay/avatars/j4slezbrbdehcomrhje8'),
+(3, 'host@gmail.com', '$2b$10$ch/gepo7MiSD7MCZ9PpW0uSI.upAxnfdSvrbMLmrtzhY7.tZ0fKj6', 'Host', 'Verified', '0900000000', 1, 1, 'LOCAL', '4stay/avatars/j4slezbrbdehcomrhje8');
 
-INSERT INTO `levels` (`id`, `name`, `minPoints`, `description`, `isActive`) VALUES
-(1, 'BRONZE', 0, 'Cấp độ cơ bản', 0),
-(2, 'PLATINU', 1001, 'Khách hàng cao cấp', 1),
-(3, 'GOLD', 500, 'Khách hàng VIP', 1),
-(4, 'PLATINUM', 1000, 'Khách hàng cao cấp', 1);
+-- 3. User Roles
+INSERT IGNORE INTO `user_roles` (`userId`, `roleId`) VALUES (1, 1), (1, 3), (2, 1), (3, 1), (3, 2);
 
-INSERT INTO `location_countries` (`id`, `name`, `code`, `createdAt`, `updatedAt`) VALUES
-(1, 'Việt Nam', 'VN', '2025-11-22 10:52:46', '2025-11-22 10:52:46');
+-- 4. Levels
+INSERT IGNORE INTO `levels` (`id`, `name`, `minPoints`, `discountPercent`, `maxDiscountAmount`) VALUES
+(1, 'BRONZE', 0, 0.00, 0.00),
+(2, 'SILVER', 200, 5.00, 200000.00),
+(3, 'GOLD', 500, 10.00, 500000.00),
+(4, 'PLATINUM', 1000, 15.00, 1000000.00);
 
-INSERT INTO `location_districts` (`id`, `provinceId`, `name`, `code`, `isDeleted`, `deletedAt`, `createdAt`, `updatedAt`) VALUES
-(1, 1, 'Quận 1', 'Q1', 0, NULL, '2025-11-22 10:52:46', '2025-11-22 10:52:46'),
-(2, 2, 'Ba Đình', 'BADINH', 0, NULL, '2025-11-22 10:52:46', '2025-11-22 10:52:46'),
-(3, 3, 'Sơn Trà', 'SONTRA', 0, NULL, '2025-11-22 10:52:46', '2025-11-22 10:52:46');
+-- 5. Loyalty Program
+INSERT INTO `loyalty_program` (`userId`, `levelId`, `points`) VALUES (1, 4, 2400), (2, 1, 0), (3, 1, 0)
+ON DUPLICATE KEY UPDATE `levelId` = VALUES(`levelId`), `points` = VALUES(`points`);
 
-INSERT INTO `location_provinces` (`id`, `countryId`, `name`, `code`, `imageUrl`, `isDeleted`, `deletedAt`, `createdAt`, `updatedAt`) VALUES
-(1, 1, 'Hồ Chí Minh', 'HCM', '4stay/provinces/Hồ Chí Minh/zzg4ynrn1sp2g154rdya', 0, NULL, '2025-11-22 10:52:46', '2025-11-22 05:51:48'),
-(2, 1, 'Hà Nội', 'HN', '4stay/provinces/Hà Nội/ehb2bk67um4bizdluqkh', 0, NULL, '2025-11-22 10:52:46', '2025-11-22 05:52:00'),
-(3, 1, 'Đà Nẵng', 'DN', '4stay/provinces/Đà Nẵng/bmghsvpfguwfyybvx2nd', 0, NULL, '2025-11-22 10:52:46', '2025-11-22 05:52:12');
-
-INSERT INTO `location_wards` (`id`, `districtId`, `name`, `code`, `isDeleted`, `deletedAt`, `createdAt`, `updatedAt`) VALUES
-(1, 1, 'Nguyễn Thái Bình', 'NTB', 0, NULL, '2025-11-22 10:52:46', '2025-11-22 10:52:46'),
-(2, 2, 'Phúc Xá', 'PHUCXA', 0, NULL, '2025-11-22 10:52:46', '2025-11-22 10:52:46'),
-(3, 3, 'An Hải Bắc', 'AHB', 0, NULL, '2025-11-22 10:52:46', '2025-11-22 10:52:46');
-
-INSERT INTO `loyalty_program` (`id`, `userId`, `levelId`, `totalBookings`, `totalNights`, `points`, `lastUpgradeDate`) VALUES
-(1, 1, 1, 0, 0, 0, NULL);
-
-INSERT INTO `otp_codes` (`id`, `userId`, `email`, `otp`, `expiresAt`, `isUsed`) VALUES
-(1, 1, 'admin@gmail.com', '318062', '2025-10-02 03:46:39', 1);
-
-INSERT INTO `payment_methods` (`id`, `name`, `description`, `isActive`) VALUES
+-- 6. Payment Methods
+INSERT IGNORE INTO `payment_methods` (`id`, `name`, `description`, `isActive`) VALUES
 (1, 'CASH', 'Thanh toán tiền mặt', 1),
-(2, 'CREDIT_CARD', 'Thanh toán bằng thẻ tín dụng', 1),
-(3, 'PAYPAL', 'Thanh toán qua PayPal', 1),
-(4, 'MOMO', 'Thanh toán qua ví MoMo', 1),
-(5, 'VNPAY', 'Thanh toán qua VNPay', 1);
+(2, 'BANK_TRANSFER', 'Chuyển khoản ngân hàng', 1);
 
-INSERT INTO `roles` (`id`, `name`, `description`, `isActive`, `createdAt`, `updatedAt`) VALUES
-(1, 'USER', 'Người dùng đặt phòng', 1, '2025-10-02 02:46:12', '2025-10-02 02:46:12'),
-(2, 'HOST', 'Chủ homestay quản lý phòng', 0, '2025-10-02 02:46:12', '2025-10-02 02:46:12'),
-(3, 'ADMIN', 'Quản trị hệ thống', 1, '2025-10-02 02:46:12', '2025-10-02 02:46:12');
+-- 7. Amenities
+INSERT IGNORE INTO `amenities` (`id`, `name`, `category`) VALUES
+(1, 'Wifi', 'BASIC'), (2, 'Air Conditioner', 'BASIC'), (3, 'Heating', 'BASIC'),
+(4, 'Television', 'BASIC'), (5, 'Refrigerator', 'BASIC'), (6, 'Kitchen', 'BASIC'),
+(7, 'Washing Machine', 'BASIC'), (8, 'Shower', 'BATHROOM'), (9, 'Bath Tub', 'BATHROOM'),
+(10, 'Wardrobe', 'BEDROOM'), (11, 'Desk', 'BEDROOM'), (12, 'Balcony', 'COMMON'),
+(13, 'Parking', 'COMMON'), (14, 'Swimming Pool', 'COMMON'), (15, 'Gym', 'COMMON');
 
-INSERT INTO `room_amenities` (`id`, `roomId`, `amenityId`) VALUES
-(1, 1, 1),
-(2, 1, 2),
-(3, 1, 4),
-(4, 1, 7),
-(55, 1, 11),
-(56, 2, 1),
-(57, 2, 2),
-(58, 2, 3),
-(59, 2, 4),
-(60, 2, 12),
-(61, 3, 1),
-(62, 3, 2),
-(63, 3, 5),
-(64, 3, 7),
-(65, 3, 14),
-(66, 4, 1),
-(67, 4, 3),
-(68, 4, 4),
-(69, 4, 7),
-(70, 4, 15),
-(71, 5, 2),
-(72, 5, 3),
-(73, 5, 6),
-(74, 5, 8),
-(75, 5, 16),
-(76, 6, 1),
-(77, 6, 2),
-(78, 6, 4),
-(79, 6, 9),
-(80, 6, 11),
-(81, 7, 3),
-(82, 7, 5),
-(83, 7, 7),
-(84, 7, 12),
-(85, 7, 18),
-(86, 8, 1),
-(87, 8, 4),
-(88, 8, 6),
-(89, 8, 10),
-(90, 8, 20),
-(91, 9, 2),
-(92, 9, 3),
-(93, 9, 7),
-(94, 9, 15),
-(95, 9, 21),
-(96, 10, 1),
-(97, 10, 5),
-(98, 10, 8),
-(99, 10, 12),
-(100, 10, 22);
+-- 8. Locations
+INSERT IGNORE INTO `location_countries` (`id`, `name`, `code`) VALUES (1, 'Việt Nam', 'VN');
 
-INSERT INTO `room_beds` (`id`, `roomId`, `type`, `quantity`) VALUES
-(1, 1, 'QUEEN', 1),
-(2, 1, 'SOFA_BED', 1);
+-- 9. Rooms
+INSERT IGNORE INTO `rooms` (`id`, `hostId`, `provinceId`, `wardId`, `street`, `name`, `description`, `price`, `adultCapacity`, `childCapacity`, `latitude`, `longitude`) VALUES
+(1, 1, 28, 2631, '47 Nguyễn Thái Bình', '4Stay Central Saigon', 'Căn hộ ngay trung tâm Q1', 1200000.00, 2, 1, 10.7694452, 106.7005728),
+(2, 1, 1, 8, '12 Hoàng Hoa Thám', '4Stay Hanoi View', 'Phòng đôi view Hồ Tây', 950000.00, 2, 0, 21.0425013, 105.8159563),
+(3, 1, 21, 1860, '5 Trần Hưng Đạo', '4Stay Da Nang Riverside', 'Phòng sát sông Hàn', 880000.00, 2, 1, 16.0607904, 108.2303821),
+(4, 1, 28, 2631, '22 Lê Lợi', 'Saigon Luxury Loft', 'Căn hộ kiểu loft sang trọng', 1500000.00, 3, 1, 10.7726018, 106.6994504),
+(5, 1, 1, 8, '88 Thụy Khuê', 'Hanoi Old Quarter Home', 'Phòng ấm cúng trong phố cổ', 780000.00, 2, 1, 21.0417658, 105.8260564),
+(6, 1, 21, 1860, '19 Võ Văn Kiệt', 'Da Nang Beachfront', 'Phòng hướng biển Mỹ Khê', 1100000.00, 2, 1, 16.0631470, 108.2419488),
+(7, 1, 28, 2630, '10 Nguyễn Huệ', 'Saigon Walking Street Studio', 'Studio ngay phố đi bộ', 1350000.00, 2, 0, 10.7734609, 106.7040780),
+(8, 1, 1, 58, '55 Nguyễn Trãi', 'Hanoi Cozy Apartment', 'Căn hộ mini trung tâm', 650000.00, 2, 1, 20.9869283, 105.7970533),
+(9, 1, 21, 1856, '77 Bạch Đằng', 'Da Nang River Suite', 'Suite cao cấp sông Hàn', 1600000.00, 3, 1, 16.0738682, 108.2246250),
+(10, 1, 28, 2631, '320 Lý Tự Trọng', 'Saigon City View', 'Phòng view thành phố tuyệt đẹp', 900000.00, 2, 1, 10.7753297, 106.6985971);
 
-INSERT INTO `room_images` (`id`, `roomId`, `imageUrl`, `isMain`, `position`, `createdAt`, `updatedAt`) VALUES
-(1, 1, '4stay/rooms/Phòng Deluxe view biển/e314m9rrli3epik3yfbj', 1, 1, '2025-10-26 00:42:49', '2025-10-26 00:42:49'),
-(2, 1, '4stay/rooms/Phòng Deluxe view biển/agg7tneya7dcreneomo9', 0, 2, '2025-10-26 00:42:49', '2025-10-26 00:42:49'),
+-- 10. Room Beds
+INSERT IGNORE INTO `room_beds` (`roomId`, `type`, `quantity`) VALUES
+(1, 'QUEEN', 1), (1, 'SOFA_BED', 1), (2, 'KING', 1), (3, 'DOUBLE', 1), (3, 'SINGLE', 1),
+(4, 'KING', 1), (5, 'QUEEN', 1), (6, 'KING', 1), (7, 'QUEEN', 1), (8, 'DOUBLE', 1),
+(9, 'KING', 2), (10, 'QUEEN', 1);
+
+-- 11. Room Amenities
+INSERT IGNORE INTO `room_amenities` (`roomId`, `amenityId`) VALUES
+(1,1), (1,2), (1,5), (1,6), (1,8),
+(2,1), (2,2), (2,4), (2,8),
+(3,1), (3,2), (3,12), (3,13),
+(4,1), (4,2), (4,15),
+(5,1), (5,2), (5,10),
+(6,1), (6,2), (6,8), (6,12),
+(7,1), (7,2), (7,4),
+(8,1), (8,2), (8,5),
+(9,1), (9,2), (9,14),
+(10,1), (10,2), (10,11);
+
+-- 12. Room Images
+INSERT IGNORE INTO `room_images` (`id`, `roomId`, `imageUrl`, `isMain`, `position`, `createdAt`, `updatedAt`) VALUES
+(1, 1, '4stay/rooms/4Stay Central Saigon/bequ4bfvubsiki7zredc', 1, 1, '2025-10-26 00:42:49', '2025-10-26 00:42:49'),
+(2, 1, '4stay/rooms/4Stay Central Saigon/xszxsgwtktrh2iw0abax', 0, 2, '2025-10-26 00:42:49', '2025-10-26 00:42:49'),
 (3, 4, '4stay/rooms/Saigon Luxury Loft/rc7m8hcphjma2nenxdno', 1, 1, '2025-11-29 12:48:35', '2025-11-29 12:48:35'),
 (4, 4, '4stay/rooms/Saigon Luxury Loft/jroulxfxuyqlmz1ocnbe', 0, 2, '2025-11-29 12:48:35', '2025-11-29 12:48:35'),
 (5, 4, '4stay/rooms/Saigon Luxury Loft/a2fkpib2cjjii7rg0bmj', 0, 3, '2025-11-29 12:48:35', '2025-11-29 12:48:35'),
@@ -219,24 +162,64 @@ INSERT INTO `room_images` (`id`, `roomId`, `imageUrl`, `isMain`, `position`, `cr
 (73, 9, '4stay/rooms/Da Nang River Suite/rw975vqazc2b1omopkhg', 0, 6, '2025-11-29 12:55:04', '2025-11-29 12:55:04'),
 (74, 9, '4stay/rooms/Da Nang River Suite/jaw7nd8osogc8bwmrtn9', 0, 7, '2025-11-29 12:55:04', '2025-11-29 12:55:04');
 
-INSERT INTO `rooms` (`id`, `hostId`, `countryId`, `provinceId`, `districtId`, `wardId`, `street`, `fullAddress`, `name`, `description`, `price`, `adultCapacity`, `childCapacity`, `status`, `rating`, `reviewCount`, `isDeleted`, `deletedAt`, `createdAt`, `updatedAt`) VALUES
-(1, 1, 1, 1, 1, 1, '47/57 Nguyễn Thái Bình', '47/57 Nguyễn Thái Bình, Nguyễn Thái Bình, Quận 1, Hồ Chí Minh, Việt Nam', '4Stay Central Saigon', 'Căn hộ cao cấp ngay trung tâm Quận 1, thiết kế hiện đại, đầy đủ tiện nghi với phòng khách rộng rãi, bếp riêng, ban công hướng phố. Gần các điểm tham quan nổi tiếng, nhà hàng, quán cà phê và trung tâm thương mại. Thích hợp cho gia đình hoặc nhóm bạn muốn trải nghiệm trọn vẹn thành phố Hồ Chí Minh.', 1200000.00, 2, 1, 'AVAILABLE', 5.0, 7, 0, NULL, '2025-11-22 10:52:46', '2025-11-29 19:57:40'),
-(2, 1, 1, 2, 2, 2, '12 Hoàng Hoa Thám', '12 Hoàng Hoa Thám, Phúc Xá, Ba Đình, Hà Nội, Việt Nam', '4Stay Hanoi View', 'Phòng đôi view Hồ Tây yên tĩnh, thiết kế ấm cúng, nội thất tiện nghi. Cửa sổ lớn đón nắng sớm, không gian thoáng đãng, lý tưởng cho kỳ nghỉ lãng mạn hoặc công tác. Gần các di tích lịch sử, nhà hàng truyền thống và phố cổ Hà Nội.', 950000.00, 2, 0, 'AVAILABLE', 4.6, 5, 0, NULL, '2025-11-22 10:52:46', '2025-11-29 19:57:40'),
-(3, 1, 1, 3, 3, 3, '5 Trần Hưng Đạo', '5 Trần Hưng Đạo, An Hải Bắc, Sơn Trà, Đà Nẵng, Việt Nam', '4Stay Da Nang Riverside', 'Phòng sát sông Hàn, gần cầu Rồng, thiết kế hiện đại, sáng sủa với ban công nhìn ra sông. Nội thất đầy đủ với giường thoải mái, phòng tắm tiện nghi. Phù hợp cho cả khách du lịch và công tác, dễ dàng di chuyển đến các điểm tham quan nổi tiếng.', 880000.00, 2, 1, 'AVAILABLE', 4.2, 5, 0, NULL, '2025-11-22 10:52:46', '2025-11-29 19:57:40'),
-(4, 1, 1, 1, 1, 1, '22 Lê Lợi', '22 Lê Lợi, Nguyễn Thái Bình, Quận 1, Hồ Chí Minh, Việt Nam', 'Saigon Luxury Loft', 'Căn hộ kiểu loft cực sang trọng, thiết kế mở với trần cao, phòng khách rộng rãi và khu bếp tiện nghi. View thành phố tuyệt đẹp, nội thất hiện đại, phù hợp cho gia đình hoặc nhóm bạn. Gần các trung tâm thương mại, nhà hàng cao cấp và phố đi bộ.', 1500000.00, 3, 1, 'AVAILABLE', 4.6, 7, 0, NULL, '2025-11-29 18:50:19', '2025-11-29 20:06:27'),
-(5, 1, 1, 2, 2, 2, '88 Thụy Khuê', '88 Thụy Khuê, Phúc Xá, Ba Đình, Hà Nội, Việt Nam', 'Hanoi Old Quarter Home', 'Phòng ấm cúng trong phố cổ, kết hợp nét truyền thống và hiện đại. Nội thất đầy đủ, có bếp nhỏ, không gian yên tĩnh, gần các quán ăn, cửa hàng lưu niệm. Thích hợp cho du khách muốn khám phá văn hóa và ẩm thực Hà Nội.', 780000.00, 2, 1, 'AVAILABLE', 4.7, 7, 0, NULL, '2025-11-29 18:50:19', '2025-11-29 20:06:27'),
-(6, 1, 1, 3, 3, 3, '19 Võ Văn Kiệt', '19 Võ Văn Kiệt, An Hải Bắc, Sơn Trà, Đà Nẵng, Việt Nam', 'Da Nang Beachfront', 'Phòng hướng biển Mỹ Khê, thiết kế hiện đại, ban công nhìn ra bãi biển. Nội thất tiện nghi, phòng tắm đầy đủ tiện ích, phù hợp cho kỳ nghỉ thư giãn, tắm biển và thưởng thức cảnh bình minh trên biển.', 1100000.00, 2, 1, 'AVAILABLE', 4.6, 7, 0, NULL, '2025-11-29 18:50:19', '2025-11-29 20:06:27'),
-(7, 1, 1, 1, 1, 1, '10 Nguyễn Huệ', '10 Nguyễn Huệ, Nguyễn Thái Bình, Quận 1, Hồ Chí Minh, Việt Nam', 'Saigon Walking Street Studio', 'Studio ngay phố đi bộ Nguyễn Huệ, thiết kế nhỏ gọn nhưng tiện nghi đầy đủ. View đường phố sầm uất, thuận tiện tham quan các quán cà phê, nhà hàng, trung tâm mua sắm. Lý tưởng cho các cặp đôi hoặc khách công tác.', 1350000.00, 2, 0, 'AVAILABLE', 4.7, 3, 0, NULL, '2025-11-29 18:50:19', '2025-11-29 19:58:08'),
-(8, 1, 1, 2, 2, 2, '55 Nguyễn Trãi', '55 Nguyễn Trãi, Phúc Xá, Ba Đình, Hà Nội, Việt Nam', 'Hanoi Cozy Apartment', 'Căn hộ mini tiện nghi tại trung tâm Hà Nội, thiết kế hiện đại, phòng ngủ và phòng khách đầy đủ tiện ích. Gần các quán ăn, cửa hàng, thuận tiện di chuyển đến các điểm tham quan nổi tiếng. Phù hợp cho khách công tác hoặc du lịch ngắn ngày.', 650000.00, 2, 1, 'AVAILABLE', 4.2, 0, 0, NULL, '2025-11-29 18:50:19', '2025-11-29 19:57:40'),
-(9, 1, 1, 3, 3, 3, '77 Bạch Đằng', '77 Bạch Đằng, An Hải Bắc, Sơn Trà, Đà Nẵng, Việt Nam', 'Da Nang River Suite', 'Suite cao cấp nhìn sông Hàn, thiết kế rộng rãi, trang bị nội thất hiện đại, ban công thoáng mát. Thích hợp cho gia đình hoặc nhóm bạn muốn trải nghiệm kỳ nghỉ sang trọng. Gần các nhà hàng, khu giải trí và bãi biển nổi tiếng.', 1600000.00, 3, 1, 'AVAILABLE', 4.0, 3, 0, NULL, '2025-11-29 18:50:19', '2025-11-29 19:57:40'),
-(10, 1, 1, 1, 1, 1, '320 Lý Tự Trọng', '320 Lý Tự Trọng, Nguyễn Thái Bình, Quận 1, Hồ Chí Minh, Việt Nam', 'Saigon City View', 'Phòng view thành phố tuyệt đẹp, thiết kế ấm cúng, đầy đủ tiện nghi với giường thoải mái, bàn làm việc, phòng tắm riêng. Gần các trung tâm thương mại, quán cà phê, thuận tiện cho cả khách du lịch và công tác.', 900000.00, 2, 1, 'AVAILABLE', 4.5, 2, 0, NULL, '2025-11-29 18:50:19', '2025-11-29 19:57:40');
 
-INSERT INTO `user_roles` (`id`, `userId`, `roleId`) VALUES
+-- 13. Bookings
+INSERT IGNORE INTO `bookings` (`id`, `userId`, `roomId`, `guestFullName`, `guestEmail`, `guestPhoneNumber`, `checkIn`, `checkOut`, `adults`, `children`, `rawTotalPrice`, `totalPrice`, `paidAmount`, `status`, `paymentMethod`) VALUES
+(1, 1, 1, 'Demo Customer', 'user@gmail.com', '0907654321', '2025-11-01', '2025-11-03', 2, 0, 2400000.00, 2400000.00, 2400000.00, 'CHECKED_OUT', 'BANK_TRANSFER');
+
+-- 14. Reviews
+INSERT IGNORE INTO `reviews` (`bookingId`, `userId`, `rating`, `comment`) VALUES (1, 2, 5.0, 'Tuyệt vời, sạch sẽ!');
+
+-- 15. Blog Categories
+INSERT IGNORE INTO `blog_categories` (`id`, `name`, `slug`, `description`, `position`, `isActive`) VALUES
+(1, 'Cẩm nang du lịch', 'cam-nang-du-lich', 'Cẩm nang hướng dẫn du lịch tự túc từ A-Z', 1, 1),
+(2, 'Ẩm thực', 'am-thuc', 'Khám phá ẩm thực độc đáo tại các homestay', 2, 1),
+(3, 'Review Homestay', 'review-homestay', 'Đánh giá chân thực các căn homestay nổi bật', 3, 1),
+(4, 'Kinh nghiệm đặt phòng', 'kinh-nghiem-dat-phong', 'Mẹo săn deal tốt, tránh lừa đảo khi đặt phòng', 4, 1),
+(5, 'Sự kiện & Lễ hội', 'su-kien-le-hoi', 'Các lễ hội văn hóa đặc sắc tại địa phương', 5, 1);
+
+-- 16. Blog Tags
+INSERT IGNORE INTO `blog_tags` (`id`, `name`, `slug`) VALUES
+(1, 'Đà Lạt', 'da-lat'),
+(2, 'Hà Nội', 'ha-noi'),
+(3, 'Đà Nẵng', 'da-nang'),
+(4, 'Sài Gòn', 'sai-gon'),
+(5, 'Review', 'review'),
+(6, 'Ẩm thực đường phố', 'am-thuc-duong-pho'),
+(7, 'Homestay Đẹp', 'homestay-dep');
+
+-- 17. Blog Posts
+INSERT IGNORE INTO `blog_posts` (`id`, `categoryId`, `authorId`, `provinceId`, `title`, `slug`, `excerpt`, `content`, `thumbnailUrl`, `metaTitle`, `metaDescription`, `metaKeywords`, `status`, `isFeatured`, `viewCount`, `readingTime`, `publishedAt`) VALUES
+(1, 1, 1, 28, 'Top 5 món ăn lề đường phải thử khi ghé thăm Sài Gòn', 'top-5-mon-an-le-duong-phai-thu-khi-ghe-tham-sai-gon', 'Sài Gòn không chỉ nổi tiếng với những tòa nhà chọc trời mà còn có nền ẩm thực đường phố vô cùng đa dạng. Cùng 4Stay khám phá top 5 món ngon đường phố không thể bỏ lỡ tại TPHCM.', '<h2>Sài Gòn - Thiên đường ẩm thực đường phố</h2><p>Nếu bạn lần đầu đến Sài Gòn, hãy chuẩn bị một chiếc bụng đói vì ẩm thực nơi đây sẽ khiến bạn mê mẩn. Từ bánh mì Huỳnh Hoa nổi tiếng đến hủ tiếu gõ lề đường, mỗi món ăn đều mang hương vị rất riêng.</p><h3>1. Cơm tấm Sài Gòn</h3><p>Món ăn huyền thoại có thể ăn từ sáng đến tối muộn. Hạt cơm tấm tơi xốp ăn kèm sườn nướng thơm phức, bì chả và nước mắm chua ngọt sệt sệt đặc trưng.</p><h3>2. Bánh tráng trộn</h3><p>Món ăn vặt quốc dân của giới trẻ Sài Thành. Bánh tráng cắt nhỏ trộn đều cùng muối tôm, tắc, trứng cút, khô bò, xoài xanh và rau răm.</p><p>Đặt phòng tại <strong>4Stay Central Saigon</strong> để thuận tiện đi bộ khám phá các phố ẩm thực sầm uất tại Quận 1 nhé!</p>', 'https://res.cloudinary.com/nguyenvuongviet/image/upload/v1779777922/4stay/blogs/qysrhyrbaxbd63ehhbru.png', 'Top 5 ẩm thực đường phố Sài Gòn không thể bỏ qua | 4Stay', 'Khám phá danh sách các món ăn đường phố ngon nhất tại TPHCM cùng kinh nghiệm đi lại chi tiết từ 4Stay.', 'ẩm thực sài gòn, ăn vặt quận 1, du lịch tphcm, cơm tấm sài gòn', 'PUBLISHED', 1, 142, 5, '2026-05-24 15:00:00'),
+(2, 3, 1, 1, 'Review chi tiết căn hộ 4Stay Hanoi View ven Hồ Tây', 'review-chi-tiet-can-ho-4stay-hanoi-view-ven-ho-tay', 'Bạn đang tìm kiếm một không gian yên bình ven Hồ Tây cho chuyến đi Hà Nội sắp tới? Hãy xem bài review chi tiết về tiện ích, không gian và trải nghiệm tại 4Stay Hanoi View nhé.', '<h2>Trải nghiệm yên bình giữa lòng thủ đô</h2><p>Hà Nội có những ngày rất vội vã, nhưng khi bạn bước vào <strong>4Stay Hanoi View</strong>, mọi ồn ào dường như lùi lại phía sau. Tọa lạc trên đường Hoàng Hoa Thám, căn hộ sở hữu ban công rộng lớn hướng thẳng ra mặt nước Hồ Tây thơ mộng.</p><h3>Thiết kế và Tiện ích</h3><p>Căn hộ được thiết kế theo phong cách tối giản Nhật Bản với tông màu gỗ ấm áp. Giường ngủ cỡ King siêu êm ái cùng hệ cửa kính chạm trần giúp bạn đón ánh bình minh mỗi sáng sớm.</p><p>Từ homestay, bạn chỉ mất 5 phút đi bộ ra bờ hồ và thưởng thức cà phê trứng truyền thống hoặc kem Hồ Tây lộng gió.</p>', 'https://res.cloudinary.com/nguyenvuongviet/image/upload/v1779777898/4stay/blogs/kr55i09mbhan0xzaefm5.png', 'Review căn hộ 4Stay Hanoi View bên bờ Hồ Tây thơ mộng', 'Đánh giá chân thực homestay 4Stay Hanoi View: Vị trí đắc địa, view ngắm trọn hoàng hôn Hồ Tây cực chill.', 'homestay hồ tây, review 4stay hanoi view, homestay hà nội đẹp', 'PUBLISHED', 0, 89, 4, '2026-05-24 15:05:00'),
+(3, 4, 1, 21, 'Kinh nghiệm đặt homestay Đà Nẵng giá rẻ, tránh bẫy mùa cao điểm', 'kinh-nghiem-dat-homestay-da-nang-gia-re-tranh-bay-mua-cao-diem', 'Đà Nẵng đang bước vào mùa du lịch cao điểm. Để tránh tình trạng cháy phòng hoặc thuê phải phòng kém chất lượng với giá cắt cổ, bỏ túi ngay những mẹo vàng đặt phòng homestay từ 4Stay.', '<h2>Lên kế hoạch đặt phòng thông minh tại Đà Nẵng</h2><p>Đà Nẵng là thành phố đáng sống nhất Việt Nam và luôn thu hút hàng triệu lượt khách mỗi mùa hè. Nhu cầu đặt phòng tăng đột biến dẫn đến việc nhiều cơ sở nâng giá vô tội vạ.</p><h3>1. Hãy đặt trước ít nhất 3 tuần</h3><p>Việc đặt phòng sớm không chỉ giúp bạn giữ được căn phòng ưng ý mà còn được hưởng mức giá ưu đãi từ các hệ thống lớn.</p><h3>2. Lựa chọn các căn homestay gần sông Hàn hoặc gần biển Mỹ Khê</h3><p>Nếu bạn thích sự nhộn nhịp ban đêm và ngắm cầu rồng phun lửa, hãy chọn khu vực sông Hàn như căn <strong>4Stay Da Nang Riverside</strong>. Nếu thích tắm biển đón bình minh, khu vực Mỹ Khê là lựa chọn hoàn hảo.</p>', 'https://res.cloudinary.com/nguyenvuongviet/image/upload/v1779777874/4stay/blogs/zypi6d613moztrsyjgsr.png', 'Kinh nghiệm đặt phòng homestay Đà Nẵng chất lượng giá tốt | 4Stay', 'Mẹo săn phòng homestay Đà Nẵng giá rẻ dịp hè, phân tích ưu nhược điểm khu vực ven sông Hàn và ven biển.', 'kinh nghiệm đặt phòng đà nẵng, homestay đà nẵng gần biển, du lịch đà nẵng', 'PUBLISHED', 1, 210, 6, '2026-05-24 15:10:00');
+
+-- 18. Blog Post Tags
+INSERT IGNORE INTO `blog_post_tags` (`postId`, `tagId`) VALUES
+(1, 4), (1, 6), (2, 2), (2, 5), (2, 7), (3, 3), (3, 5);
+
+-- 19. Blog Comments
+INSERT IGNORE INTO `blog_comments` (`id`, `postId`, `userId`, `content`) VALUES
+(1, 1, 2, 'Bánh mì Huỳnh Hoa ăn siêu ngon nhưng hơi nhiều bơ, ai sợ béo nên cân nhắc nhé!'),
+(2, 1, 3, 'Cơm tấm sườn bì chả ở Sài Gòn đúng là đỉnh nhất, ăn hoài không chán.'),
+(3, 2, 2, 'Vừa ở đây tuần trước, view ban công Hồ Tây buổi chiều ngắm hoàng hôn đỉnh thực sự!');
+
+-- 20. Promotions
+INSERT IGNORE INTO `promotions` (`id`, `code`, `name`, `promotionType`, `discountType`, `discountValue`, `maxDiscount`, `minOrderValue`, `provinceId`, `targetLevelId`, `usageLimit`, `usedCount`, `perUserLimit`, `startDate`, `endDate`, `isPublic`, `isActive`, `isDeleted`) VALUES
+(1, 'WELCOME10', 'Ưu đãi chào mừng thành viên mới', 'WELCOME', 'PERCENTAGE', 10.00, 150000.00, 0.00, NULL, NULL, 1000, 0, 1, '2026-01-01 00:00:00', '2027-12-31 23:59:59', 1, 1, 0),
+(2, 'SUMMER2026', 'Chào hè rực rỡ - Giảm giá homestay', 'SEASONAL', 'FIXED_AMOUNT', 200000.00, NULL, 1500000.00, NULL, NULL, 500, 0, 1, '2026-06-01 00:00:00', '2026-08-31 23:59:59', 1, 1, 0),
+(3, 'SAIGONSPECIAL', 'Trải nghiệm homestay Sài Gòn sôi động', 'BLOG', 'PERCENTAGE', 12.00, 200000.00, 500000.00, 28, NULL, 300, 0, 1, '2026-01-01 00:00:00', '2026-12-31 23:59:59', 1, 1, 0),
+(4, 'GOLDMEMBER', 'Ưu đãi đặc quyền hạng Vàng', 'LOYALTY', 'PERCENTAGE', 15.00, 500000.00, 1000000.00, NULL, 3, 200, 0, 2, '2026-01-01 00:00:00', '2026-12-31 23:59:59', 1, 1, 0),
+(5, 'THANKYOU', 'Cảm ơn bạn đã lựa chọn 4Stay', 'THANKYOU', 'FIXED_AMOUNT', 100000.00, NULL, 500000.00, NULL, NULL, 10000, 0, 1, '2026-01-01 00:00:00', '2027-12-31 23:59:59', 0, 1, 0);
+
+-- 21. Blog Promotions
+INSERT IGNORE INTO `blog_promotions` (`id`, `postId`, `promotionId`) VALUES
 (1, 1, 3);
 
-INSERT INTO `users` (`id`, `email`, `password`, `firstName`, `lastName`, `phoneNumber`, `dateOfBirth`, `gender`, `avatar`, `country`, `isVerified`, `isActive`, `googleId`, `provider`, `lastLogin`, `isDeleted`, `deletedAt`, `createdAt`, `updatedAt`) VALUES
-(1, 'admin@gmail.com', '$2b$10$ch/gepo7MiSD7MCZ9PpW0uSI.upAxnfdSvrbMLmrtzhY7.tZ0fKj6', 'admin', 'vieet', '0901234567', NULL, NULL, '4stay/avatars/j4slezbrbdehcomrhje8', 'Vietnam', 1, 1, NULL, 'LOCAL', NULL, 0, NULL, '2025-10-26 00:33:42', '2025-11-28 16:33:25');
-
+-- 22. User Vouchers
+INSERT IGNORE INTO `user_vouchers` (`id`, `userId`, `promotionId`, `status`, `collectedAt`) VALUES
+(1, 2, 1, 'AVAILABLE', '2026-06-01 10:00:00'),
+(2, 2, 2, 'AVAILABLE', '2026-06-01 11:00:00');
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
 /*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;

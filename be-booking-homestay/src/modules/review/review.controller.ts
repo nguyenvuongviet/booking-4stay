@@ -12,6 +12,7 @@ import {
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Public } from 'src/common/decorator/public.decorator';
 import { Roles } from 'src/common/decorator/roles.decorator';
+import { Role } from '../user/dto/enum.dto';
 import { CreateReviewDto } from './dto/create-review.dto';
 import { ListReviewQuery } from './dto/list-review.query';
 import { ReviewService } from './review.service';
@@ -50,7 +51,7 @@ export class ReviewController {
   }
 
   @Delete('/admin/:id')
-  @Roles('ADMIN')
+  @Roles(Role.ADMIN)
   @ApiBearerAuth('AccessToken')
   async remove(@Param('id', ParseIntPipe) id: number, @Req() req: Request) {
     const user = req['user'];

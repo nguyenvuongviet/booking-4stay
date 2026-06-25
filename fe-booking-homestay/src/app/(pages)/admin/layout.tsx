@@ -1,11 +1,11 @@
 "use client";
 
-import Loader from "@/components/loader/Loader";
+import Loader from "@/_components/ui/loader";
 import { getCurrentUser, isAdmin } from "@/lib/utils/auth-client";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useMemo, useState } from "react";
-import { AdminSidebar } from "./_components/SideBar";
 import { AdminHeader } from "./_components/Header";
+import { AdminSidebar } from "./_components/SideBar";
 
 const SIDEBAR_WIDTH = {
   expanded: 256,
@@ -66,7 +66,7 @@ export default function AdminLayout({
 
   const sidebarWidthPx = useMemo(
     () => (isCollapsed ? SIDEBAR_WIDTH.collapsed : SIDEBAR_WIDTH.expanded),
-    [isCollapsed]
+    [isCollapsed],
   );
 
   if (!ready)
@@ -80,11 +80,13 @@ export default function AdminLayout({
     <div className="min-h-screen bg-background flex">
       <AdminSidebar isCollapsed={isCollapsed} onToggle={toggleSidebar} />
       <div
-        className="flex-1 transition-all duration-300"
+        className="min-w-0 flex-1 overflow-x-hidden transition-all duration-300"
         style={{ marginLeft: `${sidebarWidthPx}px` }}
       >
         <AdminHeader />
-        <main className="px-6 pb-6 pt-2">{children}</main>
+        <main className="min-w-0 overflow-x-hidden px-6 pb-6 pt-2">
+          {children}
+        </main>
       </div>
     </div>
   );

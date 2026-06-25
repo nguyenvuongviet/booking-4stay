@@ -4,9 +4,11 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { CreateReviewDto } from './dto/create-review.dto';
-import { PrismaService } from '../prisma/prisma.service';
+import { bookings_status } from '@prisma/client';
 import { sanitizeReviewList } from 'src/utils/sanitize/review.sanitize';
+import { PrismaService } from '../prisma/prisma.service';
+import { Role } from '../user/dto/enum.dto';
+import { CreateReviewDto } from './dto/create-review.dto';
 import { ListReviewQuery } from './dto/list-review.query';
 
 @Injectable()
@@ -14,38 +16,7 @@ export class ReviewService {
   constructor(private readonly prisma: PrismaService) {}
 
   async findAll(q: ListReviewQuery) {
-    const page = Math.max(1, Number(q.page) || 1);
-    const pageSize = Math.max(1, Number(q.pageSize) || 10);
-    const skip = (page - 1) * pageSize;
-
-    const where: any = {
-      isDeleted: false,
-      bookings: { isDeleted: false },
-    };
-
-    if (q.minRating) where.rating = { gte: q.minRating };
-    if (q.maxRating) {
-      where.rating = where.rating || {};
-      where.rating.lte = q.maxRating;
-    }
-
-    const [items, total] = await this.prisma.$transaction([
-      this.prisma.reviews.findMany({
-        where,
-        orderBy: { createdAt: 'desc' },
-        skip,
-        take: pageSize,
-        include: {
-          users: {
-            select: { id: true, firstName: true, lastName: true, avatar: true },
-          },
-          bookings: { select: { id: true } },
-        },
-      }),
-      this.prisma.reviews.count({ where }),
-    ]);
-
-    return { page, pageSize, total, items: sanitizeReviewList(items) };
+    return this.queryReviews({}, q);
   }
 
   async create(userId: number, dto: CreateReviewDto) {
@@ -65,7 +36,7 @@ export class ReviewService {
       throw new ForbiddenException(
         'Bạn không thể review booking của người khác',
       );
-    if (b.status !== 'CHECKED_OUT')
+    if (b.status !== bookings_status.CHECKED_OUT)
       throw new BadRequestException('Chỉ review được sau khi CHECKED_OUT');
 
     if (b.isReview) throw new BadRequestException('Booking này đã được review');
@@ -89,38 +60,7 @@ export class ReviewService {
   }
 
   async listByRoom(roomId: number, q: ListReviewQuery) {
-    const page = Math.max(1, Number(q.page) || 1);
-    const pageSize = Math.max(1, Number(q.pageSize) || 10);
-    const skip = (page - 1) * pageSize;
-
-    const where: any = {
-      isDeleted: false,
-      bookings: { roomId, isDeleted: false },
-    };
-
-    if (q.minRating) where.rating = { gte: q.minRating };
-    if (q.maxRating) {
-      where.rating = where.rating || {};
-      where.rating.lte = q.maxRating;
-    }
-
-    const [items, total] = await this.prisma.$transaction([
-      this.prisma.reviews.findMany({
-        where,
-        orderBy: { createdAt: 'desc' },
-        skip,
-        take: pageSize,
-        include: {
-          users: {
-            select: { id: true, firstName: true, lastName: true, avatar: true },
-          },
-          bookings: { select: { id: true } },
-        },
-      }),
-      this.prisma.reviews.count({ where }),
-    ]);
-
-    return { page, pageSize, total, items: sanitizeReviewList(items) };
+    return this.queryReviews({ bookings: { roomId } }, q);
   }
 
   async listByUser(userId: number) {
@@ -145,7 +85,7 @@ export class ReviewService {
     });
     if (!r || r.isDeleted) throw new NotFoundException('Review không tồn tại');
 
-    if (role !== 'ADMIN') {
+    if (role !== Role.ADMIN) {
       throw new ForbiddenException('Bạn không thể xoá review của người khác');
     }
 
@@ -159,5 +99,44 @@ export class ReviewService {
     });
 
     return { message: 'Xoá review thành công' };
+  }
+
+  private async queryReviews(extraWhere: any, q: ListReviewQuery) {
+    const page = Math.max(1, Number(q.page) || 1);
+    const pageSize = Math.max(1, Number(q.pageSize) || 10);
+    const skip = (page - 1) * pageSize;
+
+    const where: any = {
+      isDeleted: false,
+      bookings: { isDeleted: false, ...extraWhere.bookings },
+      ...extraWhere,
+    };
+    if (extraWhere.bookings) {
+      where.bookings = { isDeleted: false, ...extraWhere.bookings };
+    }
+
+    if (q.minRating) where.rating = { gte: q.minRating };
+    if (q.maxRating) {
+      where.rating = where.rating || {};
+      where.rating.lte = q.maxRating;
+    }
+
+    const [items, total] = await this.prisma.$transaction([
+      this.prisma.reviews.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: pageSize,
+        include: {
+          users: {
+            select: { id: true, firstName: true, lastName: true, avatar: true },
+          },
+          bookings: { select: { id: true } },
+        },
+      }),
+      this.prisma.reviews.count({ where }),
+    ]);
+
+    return { page, pageSize, total, items: sanitizeReviewList(items) };
   }
 }

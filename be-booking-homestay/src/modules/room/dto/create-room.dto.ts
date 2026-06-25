@@ -5,6 +5,7 @@ import {
   IsNumber,
   IsOptional,
   IsString,
+  Max,
   Min,
 } from 'class-validator';
 
@@ -41,12 +42,9 @@ export class CreateRoomDto {
   @IsNumber()
   provinceId: number;
 
-  @ApiProperty({ example: 1 })
+  @ApiPropertyOptional({ example: 1 })
   @IsNumber()
-  districtId: number;
-
-  @ApiProperty({ example: 1 })
-  @IsNumber()
+  @IsOptional()
   wardId?: number;
 
   @ApiPropertyOptional({ example: '47/57 Nguyễn Thái Bình' })
@@ -54,4 +52,18 @@ export class CreateRoomDto {
   @IsOptional()
   @Transform(({ value }: TransformFnParams) => value?.trim())
   street: string;
+
+  @ApiPropertyOptional({ example: 10.7769 })
+  @IsNumber()
+  @IsOptional()
+  @Min(-90)
+  @Max(90)
+  latitude?: number;
+
+  @ApiPropertyOptional({ example: 106.7009 })
+  @IsNumber()
+  @IsOptional()
+  @Min(-180)
+  @Max(180)
+  longitude?: number;
 }

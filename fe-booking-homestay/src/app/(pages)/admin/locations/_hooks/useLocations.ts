@@ -1,67 +1,122 @@
 "use client";
 
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "@/_components/ui/use-toast";
 import {
   BaseLocation,
   LocationType,
   createLocation as apiCreate,
   deleteLocation as apiDelete,
   uploadProvinceImage as apiUploadProvinceImage,
+  getCountries,
   getLocationsByType,
+  getProvinces,
   updateLocation,
 } from "@/services/admin/locationsApi";
 import { useCallback, useEffect, useState } from "react";
 
 export function useLocations() {
-  const [dataType, setDataType] = useState<
-    "Country" | "Province" | "District" | "Ward"
-  >("Country");
+  const [dataType, setDataType] = useState<"Country" | "Province" | "Ward">(
+    "Country",
+  );
   const [selectedParent, setSelectedParent] = useState<string | null>(null);
+  const [filterProvinceId, setFilterProvinceId] = useState<number | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [list, setList] = useState<BaseLocation[]>([]);
+  const [meta, setMeta] = useState({
+    totalItems: 0,
+    itemsPerPage: 10,
+    totalPages: 1,
+    currentPage: 1,
+  });
+
   const [countries, setCountries] = useState<BaseLocation[]>([]);
   const [provinces, setProvinces] = useState<BaseLocation[]>([]);
-  const [districts, setDistricts] = useState<BaseLocation[]>([]);
-  const [list, setList] = useState<BaseLocation[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
+
+  const clearFilters = () => {
+    setSelectedParent(null);
+    setFilterProvinceId(null);
+    setSearchTerm("");
+    setPage(1);
+  };
 
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
       const typeLower = dataType.toLowerCase() as LocationType;
-      let parentId: number | undefined;
+      const params: any = {
+        page,
+        pageSize: 12,
+        search: searchTerm,
+      };
 
-      if (dataType === "Province" && selectedParent)
-        parentId = countries.find((c) => c.name === selectedParent)?.id;
-      if (dataType === "District" && selectedParent)
-        parentId = provinces.find((p) => p.name === selectedParent)?.id;
-      if (dataType === "Ward" && selectedParent)
-        parentId = districts.find((d) => d.name === selectedParent)?.id;
+      if (selectedParent && selectedParent !== "all") {
+        const pId = Number(selectedParent);
+        if (dataType === "Province") params.countryId = pId;
+        if (dataType === "Ward") params.provinceId = pId;
+      }
 
-      const res = await getLocationsByType(typeLower, parentId);
+      if (!params.provinceId && filterProvinceId && dataType === "Ward") {
+        params.provinceId = filterProvinceId;
+      }
 
-      setList(res);
-      if (dataType === "Country") setCountries(res);
-      if (dataType === "Province") setProvinces(res);
-      if (dataType === "District") setDistricts(res);
+      const res = await getLocationsByType(typeLower, params);
+
+      setList(res.items);
+      setMeta(res.meta);
+
+      if (dataType !== "Country" && countries.length === 0) {
+        const cRes = await getCountries({ pageSize: 1000 });
+        setCountries(cRes.items);
+      }
+      if (dataType === "Ward" && provinces.length === 0) {
+        const pRes = await getProvinces({ pageSize: 1000 });
+        setProvinces(pRes.items);
+      }
     } catch {
       toast({ variant: "destructive", title: "Không thể tải dữ liệu" });
     } finally {
       setLoading(false);
     }
-  }, [dataType, selectedParent]);
+  }, [
+    dataType,
+    selectedParent,
+    filterProvinceId,
+    page,
+    searchTerm,
+    countries.length,
+    provinces.length,
+  ]);
 
   useEffect(() => {
     fetchData();
   }, [fetchData]);
 
-  const filteredList = list.filter((i) =>
-    i.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  useEffect(() => {
+    setPage(1);
+  }, [dataType, selectedParent, searchTerm]);
 
-  const create = async (
-    type: "Country" | "Province" | "District" | "Ward",
-    raw: any
+  const filteredList = list;
+
+  const searchParents = async (
+    type: "Province" | "Ward",
+    search: string,
+    parentId?: number,
   ) => {
+    const params: any = { search, pageSize: 1000 };
+    if (parentId) {
+      if (type === "Province") params.countryId = parentId;
+      if (type === "Ward") params.provinceId = parentId;
+    }
+
+    if (type === "Province") {
+      const res = await getProvinces(params);
+      setProvinces(res.items);
+    }
+  };
+
+  const create = async (type: "Country" | "Province" | "Ward", raw: any) => {
     try {
       let payload: any = {
         name: raw.name,
@@ -72,8 +127,7 @@ export function useLocations() {
       } else {
         const map = {
           Province: "countryId",
-          District: "provinceId",
-          Ward: "districtId",
+          Ward: "provinceId",
         } as const;
 
         const fieldName = map[type];
@@ -96,9 +150,9 @@ export function useLocations() {
   };
 
   const edit = async (
-    type: "Country" | "Province" | "District" | "Ward",
+    type: "Country" | "Province" | "Ward",
     id: number,
-    raw: any
+    raw: any,
   ) => {
     try {
       const payload: any = { name: raw.name?.trim() };
@@ -108,8 +162,7 @@ export function useLocations() {
       } else {
         const map = {
           Province: "countryId",
-          District: "provinceId",
-          Ward: "districtId",
+          Ward: "provinceId",
         } as const;
 
         const parentField = map[type];
@@ -128,10 +181,7 @@ export function useLocations() {
     }
   };
 
-  const remove = async (
-    type: "Country" | "Province" | "District" | "Ward",
-    id: number
-  ) => {
+  const remove = async (type: "Country" | "Province" | "Ward", id: number) => {
     const ok = confirm(`Bạn có chắc muốn xoá ${type} này?`);
     if (!ok) return;
 
@@ -178,20 +228,25 @@ export function useLocations() {
     setDataType,
     selectedParent,
     setSelectedParent,
+    filterProvinceId,
+    setFilterProvinceId,
 
     countries,
     provinces,
-    districts,
 
     filteredList,
     loading,
     searchTerm,
     setSearchTerm,
+    page,
+    setPage,
+    meta,
 
     fetchData,
     create,
     edit,
     remove,
     uploadProvinceImage,
+    clearFilters,
   };
 }

@@ -21,17 +21,23 @@ export class CreateBookingDto {
   roomId: number;
 
   @ApiProperty({
-    example: '2025-12-10',
+    example: '2026-03-24',
     description: 'Ngày nhận phòng (YYYY-MM-DD)',
   })
-  @IsDateString()
+  @IsDateString(
+    {},
+    { message: 'Ngày nhận phòng phải đúng định dạng ISO 8601 (YYYY-MM-DD)' },
+  )
   checkIn: string;
 
   @ApiProperty({
-    example: '2025-12-12',
+    example: '2026-03-25',
     description: 'Ngày trả phòng (YYYY-MM-DD)',
   })
-  @IsDateString()
+  @IsDateString(
+    {},
+    { message: 'Ngày trả phòng phải đúng định dạng ISO 8601 (YYYY-MM-DD)' },
+  )
   checkOut: string;
 
   @ApiPropertyOptional({ example: 2, description: 'Số lượng người lớn' })
@@ -82,4 +88,19 @@ export class CreateBookingDto {
   @IsOptional()
   @IsEnum(bookings_paymentMethod)
   paymentMethod: bookings_paymentMethod;
+
+  @ApiPropertyOptional({
+    description: 'Thời điểm cập nhật chính sách huỷ phòng mà người dùng đã đọc',
+  })
+  @IsOptional()
+  @IsString()
+  policyUpdatedAt?: string;
+
+  @ApiPropertyOptional({
+    example: 'DALAT15',
+    description: 'Mã giảm giá (nếu có)',
+  })
+  @IsOptional()
+  @IsString()
+  promotionCode?: string;
 }

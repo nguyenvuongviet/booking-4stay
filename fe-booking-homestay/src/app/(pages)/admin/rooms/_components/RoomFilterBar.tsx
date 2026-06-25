@@ -1,7 +1,7 @@
 "use client";
 
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { Card } from "@/_components/ui/card";
+import { Input } from "@/_components/ui/input";
 import { Filter, Search, Star, Users, X } from "lucide-react";
 
 export function RoomFilterBar(props: any) {

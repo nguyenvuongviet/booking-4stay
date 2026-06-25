@@ -15,6 +15,11 @@ export const REFRESH_TOKEN_EXPIRES = process.env.REFRESH_TOKEN_EXPIRES;
 export const SENDER_EMAIL = process.env.SENDER_EMAIL;
 export const SENDER_PASSWORD = process.env.SENDER_PASSWORD;
 
+export const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY || '';
+export const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY || '';
+export const VAPID_SUBJECT =
+  process.env.VAPID_SUBJECT || (SENDER_EMAIL ? `mailto:${SENDER_EMAIL}` : '');
+
 export const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 export const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
 
@@ -22,12 +27,14 @@ export const CLOUDINARY_NAME = process.env.CLOUDINARY_NAME;
 export const CLOUDINARY_API_KEY = process.env.CLOUDINARY_API_KEY;
 export const CLOUDINARY_API_SECRET = process.env.CLOUDINARY_API_SECRET;
 
-export const VNPAY_HOST = process.env.VNPAY_HOST;
-export const VNPAY_TMN_CODE = process.env.VNPAY_TMN_CODE || '';
-export const VNPAY_SECRET_KEY = process.env.VNPAY_SECRET_KEY || '';
-export const VNPAY_RETURN_URL = process.env.VNPAY_RETURN_URL || '';
+export const PAYOS_CLIENT_ID = process.env.PAYOS_CLIENT_ID || '';
+export const PAYOS_API_KEY = process.env.PAYOS_API_KEY || '';
+export const PAYOS_CHECKSUM_KEY = process.env.PAYOS_CHECKSUM_KEY || '';
 
 export const ADMIN_EMAIL = process.env.ADMIN_EMAIL || '';
+export const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:3000';
+
+export const WALK_IN_GUEST_ID = Number(process.env.WALK_IN_GUEST_ID) || 1;
 
 console.log({
   PORT,
@@ -39,14 +46,16 @@ console.log({
   REFRESH_TOKEN_EXPIRES,
   SENDER_EMAIL,
   SENDER_PASSWORD,
+  VAPID_PUBLIC_KEY,
+  VAPID_SUBJECT,
   GOOGLE_CLIENT_ID,
   GOOGLE_CLIENT_SECRET,
   CLOUDINARY_NAME,
   CLOUDINARY_API_KEY,
   CLOUDINARY_API_SECRET,
-  VNPAY_HOST,
-  VNPAY_TMN_CODE,
-  VNPAY_SECRET_KEY,
-  VNPAY_RETURN_URL,
+  PAYOS_CLIENT_ID,
+  PAYOS_API_KEY,
+  PAYOS_CHECKSUM_KEY,
   ADMIN_EMAIL,
+  CLIENT_URL,
 });

@@ -21,6 +21,15 @@ export class MailService {
     `;
   }
 
+  private escapeHtml(value: string) {
+    return value
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
   private bookingInfoBlock(booking: any) {
     const nights =
       (new Date(booking.checkOut).getTime() -
@@ -95,6 +104,7 @@ export class MailService {
       | 'BOOKING_PENDING'
       | 'BOOKING_CONFIRMED'
       | 'BOOKING_CANCELLED'
+      | 'BOOKING_CANCELLED_BY_ADMIN'
       | 'BOOKING_PARTIALLY_PAID'
       | 'BOOKING_REFUNDED'
       | 'BOOKING_CHECKED_IN'
@@ -166,6 +176,16 @@ export class MailService {
       `;
         break;
 
+      case 'BOOKING_CANCELLED_BY_ADMIN':
+        subject = 'Booking đã bị hủy bởi Admin';
+        body = `
+        ${info}
+        <p style="color:red;"><b>Trạng thái:</b> CANCELLED_BY_ADMIN</p>
+        <p><b>Lý do hủy:</b></p>
+        <p><i>${booking.cancelReason ?? 'Admin chủ động huỷ đơn'}</i></p>
+      `;
+        break;
+
       case 'BOOKING_WAITING_REFUND':
         subject = 'Yêu cầu hoàn tiền – cần xử lý';
         body = `
@@ -192,6 +212,95 @@ export class MailService {
       to,
       subject: `4Stay - ${subject}`,
       html: this.wrapTemplate(subject, body),
+    });
+  }
+
+  async sendNewMessageMail(
+    to: string,
+    senderName: string,
+    messagePreview: string,
+    conversationUrl?: string,
+  ) {
+    const subject = 'Tin nhắn mới';
+    const preview =
+      messagePreview.length > 160
+        ? `${messagePreview.slice(0, 157)}...`
+        : messagePreview;
+    const safePreview = this.escapeHtml(preview);
+    const safeSenderName = this.escapeHtml(senderName);
+    const body = `
+      <p>Bạn có tin nhắn mới từ <b>${safeSenderName}</b> trên 4Stay.</p>
+      <div style="margin: 16px 0; padding: 14px; background: #fff7ed; border-left: 4px solid #FF6B00; color: #333;">
+        ${safePreview}
+      </div>
+      ${conversationUrl
+        ? `<p style="margin-top: 18px;">
+              <a href="${conversationUrl}" style="display:inline-block; padding: 10px 16px; background:#FF6B00; color:#fff; text-decoration:none; border-radius:6px;">
+                Mở hộp thư
+              </a>
+            </p>`
+        : ''
+      }
+      <p style="color:#666;">Email này chỉ được gửi tối đa một lần trong 15 phút cho cùng một cuộc trò chuyện.</p>
+    `;
+
+    await transporter.sendMail({
+      from: `"4Stay Support" <${SENDER_EMAIL}>`,
+      to,
+      subject: `4Stay - ${subject}`,
+      html: this.wrapTemplate(subject, body),
+    });
+  }
+
+  async sendCheckinReminderMail(to: string, booking: any, isAdmin = false) {
+    const subject = isAdmin
+      ? 'Nhắc lịch check-in ngày mai'
+      : 'Nhắc bạn check-in vào ngày mai';
+    const info = this.bookingInfoBlock(booking);
+    const body = isAdmin
+      ? `
+        ${info}
+        <p style="color:#6d28d9;"><b>Thong bao:</b> Booking này sẽ check-in vào ngày mai.</p>
+        <p>Vui lòng chủ động theo dõi và hỗ trợ khách hàng khi cần.</p>
+      `
+      : `
+        ${info}
+        <p style="color:#6d28d9;"><b>Thong bao:</b> Bạn sẽ check-in vào ngày mai.</p>
+        <p>Vui lòng kiểm tra lại lịch trình và liên hệ 4Stay nếu cần hỗ trợ.</p>
+      `;
+
+    await transporter.sendMail({
+      from: `"4Stay Support" <${SENDER_EMAIL}>`,
+      to,
+      subject: `4Stay - ${subject}`,
+      html: this.wrapTemplate(subject, body),
+    });
+  }
+
+  async sendSupportMail(adminEmail: string, contactData: any) {
+    const subject = `Yêu cầu hỗ trợ mới từ ${contactData.fullName}`;
+    const safeName = this.escapeHtml(contactData.fullName);
+    const safeEmail = this.escapeHtml(contactData.email);
+    const safeMessage = this.escapeHtml(contactData.message).replace(/\n/g, '<br/>');
+
+    const body = `
+      <p>Chào Admin,</p>
+      <p>Bạn vừa nhận được một yêu cầu hỗ trợ mới trên hệ thống 4Stay.</p>
+      <hr style="margin: 16px 0;" />
+      <p><b>Khách hàng:</b> ${safeName}</p>
+      <p><b>Email liên hệ:</b> ${safeEmail}</p>
+      <p><b>Nội dung:</b></p>
+      <div style="margin: 16px 0; padding: 14px; background: #fff7ed; border-left: 4px solid #FF6B00; color: #333;">
+        ${safeMessage}
+      </div>
+      <p>Vui lòng liên hệ lại với khách hàng qua email trên để hỗ trợ.</p>
+    `;
+
+    await transporter.sendMail({
+      from: `"4Stay System" <${SENDER_EMAIL}>`,
+      to: adminEmail,
+      subject: `[4Stay Support] ${subject}`,
+      html: this.wrapTemplate('Yêu cầu hỗ trợ', body),
     });
   }
 }

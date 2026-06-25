@@ -1,7 +1,7 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Badge } from "@/_components/ui/badge";
+import { Button } from "@/_components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -9,17 +9,16 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+} from "@/_components/ui/dialog";
+import { Input } from "@/_components/ui/input";
+import { Label } from "@/_components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
+} from "@/_components/ui/select";
 import { formatDate } from "@/lib/utils/date";
 import type { Role, UpdateUserDto, User } from "@/types/user";
 import { useEffect, useState } from "react";
@@ -71,7 +70,6 @@ export function UserEditModal({
       roleName: form.roleName,
       dateOfBirth: form.dateOfBirth || null,
       gender: form.gender,
-      isActive: form.isActive,
     };
 
     await onSubmit(payload);
@@ -79,7 +77,7 @@ export function UserEditModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[640px]">
+      <DialogContent className="sm:max-w-160">
         <DialogHeader>
           <DialogTitle>Chỉnh sửa thông tin</DialogTitle>
           <DialogDescription>Cập nhật thông tin người dùng.</DialogDescription>
@@ -186,7 +184,7 @@ export function UserEditModal({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="ADMIN">ADMIN</SelectItem>
-                <SelectItem value="HOST">HOST</SelectItem>
+                {/* <SelectItem value="HOST">HOST</SelectItem> */}
                 <SelectItem value="USER">USER</SelectItem>
               </SelectContent>
             </Select>
@@ -220,15 +218,6 @@ export function UserEditModal({
               }
               className="pr-10"
             />
-          </div>
-
-          <div className="flex items-center gap-3 mt-2">
-            <Switch
-              id="isActive"
-              checked={!!form.isActive}
-              onCheckedChange={(v) => setForm((s) => ({ ...s, isActive: v }))}
-            />
-            <Label htmlFor="isActive">Hoạt động</Label>
           </div>
         </div>
 

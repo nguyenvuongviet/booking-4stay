@@ -35,12 +35,12 @@ export interface RoomLocation {
   countryId: number;
   province: string;
   provinceId: number;
-  district: string;
-  districtId: number;
   ward: string;
   wardId: number;
   street: string;
   fullAddress: string;
+  latitude?: number | null;
+  longitude?: number | null;
 }
 
 export interface UserRoom {
@@ -83,12 +83,15 @@ export interface CreateRoomDto {
   adultCapacity: number;
   childCapacity?: number;
   provinceId: number;
-  districtId: number;
   wardId: number;
   street: string;
+  latitude?: number;
+  longitude?: number;
 }
 
-export interface UpdateRoomDto extends Partial<CreateRoomDto> {}
+export interface UpdateRoomDto extends Partial<CreateRoomDto> {
+  status?: "AVAILABLE" | "BOOKED" | "MAINTENANCE" | string;
+}
 
 export interface Amenity {
   id: number;

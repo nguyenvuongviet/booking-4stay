@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@/_components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -8,13 +8,22 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+} from "@/_components/ui/dialog";
+import { Input } from "@/_components/ui/input";
+import { Textarea } from "@/_components/ui/textarea";
 import type { Room } from "@/types/room";
-import { useEffect } from "react";
+import dynamic from "next/dynamic";
+import { useEffect, useState } from "react";
 import { LocationSelector } from "../../_components/location-selector";
 import { useRoomForm } from "../_hooks/useRoomForm";
+
+const MapPicker = dynamic(
+  () => import("../../_components/MapPicker").then((m) => m.MapPicker),
+  {
+    ssr: false,
+    loading: () => <div className="h-70 bg-muted rounded-lg animate-pulse" />,
+  },
+);
 
 interface Props {
   open: boolean;
@@ -35,6 +44,11 @@ export function RoomFormModal({
     onSuccess,
     initialData,
     isEditMode,
+  });
+
+  const [locationNames, setLocationNames] = useState({
+    provinceName: "",
+    wardName: "",
   });
 
   useEffect(() => {
@@ -103,20 +117,43 @@ export function RoomFormModal({
               value={{
                 countryId: form.countryId,
                 provinceId: form.provinceId,
-                districtId: form.districtId,
                 wardId: form.wardId,
               }}
               autoFocus={isEditMode}
-              onChange={(loc) => updateMany(loc)}
+              onChange={(loc) => {
+                const { _provinceName, _wardName, ...rest } = loc;
+                updateMany(rest);
+                setLocationNames({
+                  provinceName: _provinceName || "",
+                  wardName: _wardName || "",
+                });
+              }}
             />
           </div>
 
           <div className="space-y-1">
             <label className="text-sm font-medium">Đường</label>
             <Input
-              placeholder="Số nhà / Tên đường"
+              placeholder="Nhập đầy đủ để lấy tọa độ chính xác: số nhà, tên đường, quận, thành phố"
               value={form.street}
               onChange={(e) => update("street", e.target.value)}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium block">
+              Vị trí trên bản đồ
+            </label>
+            <MapPicker
+              lat={form.latitude}
+              lng={form.longitude}
+              address={form.street || undefined}
+              provinceName={locationNames.provinceName || undefined}
+              wardName={locationNames.wardName || undefined}
+              onChange={(lat, lng) => {
+                update("latitude", lat);
+                update("longitude", lng);
+              }}
             />
           </div>
 
@@ -142,8 +179,8 @@ export function RoomFormModal({
                 ? "Đang lưu..."
                 : "Đang tạo..."
               : isEditMode
-              ? "Lưu thay đổi"
-              : "Tạo phòng"}
+                ? "Lưu thay đổi"
+                : "Tạo phòng"}
           </Button>
         </DialogFooter>
       </DialogContent>

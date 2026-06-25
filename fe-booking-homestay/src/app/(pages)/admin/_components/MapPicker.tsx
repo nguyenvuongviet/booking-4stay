@@ -1,0 +1,220 @@
+"use client";
+
+import { Button } from "@/_components/ui/button";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+import { Loader2, LocateFixed } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import {
+  MapContainer,
+  Marker,
+  TileLayer,
+  useMap,
+  useMapEvents,
+} from "react-leaflet";
+
+const DefaultIcon = L.icon({
+  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+  iconRetinaUrl:
+    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41],
+});
+L.Marker.prototype.options.icon = DefaultIcon;
+
+interface Props {
+  lat: number | null;
+  lng: number | null;
+  address?: string;
+  wardName?: string;
+  provinceName?: string;
+  onChange: (lat: number, lng: number) => void;
+}
+
+function ClickHandler({
+  onChange,
+}: {
+  onChange: (lat: number, lng: number) => void;
+}) {
+  useMapEvents({
+    click(e) {
+      onChange(e.latlng.lat, e.latlng.lng);
+    },
+  });
+  return null;
+}
+
+function MapFlyTo({ lat, lng }: { lat: number; lng: number }) {
+  const map = useMap();
+  useEffect(() => {
+    map.flyTo([lat, lng], 16, { duration: 1 });
+  }, [lat, lng]);
+  return null;
+}
+
+function DraggableMarker({
+  lat,
+  lng,
+  onChange,
+}: {
+  lat: number;
+  lng: number;
+  onChange: (lat: number, lng: number) => void;
+}) {
+  const markerRef = useRef<L.Marker>(null);
+  return (
+    <Marker
+      position={[lat, lng]}
+      draggable
+      ref={markerRef}
+      eventHandlers={{
+        dragend() {
+          const pos = markerRef.current?.getLatLng();
+          if (pos) onChange(pos.lat, pos.lng);
+        },
+      }}
+    />
+  );
+}
+
+const DEFAULT_CENTER: [number, number] = [16.0, 108.0];
+const DEFAULT_ZOOM = 6;
+
+export function MapPicker({
+  lat,
+  lng,
+  address,
+  wardName,
+  provinceName,
+  onChange,
+}: Props) {
+  const hasCoords = lat !== null && lng !== null;
+  const [geocoding, setGeocoding] = useState(false);
+  const [geocodeError, setGeocodeError] = useState<string | null>(null);
+
+  const handleGeocode = async () => {
+    const parts = [address, wardName, provinceName].filter(Boolean);
+    if (parts.length === 0) {
+      setGeocodeError(
+        "Chưa có địa chỉ để tìm. Hãy chọn tỉnh/phường và nhập tên đường trước.",
+      );
+      return;
+    }
+    try {
+      setGeocoding(true);
+      setGeocodeError(null);
+
+      const params = new URLSearchParams({
+        format: "json",
+        limit: "1",
+        countrycodes: "vn",
+      });
+
+      if (address?.trim()) params.set("street", address.trim());
+      if (wardName?.trim() && provinceName?.trim()) {
+        params.set("city", `${wardName.trim()}, ${provinceName.trim()}`);
+      } else if (provinceName?.trim()) {
+        params.set("city", provinceName.trim());
+      }
+      params.set("country", "Việt Nam");
+
+      let res = await fetch(
+        `https://nominatim.openstreetmap.org/search?${params.toString()}`,
+        { headers: { "Accept-Language": "vi" } },
+      );
+      let data = await res.json();
+
+      if (!data?.length) {
+        const fullQuery = encodeURIComponent(parts.join(", ") + ", Việt Nam");
+        res = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${fullQuery}`,
+          { headers: { "Accept-Language": "vi" } },
+        );
+        data = await res.json();
+      }
+
+      if (data?.length > 0) {
+        onChange(parseFloat(data[0].lat), parseFloat(data[0].lon));
+      } else {
+        setGeocodeError(
+          "Không tìm thấy vị trí. Hãy thử nhập địa chỉ rõ hơn hoặc ghim tay trên bản đồ.",
+        );
+      }
+    } catch {
+      setGeocodeError("Lỗi kết nối. Vui lòng thử lại.");
+    } finally {
+      setGeocoding(false);
+    }
+  };
+
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex items-center gap-3">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={handleGeocode}
+          disabled={geocoding || !address?.trim()}
+          className="flex items-center gap-2"
+        >
+          {geocoding ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <LocateFixed className="w-4 h-4" />
+          )}
+          {geocoding ? "Đang tìm..." : "Tự động lấy tọa độ"}
+        </Button>
+
+        {hasCoords && (
+          <span className="text-xs text-muted-foreground">
+            📍 {Number(lat).toFixed(5)}, {Number(lng).toFixed(5)}
+          </span>
+        )}
+      </div>
+
+      {geocodeError && (
+        <p className="text-xs text-destructive">{geocodeError}</p>
+      )}
+
+      <div className="rounded-lg overflow-hidden border border-border shadow-sm h-65">
+        <MapContainer
+          center={hasCoords ? [Number(lat), Number(lng)] : DEFAULT_CENTER}
+          zoom={hasCoords ? 15 : DEFAULT_ZOOM}
+          style={{ height: "100%", width: "100%" }}
+          scrollWheelZoom
+        >
+          <TileLayer
+            url="https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}"
+            subdomains={["mt0", "mt1", "mt2", "mt3"]}
+            maxZoom={20}
+          />
+          {/* Custom attribution to credit Google Maps */}
+          <div className="absolute bottom-1 right-2 z-10 bg-white/70 dark:bg-black/70 px-1.5 py-0.5 rounded-sm text-[9px] text-muted-foreground pointer-events-none select-none backdrop-blur-xs font-sans">
+            © Google Maps
+          </div>
+          <ClickHandler onChange={onChange} />
+          {hasCoords && (
+            <>
+              <MapFlyTo lat={Number(lat)} lng={Number(lng)} />
+              <DraggableMarker
+                lat={Number(lat)}
+                lng={Number(lng)}
+                onChange={onChange}
+              />
+            </>
+          )}
+        </MapContainer>
+      </div>
+
+      <p className="text-xs text-muted-foreground text-center">
+        {hasCoords
+          ? "Kéo pin để tinh chỉnh vị trí — hoặc click vào bản đồ để đặt lại."
+          : "Bấm nút trên hoặc click vào bản đồ để đặt vị trí homestay."}
+      </p>
+    </div>
+  );
+}

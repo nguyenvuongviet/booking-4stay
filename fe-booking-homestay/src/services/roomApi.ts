@@ -1,4 +1,17 @@
 import api from "./api";
+export interface RoomQueryParams {
+  search?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  adults?: number;
+  children?: number;
+  minRating?: number;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
+  page?: number;
+  pageSize?: number;
+  provinceId?: number;
+}
 
 export const room_all = async (params?: any) => {
   try {
@@ -27,47 +40,12 @@ export const room_detail = async (id: number | string) => {
   }
 };
 
-export const location = async () => {
-  try {
-    const resp = await api.get(`/location/provinces/search`);
-    return resp.data;
-  } catch (error) {
-    console.error("list location error: ", error);
-    throw error;
-  }
-};
-
-export const search_location = async (keyword: string) => {
-  try {
-    if (!keyword.trim()) {
-      return { data: { data: [] } };
-    }
-
-    const resp = await api.get("/location/provinces/search", {
-      params: {
-        keyword: keyword.trim(),
-      },
-    });
-
-    return {
-      data: {
-        data: Array.isArray(resp.data?.data?.data)
-          ? resp.data.data.data
-          : resp.data?.data || [],
-      },
-    };
-  } catch (error) {
-    console.error("search location error:", error);
-    return { data: { data: [] } };
-  }
-};
-
 export const search_room = async (
   keyword: string,
   adults: number,
   children: number,
   page: number = 1,
-  pageSize: number = 6
+  pageSize: number = 6,
 ) => {
   try {
     const resp = await api.get("/room/all", {
@@ -81,16 +59,41 @@ export const search_room = async (
       total: mainData.total || 0,
       page: mainData.page || page,
     };
-  } catch (error) {
+  } catch (error: any) {
+    if (error.response?.status === 404) {
+      return { rooms: [], totalPages: 1, total: 0, page };
+    }
     console.error("Get list room error:", error);
     return { rooms: [], totalPages: 1, total: 0, page };
+  }
+};
+
+export const getRooms = async (params?: RoomQueryParams) => {
+  try {
+    const resp = await api.get("/room/all", { params });
+
+    const mainData = resp.data?.data || {};
+
+    return {
+      rooms: Array.isArray(mainData.items) ? mainData.items : [],
+      totalPages: mainData.totalPages || 1,
+      total: mainData.total || 0,
+      page: mainData.page || params?.page || 1,
+    };
+  } catch (error: any) {
+    if (error.response?.status === 404) {
+      return { rooms: [], totalPages: 1, total: 0, page: 1 };
+    }
+
+    console.error("Get rooms error:", error);
+    throw error;
   }
 };
 
 export const room_available = async (
   roomId: number | string,
   checkIn: string,
-  checkOut: string
+  checkOut: string,
 ) => {
   try {
     const resp = await api.get(`bookings/rooms/${roomId}/availability`, {
@@ -106,10 +109,30 @@ export const room_available = async (
   }
 };
 
+export const room_preview = async (
+  roomId: number,
+  checkIn: string,
+  checkOut: string,
+  promotionCode?: string,
+) => {
+  try {
+    const resp = await api.post(`bookings/preview`, {
+      roomId,
+      checkIn,
+      checkOut,
+      ...(promotionCode && { promotionCode }),
+    });
+    return resp.data?.data || {};
+  } catch (error) {
+    console.error("Check room preview error:", error);
+    throw error;
+  }
+};
+
 export const get_review = async (
   roomId: number | string,
   page = 1,
-  pageSize = 3
+  pageSize = 3,
 ) => {
   try {
     const resp = await api.get(`review/rooms/${roomId}`, {
@@ -122,38 +145,18 @@ export const get_review = async (
   }
 };
 
-export const sort_price = async ({
-  minPrice,
-  maxPrice,
-  minRating,
-  sortBy = "price",
-  sortOrder = "desc",
-  page = 1,
-  pageSize = 6,
-}: {
-  minPrice?: number;
-  maxPrice?: number;
-  minRating?: number;
-  sortBy?: string;
-  sortOrder?: "asc" | "desc";
-  page?: number;
-  pageSize?: number;
-}) => {
+export const get_room_calendar = async (
+  roomId: number | string,
+  month?: number,
+  year?: number,
+) => {
   try {
-    const resp = await api.get(`/room/all`, {
-      params: {
-        minPrice,
-        maxPrice,
-        minRating,
-        sortBy,
-        sortOrder,
-        page,
-        pageSize,
-      },
+    const resp = await api.get(`/room/${roomId}/calendar`, {
+      params: { month, year },
     });
-    return resp.data;
+    return resp.data?.data || {};
   } catch (error) {
-    console.error("Check review error:", error);
+    console.error("Get room calendar error:", error);
     throw error;
   }
 };

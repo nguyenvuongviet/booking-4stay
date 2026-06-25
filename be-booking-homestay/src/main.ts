@@ -1,15 +1,20 @@
+import { ValidationPipe } from '@nestjs/common';
 import { NestFactory, Reflector } from '@nestjs/core';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { PORT } from './common/constant/app.constant';
-import { ValidationPipe } from '@nestjs/common';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { LoggingInterceptor } from './common/interceptor/logging.interceptor';
-import { ResponseSuccessInterceptor } from './common/interceptor/response-success.interceptor';
 import { ProtectGuard } from './common/guard/protect/protect.guard';
 import { RolesGuard } from './common/guard/role/roles.guard';
+import { LoggingInterceptor } from './common/interceptor/logging.interceptor';
+import { ResponseSuccessInterceptor } from './common/interceptor/response-success.interceptor';
+import { GlobalLoggerConfig } from './config/logger.config';
+
+process.env.TZ = 'Asia/Ho_Chi_Minh';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    logger: GlobalLoggerConfig,
+  });
 
   app.enableCors({
     origin: '*', //'http://localhost:3000',

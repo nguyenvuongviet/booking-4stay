@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Injectable,
+  Logger,
   UnauthorizedException,
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
@@ -12,13 +13,14 @@ import {
   GOOGLE_CLIENT_SECRET,
   REFRESH_TOKEN_SECRET,
 } from 'src/common/constant/app.constant';
-import { Validator } from 'src/common/validation';
+import { isEmail } from 'class-validator';
 import { LoyaltyProgram } from 'src/helpers/loyalty.helper';
 import { sanitizeUserData } from 'src/utils/sanitize/user.sanitize';
 import { VerifyOtpDto } from '../otp/dto/verifyOtp.dto';
 import { OtpService } from '../otp/otp.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { TokenService } from '../token/token.service';
+import { Role } from '../user/dto/enum.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { GoogleLoginDto } from './dto/google-login.dto';
 import { LoginDto } from './dto/login.dto';
@@ -28,6 +30,8 @@ import { ResetPasswordDto } from './dto/reset-password';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     private readonly prismaService: PrismaService,
     private readonly tokenService: TokenService,
@@ -38,7 +42,7 @@ export class AuthService {
   async register(dto: RegisterDto): Promise<{ message: string; user: any }> {
     const { email, password, phoneNumber, firstName, lastName } = dto;
 
-    if (Validator.isValidEmail(email) === false) {
+    if (isEmail(email) === false) {
       throw new BadRequestException('Email không hợp lệ!');
     }
 
@@ -84,12 +88,10 @@ export class AuthService {
         },
       });
 
-      console.log({ userNew });
-
       this.otpService
         .createOtp(email, userNew.id, 'REGISTER')
         .catch((error) => {
-          console.log(`Lỗi tạo OTP cho ${email}: ${error.message}`);
+          this.logger.error(`Lỗi tạo OTP cho ${email}`, error.stack);
         });
 
       return {
@@ -104,24 +106,13 @@ export class AuthService {
   }
 
   async verifyOtp(dto: VerifyOtpDto) {
-    // try {
-    //   return await this.otpService.verifyOtp(verifyOtpDto);
-    // } catch (error) {
-    //   console.log(
-    //     `Lỗi xác thực OTP cho ${verifyOtpDto.email}: ${error.message}`,
-    //   );
-    //   throw error instanceof BadRequestException
-    //     ? error
-    //     : new BadRequestException('OTP không hợp lệ hoặc hết hạn!');
-    // }
-
     return await this.otpService.verifyOtp(dto);
   }
 
   async activateAccount(dto: VerifyOtpDto): Promise<{ message: string }> {
     const { email } = dto;
 
-    if (!Validator.isValidEmail(email)) {
+    if (!isEmail(email)) {
       throw new BadRequestException('Email không hợp lệ!');
     }
 
@@ -147,7 +138,7 @@ export class AuthService {
         message: 'Tài khoản đã được kích hoạt và gán loyalty mặc định!',
       };
     } catch (error) {
-      console.error(`Error activateAccount(${email}): ${error.message}`);
+      this.logger.error(`Lỗi kích hoạt tài khoản ${email}`, error.stack);
       throw new BadRequestException(
         'Không thể kích hoạt tài khoản. Vui lòng thử lại.',
       );
@@ -157,7 +148,7 @@ export class AuthService {
   async login(dto: LoginDto): Promise<any> {
     const { email, password } = dto;
 
-    if (Validator.isValidEmail(email) === false) {
+    if (isEmail(email) === false) {
       throw new BadRequestException('Email không hợp lệ!');
     }
 
@@ -184,7 +175,7 @@ export class AuthService {
       const tokens = this.tokenService.createTokens(userExist.id);
       return { ...tokens, user: sanitizeUserData(userExist) };
     } catch (error) {
-      console.log(`Lỗi khi đăng nhập cho ${email}: ${error.message}`);
+      this.logger.error(`Lỗi đăng nhập cho ${email}`, error.stack);
       throw error instanceof BadRequestException
         ? error
         : new BadRequestException('Lỗi khi đăng nhập. Vui lòng thử lại.');
@@ -220,7 +211,7 @@ export class AuthService {
 
       return tokens;
     } catch (error) {
-      console.log(`Lỗi khi làm mới token: ${error.message}`);
+      this.logger.error('Lỗi làm mới token', error.stack);
       throw error instanceof UnauthorizedException
         ? error
         : new UnauthorizedException('Lỗi khi làm mới token. Vui lòng thử lại.');
@@ -229,7 +220,7 @@ export class AuthService {
 
   async forgotPassword(dto: ForgotPasswordDto): Promise<{ message: string }> {
     const { email } = dto;
-    if (Validator.isValidEmail(email) === false) {
+    if (isEmail(email) === false) {
       throw new BadRequestException('Email không hợp lệ!');
     }
 
@@ -245,12 +236,12 @@ export class AuthService {
       this.otpService
         .createOtp(userExist.email, userExist.id, 'FORGOT_PASSWORD')
         .catch((error) =>
-          console.log(`Lỗi tạo OTP cho ${email}: ${error.message}`),
+          this.logger.error(`Lỗi tạo OTP cho ${email}`, error.stack),
         );
 
       return { message: 'OTP đặt lại mật khẩu đã được gửi đến email của bạn.' };
     } catch (error) {
-      console.log(`Lỗi khi xử lý yêu cầu quên mật khẩu: ${error.message}`);
+      this.logger.error('Lỗi xử lý quên mật khẩu', error.stack);
       throw error instanceof BadRequestException
         ? error
         : new BadRequestException('Lỗi khi xử lý yêu cầu. Vui lòng thử lại.');
@@ -259,7 +250,7 @@ export class AuthService {
 
   async resetPassword(dto: ResetPasswordDto): Promise<{ message: string }> {
     const { email, newPassword } = dto;
-    if (Validator.isValidEmail(email) === false) {
+    if (isEmail(email) === false) {
       throw new BadRequestException('Email không hợp lệ!');
     }
 
@@ -281,7 +272,7 @@ export class AuthService {
 
       return { message: 'Đặt lại mật khẩu thành công!' };
     } catch (error) {
-      console.log(`Lỗi khi đặt lại mật khẩu cho ${email}: ${error.message}`);
+      this.logger.error(`Lỗi đặt lại mật khẩu cho ${email}`, error.stack);
       throw error instanceof BadRequestException
         ? error
         : new BadRequestException(
@@ -321,7 +312,7 @@ export class AuthService {
       });
       if (!user) {
         const defaultRole = await this.prismaService.roles.findUnique({
-          where: { name: 'USER' },
+          where: { name: Role.USER },
         });
         if (!defaultRole)
           throw new BadRequestException('Không tìm thấy role mặc định!');
@@ -380,7 +371,7 @@ export class AuthService {
         user: sanitizeUserData(user),
       };
     } catch (err) {
-      console.log('Google Login Error:', err);
+      this.logger.error('Lỗi đăng nhập Google', err.stack ?? err);
       throw new BadRequestException('Đăng nhập Google thất bại!');
     }
   }

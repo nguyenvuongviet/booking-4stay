@@ -39,7 +39,6 @@ BEGIN
   SET NEW.`fullAddress` = CONCAT_WS(', ',
     NEW.`street`,
     (SELECT name FROM `location_wards` WHERE `id` = NEW.`wardId`),
-    (SELECT name FROM `location_districts` WHERE `id` = NEW.`districtId`),
     (SELECT name FROM `location_provinces` WHERE `id` = NEW.`provinceId`),
     (SELECT name FROM `location_countries` WHERE `id` = NEW.`countryId`)
   );
@@ -55,7 +54,6 @@ BEGIN
     SET `fullAddress` = CONCAT_WS(', ',
       `street`,
       (SELECT `name` FROM `location_wards` WHERE `id` = `rooms`.`wardId`),
-      (SELECT `name` FROM `location_districts` WHERE `id` = `rooms`.`districtId`),
       (SELECT `name` FROM `location_provinces` WHERE `id` = `rooms`.`provinceId`),
       NEW.`name`
     )
@@ -73,29 +71,10 @@ BEGIN
     SET `fullAddress` = CONCAT_WS(', ',
       `street`,
       (SELECT `name` FROM `location_wards` WHERE `id` = `rooms`.`wardId`),
-      (SELECT `name` FROM `location_districts` WHERE `id` = `rooms`.`districtId`),
       NEW.`name`,
       (SELECT `name` FROM `location_countries` WHERE `id` = `rooms`.`countryId`)
     )
     WHERE `provinceId` = NEW.`id`;
-  END IF;
-END $$
-
-DROP TRIGGER IF EXISTS `trg_district_name_update` $$
-CREATE TRIGGER `trg_district_name_update`
-AFTER UPDATE ON `location_districts`
-FOR EACH ROW
-BEGIN
-  IF NEW.`name` <> OLD.`name` THEN
-    UPDATE `rooms`
-    SET `fullAddress` = CONCAT_WS(', ',
-      `street`,
-      (SELECT `name` FROM `location_wards` WHERE `id` = `rooms`.`wardId`),
-      NEW.`name`,
-      (SELECT `name` FROM `location_provinces` WHERE `id` = `rooms`.`provinceId`),
-      (SELECT `name` FROM `location_countries` WHERE `id` = `rooms`.`countryId`)
-    )
-    WHERE `districtId` = NEW.`id`;
   END IF;
 END $$
 
@@ -109,7 +88,6 @@ BEGIN
     SET `fullAddress` = CONCAT_WS(', ',
       `street`,
       NEW.`name`,
-      (SELECT `name` FROM `location_districts` WHERE `id` = `rooms`.`districtId`),
       (SELECT `name` FROM `location_provinces` WHERE `id` = `rooms`.`provinceId`),
       (SELECT `name` FROM `location_countries` WHERE `id` = `rooms`.`countryId`)
     )
@@ -124,19 +102,15 @@ CREATE TRIGGER `trg_rooms_fullAddress_update`
 BEFORE UPDATE ON `rooms`
 FOR EACH ROW
 BEGIN
-  -- Chỉ chạy nếu có bất kỳ trường địa chỉ nào thay đổi (Tùy chọn: tối ưu hóa hiệu suất)
   IF 
     NEW.`street` <> OLD.`street` OR
     NEW.`wardId` <> OLD.`wardId` OR
-    NEW.`districtId` <> OLD.`districtId` OR
     NEW.`provinceId` <> OLD.`provinceId` OR
     NEW.`countryId` <> OLD.`countryId` 
   THEN
-    -- Lấy tên vị trí và ghép lại
     SET NEW.`fullAddress` = CONCAT_WS(', ',
       NEW.`street`,
       (SELECT name FROM `location_wards` WHERE `id` = NEW.`wardId`),
-      (SELECT name FROM `location_districts` WHERE `id` = NEW.`districtId`),
       (SELECT name FROM `location_provinces` WHERE `id` = NEW.`provinceId`),
       (SELECT name FROM `location_countries` WHERE `id` = NEW.`countryId`)
     );
@@ -191,14 +165,53 @@ AFTER UPDATE ON `bookings`
 FOR EACH ROW
 BEGIN
   IF NEW.`status` = 'CHECKED_OUT' AND OLD.`status` <> 'CHECKED_OUT' THEN
-    UPDATE `loyalty_program`
-    SET 
+    INSERT INTO `loyalty_program` (`userId`, `levelId`, `totalBookings`, `totalNights`, `points`, `lastUpgradeDate`)
+    VALUES (NEW.`userId`, 1, 1, DATEDIFF(NEW.`checkOut`, NEW.`checkIn`), ROUND(NEW.`totalPrice` / 1000, 0), NOW())
+    ON DUPLICATE KEY UPDATE
       `totalBookings` = `totalBookings` + 1,
       `totalNights` = `totalNights` + DATEDIFF(NEW.`checkOut`, NEW.`checkIn`),
       `points` = `points` + ROUND(NEW.`totalPrice` / 1000, 0),
-      `lastUpgradeDate` = NOW()
-    WHERE `userId` = NEW.`userId`;
+      `lastUpgradeDate` = NOW();
   END IF;
 END $$
 
+DROP TRIGGER IF EXISTS `trg_users_after_insert_loyalty` $$
+CREATE TRIGGER `trg_users_after_insert_loyalty`
+AFTER INSERT ON `users`
+FOR EACH ROW
+BEGIN
+  INSERT IGNORE INTO `loyalty_program` (`userId`, `levelId`, `points`)
+  VALUES (NEW.`id`, 1, 0);
+END $$
+
 DELIMITER ;
+
+/* ==========================================================
+    VIEW: view_rooms (tiện ích xem dữ liệu phòng đầy đủ)
+   ========================================================== */
+CREATE OR REPLACE VIEW `view_rooms` AS
+SELECT
+  r.`id`,
+  r.`name`,
+  r.`description`,
+  r.`price`,
+  r.`adultCapacity`,
+  r.`childCapacity`,
+  r.`status`,
+  r.`rating`,
+  r.`reviewCount`,
+  r.`street`,
+  r.`fullAddress`,
+  r.`latitude`,
+  r.`longitude`,
+  r.`hostId`,
+  r.`countryId`,  c.`name` AS `countryName`,
+  r.`provinceId`, p.`name` AS `provinceName`,
+  r.`wardId`,     w.`name` AS `wardName`,
+  r.`isDeleted`,
+  r.`createdAt`,
+  r.`updatedAt`
+FROM `rooms` r
+LEFT JOIN `location_wards`     w ON w.`id` = r.`wardId`
+LEFT JOIN `location_provinces` p ON p.`id` = r.`provinceId`
+LEFT JOIN `location_countries` c ON c.`id` = r.`countryId`;

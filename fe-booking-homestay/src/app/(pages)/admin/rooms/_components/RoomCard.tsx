@@ -35,6 +35,31 @@ export function RoomCard({ room, onDelete }: any) {
           </div>
         )}
 
+        {room.status && (
+          <div
+            className={`absolute top-4 left-4 backdrop-blur-xl px-2.5 py-1 rounded-full flex items-center gap-1.5 shadow-sm shadow-black/10 text-xs font-semibold ${
+              room.status === "MAINTENANCE"
+                ? "bg-red-500/80 text-white"
+                : room.status === "BOOKED"
+                  ? "bg-amber-500/80 text-white"
+                  : "bg-emerald-500/80 text-white"
+            }`}
+          >
+            <span
+              className={`w-1.5 h-1.5 rounded-full ${
+                room.status === "MAINTENANCE"
+                  ? "bg-red-200 animate-pulse"
+                  : room.status === "BOOKED"
+                    ? "bg-amber-200 animate-pulse"
+                    : "bg-emerald-200 animate-pulse"
+              }`}
+            />
+            {room.status === "MAINTENANCE" && "Đang khóa"}
+            {room.status === "BOOKED" && "Đang đặt"}
+            {room.status === "AVAILABLE" && "Sẵn sàng"}
+          </div>
+        )}
+
         <div className="absolute top-4 right-4 bg-background/70 backdrop-blur-xl px-2 py-1 rounded-full flex items-center gap-1 shadow-sm shadow-black/10">
           <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
           <span className="text-sm font-medium">{room.rating ?? 0}</span>

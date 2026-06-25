@@ -1,0 +1,1 @@
+export type PaymentMethod = 'CASH' | 'BANK_TRANSFER';

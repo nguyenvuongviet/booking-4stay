@@ -1,13 +1,13 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
-  IsOptional,
-  IsNumber,
-  IsString,
-  Min,
-  IsInt,
-  Max,
   IsDateString,
+  IsInt,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Max,
+  Min,
   ValidateIf,
 } from 'class-validator';
 import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
@@ -61,6 +61,12 @@ export class RoomFilterDto extends PaginationQueryDto {
   @IsDateString()
   @ValidateIf((o) => !!o.checkIn)
   checkOut?: string;
+
+  @ApiPropertyOptional({ description: 'ID tỉnh thành' })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  provinceId?: number;
 
   @ApiPropertyOptional({
     example: 'price',

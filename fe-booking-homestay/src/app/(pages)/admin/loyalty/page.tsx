@@ -1,9 +1,13 @@
 "use client";
 
-import { Card } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card } from "@/_components/ui/card";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/_components/ui/tabs";
 import { useState } from "react";
-
 import { RefreshButton } from "../_components/RefreshButton";
 import LoyaltyLevelsTab from "./_components/LoyaltyLevelsTab";
 import LoyaltyUsersTab from "./_components/LoyaltyUsersTab";
@@ -14,12 +18,12 @@ export default function LoyaltyPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between pb-4 border-b">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between pb-4 border-b gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
             Quản lý khách hàng thân thiết
           </h1>
-          <p className="text-gray-600 mt-1">
+          <p className="text-gray-600 dark:text-slate-400 mt-1">
             Quản lý cấp độ và quyền lợi khách hàng.
           </p>
         </div>

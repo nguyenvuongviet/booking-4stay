@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@/_components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -8,8 +8,8 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
+} from "@/_components/ui/dialog";
+import { Input } from "@/_components/ui/input";
 import {
   createLoyaltyLevel,
   LoyaltyLevel,
@@ -35,16 +35,22 @@ export default function LevelModal({
 
   const [name, setName] = useState("");
   const [minPoints, setMinPoints] = useState<number | string>(0);
+  const [discountPercent, setDiscountPercent] = useState<number | string>(0);
+  const [maxDiscountAmount, setMaxDiscountAmount] = useState<number | string>(0);
   const [description, setDescription] = useState("");
 
   useEffect(() => {
     if (editData) {
       setName(editData.name);
       setMinPoints(editData.minPoints);
+      setDiscountPercent(editData.discountPercent);
+      setMaxDiscountAmount(editData.maxDiscountAmount);
       setDescription(editData.description ?? "");
     } else {
       setName("");
       setMinPoints("");
+      setDiscountPercent("");
+      setMaxDiscountAmount("");
       setDescription("");
     }
   }, [editData]);
@@ -54,6 +60,8 @@ export default function LevelModal({
       const payload = {
         name,
         minPoints: Number(minPoints),
+        discountPercent: Number(discountPercent),
+        maxDiscountAmount: Number(maxDiscountAmount),
         description,
       };
 
@@ -108,6 +116,30 @@ export default function LevelModal({
             <p className="text-xs text-muted-foreground">
               Số điểm tối thiểu để đạt cấp độ này.
             </p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">Giảm giá (%)</label>
+              <Input
+                type="number"
+                min="0"
+                max="100"
+                placeholder="VD: 5"
+                value={discountPercent}
+                onChange={(e) => setDiscountPercent(e.target.value)}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">Giảm tối đa (đ)</label>
+              <Input
+                type="number"
+                min="0"
+                placeholder="VD: 500000"
+                value={maxDiscountAmount}
+                onChange={(e) => setMaxDiscountAmount(e.target.value)}
+              />
+            </div>
           </div>
 
           <div className="space-y-1.5">

@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@/_components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -8,8 +8,8 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
+} from "@/_components/ui/dialog";
+import { Input } from "@/_components/ui/input";
 import { BedItemDto, BedType } from "@/types/room";
 import { Plus, Trash, Trash2 } from "lucide-react";
 

@@ -1,8 +1,8 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Badge } from "@/_components/ui/badge";
+import { Button } from "@/_components/ui/button";
+import { Card } from "@/_components/ui/card";
 import { getAmenityIcon } from "@/constants/amenity-icons";
 import type { Room } from "@/types/room";
 import {
@@ -96,7 +96,7 @@ export default function RoomInfoTab({
             {room.amenities?.length ? (
               <div className="space-y-4">
                 {Object.entries(
-                  Object.groupBy(room.amenities, (a) => a.category)
+                  Object.groupBy(room.amenities, (a) => a.category),
                 ).map(([cat, list]) => (
                   <div key={cat}>
                     <h4 className="text-sm font-semibold text-primary uppercase mb-2">

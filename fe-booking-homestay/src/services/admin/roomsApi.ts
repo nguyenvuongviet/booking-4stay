@@ -55,7 +55,7 @@ export async function getRoomById(id: number): Promise<Room> {
 
 export async function updateRoom(
   id: number,
-  dto: UpdateRoomDto
+  dto: UpdateRoomDto,
 ): Promise<Room> {
   try {
     const res = await api.patch(`/room/admin/${id}`, dto);
@@ -138,16 +138,6 @@ export async function deleteRoomImages(id: number, imageIds: number[]) {
   }
 }
 
-// export async function getRoomImages(id: number) {
-//   try {
-//     const res = await api.get(`/room/${id}/images`);
-//     return res.data.data;
-//   } catch (error) {
-//     console.error("Get room images error:", error);
-//     throw error;
-//   }
-// }
-
 export async function setMainImage(id: number, imageId: number) {
   try {
     const res = await api.patch(`/room/${id}/images/main`, { imageId });
@@ -164,6 +154,74 @@ export async function updateOrder(id: number, order: number[]) {
     return res.data.data;
   } catch (error) {
     console.error("Set main image error:", error);
+    throw error;
+  }
+}
+
+// ──────────────────────────────────────────
+// Room Calendar (Pricing & Availability)
+// ──────────────────────────────────────────
+
+export interface CalendarDay {
+  date: string;
+  price: number;
+  status: "AVAILABLE" | "BLOCKED" | "BOOKED";
+  bookingDetails: { guestName: string } | null;
+}
+
+export interface CalendarSummary {
+  totalDays: number;
+  availableDays: number;
+  bookedDays: number;
+  blockedDays: number;
+  occupancyRate: string;
+}
+
+export interface RoomCalendarResponse {
+  roomId: number;
+  roomName: string;
+  basePrice: number;
+  month: number;
+  year: number;
+  calendar: CalendarDay[];
+  summary: CalendarSummary;
+}
+
+export interface CalendarUpdateItem {
+  date: string;
+  price?: number;
+  isAvailable?: boolean;
+}
+
+export async function getRoomCalendar(
+  roomId: number,
+  month?: number,
+  year?: number,
+): Promise<RoomCalendarResponse> {
+  try {
+    const res = await api.get(`/room/${roomId}/calendar`, {
+      params: { month, year },
+    });
+    return res.data.data;
+  } catch (error) {
+    console.error("Get room calendar error:", error);
+    throw error;
+  }
+}
+
+export async function updateRoomCalendar(
+  roomId: number,
+  updates: CalendarUpdateItem[],
+): Promise<{
+  message: string;
+  updatedPrices: number;
+  updatedAvailability: number;
+}> {
+  try {
+    const res = await api.put(`/room/${roomId}/calendar`, { updates });
+    return res.data.data;
+  } catch (error) {
+    console.error("Update room calendar error:", error);
     throw error;
   }
 }

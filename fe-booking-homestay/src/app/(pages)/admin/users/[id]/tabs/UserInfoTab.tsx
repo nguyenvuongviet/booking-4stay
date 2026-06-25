@@ -1,7 +1,7 @@
 "use client";
 
-import { Card } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Card } from "@/_components/ui/card";
+import { Skeleton } from "@/_components/ui/skeleton";
 import { formatDate } from "@/lib/utils/date";
 import { getUserById } from "@/services/admin/usersApi";
 import { User } from "@/types/user";

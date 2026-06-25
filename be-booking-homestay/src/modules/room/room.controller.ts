@@ -18,18 +18,29 @@ import { ApiBearerAuth, ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { Public } from 'src/common/decorator/public.decorator';
 import { Roles } from 'src/common/decorator/roles.decorator';
 import { UploadRoomImagesDto } from 'src/common/dto/upload-file.dto';
+import { Role } from '../user/dto/enum.dto';
 import { CreateRoomDto } from './dto/create-room.dto';
 import { RoomFilterDto } from './dto/filter-room.dto';
+import {
+  RoomCalendarQueryDto,
+  UpdateCalendarDto,
+} from './dto/room-calendar.dto';
 import { SetRoomAmenitiesDto } from './dto/set-room-amenities.dto';
 import { SetRoomBedsDto } from './dto/set-room-beds.dto';
 import { DeleteRoomImagesDto, ImageItemDto } from './dto/set-room-images.dto';
 import { UpdateRoomDto } from './dto/update-room.dto';
+import { RoomAssetService } from './room-asset.service';
+import { RoomCalendarService } from './room-calendar.service';
 import { RoomService } from './room.service';
 
 @ApiTags('room')
 @Controller('room')
 export class RoomController {
-  constructor(private readonly roomService: RoomService) {}
+  constructor(
+    private readonly roomService: RoomService,
+    private readonly assetService: RoomAssetService,
+    private readonly calendarService: RoomCalendarService,
+  ) {}
 
   @Get('all')
   @Public()
@@ -44,7 +55,7 @@ export class RoomController {
   }
 
   @Post('admin')
-  @Roles('ADMIN')
+  @Roles(Role.ADMIN)
   @ApiBearerAuth('AccessToken')
   async create(@Req() req: Request, @Body() createRoomDto: CreateRoomDto) {
     const user = req['user'];
@@ -52,43 +63,43 @@ export class RoomController {
   }
 
   @Patch('admin/:id')
-  @Roles('ADMIN')
+  @Roles(Role.ADMIN)
   @ApiBearerAuth('AccessToken')
   async update(@Param('id') id: string, @Body() dto: UpdateRoomDto) {
     return await this.roomService.update(+id, dto);
   }
 
   @Delete('admin/:id')
-  @Roles('ADMIN')
+  @Roles(Role.ADMIN)
   @ApiBearerAuth('AccessToken')
   remove(@Param('id') id: string) {
     return this.roomService.remove(+id);
   }
 
   @Put(':id/amenities')
-  @Roles('ADMIN')
+  @Roles(Role.ADMIN)
   @ApiBearerAuth('AccessToken')
   @ApiBody({ type: SetRoomAmenitiesDto })
   async setAmenities(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: SetRoomAmenitiesDto,
   ) {
-    return this.roomService.setAmenities(id, dto.amenityIds);
+    return this.assetService.setAmenities(id, dto.amenityIds);
   }
 
   @Put(':id/beds')
-  @Roles('ADMIN')
+  @Roles(Role.ADMIN)
   @ApiBearerAuth('AccessToken')
   @ApiBody({ type: SetRoomBedsDto })
   async setBeds(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: SetRoomBedsDto,
   ) {
-    return this.roomService.setBeds(id, dto.beds);
+    return this.assetService.setBeds(id, dto.beds);
   }
 
   @Post(':id/images')
-  @Roles('ADMIN')
+  @Roles(Role.ADMIN)
   @ApiBearerAuth('AccessToken')
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FilesInterceptor('files'))
@@ -99,37 +110,57 @@ export class RoomController {
     @Body('images') imagesJson?: string,
   ) {
     const images: ImageItemDto[] = imagesJson ? JSON.parse(imagesJson) : [];
-    return this.roomService.addRoomImages(id, files, images);
+    return this.assetService.addRoomImages(id, files, images);
   }
 
   @Delete(':id/images')
-  @Roles('ADMIN')
+  @Roles(Role.ADMIN)
   @ApiBearerAuth('AccessToken')
   @ApiBody({ type: DeleteRoomImagesDto })
   async deleteRoomImages(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: DeleteRoomImagesDto,
   ) {
-    return this.roomService.deleteRoomImagesByIds(id, dto.imageIds);
+    return this.assetService.deleteRoomImagesByIds(id, dto.imageIds);
   }
 
   @Patch(':id/images/main')
-  @Roles('ADMIN')
+  @Roles(Role.ADMIN)
   @ApiBearerAuth('AccessToken')
   async setMainImage(
     @Param('id', ParseIntPipe) roomId: number,
     @Body('imageId', ParseIntPipe) imageId: number,
   ) {
-    return this.roomService.setMainImage(roomId, imageId);
+    return this.assetService.setMainImage(roomId, imageId);
   }
 
   @Patch(':id/images/order')
-  @Roles('ADMIN')
+  @Roles(Role.ADMIN)
   @ApiBearerAuth('AccessToken')
   async updateOrder(
     @Param('id', ParseIntPipe) roomId: number,
     @Body('order') order: number[],
   ) {
-    return this.roomService.updateImageOrder(roomId, order);
+    return this.assetService.updateImageOrder(roomId, order);
+  }
+
+  @Get(':id/calendar')
+  @Public()
+  async getCalendar(
+    @Param('id', ParseIntPipe) id: number,
+    @Query() query: RoomCalendarQueryDto,
+  ) {
+    return this.calendarService.getCalendar(id, query);
+  }
+
+  @Put(':id/calendar')
+  @Roles(Role.ADMIN)
+  @ApiBearerAuth('AccessToken')
+  @ApiBody({ type: UpdateCalendarDto })
+  async updateCalendar(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateCalendarDto,
+  ) {
+    return this.calendarService.updateCalendar(id, dto.updates);
   }
 }

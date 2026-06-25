@@ -1,4 +1,10 @@
-import "dotenv/config";
-
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
-export const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+export const NEXT_PUBLIC_GOOGLE_CLIENT_ID =
+  process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+
+export enum AppConfigKey {
+  BOOKING_EXPIRY_MINUTES = "BOOKING_EXPIRY_MINUTES",
+  CANCELLATION_POLICY = "CANCELLATION_POLICY",
+  SITE_NAME = "SITE_NAME",
+  CONTACT_EMAIL = "CONTACT_EMAIL",
+}

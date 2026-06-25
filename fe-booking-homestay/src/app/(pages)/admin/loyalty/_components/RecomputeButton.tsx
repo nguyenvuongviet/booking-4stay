@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@/_components/ui/button";
 import { recomputeAllUserLevels } from "@/services/admin/loyaltyApi";
 import { Loader2, Sparkles } from "lucide-react";
 import { useState } from "react";
@@ -8,21 +8,29 @@ import toast from "react-hot-toast";
 import { ConfirmDialog } from "./ConfirmDialog";
 
 export function RecomputeButton({ onDone }: { onDone?: () => void }) {
-  const [loading, setLoading] = useState(false);
+  const [loading] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   const handleAction = async () => {
-    try {
-      setLoading(true);
-      const res = await recomputeAllUserLevels();
-      toast.success("Đã tính lại cấp độ cho toàn bộ người dùng!");
-      if (onDone) onDone();
-    } catch {
-      toast.error("Không thể tính lại cấp độ.");
-    } finally {
-      setLoading(false);
-      setConfirmOpen(false);
-    }
+    setConfirmOpen(false);
+
+    await toast.promise(
+      recomputeAllUserLevels(),
+      {
+        loading: "Đang quét và tính toán lại cấp độ người dùng...",
+        success: (res) => {
+          if (onDone) onDone();
+          return `Thành công! Đã cập nhật cho ${res.totalUpdated} người dùng.`;
+        },
+        error: (err) => {
+          console.error(err);
+          return "Có lỗi xảy ra khi tính toán lại cấp độ.";
+        },
+      },
+      {
+        style: { minWidth: "300px" },
+      },
+    );
   };
 
   return (
