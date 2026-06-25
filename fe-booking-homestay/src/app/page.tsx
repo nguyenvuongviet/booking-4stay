@@ -10,13 +10,16 @@ import HeroSection from "@/_components/home/HeroSection";
 import PopularDestinations from "@/_components/home/PopularDestinations";
 import RecentlyViewedSection from "@/_components/home/RecentlyViewedSection";
 import RoomSection from "@/_components/home/RoomSection";
-import { getLocation } from "@/services/locationApi";
+import { PopularDestination } from "@/models/Destination";
+import { getPopularDestinations } from "@/services/locationApi";
 import { getPopularRooms, PopularRoom } from "@/services/recommendationApi";
 import { Suspense, useEffect, useState } from "react";
 
 export default function HomePage() {
   const [rooms, setRooms] = useState<PopularRoom[]>([]);
-  const [locations, setLocations] = useState<any[]>([]);
+  const [popularLocations, setPopularLocations] = useState<
+    PopularDestination[]
+  >([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -35,30 +38,8 @@ export default function HomePage() {
 
     const fetchLocations = async () => {
       try {
-        const resp = await getLocation({ pageSize: 1000 });
-        const items = resp.items || [];
-
-        const popularProvinces = [
-          "Đà Nẵng",
-          "Hà Nội",
-          "Hồ Chí Minh",
-          "Hội An",
-          "Phú Quốc",
-          "Đà Lạt",
-          "Nha Trang",
-        ];
-
-        const sortedLocations = items.sort((a: any, b: any) => {
-          const aIndex = popularProvinces.indexOf(a.name);
-          const bIndex = popularProvinces.indexOf(b.name);
-
-          if (aIndex !== -1 && bIndex !== -1) return aIndex - bIndex;
-          if (aIndex !== -1) return -1;
-          if (bIndex !== -1) return 1;
-          return 0;
-        });
-
-        setLocations(sortedLocations);
+        const data = await getPopularDestinations(6);
+        setPopularLocations(data);
       } catch (error) {
         console.error("Error fetching locations:", error);
       }
@@ -84,7 +65,7 @@ export default function HomePage() {
       <RoomSection rooms={rooms as any} />
       <ForYouSection />
       <AvailableSoonSection />
-      <PopularDestinations locations={locations} />
+      <PopularDestinations locations={popularLocations} />
       {/* <FeaturesSection /> */}
       <Footer />
     </div>

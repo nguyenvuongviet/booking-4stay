@@ -1,3 +1,4 @@
+import { PopularDestination } from "@/models/Destination";
 import { Location } from "@/models/Location";
 import api from "./api";
 
@@ -86,6 +87,28 @@ export async function searchProvince(keyword: string): Promise<any[]> {
     return resp.data?.data.data || [];
   } catch (error) {
     console.error("search province by keyword error:", error);
+    return [];
+  }
+}
+
+export async function getPopularDestinations(
+  limit = 10,
+): Promise<PopularDestination[]> {
+  try {
+    const resp = await api.get(
+      "/recommendation/popular-destinations",
+      {
+        params: { limit },
+      },
+    );
+
+    return resp.data?.data || [];
+  } catch (error) {
+    console.error(
+      "get popular destinations error:",
+      error,
+    );
+
     return [];
   }
 }

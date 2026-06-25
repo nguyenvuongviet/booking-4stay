@@ -61,7 +61,7 @@ export default function LocationSuggestions({
             ${index === activeIndex ? "bg-primary/20 scale-[1.01] shadow-sm" : "hover:bg-primary/10 dark:hover:bg-white/5"}`}
           >
             <img
-              src={loc.imageUrl || "/default.jpg"}
+              src={loc.imageUrl || "/default-location.jpg"}
               alt={loc.name}
               className="w-12 h-12 rounded-xl object-cover border border-gray-200 dark:border-white/10 shadow-sm"
             />

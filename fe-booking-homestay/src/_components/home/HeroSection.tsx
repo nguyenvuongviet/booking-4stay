@@ -43,7 +43,7 @@ export default function HeroSection() {
             deleteSpeed={60}
             pause={2000}
             loop={true}
-            className={`elegant-heading text-gradient text-2xl sm:text-4xl md:text-7xl lg:text-8xl mb-2 md:mb-4 ${
+            className={`elegant-heading text-gradient text-2xl sm:text-4xl md:text-6xl lg:text-7xl mb-2 md:mb-4 ${
               lang === "vi"
                 ? "min-h-16 sm:min-h-24 md:min-h-46"
                 : "min-h-20 sm:min-h-28 md:min-h-55"

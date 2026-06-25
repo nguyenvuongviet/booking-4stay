@@ -4,3 +4,13 @@ export interface Destination {
   country: string;
   image: string;
 }
+
+export interface PopularDestination {
+  id: number;
+  name: string;
+  imageUrl: string | null;
+  roomCount: number;
+  bookingCount: number;
+  avgRating: number;
+  popularityScore: number;
+}
