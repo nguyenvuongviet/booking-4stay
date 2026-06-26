@@ -69,7 +69,11 @@ export default function RewardsTab({ user, isActive }: Props) {
     setBookingsLoading(true);
     try {
       // Using pageSize 6 for rewards history table
-      const res = await get_booking({ page: pageNumber, pageSize: 6 });
+      const res = await get_booking({
+        page: pageNumber,
+        pageSize: 6,
+        status: "CHECKED_OUT",
+      });
       setBookings(res.bookings || []);
       setTotalPages(Math.ceil(res.total / 6));
       setTotalCount(res.total || 0);

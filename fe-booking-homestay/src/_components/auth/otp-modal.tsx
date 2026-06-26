@@ -121,7 +121,10 @@ export default function OTPModals({
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
       <div className="bg-white rounded-xl p-8 shadow-xl w-full max-w-md">
         <div className="flex items-center justify-center mb-4 relative">
-          <button className="absolute right-0" onClick={() => setShow(false)}>
+          <button
+            className="absolute right-0 cursor-pointer"
+            onClick={() => setShow(false)}
+          >
             <X size={24} />
           </button>
           <h2 className="text-3xl elegant-heading text-primary text-center">
@@ -160,7 +163,7 @@ export default function OTPModals({
           ))}
         </div>
 
-        <Button className="w-full mb-4" onClick={handleVerify}>
+        <Button className="w-full mb-4 cursor-pointer" onClick={handleVerify}>
           {t("Verify")} OTP
         </Button>
 
@@ -168,7 +171,7 @@ export default function OTPModals({
           <span className="text-muted-foreground text-sm">{t("no_code")}</span>
           <button
             type="button"
-            className="text-primary text-sm elegant-sans hover:underline"
+            className="text-primary text-sm elegant-sans hover:underline cursor-pointer"
             onClick={handleSendOtp}
           >
             {t("Resend")} OTP

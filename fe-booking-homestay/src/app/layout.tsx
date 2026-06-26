@@ -33,6 +33,9 @@ const lora = Lora({
 export const metadata: Metadata = {
   title: "Booking 4Stay",
   description: "Booking 4Stay Website",
+  verification: {
+    google: "Lnbx6ucSvvRaZKXauOhqEFCcmf59T4m4ezY__lnLing",
+  },
 };
 
 export default function RootLayout({

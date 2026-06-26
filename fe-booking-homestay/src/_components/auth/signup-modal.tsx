@@ -145,7 +145,7 @@ export default function SignUpModal({
           <div className="bg-card rounded-2xl p-8 w-full max-w-md mx-4 shadow-2xl">
             <div className="flex items-center justify-center mb-4 relative">
               <button
-                className="absolute right-0"
+                className="absolute right-0 cursor-pointer"
                 onClick={() => setShow(false)}
               >
                 <X size={24} />
@@ -261,7 +261,7 @@ export default function SignUpModal({
                     />
                     <button
                       type="button"
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-primary hover:text-primary/80"
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-primary hover:text-primary/80 cursor-pointer"
                       onClick={() => setShowPassword(!showPassword)}
                     >
                       {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -303,7 +303,7 @@ export default function SignUpModal({
               </div>
 
               <Button
-                className="rounded-2xl w-full bg-primary hover:bg-primary/80 h-10 elegant-subheading text-md"
+                className="rounded-2xl w-full bg-primary hover:bg-primary/80 h-10 elegant-subheading text-md cursor-pointer"
                 type="submit"
                 disabled={loading}
               >
@@ -320,7 +320,7 @@ export default function SignUpModal({
                   setShow(false);
                   switchToSignIn(true);
                 }}
-                className="text-primary elegant-subheading text-sm hover:underline"
+                className="text-primary elegant-subheading text-sm hover:underline cursor-pointer"
               >
                 {t("signIn")}
               </button>

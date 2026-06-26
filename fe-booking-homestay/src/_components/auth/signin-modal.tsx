@@ -80,7 +80,7 @@ export default function SignInModal({
           accessToken: data.accessToken,
           refreshToken: data.refreshToken,
           user: data.user,
-        })
+        }),
       );
       setShow(false);
     } catch (error: any) {
@@ -104,14 +104,13 @@ export default function SignInModal({
           <div className="bg-card rounded-2xl p-8 w-full max-w-md mx-4 shadow-2xl">
             <div className="flex items-center justify-center mb-4 relative">
               <button
-                className="absolute right-0"
+                className="absolute right-0 cursor-pointer"
                 onClick={() => setShow(false)}
               >
                 <X size={24} />
               </button>
               <h2 className="text-3xl elegant-heading text-primary text-center">
                 {t("SIGN IN")}
-
               </h2>
             </div>
             {apiError && (
@@ -148,7 +147,7 @@ export default function SignInModal({
                   </Label>
                   <button
                     type="button"
-                    className="text-muted-foreground text-sm hover:text-primary flex items-center gap-1"
+                    className="text-muted-foreground text-sm hover:text-primary flex items-center gap-1 cursor-pointer"
                     onClick={() => setShowPassword(!showPassword)}
                   >
                     {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -168,7 +167,7 @@ export default function SignInModal({
               )}
 
               <Button
-                className="mt-4 rounded-2xl w-full bg-primary hover:bg-primary/80 h-10 elegant-subheading text-md"
+                className="mt-4 rounded-2xl w-full bg-primary hover:bg-primary/80 h-10 elegant-subheading text-md cursor-pointer"
                 type="submit"
                 disabled={loading}
               >
@@ -186,14 +185,14 @@ export default function SignInModal({
                     setShow(false);
                     switchToSignUp(true);
                   }}
-                  className="text-primary elegant-subheading text-sm hover:underline"
+                  className="text-primary elegant-subheading text-sm hover:underline cursor-pointer"
                 >
                   {t("signUp")}
                 </button>
               </div>
               <div>
                 <button
-                  className="text-primary elegant-subheading hover:underline"
+                  className="text-primary elegant-subheading hover:underline cursor-pointer"
                   onClick={() => {
                     switchToForgotPassword(true);
                     setShow(false);

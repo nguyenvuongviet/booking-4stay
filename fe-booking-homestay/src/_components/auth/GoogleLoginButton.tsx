@@ -23,7 +23,7 @@ export default function GoogleLoginButton() {
 
         localStorage.setItem(
           STORAGE_KEYS.CURRENT_USER,
-          JSON.stringify({ user, accessToken, refreshToken })
+          JSON.stringify({ user, accessToken, refreshToken }),
         );
         setUser(user);
         toast.success("Đăng nhập Google thành công!");
@@ -42,7 +42,7 @@ export default function GoogleLoginButton() {
     <button
       onClick={() => !loading && googleLogin()}
       disabled={loading}
-      className="rounded-2xl w-full border border-border text-foreground bg-transparent hover:bg-muted flex items-center justify-center gap-2 py-2 transition disabled:opacity-50"
+      className="rounded-2xl w-full border border-border text-foreground bg-transparent hover:bg-muted flex items-center justify-center gap-2 py-2 transition disabled:opacity-50 cursor-pointer"
     >
       {loading ? (
         <span className="text-sm">Đang xử lý...</span>

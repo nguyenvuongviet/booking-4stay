@@ -77,4 +77,32 @@ export class LoyaltyProgram {
     }
     return false;
   }
+
+  async addLoyaltyProgressAfterCheckout(
+    userId: number,
+    checkIn: Date,
+    checkOut: Date,
+    totalPrice: number,
+    tx?: Prisma.TransactionClient,
+  ): Promise<void> {
+    const prisma = tx || this.prisma;
+    const diffTime = Math.abs(
+      new Date(checkOut).getTime() - new Date(checkIn).getTime(),
+    );
+    const nights = Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+    const addedPoints = Math.round(Number(totalPrice) / 1000);
+
+    // Ensure loyalty program record exists
+    await this.createLoyaltyProgram(userId, { tx });
+
+    // Update statistics
+    await prisma.loyalty_program.update({
+      where: { userId },
+      data: {
+        totalBookings: { increment: 1 },
+        totalNights: { increment: nights },
+        points: { increment: addedPoints },
+      },
+    });
+  }
 }

@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import axios from 'axios';
 import { format } from 'date-fns';
 import { SENDER_EMAIL } from 'src/common/constant/app.constant';
 import transporter from 'src/config/nodemailer.config';
@@ -28,6 +29,57 @@ export class MailService {
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#039;');
+  }
+
+  private async sendMail(options: {
+    from: string;
+    to: string;
+    subject: string;
+    html: string;
+  }) {
+    const resendApiKey = process.env.RESEND_API_KEY;
+    if (resendApiKey) {
+      const fromEmail =
+        process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
+
+      let displayName = '4Stay Support';
+      const nameMatch = options.from.match(/^"([^"]+)"/);
+      if (nameMatch) {
+        displayName = nameMatch[1];
+      }
+
+      let rawFromEmail = fromEmail;
+      const emailMatch = fromEmail.match(/<([^>]+)>/);
+      if (emailMatch) {
+        rawFromEmail = emailMatch[1];
+      }
+      const fromValue = `${displayName} <${rawFromEmail}>`;
+
+      try {
+        const response = await axios.post(
+          'https://api.resend.com/emails',
+          {
+            from: fromValue,
+            to: [options.to],
+            subject: options.subject,
+            html: options.html,
+          },
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${resendApiKey}`,
+            },
+          },
+        );
+        return response.data;
+      } catch (error: any) {
+        const errMsg = error.response?.data?.message || error.message;
+        throw new Error(`Resend API Error: ${errMsg}`);
+      }
+    }
+
+    // Fallback to Nodemailer
+    await transporter.sendMail(options);
   }
 
   private bookingInfoBlock(booking: any) {
@@ -90,7 +142,7 @@ export class MailService {
       `;
     }
 
-    await transporter.sendMail({
+    await this.sendMail({
       from: `"4Stay Support" <${SENDER_EMAIL}>`,
       to,
       subject: `4Stay – ${subject}`,
@@ -207,7 +259,7 @@ export class MailService {
         break;
     }
 
-    await transporter.sendMail({
+    await this.sendMail({
       from: `"4Stay Support" <${SENDER_EMAIL}>`,
       to,
       subject: `4Stay - ${subject}`,
@@ -233,18 +285,19 @@ export class MailService {
       <div style="margin: 16px 0; padding: 14px; background: #fff7ed; border-left: 4px solid #FF6B00; color: #333;">
         ${safePreview}
       </div>
-      ${conversationUrl
-        ? `<p style="margin-top: 18px;">
+      ${
+        conversationUrl
+          ? `<p style="margin-top: 18px;">
               <a href="${conversationUrl}" style="display:inline-block; padding: 10px 16px; background:#FF6B00; color:#fff; text-decoration:none; border-radius:6px;">
                 Mở hộp thư
               </a>
             </p>`
-        : ''
+          : ''
       }
       <p style="color:#666;">Email này chỉ được gửi tối đa một lần trong 15 phút cho cùng một cuộc trò chuyện.</p>
     `;
 
-    await transporter.sendMail({
+    await this.sendMail({
       from: `"4Stay Support" <${SENDER_EMAIL}>`,
       to,
       subject: `4Stay - ${subject}`,
@@ -269,7 +322,7 @@ export class MailService {
         <p>Vui lòng kiểm tra lại lịch trình và liên hệ 4Stay nếu cần hỗ trợ.</p>
       `;
 
-    await transporter.sendMail({
+    await this.sendMail({
       from: `"4Stay Support" <${SENDER_EMAIL}>`,
       to,
       subject: `4Stay - ${subject}`,
@@ -281,7 +334,10 @@ export class MailService {
     const subject = `Yêu cầu hỗ trợ mới từ ${contactData.fullName}`;
     const safeName = this.escapeHtml(contactData.fullName);
     const safeEmail = this.escapeHtml(contactData.email);
-    const safeMessage = this.escapeHtml(contactData.message).replace(/\n/g, '<br/>');
+    const safeMessage = this.escapeHtml(contactData.message).replace(
+      /\n/g,
+      '<br/>',
+    );
 
     const body = `
       <p>Chào Admin,</p>
@@ -296,7 +352,7 @@ export class MailService {
       <p>Vui lòng liên hệ lại với khách hàng qua email trên để hỗ trợ.</p>
     `;
 
-    await transporter.sendMail({
+    await this.sendMail({
       from: `"4Stay System" <${SENDER_EMAIL}>`,
       to: adminEmail,
       subject: `[4Stay Support] ${subject}`,

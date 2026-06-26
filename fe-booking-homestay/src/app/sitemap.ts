@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 
-const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://4stay.com";
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://booking-4stay.vercel.app";
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3001";
 
@@ -10,8 +10,9 @@ async function fetchPublishedPosts() {
       next: { revalidate: 3600 }, // Revalidate every hour
     });
     if (!res.ok) return [];
-    const data = await res.json();
-    return data.items || [];
+    const resJson = await res.json();
+    const items = resJson.data?.items || [];
+    return Array.isArray(items) ? items : [];
   } catch {
     return [];
   }
@@ -23,11 +24,14 @@ async function fetchCategories() {
       next: { revalidate: 3600 },
     });
     if (!res.ok) return [];
-    return await res.json();
+    const resJson = await res.json();
+    const categories = resJson.data || [];
+    return Array.isArray(categories) ? categories : [];
   } catch {
     return [];
   }
 }
+
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [posts, categories] = await Promise.all([

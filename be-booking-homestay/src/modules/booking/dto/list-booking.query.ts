@@ -7,4 +7,12 @@ export class ListBookingQuery extends PaginationQueryDto {
   @IsOptional()
   @IsString()
   sortOrder?: 'asc' | 'desc' = 'desc';
+
+  @ApiPropertyOptional({
+    example: 'CHECKED_OUT',
+    description: 'Filter by status',
+  })
+  @IsOptional()
+  @IsString()
+  status?: string;
 }

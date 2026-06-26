@@ -31,9 +31,12 @@ export class BookingQueryService {
    * Lấy danh sách lịch sử đặt phòng của user đang đăng nhập (có phân trang).
    */
   async listMine(userId: number, q: ListBookingQuery) {
-    const { page = 1, pageSize = 12, sortOrder = 'desc' } = q;
+    const { page = 1, pageSize = 12, sortOrder = 'desc', status } = q;
 
-    const where = { userId };
+    const where: any = { userId };
+    if (status) {
+      where.status = status;
+    }
     const [items, total] = await this.prisma.$transaction([
       this.prisma.bookings.findMany({
         where,

@@ -97,12 +97,12 @@ export default async function BlogDetailPage({ params }: Props) {
     publisher: {
       "@type": "Organization",
       name: "4Stay Homestay Booking",
-      url: "https://4stay.booking.vn",
+      url: process.env.NEXT_PUBLIC_SITE_URL || "https://booking-4stay.vercel.app",
     },
     description: post.metaDescription || post.excerpt || post.title,
     mainEntityOfPage: {
       "@type": "WebPage",
-      "@id": `https://4stay.booking.vn/blog/${slug}`,
+      "@id": `${process.env.NEXT_PUBLIC_SITE_URL || "https://booking-4stay.vercel.app"}/blog/${slug}`,
     },
   };
 

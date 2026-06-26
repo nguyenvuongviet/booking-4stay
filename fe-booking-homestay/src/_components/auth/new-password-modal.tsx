@@ -164,7 +164,10 @@ export default function NewPasswordModal({
     <div className="fixed inset-0 bg-foreground/50 flex items-center justify-center z-50">
       <div className="bg-card rounded-lg p-8 w-full max-w-md shadow-2xl">
         <div className="flex items-center justify-center mb-6 relative">
-          <button className="absolute right-0" onClick={() => setShow(false)}>
+          <button
+            className="absolute right-0 cursor-pointer"
+            onClick={() => setShow(false)}
+          >
             <X size={24} />
           </button>
           <h2 className="text-3xl elegant-heading text-primary text-center">
@@ -191,7 +194,10 @@ export default function NewPasswordModal({
                 onChange={(e) => setEmail(e.target.value)}
               />
             </div>
-            <Button className="w-full rounded-2xl mb-4" type="submit">
+            <Button
+              className="w-full rounded-2xl mb-4 cursor-pointer"
+              type="submit"
+            >
               {t("Next")}
             </Button>
           </form>
@@ -235,7 +241,7 @@ export default function NewPasswordModal({
 
             {error && <p className="text-destructive text-sm mb-4">{error}</p>}
 
-            <Button className="w-full rounded-2xl" type="submit">
+            <Button className="w-full rounded-2xl cursor-pointer" type="submit">
               {t("Verify")} OTP
             </Button>
 
@@ -245,7 +251,7 @@ export default function NewPasswordModal({
               </span>
               <button
                 type="button"
-                className="text-primary elegant-sans text-sm hover:underline"
+                className="text-primary elegant-sans text-sm hover:underline cursor-pointer"
                 onClick={handleSendOtp}
               >
                 {t("Resend")} OTP
@@ -278,7 +284,7 @@ export default function NewPasswordModal({
                 />
                 <button
                   type="button"
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-primary hover:text-primary/80"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-primary hover:text-primary/80 cursor-pointer"
                   onClick={() => setShowPassword(!showPassword)}
                 >
                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -314,7 +320,7 @@ export default function NewPasswordModal({
               {t("Use 6 or more characters")}!
             </p>
 
-            <Button className="rounded-2xl w-full h-10 mb-2">
+            <Button className="rounded-2xl w-full h-10 mb-2 cursor-pointer">
               {t("Submit")}
             </Button>
           </form>
