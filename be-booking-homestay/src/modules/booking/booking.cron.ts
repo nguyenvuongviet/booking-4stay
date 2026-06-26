@@ -26,10 +26,9 @@ export class BookingCron {
   ) {}
 
   /**
-   * Chạy lúc 12:00 trưa mỗi ngày.
    * Tự động quét và chuyển các đơn từ CHECKED_IN sang CHECKED_OUT nếu hôm nay là ngày trả phòng.
    */
-  @Cron('*/5 * * * * *', { timeZone: 'Asia/Ho_Chi_Minh' })
+  @Cron('0 0 12 * * *', { timeZone: 'Asia/Ho_Chi_Minh' })
   async handleAutoCheckOut() {
     const today = startOfDay(new Date());
     const checkouts = await this.prisma.bookings.findMany({
@@ -59,10 +58,9 @@ export class BookingCron {
   }
 
   /**
-   * Chạy lúc 14:00 chiều mỗi ngày.
    * Tự động quét và chuyển các đơn từ CONFIRMED/PARTIALLY_PAID sang CHECKED_IN nếu hôm nay là ngày nhận phòng.
    */
-  @Cron('*/5 * * * * *', { timeZone: 'Asia/Ho_Chi_Minh' })
+  @Cron('0 0 14 * * *', { timeZone: 'Asia/Ho_Chi_Minh' })
   async handleAutoCheckIn() {
     const today = startOfDay(new Date());
 
@@ -95,7 +93,6 @@ export class BookingCron {
   }
 
   /**
-   * Chạy mỗi phút (* * * * *).
    * Tự động quét và hủy các đơn PENDING nếu quá thời gian giữ chỗ (ví dụ: 15 phút) mà chưa thanh toán.
    */
   @Cron('* * * * *')
@@ -145,7 +142,6 @@ export class BookingCron {
   }
 
   /**
-   * Chạy lúc 2:00 sáng mỗi ngày.
    * Dọn dẹp các dữ liệu lịch phòng (giá phòng, khóa phòng) cũ hơn 30 ngày để làm nhẹ database.
    */
   @Cron('0 2 * * *', { timeZone: 'Asia/Ho_Chi_Minh' })
@@ -172,7 +168,6 @@ export class BookingCron {
   }
 
   /**
-   * Chạy mỗi 1 tiếng mỗi ngày.
    * Nhắc khách có booking sắp check-in vào ngày mai.
    */
   @Cron('0 * * * *', { timeZone: 'Asia/Ho_Chi_Minh' })
@@ -295,7 +290,6 @@ export class BookingCron {
   }
 
   /**
-   * Chạy mỗi 5 phút.
    * Đối soát các giao dịch thanh toán PENDING quá 10 phút với PayOS.
    * Phòng trường hợp webhook bị mất (network issue).
    */

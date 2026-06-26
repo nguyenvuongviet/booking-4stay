@@ -154,9 +154,8 @@ export class RecommendationController {
   }
 
   @Get('popular-destinations')
-  getPopularDestinations(
-    @Query('limit') limit?: string,
-  ) {
+  @Public()
+  getPopularDestinations(@Query('limit') limit?: string) {
     return this.recommendationService.getPopularDestinations(
       Number(limit) || 10,
     );

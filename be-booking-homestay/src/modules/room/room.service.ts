@@ -16,7 +16,7 @@ export class RoomService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly ragIndexService: RagIndexService,
-  ) { }
+  ) {}
 
   async findAll(query: RoomFilterDto) {
     let {
@@ -154,22 +154,46 @@ export class RoomService {
   }
 
   async create(hostId: number = 1, dto: CreateRoomDto) {
+    const fullAddress = await this.getFullAddress(
+      dto.street,
+      dto.wardId,
+      dto.provinceId,
+      1, // Default countryId to 1 (Việt Nam)
+    );
     const room = await this.prisma.rooms.create({
-      data: { ...dto, hostId },
+      data: { ...dto, hostId, fullAddress },
     });
     // Kích hoạt đồng bộ vector ngầm
-    this.ragIndexService.indexRoom(room.id).catch(e => console.error('[RAG] Failed to index room:', e));
+    this.ragIndexService
+      .indexRoom(room.id)
+      .catch((e) => console.error('[RAG] Failed to index room:', e));
     return room;
   }
 
   async update(id: number, dto: UpdateRoomDto) {
-    await this.findOne(id);
+    const existing = await this.findOne(id);
+
+    const street = dto.street !== undefined ? dto.street : existing.street;
+    const wardId = dto.wardId !== undefined ? dto.wardId : existing.wardId;
+    const provinceId =
+      dto.provinceId !== undefined ? dto.provinceId : existing.provinceId;
+    const countryId = existing.countryId;
+
+    const fullAddress = await this.getFullAddress(
+      street,
+      wardId,
+      provinceId,
+      countryId,
+    );
+
     const room = await this.prisma.rooms.update({
       where: { id },
-      data: dto,
+      data: { ...dto, fullAddress },
     });
     // Kích hoạt đồng bộ vector ngầm
-    this.ragIndexService.indexRoom(id).catch(e => console.error('[RAG] Failed to index room:', e));
+    this.ragIndexService
+      .indexRoom(id)
+      .catch((e) => console.error('[RAG] Failed to index room:', e));
     return room;
   }
 
@@ -207,6 +231,42 @@ export class RoomService {
     // Xoá vector khi phòng bị xoá
     await this.prisma.room_embeddings
       .delete({ where: { roomId: id } })
-      .catch(() => { });
+      .catch(() => {});
+  }
+
+  async getFullAddress(
+    street?: string | null,
+    wardId?: number | null,
+    provinceId?: number | null,
+    countryId?: number | null,
+  ): Promise<string> {
+    const parts: string[] = [];
+    if (street) parts.push(street);
+
+    if (wardId) {
+      const ward = await this.prisma.location_wards.findUnique({
+        where: { id: wardId },
+        select: { name: true },
+      });
+      if (ward) parts.push(ward.name);
+    }
+
+    if (provinceId) {
+      const province = await this.prisma.location_provinces.findUnique({
+        where: { id: provinceId },
+        select: { name: true },
+      });
+      if (province) parts.push(province.name);
+    }
+
+    if (countryId) {
+      const country = await this.prisma.location_countries.findUnique({
+        where: { id: countryId },
+        select: { name: true },
+      });
+      if (country) parts.push(country.name);
+    }
+
+    return parts.join(', ');
   }
 }

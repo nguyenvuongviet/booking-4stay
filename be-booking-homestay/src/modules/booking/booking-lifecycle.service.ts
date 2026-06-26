@@ -86,6 +86,12 @@ export class BookingLifecycleService {
     }
 
     if (newStatus === bookings_status.CHECKED_OUT) {
+      await this.loyaltyProgram.addLoyaltyProgressAfterCheckout(
+        updated.userId,
+        updated.checkIn,
+        updated.checkOut,
+        Number(updated.totalPrice),
+      );
       await this.loyaltyProgram.recalculateLoyaltyLevel(updated.userId);
 
       // Auto Reward: Tặng coupon THANKYOU cho user sau checkout
