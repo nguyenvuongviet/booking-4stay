@@ -1,25 +1,36 @@
 import { PrismaClient } from '@prisma/client';
 import { execSync } from 'child_process';
 import * as fs from 'fs';
-import * as path from 'path';
 import * as mysql from 'mysql2/promise';
+import * as path from 'path';
 
 const prisma = new PrismaClient();
 
 /**
- * Hỗ trợ đợi database sẵn sàng (retry 5 lần)
+ * Hỗ trợ đợi database sẵn sàng (retry 5 lần) - Đã cấu hình thêm SSL cho Cloud DBs
  */
 async function waitForDatabase(
   dbUrl: string,
   retries = 5,
 ): Promise<mysql.Connection | null> {
+  const connectionConfig: any = { uri: dbUrl };
+
+  if (
+    dbUrl.includes('sslaccept=') ||
+    dbUrl.includes('ssl=') ||
+    dbUrl.includes('tidb') ||
+    dbUrl.includes('aiven')
+  ) {
+    connectionConfig.ssl = { minVersion: 'TLSv1.2', rejectUnauthorized: false };
+  }
+
   for (let i = 0; i < retries; i++) {
     try {
-      const conn = await mysql.createConnection({ uri: dbUrl });
+      const conn = await mysql.createConnection(connectionConfig);
       return conn;
-    } catch (err) {
+    } catch (err: any) {
       console.log(
-        `[!] Đang đợi database sẵn sàng... (Lần thử ${i + 1}/${retries})`,
+        `[!] Đang đợi database sẵn sàng... (Lần thử ${i + 1}/${retries}). Lỗi: ${err.message}`,
       );
       await new Promise((res) => setTimeout(res, 2000));
     }
@@ -39,10 +50,21 @@ async function executeSqlFileWithMysql2(filePath: string) {
   const dbUrl = process.env.DATABASE_URL;
   if (!dbUrl) throw new Error('DATABASE_URL không tồn tại trong môi trường.');
 
-  const connection = await mysql.createConnection({
+  const connectionConfig: any = {
     uri: dbUrl,
     multipleStatements: true,
-  });
+  };
+
+  if (
+    dbUrl.includes('sslaccept=') ||
+    dbUrl.includes('ssl=') ||
+    dbUrl.includes('tidb') ||
+    dbUrl.includes('aiven')
+  ) {
+    connectionConfig.ssl = { minVersion: 'TLSv1.2', rejectUnauthorized: false };
+  }
+
+  const connection = await mysql.createConnection(connectionConfig);
 
   try {
     const sql = fs.readFileSync(filePath, 'utf-8');
@@ -89,10 +111,18 @@ async function main() {
     execSync('npx ts-node src/scripts/seed-configs.ts', { stdio: 'inherit' });
 
     // Bước 2: Triggers & Procedures
-    console.log('\n Bước 2: Thiết lập Triggers & Procedures...');
-    await executeSqlFileWithMysql2(
-      path.join(__dirname, '../../db/db_trigger.sql'),
-    );
+    const isTiDB =
+      dbUrl.includes('tidb') || process.env.SKIP_TRIGGERS === 'true';
+    if (isTiDB) {
+      console.log(
+        '\n Bước 2: Phát hiện database TiDB (hoặc SKIP_TRIGGERS=true). Tự động bỏ qua thiết lập Triggers & Procedures SQL (đã được chuyển lên tầng NestJS Services)...',
+      );
+    } else {
+      console.log('\n Bước 2: Thiết lập Triggers & Procedures...');
+      await executeSqlFileWithMysql2(
+        path.join(__dirname, '../../db/db_trigger.sql'),
+      );
+    }
 
     // Bước 3: Locations API
     console.log('\n Bước 3: Đồng bộ 63 tỉnh thành Việt Nam (API)...');

@@ -28,6 +28,7 @@ export class ReviewService {
         status: true,
         isDeleted: true,
         isReview: true,
+        roomId: true,
       },
     });
 
@@ -56,6 +57,8 @@ export class ReviewService {
       }),
     ]);
 
+    await this.recomputeRoomRating(b.roomId);
+
     return { message: 'Tạo review thành công' };
   }
 
@@ -81,7 +84,16 @@ export class ReviewService {
   async remove(id: number, role: string) {
     const r = await this.prisma.reviews.findUnique({
       where: { id },
-      select: { id: true, userId: true, isDeleted: true },
+      select: {
+        id: true,
+        userId: true,
+        isDeleted: true,
+        bookings: {
+          select: {
+            roomId: true,
+          },
+        },
+      },
     });
     if (!r || r.isDeleted) throw new NotFoundException('Review không tồn tại');
 
@@ -97,6 +109,10 @@ export class ReviewService {
         updatedAt: new Date(),
       },
     });
+
+    if (r.bookings?.roomId) {
+      await this.recomputeRoomRating(r.bookings.roomId);
+    }
 
     return { message: 'Xoá review thành công' };
   }
@@ -138,5 +154,35 @@ export class ReviewService {
     ]);
 
     return { page, pageSize, total, items: sanitizeReviewList(items) };
+  }
+
+  async recomputeRoomRating(roomId: number) {
+    const aggregate = await this.prisma.reviews.aggregate({
+      where: {
+        isDeleted: false,
+        bookings: {
+          roomId: roomId,
+          isDeleted: false,
+        },
+      },
+      _avg: {
+        rating: true,
+      },
+      _count: {
+        id: true,
+      },
+    });
+
+    const avg = aggregate._avg.rating ? Number(aggregate._avg.rating) : 0;
+    const averageRating = Math.round(avg * 10) / 10;
+    const reviewCount = aggregate._count.id;
+
+    await this.prisma.rooms.update({
+      where: { id: roomId },
+      data: {
+        rating: averageRating,
+        reviewCount: reviewCount,
+      },
+    });
   }
 }
