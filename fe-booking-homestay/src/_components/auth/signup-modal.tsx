@@ -3,12 +3,17 @@
 import { Button } from "@/_components/ui/button";
 import { Input } from "@/_components/ui/input";
 import { Label } from "@/_components/ui/label";
+import {
+  validateEmail,
+  validatePasswordStrength,
+  validatePhoneNumber,
+} from "@/_helper/validation.helper";
 import { useAuth } from "@/context/auth-context";
+import { useLang } from "@/context/lang-context";
 import { register } from "@/services/authApi";
 import { Eye, EyeOff, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import GoogleLoginButton from "./GoogleLoginButton";
-import { useLang } from "@/context/lang-context";
 
 interface SignUpModalProps {
   show: boolean;
@@ -64,50 +69,40 @@ export default function SignUpModal({
 
   if (!show) return null;
 
-  const validateEmail = (email: string) => {
-    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return re.test(email);
-  };
-
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     console.log("Sign In button clicked");
-    let hasError = false;
 
-    if (!firstName.trim()) {
-      setFirstNameError("Vui lòng nhập Họ của bạn!");
-      hasError = true;
-    } else setFirstNameError("");
-    if (!lastName.trim()) {
-      setLastNameError("Vui lòng nhập Tên của bạn!");
-      hasError = true;
-    } else setLastNameError("");
-    if (!phone.trim()) {
-      setPhoneError("Vui lòng nhập số điện thoại!");
-      hasError = true;
-    } else setPhoneError("");
-    if (!passwordInput) {
-      setPasswordError("Vui lòng nhập mật khẩu!");
-      hasError = true;
-    } else if (passwordInput.length < 6) {
-      setPasswordError("Mật khẩu phải có ít nhất 6 kí tự!");
-      hasError = true;
-    } else setPasswordError("");
+    const firstNameErr = !firstName.trim() ? "Vui lòng nhập Họ của bạn!" : "";
+    const lastNameErr = !lastName.trim() ? "Vui lòng nhập Tên của bạn!" : "";
+    const emailErr = validateEmail(emailInput);
+    const phoneErr = validatePhoneNumber(phone);
+    const pwdErr = validatePasswordStrength(passwordInput);
+    let confirmPwdErr = "";
+
     if (!confirmPassword) {
-      setConfirmPasswordError("Xác nhận mật khẩu!");
-      hasError = true;
+      confirmPwdErr = "Xác nhận mật khẩu!";
     } else if (passwordInput !== confirmPassword) {
-      setConfirmPasswordError("Mật khẩu không trùng khớp!");
-      hasError = true;
-    } else setConfirmPasswordError("");
-    if (!emailInput.trim()) {
-      setEmailError("Vui lòng nhập email!");
-      hasError = true;
-    } else if (!validateEmail(emailInput.trim())) {
-      setEmailError("Vui lòng nhập email đúng!");
-      hasError = true;
-    } else setEmailError("");
-    if (hasError) return;
+      confirmPwdErr = "Mật khẩu không trùng khớp!";
+    }
+
+    setFirstNameError(firstNameErr);
+    setLastNameError(lastNameErr);
+    setEmailError(emailErr);
+    setPhoneError(phoneErr);
+    setPasswordError(pwdErr);
+    setConfirmPasswordError(confirmPwdErr);
+
+    if (
+      firstNameErr ||
+      lastNameErr ||
+      emailErr ||
+      phoneErr ||
+      pwdErr ||
+      confirmPwdErr
+    ) {
+      return;
+    }
 
     setApiError("");
     setLoading(true);
@@ -155,7 +150,7 @@ export default function SignUpModal({
               </h2>
             </div>
             {apiError && (
-              <p className="text-destructive text-left text-sm mt-4 elegant-subheading">
+              <p className="text-destructive text-left text-sm mt-4 elegant-subheading mb-4">
                 {apiError}
               </p>
             )}
@@ -172,7 +167,14 @@ export default function SignUpModal({
                     id="firstName"
                     className="bg-input rounded-2xl mt-1 mb-2"
                     value={firstName}
-                    onChange={(e) => setFirstName(e.target.value)}
+                    onChange={(e) => {
+                      setFirstName(e.target.value);
+                      setFirstNameError(
+                        e.target.value.trim()
+                          ? ""
+                          : "Vui lòng nhập Họ của bạn!",
+                      );
+                    }}
                   />
                   {firstNameError && (
                     <p className="text-destructive text-xs mb-1">
@@ -192,7 +194,14 @@ export default function SignUpModal({
                     id="lastName"
                     className="bg-input rounded-2xl mt-1 mb-2"
                     value={lastName}
-                    onChange={(e) => setLastName(e.target.value)}
+                    onChange={(e) => {
+                      setLastName(e.target.value);
+                      setLastNameError(
+                        e.target.value.trim()
+                          ? ""
+                          : "Vui lòng nhập Tên của bạn!",
+                      );
+                    }}
                   />
                   {lastNameError && (
                     <p className="text-destructive text-xs mb-1">
@@ -214,7 +223,10 @@ export default function SignUpModal({
                   type="email"
                   className="bg-input rounded-2xl mt-1 mb-2"
                   value={emailInput}
-                  onChange={(e) => setEmailInput(e.target.value)}
+                  onChange={(e) => {
+                    setEmailInput(e.target.value);
+                    setEmailError(validateEmail(e.target.value));
+                  }}
                 />
               </div>
               {emailError && (
@@ -233,7 +245,10 @@ export default function SignUpModal({
                   type="tel"
                   className="bg-input rounded-2xl mt-1 mb-2"
                   value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
+                  onChange={(e) => {
+                    setPhone(e.target.value);
+                    setPhoneError(validatePhoneNumber(e.target.value));
+                  }}
                 />
               </div>
               {phoneError && (
@@ -256,7 +271,16 @@ export default function SignUpModal({
                       value={passwordInput}
                       onChange={(e) => {
                         setPasswordInput(e.target.value);
-                        if (passwordError) setPasswordError("");
+                        setPasswordError(
+                          validatePasswordStrength(e.target.value),
+                        );
+                        if (confirmPassword) {
+                          setConfirmPasswordError(
+                            e.target.value === confirmPassword
+                              ? ""
+                              : "Mật khẩu không trùng khớp!",
+                          );
+                        }
                       }}
                     />
                     <button
@@ -288,7 +312,11 @@ export default function SignUpModal({
                     value={confirmPassword}
                     onChange={(e) => {
                       setConfirmPassword(e.target.value);
-                      if (confirmPasswordError) setConfirmPasswordError("");
+                      setConfirmPasswordError(
+                        passwordInput === e.target.value
+                          ? ""
+                          : "Mật khẩu không trùng khớp!",
+                      );
                     }}
                   />
                   {confirmPasswordError && (
@@ -297,8 +325,11 @@ export default function SignUpModal({
                     </p>
                   )}
                 </div>
-                <p className="text-muted-foreground elegant-subheading text-xs mb-4">
-                  {t("Use 6 or more characters")}!
+
+                <p className="text-muted-foreground elegant-subheading text-[10px] mb-4 leading-relaxed col-span-2">
+                  Yêu cầu mật khẩu mạnh: Tối thiểu 8 ký tự, gồm ít nhất 1 chữ
+                  hoa, 1 chữ thường, 1 số và 1 ký tự đặc biệt (@, $, !, %, *, ?,
+                  &).
                 </p>
               </div>
 

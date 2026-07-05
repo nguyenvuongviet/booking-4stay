@@ -70,11 +70,11 @@ export class RoomFilterDto extends PaginationQueryDto {
 
   @ApiPropertyOptional({
     example: 'price',
-    description: 'sortBy: price|rating|createdAt',
+    description: 'sortBy: price|rating|createdAt|id',
   })
   @IsOptional()
   @IsString()
-  sortBy?: 'price' | 'rating' | 'createdAt';
+  sortBy?: 'price' | 'rating' | 'createdAt' | 'id';
 
   @ApiPropertyOptional({ example: 'asc', description: 'sortOrder: asc|desc' })
   @IsOptional()

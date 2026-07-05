@@ -47,8 +47,8 @@ export default function BookingSummary(props: Props) {
   const hasWaterfallDiscount = couponDiscount > 0 || loyaltyDiscount > 0;
 
   return (
-    <Card className="p-4 sm:p-6 sticky top-24 max-h-screen overflow-y-auto space-y-4">
-      <h2 className="text-xl sm:text-2xl elegant-heading mb-4 sm:mb-6">
+    <Card className="p-4 sm:p-6 sticky top-24 overflow-y-auto space-y-4">
+      <h2 className="text-xl sm:text-2xl elegant-heading mb-2 sm:mb-4">
         {t("Booking Summary")}
       </h2>
       <div className="w-full h-40 sm:h-50 rounded-2xl overflow-hidden mb-2">

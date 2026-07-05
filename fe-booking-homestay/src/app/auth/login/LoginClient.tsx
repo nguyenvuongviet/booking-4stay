@@ -1,9 +1,13 @@
 "use client";
 
-import Loader from "@/_components/ui/loader";
 import { Button } from "@/_components/ui/button";
 import { Card } from "@/_components/ui/card";
+import Loader from "@/_components/ui/loader";
 import { toast } from "@/_components/ui/use-toast";
+import {
+  validateEmail,
+  validateLoginPassword,
+} from "@/_helper/validation.helper";
 import { STORAGE_KEYS } from "@/constants";
 import { useAuth } from "@/context/auth-context";
 import { isAdmin } from "@/lib/utils/auth-client";
@@ -22,6 +26,8 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
 
   const nextRoute = params.get("next") || "/admin";
 
@@ -42,23 +48,42 @@ export default function LoginPage() {
     }
   }, [isLoading]);
 
+  const handleEmailChange = (val: string) => {
+    setEmail(val);
+    setEmailError(validateEmail(val));
+  };
+
+  const handlePasswordChange = (val: string) => {
+    setPassword(val);
+    setPasswordError(validateLoginPassword(val));
+  };
+
+  const validateForm = () => {
+    const emailErr = validateEmail(email);
+    const pwdErr = validateLoginPassword(password);
+    setEmailError(emailErr);
+    setPasswordError(pwdErr);
+    return !emailErr && !pwdErr;
+  };
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
-    const emailTrim = email.trim();
-    const pwdTrim = password.trim();
-    if (!emailTrim || !pwdTrim) {
+    if (!validateForm()) {
       toast({
         variant: "destructive",
-        title: "Thiếu thông tin",
-        description: "Vui lòng nhập đầy đủ Email và Mật khẩu.",
+        title: "Thông tin chưa hợp lệ",
+        description: "Vui lòng kiểm tra lại các trường thông tin bị lỗi.",
       });
       return;
     }
 
     try {
       setIsLoading(true);
-      const { data } = await login({ email: emailTrim, password: pwdTrim });
+      const { data } = await login({
+        email: email.trim(),
+        password: password.trim(),
+      });
       const { accessToken, refreshToken, user } = data || {};
       if (!accessToken || !user) throw new Error("Đăng nhập thất bại");
       const userRoles = user.roles || [];
@@ -68,7 +93,7 @@ export default function LoginPage() {
       const currentData = { accessToken, refreshToken, user };
       localStorage.setItem(
         STORAGE_KEYS.CURRENT_USER,
-        JSON.stringify(currentData)
+        JSON.stringify(currentData),
       );
 
       updateUser(user);
@@ -114,9 +139,12 @@ export default function LoginPage() {
 
         <form onSubmit={handleSubmit} className="space-y-4 mt-6">
           <div>
-            <label className="block text-sm font-medium text-foreground mb-2">
+            <label className="block text-sm font-medium text-foreground mb-1">
               Email
             </label>
+            <p className="text-[11px] text-muted-foreground mb-2">
+              Định dạng email hợp lệ (Ví dụ: name@example.com)
+            </p>
             <div className="relative">
               <Mail className="absolute left-3 top-3 w-5 h-5 text-muted-foreground" />
               <input
@@ -124,19 +152,31 @@ export default function LoginPage() {
                 name="email"
                 autoComplete="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => handleEmailChange(e.target.value)}
                 placeholder="admin@example.com"
-                className="w-full pl-10 pr-4 py-2 border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background"
+                className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background ${
+                  emailError
+                    ? "border-red-500 focus:ring-red-200"
+                    : "border-input"
+                }`}
                 disabled={isLoading}
                 required
               />
             </div>
+            {emailError && (
+              <p className="text-xs text-red-500 mt-1 animate-in fade-in-50">
+                {emailError}
+              </p>
+            )}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-foreground mb-2">
-              Password
+            <label className="block text-sm font-medium text-foreground mb-1">
+              Mật khẩu
             </label>
+            <p className="text-[11px] text-muted-foreground mb-2">
+              Độ dài tối thiểu 6 ký tự
+            </p>
             <div className="relative">
               <Lock className="absolute left-3 top-3 w-5 h-5 text-muted-foreground" />
               <input
@@ -144,9 +184,13 @@ export default function LoginPage() {
                 name="password"
                 autoComplete="current-password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => handlePasswordChange(e.target.value)}
                 placeholder="••••••••"
-                className="w-full pl-10 pr-10 py-2 border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background"
+                className={`w-full pl-10 pr-10 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background ${
+                  passwordError
+                    ? "border-red-500 focus:ring-red-200"
+                    : "border-input"
+                }`}
                 disabled={isLoading}
                 required
               />
@@ -164,6 +208,11 @@ export default function LoginPage() {
                 )}
               </button>
             </div>
+            {passwordError && (
+              <p className="text-xs text-red-500 mt-1 animate-in fade-in-50">
+                {passwordError}
+              </p>
+            )}
           </div>
 
           <div className="flex items-center justify-between text-sm">
@@ -182,7 +231,7 @@ export default function LoginPage() {
 
           <Button
             type="submit"
-            disabled={isLoading}
+            disabled={isLoading || !!emailError || !!passwordError}
             className="w-full bg-primary hover:bg-primary/90 text-primary-foreground py-2 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
           >
             {isLoading ? (
@@ -209,4 +258,3 @@ export default function LoginPage() {
     </div>
   );
 }
-

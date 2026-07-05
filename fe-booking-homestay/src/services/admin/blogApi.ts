@@ -153,3 +153,10 @@ export const upload_blog_image = async (data: FormData) => {
   const res = await api.post("/admin/blog/upload", data);
   return res.data;
 };
+
+export const delete_blog_image = async (imageUrl: string) => {
+  const res = await api.delete("/admin/blog/upload", {
+    data: { imageUrl },
+  });
+  return res.data;
+};

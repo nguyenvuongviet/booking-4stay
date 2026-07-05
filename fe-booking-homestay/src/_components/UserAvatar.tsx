@@ -43,7 +43,7 @@ export function UserAvatar({
       className={cn(
         wrapper,
         "bg-gray-300 rounded-full flex items-center justify-center",
-        className
+        className,
       )}
     >
       <UserIcon className={cn(fallbackIconClass, "text-muted-foreground")} />

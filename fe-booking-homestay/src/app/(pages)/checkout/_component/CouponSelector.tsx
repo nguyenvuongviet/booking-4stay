@@ -129,8 +129,8 @@ export default function CouponSelector({
   });
 
   return (
-    <Card className="p-4 sm:p-6 space-y-4 sm:space-y-6 rounded-2xl bg-card">
-      <h2 className="text-xl sm:text-2xl elegant-heading mb-4 sm:mb-6 flex items-center gap-2">
+    <Card className="p-4 sm:p-6 space-y-2 sm:space-y-4 rounded-2xl bg-card">
+      <h2 className="text-xl sm:text-2xl elegant-heading mb-2 sm:mb-4 flex items-center gap-2">
         <Ticket className="text-primary w-5 h-5 sm:w-6 sm:h-6" />
         Mã Giảm Giá (Coupon)
       </h2>

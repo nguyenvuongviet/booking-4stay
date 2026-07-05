@@ -47,7 +47,14 @@ api.interceptors.response.use(
     if (!error.response || originalRequest._retry) {
       if (error.response?.status === 401) {
         localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
-        window.location.href = "/auth/login";
+        if (typeof window !== "undefined") {
+          const isAdminPath = window.location.pathname.startsWith("/admin");
+          if (isAdminPath) {
+            window.location.href = `/auth/login?next=${encodeURIComponent(window.location.pathname)}`;
+          } else {
+            window.location.href = "/";
+          }
+        }
       }
       return Promise.reject(error);
     }
@@ -59,7 +66,7 @@ api.interceptors.response.use(
       status === 401 ||
       (status === 403 &&
         (error.response?.data?.message === "jwt expired" ||
-         error.response?.data?.message?.includes("expired")));
+          error.response?.data?.message?.includes("expired")));
 
     if (isTokenExpired) {
       if (isRefreshing) {
@@ -106,7 +113,14 @@ api.interceptors.response.use(
       } catch (refreshError) {
         isRefreshing = false;
         localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
-        window.location.href = "/auth/login";
+        if (typeof window !== "undefined") {
+          const isAdminPath = window.location.pathname.startsWith("/admin");
+          if (isAdminPath) {
+            window.location.href = `/auth/login?next=${encodeURIComponent(window.location.pathname)}`;
+          } else {
+            window.location.href = "/";
+          }
+        }
         return Promise.reject(refreshError);
       }
     }

@@ -3,8 +3,9 @@
 import { Button } from "@/_components/ui/button";
 import { Card } from "@/_components/ui/card";
 import { Input } from "@/_components/ui/input";
+import { validatePasswordStrength } from "@/_helper/validation.helper";
 import { change_password } from "@/services/authApi";
-import { Save } from "lucide-react";
+import { Eye, EyeOff, Save } from "lucide-react";
 import { useState } from "react";
 import toast from "react-hot-toast";
 
@@ -15,27 +16,67 @@ export default function SecurityTab() {
     confirmPassword: "",
   });
 
+  const [errors, setErrors] = useState({
+    oldPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+
+  const [showOldPassword, setShowOldPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
   const handlePasswordChange = (key: string, value: string) => {
     setPasswordForm((prev) => ({ ...prev, [key]: value }));
+
+    setErrors((prev) => {
+      const nextErrors = { ...prev };
+
+      if (key === "oldPassword") {
+        nextErrors.oldPassword = value
+          ? ""
+          : "Vui lòng nhập mật khẩu hiện tại.";
+      }
+
+      if (key === "newPassword") {
+        nextErrors.newPassword = validatePasswordStrength(value);
+        if (passwordForm.confirmPassword) {
+          nextErrors.confirmPassword =
+            value === passwordForm.confirmPassword
+              ? ""
+              : "Xác nhận mật khẩu không khớp với mật khẩu mới.";
+        }
+      }
+
+      if (key === "confirmPassword") {
+        nextErrors.confirmPassword =
+          value === passwordForm.newPassword
+            ? ""
+            : "Xác nhận mật khẩu không khớp với mật khẩu mới.";
+      }
+
+      return nextErrors;
+    });
   };
 
   const savePassword = async () => {
-    if (
-      !passwordForm.oldPassword ||
-      !passwordForm.newPassword ||
-      !passwordForm.confirmPassword
-    ) {
-      toast.error("Vui lòng điền đầy đủ các trường mật khẩu");
-      return;
-    }
+    const oldErr = passwordForm.oldPassword
+      ? ""
+      : "Vui lòng nhập mật khẩu hiện tại.";
+    const newErr = validatePasswordStrength(passwordForm.newPassword);
+    const confirmErr =
+      passwordForm.confirmPassword === passwordForm.newPassword
+        ? ""
+        : "Xác nhận mật khẩu không khớp với mật khẩu mới.";
 
-    if (passwordForm.newPassword.length < 6) {
-      toast.error("Mật khẩu mới phải có ít nhất 6 ký tự");
-      return;
-    }
+    setErrors({
+      oldPassword: oldErr,
+      newPassword: newErr,
+      confirmPassword: confirmErr,
+    });
 
-    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      toast.error("Mật khẩu mới và xác nhận mật khẩu không trùng khớp");
+    if (oldErr || newErr || confirmErr) {
+      toast.error("Vui lòng sửa các lỗi nhập liệu trước khi lưu.");
       return;
     }
 
@@ -51,6 +92,14 @@ export default function SecurityTab() {
         newPassword: "",
         confirmPassword: "",
       });
+      setErrors({
+        oldPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      });
+      setShowOldPassword(false);
+      setShowNewPassword(false);
+      setShowConfirmPassword(false);
     } catch (error: any) {
       console.error(error);
       const errorMsg =
@@ -73,36 +122,125 @@ export default function SecurityTab() {
           <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-4">
             Đổi mật khẩu
           </h3>
-          <div className="space-y-4">
-            <Input
-              type="password"
-              placeholder="Mật khẩu hiện tại"
-              value={passwordForm.oldPassword}
-              onChange={(e) =>
-                handlePasswordChange("oldPassword", e.target.value)
-              }
-              className="h-11 rounded-lg border-border/80 bg-card focus-visible:ring-primary/20"
-            />
-            <Input
-              type="password"
-              placeholder="Mật khẩu mới"
-              value={passwordForm.newPassword}
-              onChange={(e) =>
-                handlePasswordChange("newPassword", e.target.value)
-              }
-              className="h-11 rounded-lg border-border/80 bg-card focus-visible:ring-primary/20"
-            />
-            <Input
-              type="password"
-              placeholder="Xác nhận mật khẩu mới"
-              value={passwordForm.confirmPassword}
-              onChange={(e) =>
-                handlePasswordChange("confirmPassword", e.target.value)
-              }
-              className="h-11 rounded-lg border-border/80 bg-card focus-visible:ring-primary/20"
-            />
+          <div className="space-y-5">
+            <div>
+              <div className="relative">
+                <Input
+                  type={showOldPassword ? "text" : "password"}
+                  placeholder="Mật khẩu hiện tại"
+                  value={passwordForm.oldPassword}
+                  onChange={(e) =>
+                    handlePasswordChange("oldPassword", e.target.value)
+                  }
+                  className={`h-11 rounded-lg bg-card pr-10 focus-visible:ring-primary/20 ${
+                    errors.oldPassword
+                      ? "border-red-500 focus-visible:ring-red-200"
+                      : "border-border/80"
+                  }`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowOldPassword((s) => !s)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
+                  aria-label={showOldPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                >
+                  {showOldPassword ? (
+                    <EyeOff className="w-5 h-5" />
+                  ) : (
+                    <Eye className="w-5 h-5" />
+                  )}
+                </button>
+              </div>
+              {errors.oldPassword && (
+                <p className="text-xs text-red-500 mt-1 animate-in fade-in-50">
+                  {errors.oldPassword}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <p className="text-[11px] text-muted-foreground mb-2 leading-relaxed">
+                Yêu cầu mật khẩu mạnh: Tối thiểu 8 ký tự, gồm ít nhất 1 chữ hoa,
+                1 chữ thường, 1 số và 1 ký tự đặc biệt (@, $, !, %, *, ?, &).
+              </p>
+              <div className="relative">
+                <Input
+                  type={showNewPassword ? "text" : "password"}
+                  placeholder="Mật khẩu mới"
+                  value={passwordForm.newPassword}
+                  onChange={(e) =>
+                    handlePasswordChange("newPassword", e.target.value)
+                  }
+                  className={`h-11 rounded-lg bg-card pr-10 focus-visible:ring-primary/20 ${
+                    errors.newPassword
+                      ? "border-red-500 focus-visible:ring-red-200"
+                      : "border-border/80"
+                  }`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowNewPassword((s) => !s)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
+                  aria-label={showNewPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                >
+                  {showNewPassword ? (
+                    <EyeOff className="w-5 h-5" />
+                  ) : (
+                    <Eye className="w-5 h-5" />
+                  )}
+                </button>
+              </div>
+              {errors.newPassword && (
+                <p className="text-xs text-red-500 mt-1 animate-in fade-in-50">
+                  {errors.newPassword}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <div className="relative">
+                <Input
+                  type={showConfirmPassword ? "text" : "password"}
+                  placeholder="Xác nhận mật khẩu mới"
+                  value={passwordForm.confirmPassword}
+                  onChange={(e) =>
+                    handlePasswordChange("confirmPassword", e.target.value)
+                  }
+                  className={`h-11 rounded-lg bg-card pr-10 focus-visible:ring-primary/20 ${
+                    errors.confirmPassword
+                      ? "border-red-500 focus-visible:ring-red-200"
+                      : "border-border/80"
+                  }`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword((s) => !s)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
+                  aria-label={
+                    showConfirmPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"
+                  }
+                >
+                  {showConfirmPassword ? (
+                    <EyeOff className="w-5 h-5" />
+                  ) : (
+                    <Eye className="w-5 h-5" />
+                  )}
+                </button>
+              </div>
+              {errors.confirmPassword && (
+                <p className="text-xs text-red-500 mt-1 animate-in fade-in-50">
+                  {errors.confirmPassword}
+                </p>
+              )}
+            </div>
+
             <Button
               onClick={savePassword}
+              disabled={
+                !!errors.oldPassword ||
+                !!errors.newPassword ||
+                !!errors.confirmPassword
+              }
               className="bg-primary hover:bg-primary/95 text-white gap-2 rounded-xl h-11 px-5 font-semibold cursor-pointer shadow-sm hover:shadow transition-all duration-150"
             >
               <Save className="w-4 h-4" />

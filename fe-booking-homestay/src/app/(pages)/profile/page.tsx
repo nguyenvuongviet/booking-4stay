@@ -89,9 +89,9 @@ function ProfileContent() {
         updateUser({ ...user, avatar: data.imgUrl });
       }
       setIsEditing(false);
-      console.log(t("avatar_upload_success"));
+      toast.success(t("avatar_upload_success") || "Tải ảnh đại diện lên thành công!");
     } catch (error) {
-      toast.error(t("avatar_upload_failed"));
+      toast.error(t("avatar_upload_failed") || "Tải ảnh đại diện thất bại");
       console.error("Upload avatar error:", error);
     }
   };

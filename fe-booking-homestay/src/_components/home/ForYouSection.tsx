@@ -18,14 +18,22 @@ export default function ForYouSection() {
   const router = useRouter();
   const { t } = useLang();
   const { openSignIn } = useAuth();
-  const hasFetched = useRef(false);
+  const lastFetchedUserId = useRef<string | number | null>(null);
 
   const roomIds = useMemo(() => rooms.map((r: any) => r.id), [rooms]);
   const { isFavorited, toggle } = useFavorites(roomIds);
 
   useEffect(() => {
-    if (!user || hasFetched.current) return;
-    hasFetched.current = true;
+    if (!user) {
+      setRooms([]);
+      lastFetchedUserId.current = null;
+      setLoading(true);
+      return;
+    }
+
+    if (lastFetchedUserId.current === user.id) return;
+    lastFetchedUserId.current = user.id;
+    setLoading(true);
 
     (async () => {
       try {
@@ -106,8 +114,8 @@ export default function ForYouSection() {
                   </div>
                   {/* Match score badge */}
                   {room.matchScore && (
-                    <div className="absolute bottom-2 left-2 px-2.5 py-1 bg-purple-500/90 backdrop-blur-sm rounded-full z-10">
-                      <span className="text-[10px] font-bold text-white">
+                    <div className="absolute bottom-2 left-2 px-2.5 py-1 bg-purple-500/90 backdrop-blur-sm rounded-full z-10 flex items-center justify-center">
+                      <span className="text-[10px] font-bold text-white leading-none">
                         ✨ {room.matchScore}% phù hợp
                       </span>
                     </div>

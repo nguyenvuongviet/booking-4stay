@@ -37,7 +37,7 @@ export default function GuestInfor(props: Props) {
 
   return (
     <Card className="p-4 sm:p-6">
-      <h2 className="text-xl sm:text-2xl elegant-heading mb-4 sm:mb-6">
+      <h2 className="text-xl sm:text-2xl elegant-heading mb-2 sm:mb-4">
         {t("Guest information")}
       </h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">

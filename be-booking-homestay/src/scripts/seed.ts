@@ -135,7 +135,9 @@ async function main() {
     );
 
     // Bổ sung: Tự động cập nhật fullAddress cho các phòng đã seed (vì TiDB không có trigger)
-    console.log('\n Bổ sung: Tự động tính toán và cập nhật fullAddress cho tất cả các phòng...');
+    console.log(
+      '\n Bổ sung: Tự động tính toán và cập nhật fullAddress cho tất cả các phòng...',
+    );
     const allRooms = await prisma.rooms.findMany({
       select: {
         id: true,
@@ -180,7 +182,323 @@ async function main() {
         data: { fullAddress },
       });
     }
-    console.log(`[+] Cập nhật fullAddress thành công cho ${allRooms.length} phòng.`);
+    console.log(
+      `[+] Cập nhật fullAddress thành công cho ${allRooms.length} phòng.`,
+    );
+
+    // Bổ sung: Tự động tính toán và cập nhật rating, reviewCount cho các phòng dựa trên bảng reviews
+    console.log(
+      '\n Bổ sung: Tự động tính toán và cập nhật rating, reviewCount cho các phòng...',
+    );
+    const allReviews = await prisma.reviews.findMany({
+      where: { isDeleted: false },
+      include: {
+        bookings: {
+          select: { roomId: true },
+        },
+      },
+    });
+
+    const roomReviewsMap = new Map<
+      number,
+      { ratingsSum: number; count: number }
+    >();
+    for (const r of allReviews) {
+      const roomId = r.bookings?.roomId;
+      if (!roomId) continue;
+
+      const ratingVal = r.rating ? Number(r.rating) : 0;
+      const current = roomReviewsMap.get(roomId) || { ratingsSum: 0, count: 0 };
+      current.ratingsSum += ratingVal;
+      current.count += 1;
+      roomReviewsMap.set(roomId, current);
+    }
+
+    for (const [roomId, data] of roomReviewsMap.entries()) {
+      const averageRating =
+        data.count > 0
+          ? Math.round((data.ratingsSum / data.count) * 10) / 10
+          : 0;
+      await prisma.rooms.update({
+        where: { id: roomId },
+        data: {
+          rating: averageRating,
+          reviewCount: data.count,
+        },
+      });
+      console.log(
+        `[+] Đã cập nhật Phòng #${roomId}: rating = ${averageRating}, reviewCount = ${data.count}`,
+      );
+    }
+
+    // Bổ sung: Tự động tính toán User Preferences từ lịch sử đặt phòng (Content-Based Recommendations)
+    console.log(
+      '\n Bổ sung: Tự động tính toán User Preferences cho gợi ý phòng...',
+    );
+    const bookingsForPrefs = await prisma.bookings.findMany({
+      where: {
+        status: { in: ['CHECKED_OUT', 'CONFIRMED', 'CHECKED_IN'] },
+        isDeleted: false,
+      },
+      select: { userId: true },
+    });
+
+    const uniqueUserIds = Array.from(
+      new Set(bookingsForPrefs.map((b) => b.userId)),
+    );
+
+    for (const userId of uniqueUserIds) {
+      const bookings = await prisma.bookings.findMany({
+        where: {
+          userId: userId,
+          status: { in: ['CHECKED_OUT', 'CONFIRMED', 'CHECKED_IN'] },
+          isDeleted: false,
+        },
+        include: {
+          rooms: {
+            include: {
+              room_amenities: true,
+            },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 20,
+      });
+
+      if (!bookings.length) continue;
+
+      const prices = bookings.map((b) => Number(b.totalPrice) || 0);
+      const avgPrice = prices.reduce((s, p) => s + p, 0) / prices.length;
+      const minPrice = Math.min(...prices);
+      const maxPrice = Math.max(...prices);
+
+      const avgAdults =
+        bookings.reduce((s, b) => s + b.adults, 0) / bookings.length;
+      const avgChildren =
+        bookings.reduce((s, b) => s + (b.children || 0), 0) / bookings.length;
+
+      const provinceCounts: Record<number, number> = {};
+      for (const b of bookings) {
+        const pid = b.rooms?.provinceId;
+        if (pid) provinceCounts[pid] = (provinceCounts[pid] || 0) + 1;
+      }
+      const favoriteProvinces = Object.entries(provinceCounts)
+        .sort(([, a], [, b]) => b - a)
+        .slice(0, 5)
+        .map(([id]) => Number(id));
+
+      const amenityCounts: Record<number, number> = {};
+      for (const b of bookings) {
+        for (const ra of b.rooms?.room_amenities || []) {
+          amenityCounts[ra.amenityId] = (amenityCounts[ra.amenityId] || 0) + 1;
+        }
+      }
+      const preferredAmenities = Object.entries(amenityCounts)
+        .sort(([, a], [, b]) => b - a)
+        .slice(0, 10)
+        .map(([id]) => Number(id));
+
+      const ratings = bookings
+        .map((b) => Number(b.rooms?.rating) || 0)
+        .filter((r) => r > 0);
+      const minAcceptRating = ratings.length ? Math.min(...ratings) : 0;
+
+      await prisma.user_preferences.upsert({
+        where: { userId: userId },
+        create: {
+          userId: userId,
+          avgPrice,
+          minPrice,
+          maxPrice,
+          avgAdults,
+          avgChildren,
+          minAcceptRating,
+          favoriteProvinces,
+          preferredAmenities,
+          totalCompletedBookings: bookings.length,
+          lastCalculatedAt: new Date(),
+        },
+        update: {
+          avgPrice,
+          minPrice,
+          maxPrice,
+          avgAdults,
+          avgChildren,
+          minAcceptRating,
+          favoriteProvinces,
+          preferredAmenities,
+          totalCompletedBookings: bookings.length,
+          lastCalculatedAt: new Date(),
+        },
+      });
+      console.log(`[+] Đã cập nhật User Preferences cho User #${userId}`);
+    }
+
+    // Bổ sung: Tự động tính toán và cập nhật điểm Loyalty (Loyalty Program) dựa trên lịch sử đặt phòng thành công
+    console.log(
+      '\n Bổ sung: Tự động tính toán và cập nhật Loyalty Program cho tất cả người dùng...',
+    );
+    const allLevels = await prisma.levels.findMany({
+      orderBy: { minPoints: 'asc' },
+    });
+    const defaultLevel =
+      allLevels.find((l) => l.minPoints === 0) || allLevels[0];
+
+    const allUsersForLoyalty = await prisma.users.findMany({
+      where: { isActive: true },
+      select: { id: true },
+    });
+
+    for (const u of allUsersForLoyalty) {
+      const checkedOutBookings = await prisma.bookings.findMany({
+        where: {
+          userId: u.id,
+          status: 'CHECKED_OUT',
+          isDeleted: false,
+        },
+      });
+
+      let totalBookings = checkedOutBookings.length;
+      let totalNights = 0;
+      let points = 0;
+
+      for (const b of checkedOutBookings) {
+        const diffTime = Math.abs(
+          new Date(b.checkOut).getTime() - new Date(b.checkIn).getTime(),
+        );
+        const nights = Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+        totalNights += nights;
+        points += Math.round(Number(b.totalPrice) / 1000);
+      }
+
+      let levelId = defaultLevel?.id || 1;
+      const matchedLevel = [...allLevels]
+        .reverse()
+        .find((lvl) => points >= lvl.minPoints);
+      if (matchedLevel) {
+        levelId = matchedLevel.id;
+      }
+
+      await prisma.loyalty_program.upsert({
+        where: { userId: u.id },
+        create: {
+          userId: u.id,
+          totalBookings,
+          totalNights,
+          points,
+          levelId,
+        },
+        update: {
+          totalBookings,
+          totalNights,
+          points,
+          levelId,
+        },
+      });
+      console.log(
+        `[+] Đã cập nhật Loyalty Program cho User #${u.id}: points = ${points}, levelId = ${levelId}, bookings = ${totalBookings}, nights = ${totalNights}`,
+      );
+    }
+
+    // Bổ sung: Tự động tính toán Popularity Score cho tất cả các phòng
+    console.log(
+      '\n Bổ sung: Tự động tính toán Popularity Score cho tất cả các phòng...',
+    );
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const fortyEightHoursAgo = new Date();
+    fortyEightHoursAgo.setDate(fortyEightHoursAgo.getDate() - 2);
+
+    const activeRooms = await prisma.rooms.findMany({
+      where: { isDeleted: false },
+      select: { id: true, rating: true, reviewCount: true, createdAt: true },
+    });
+
+    if (activeRooms.length > 0) {
+      const bookings30d = await prisma.bookings.findMany({
+        where: {
+          status: {
+            in: ['CONFIRMED', 'CHECKED_IN', 'CHECKED_OUT', 'PARTIALLY_PAID'],
+          },
+          createdAt: { gte: thirtyDaysAgo },
+          isDeleted: false,
+        },
+        select: { roomId: true },
+      });
+
+      const cancellations48h = await prisma.bookings.findMany({
+        where: {
+          status: { in: ['CANCELLED', 'CANCELLED_BY_ADMIN'] },
+          updatedAt: { gte: fortyEightHoursAgo },
+          isDeleted: false,
+        },
+        select: { roomId: true },
+      });
+
+      const bookingMap = new Map<number, number>();
+      for (const b of bookings30d) {
+        bookingMap.set(b.roomId, (bookingMap.get(b.roomId) || 0) + 1);
+      }
+
+      const cancelMap = new Map<number, number>();
+      for (const c of cancellations48h) {
+        cancelMap.set(c.roomId, (cancelMap.get(c.roomId) || 0) + 1);
+      }
+
+      const maxBookings =
+        bookingMap.size > 0 ? Math.max(1, ...bookingMap.values()) : 1;
+      const maxReviews = Math.max(
+        1,
+        ...activeRooms.map((r) => r.reviewCount ?? 0),
+      );
+      const maxRating = 5.0;
+
+      for (const room of activeRooms) {
+        const rating = Number(room.rating) || 0;
+        const reviewCount = room.reviewCount ?? 0;
+        const bookingCount30d = bookingMap.get(room.id) || 0;
+        const recentCancelCount = cancelMap.get(room.id) || 0;
+
+        const normalizedRating = rating / maxRating;
+        const normalizedBookings = bookingCount30d / maxBookings;
+        const normalizedReviews = reviewCount / maxReviews;
+
+        const roomAge =
+          (Date.now() - new Date(room.createdAt).getTime()) /
+          (1000 * 60 * 60 * 24);
+        const recencyBoost = roomAge < 14 ? 1.0 : 0;
+
+        const popularityScore =
+          0.4 * normalizedRating +
+          0.3 * normalizedBookings +
+          0.2 * normalizedReviews +
+          0.1 * recencyBoost;
+
+        await prisma.room_popularity.upsert({
+          where: { roomId: room.id },
+          create: {
+            roomId: room.id,
+            popularityScore,
+            bookingCount30d,
+            avgRating: rating,
+            reviewCount,
+            recentCancelCount,
+            lastCalculatedAt: new Date(),
+          },
+          update: {
+            popularityScore,
+            bookingCount30d,
+            avgRating: rating,
+            reviewCount,
+            recentCancelCount,
+            lastCalculatedAt: new Date(),
+          },
+        });
+      }
+      console.log(
+        `[+] Đã cập nhật Popularity Cache thành công cho ${activeRooms.length} phòng.`,
+      );
+    }
 
     const end = Date.now();
     console.log('\n-------------------------------------------------------');

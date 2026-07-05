@@ -132,7 +132,7 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
     if (co) setCheckOut(parse(co, "yyyy-MM-dd", new Date()));
     if (ad) setAdults(Number(ad));
     if (ch) setChildren(Number(ch));
-    setAvailable(status ? status === "Available" : true);
+    setAvailable(status ? status.toUpperCase() === "AVAILABLE" : true);
 
     // Restore price summary from localStorage if dates are set
     if (ci && co) {

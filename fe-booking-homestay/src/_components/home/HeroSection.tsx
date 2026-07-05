@@ -45,7 +45,7 @@ export default function HeroSection() {
             loop={true}
             className={`elegant-heading text-gradient text-2xl sm:text-4xl md:text-6xl lg:text-7xl mb-2 md:mb-4 ${
               lang === "vi"
-                ? "min-h-16 sm:min-h-24 md:min-h-46"
+                ? "min-h-20 sm:min-h-28 md:min-h-50"
                 : "min-h-20 sm:min-h-28 md:min-h-55"
             }`}
           />

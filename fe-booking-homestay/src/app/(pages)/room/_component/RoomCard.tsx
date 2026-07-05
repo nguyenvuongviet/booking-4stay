@@ -38,7 +38,9 @@ export function RoomCard({
     children: ch || "0",
   }).toString();
 
-  const isGuestFavorite = room.rating ?? 0 >= 4.8;
+  const isGuestFavorite = (room as any).popularity?.score
+    ? (room as any).popularity.score >= 0.5
+    : (room.rating ?? 0) >= 4.8;
 
   const handleFavoriteClick = async (e: React.MouseEvent) => {
     e.stopPropagation();

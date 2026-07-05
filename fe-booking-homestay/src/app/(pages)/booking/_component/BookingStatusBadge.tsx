@@ -25,7 +25,7 @@ export const BookingStatusBadge: React.FC<BookingStatusBadgeProps> = ({
 }) => {
   const { t } = useLang();
 
-  const iconClass = size === "sm" ? "w-3 h-3" : "w-3.5 h-3.5";
+  const iconClass = size === "sm" ? "w-3 h-4" : "w-3.5 h-3.5";
 
   const getStatusConfig = () => {
     switch (status) {

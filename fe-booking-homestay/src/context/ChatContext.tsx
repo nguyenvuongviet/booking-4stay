@@ -67,7 +67,9 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     setIsLoadingConversations(true);
     try {
       const conversationList = await getConversations();
-      setConversations(normalizeConversations(conversationList));
+      const normalized = normalizeConversations(conversationList);
+      setConversations(normalized);
+      conversationsRef.current = normalized;
     } catch (error) {
       console.error("Lỗi khi tải danh sách hội thoại:", error);
     } finally {
@@ -76,9 +78,11 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
   }, [user]);
 
   const markConversationAsRead = useCallback((conversationId: number) => {
-    setConversations((previousConversations) =>
-      markConversationReadLocally(previousConversations, conversationId),
-    );
+    setConversations((previousConversations) => {
+      const updated = markConversationReadLocally(previousConversations, conversationId);
+      conversationsRef.current = updated;
+      return updated;
+    });
   }, []);
 
   const { showMessageToast } = useChatNotifications({
@@ -118,7 +122,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     async (conversationId: number) => {
       setIsLoadingMessages(true);
       try {
-        const found = conversations.find(
+        const found = conversationsRef.current.find(
           (conversation) => conversation.id === conversationId,
         );
         if (!found) return;
@@ -147,7 +151,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
         setIsLoadingMessages(false);
       }
     },
-    [conversations, markConversationAsRead, socket],
+    [markConversationAsRead, socket],
   );
 
   const sendTypingStatus = useCallback(

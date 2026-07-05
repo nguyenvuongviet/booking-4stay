@@ -8,6 +8,7 @@ import {
 } from "@/_helper/chat.helper";
 import { IConversation } from "@/types/chat";
 import Image from "next/image";
+import { useState } from "react";
 
 interface Props {
   conv: IConversation;
@@ -27,7 +28,9 @@ export default function ConversationItem({
   const isMe = conv.lastMessage
     ? String(conv.lastMessage.senderId) === String(userId)
     : false;
-
+  const [imageSrc, setImageSrc] = useState(
+    getImageUrl(partner.avatar) || "/default-avatar.png",
+  );
   return (
     <button
       onClick={() => onSelect(conv.id)}
@@ -41,11 +44,12 @@ export default function ConversationItem({
       <div className="relative h-11 w-11 shrink-0 rounded-2xl overflow-hidden bg-white/40 dark:bg-white/10 border border-white/40 dark:border-white/20 shadow-sm backdrop-blur-md">
         {partner.avatar ? (
           <Image
-            src={getImageUrl(partner.avatar) || "/default-avatar.png"}
+            src={imageSrc}
             alt={`${partner.firstName} ${partner.lastName}`}
             fill
             className="object-cover"
             unoptimized
+            onError={() => setImageSrc("/default-avatar.png")}
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-linear-to-tr from-primary/20 to-blue-500/20 text-sm font-extrabold text-primary">

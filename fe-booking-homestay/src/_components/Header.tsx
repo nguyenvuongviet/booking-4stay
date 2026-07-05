@@ -55,7 +55,7 @@ export default function Header() {
         if (pathname === "/") {
           const placeholder = document.getElementById("searchbar-placeholder");
           const header = document.querySelector("header");
-          if (placeholder) {
+          if (placeholder && scrollY > 50) {
             const rect = placeholder.getBoundingClientRect();
             const headerHeight = header ? header.offsetHeight : 89;
             setIsSearchActiveInHeader(rect.top <= headerHeight);

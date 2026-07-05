@@ -169,4 +169,10 @@ export class BlogAdminController {
   async uploadImage(@UploadedFile() file: Express.Multer.File) {
     return this.blogService.uploadImage(file);
   }
+
+  @Delete('upload')
+  @ApiOperation({ summary: 'Xóa ảnh bài viết trên Cloudinary' })
+  async deleteImage(@Body('imageUrl') imageUrl: string) {
+    return this.blogService.deleteImage(imageUrl);
+  }
 }

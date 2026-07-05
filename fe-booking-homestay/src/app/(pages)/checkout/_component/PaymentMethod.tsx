@@ -15,7 +15,7 @@ export default function PaymentMethodSelector(props: Props) {
 
   return (
     <Card className="p-4 sm:p-6">
-      <h2 className="text-xl sm:text-2xl mb-4 sm:mb-6 elegant-heading">
+      <h2 className="text-xl sm:text-2xl mb-2 sm:mb-4 elegant-heading">
         {t("Payment menthod")}
       </h2>
       <RadioGroup

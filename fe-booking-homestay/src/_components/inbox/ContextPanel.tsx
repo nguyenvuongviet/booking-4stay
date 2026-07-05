@@ -6,6 +6,7 @@ import { Home, User, X } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Button } from "../ui/button";
+import { useState } from "react";
 
 interface Props {
   activeConversation: IConversation;
@@ -25,7 +26,9 @@ export default function ContextPanel({
   const router = useRouter();
   const partner = getPartner(activeConversation, userId);
   const isHost = String(activeConversation.hostId) === String(userId);
-
+  const [imageSrc, setImageSrc] = useState(
+    getImageUrl(partner.avatar) || "/default-avatar.png",
+  );
   const panelContent = (
     <div className="flex h-full flex-col overflow-y-auto p-5 space-y-6 scrollbar-hide">
       {/* Close button (mobile/tablet drawer) */}
@@ -53,14 +56,15 @@ export default function ContextPanel({
           Thông tin liên hệ
         </h3>
         <div className="flex flex-col items-center space-y-3 py-1">
-          <div className="relative h-18 w-18 rounded-3xl overflow-hidden border border-border shadow-sm bg-secondary">
+          <div className="relative h-18 w-18 rounded-3xl overflow-hidden border border-border shadow-sm">
             {partner.avatar ? (
               <Image
-                src={getImageUrl(partner.avatar) || ""}
+                src={imageSrc}
                 alt={partner.firstName}
                 fill
                 className="object-cover"
                 unoptimized
+                onError={() => setImageSrc("/default-avatar.png")}
               />
             ) : (
               <div className="flex h-full w-full items-center justify-center text-2xl font-extrabold text-primary">

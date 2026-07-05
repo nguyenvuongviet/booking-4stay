@@ -8,6 +8,7 @@ import {
 import { IMessage } from "@/types/chat";
 import { Check, CheckCheck } from "lucide-react";
 import Image from "next/image";
+import { useState } from "react";
 
 interface Props {
   message: IMessage;
@@ -24,6 +25,9 @@ export default function MessageBubble({
   partnerName,
   partnerAvatar,
 }: Props) {
+  const [imageSrc, setImageSrc] = useState(
+    getImageUrl(partnerAvatar) || "/default-avatar.png",
+  );
   return (
     <div className="space-y-2">
       {/* Date header */}
@@ -47,11 +51,12 @@ export default function MessageBubble({
             <div className="relative h-7 w-7 shrink-0 rounded-xl overflow-hidden bg-white/40 dark:bg-white/10 border border-white/40 dark:border-white/20 shadow-sm backdrop-blur-md">
               {partnerAvatar ? (
                 <Image
-                  src={getImageUrl(partnerAvatar) || ""}
+                  src={imageSrc}
                   alt={partnerName}
                   fill
                   className="object-cover"
                   unoptimized
+                  onError={() => setImageSrc("/default-avatar.png")}
                 />
               ) : (
                 <div className="flex h-full w-full items-center justify-center bg-linear-to-tr from-primary/20 to-blue-500/20 text-[10px] font-bold text-primary">

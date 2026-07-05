@@ -120,7 +120,7 @@ export class ChatService {
             return `- **${r.name}** (${addr}) — ${Number(r.pricePerNight).toLocaleString('vi-VN')} VND/đêm, ${r.rating}/5 ⭐`;
           })
           .join('\n');
-        return `**Gợi ý phòng phù hợp** _(dữ liệu hệ thống)_\n\n${list}`;
+        return `**Gợi ý phòng phù hợp**\n\n${list}`;
       }
 
       case ChatIntent.LOYALTY: {

@@ -7,7 +7,7 @@ import { useAuth } from "@/context/auth-context";
 import { useRealtimeChat } from "@/context/ChatContext";
 import { AlertCircle, Home } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type InboxPageContentProps = {
   routePath?: string;
@@ -52,18 +52,23 @@ export default function InboxPageContent({
 
   const [showInfo, setShowInfo] = useState(false);
   const infoToggleMode = embedded ? "always" : "responsive";
+  const processingHostId = useRef<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
     const hostId = searchParams.get("hostId");
     const roomId = searchParams.get("roomId");
-    if (hostId) {
-      createOrGetConversation(+hostId, roomId ? +roomId : undefined).then(
-        () => {
+    
+    if (hostId && processingHostId.current !== hostId) {
+      processingHostId.current = hostId;
+      createOrGetConversation(+hostId, roomId ? +roomId : undefined)
+        .then(() => {
           router.replace(routePath);
           setMobileView("chat");
-        },
-      );
+        })
+        .catch(() => {
+          processingHostId.current = null;
+        });
     }
   }, [
     user,

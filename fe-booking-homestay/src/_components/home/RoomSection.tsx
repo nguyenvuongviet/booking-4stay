@@ -112,8 +112,9 @@ export default function RoomSection({ rooms }: { rooms: Room[] }) {
                       )}
                     {room.status !== "MAINTENANCE" &&
                       !(room as any).badges?.length &&
-                      room.rating &&
-                      room.rating >= 4.8 && (
+                      ((room as any).popularity?.score
+                        ? (room as any).popularity.score >= 0.5
+                        : room.rating && room.rating >= 4.8) && (
                         <div className="absolute top-3 left-3 px-3 py-1 bg-red-500/80 rounded-full shadow-md z-10 flex items-center justify-center text-center">
                           <span className="text-[10px] font-semibold text-white uppercase tracking-wider">
                             {t("Trending")}

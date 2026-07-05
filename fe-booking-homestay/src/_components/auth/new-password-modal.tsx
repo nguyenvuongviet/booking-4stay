@@ -3,6 +3,7 @@
 import { Button } from "@/_components/ui/button";
 import { Input } from "@/_components/ui/input";
 import { Label } from "@/_components/ui/label";
+import { validatePasswordStrength } from "@/_helper/validation.helper";
 import { useLang } from "@/context/lang-context";
 import {
   forgot_password,
@@ -132,23 +133,20 @@ export default function NewPasswordModal({
   // === STEP 3: RESET PASSWORD ===
   const handleCreatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    let hasError = false;
     setApiError("");
-    if (!password) {
-      setPasswordError("Please enter your password!");
-      hasError = true;
-    } else if (password.length < 6) {
-      setPasswordError("Password must be at least 6 characters!");
-      hasError = true;
-    } else setPasswordError("");
+
+    const pwdErr = validatePasswordStrength(password);
+    let confirmPwdErr = "";
     if (!confirmPassword) {
-      setConfirmPasswordError("Please confirm your password!");
-      hasError = true;
+      confirmPwdErr = "Please confirm your password!";
     } else if (password !== confirmPassword) {
-      setConfirmPasswordError("Passwords do not match!");
-      hasError = true;
-    } else setConfirmPasswordError("");
-    if (hasError) return;
+      confirmPwdErr = "Passwords do not match!";
+    }
+
+    setPasswordError(pwdErr);
+    setConfirmPasswordError(confirmPwdErr);
+
+    if (pwdErr || confirmPwdErr) return;
 
     try {
       await reset_password({ email, otp, newPassword: password });
@@ -279,7 +277,14 @@ export default function NewPasswordModal({
                   value={password}
                   onChange={(e) => {
                     setPassword(e.target.value);
-                    if (passwordError) setPasswordError("");
+                    setPasswordError(validatePasswordStrength(e.target.value));
+                    if (confirmPassword) {
+                      setConfirmPasswordError(
+                        e.target.value === confirmPassword
+                          ? ""
+                          : "Mật khẩu không trùng khớp!",
+                      );
+                    }
                   }}
                 />
                 <button
@@ -306,7 +311,11 @@ export default function NewPasswordModal({
                 value={confirmPassword}
                 onChange={(e) => {
                   setConfirmPassword(e.target.value);
-                  if (confirmPasswordError) setConfirmPasswordError("");
+                  setConfirmPasswordError(
+                    password === e.target.value
+                      ? ""
+                      : "Mật khẩu không trùng khớp!",
+                  );
                 }}
               />
               {confirmPasswordError && (
@@ -316,8 +325,9 @@ export default function NewPasswordModal({
               )}
             </div>
 
-            <p className="text-muted-foreground text-xs mb-4">
-              {t("Use 6 or more characters")}!
+            <p className="text-muted-foreground text-[10px] mb-4 leading-relaxed">
+              Yêu cầu mật khẩu mạnh: Tối thiểu 8 ký tự, gồm ít nhất 1 chữ hoa, 1
+              chữ thường, 1 số và 1 ký tự đặc biệt (@, $, !, %, *, ?, &).
             </p>
 
             <Button className="rounded-2xl w-full h-10 mb-2 cursor-pointer">

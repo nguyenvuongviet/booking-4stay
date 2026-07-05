@@ -130,10 +130,10 @@ function SearchBarInner({
           isTransparent
             ? compact
               ? "max-w-2xl p-4 md:p-1.5 bg-white/10 border border-white/30 shadow-2xl"
-              : "max-w-none p-5 md:p-2 lg:p-3 bg-white/12 border border-white/30 shadow-[0_15px_35px_rgba(0,0,0,0.3),0_0_20px_rgba(255,255,255,0.1)] hover:bg-white/16 hover:border-white/40 hover:-translate-y-1 hover:scale-[1.005] hover:shadow-[0_20px_45px_rgba(0,0,0,0.4),0_0_30px_rgba(114,185,255,0.25)]"
+              : "max-w-none p-4 md:p-1 lg:p-2 bg-white/12 border border-white/30 shadow-[0_15px_35px_rgba(0,0,0,0.3),0_0_20px_rgba(255,255,255,0.1)] hover:bg-white/16 hover:border-white/40 hover:-translate-y-1 hover:scale-[1.005] hover:shadow-[0_20px_45px_rgba(0,0,0,0.4),0_0_30px_rgba(114,185,255,0.25)]"
             : compact
               ? "max-w-2xl p-4 md:p-1.5 bg-white/95 dark:bg-black/90 border border-border shadow-2xl hover:shadow-2xl"
-              : "max-w-none p-5 md:p-2 lg:p-3 bg-white/95 dark:bg-black/90 border border-primary/15 dark:border-white/10 shadow-[0_20px_50px_rgba(8,112,184,0.12)] dark:shadow-[0_20px_50px_rgba(255,255,255,0.06)] hover:shadow-[0_25px_60px_rgba(8,112,184,0.18)] dark:hover:shadow-[0_25px_60px_rgba(255,255,255,0.09)] hover:scale-[1.01]"
+              : "max-w-none p-4 md:p-1 lg:p-2 bg-white/95 dark:bg-black/90 border border-primary/15 dark:border-white/10 shadow-[0_20px_50px_rgba(8,112,184,0.12)] dark:shadow-[0_20px_50px_rgba(255,255,255,0.06)] hover:shadow-[0_25px_60px_rgba(8,112,184,0.18)] dark:hover:shadow-[0_25px_60px_rgba(255,255,255,0.09)] hover:scale-[1.01]"
         }`}
       >
         <div

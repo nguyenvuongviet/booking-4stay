@@ -10,7 +10,7 @@ import {
   UploadCloud,
   X,
 } from "lucide-react";
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { RichTextEditor } from "./RichTextEditor";
 
 export interface BlogFormData {
@@ -35,6 +35,7 @@ interface BlogFormProps {
   tags: BlogTag[];
   uploadingFile: boolean;
   handleFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onDeleteImage?: (imageUrl: string) => void;
   newTagInput: string;
   setNewTagInput: (val: string) => void;
   creatingTag: boolean;
@@ -54,6 +55,7 @@ export default function BlogForm({
   tags,
   uploadingFile,
   handleFileChange,
+  onDeleteImage,
   newTagInput,
   setNewTagInput,
   creatingTag,
@@ -66,6 +68,23 @@ export default function BlogForm({
 }: BlogFormProps) {
   const [showProvinceDropdown, setShowProvinceDropdown] = useState(false);
   const [provinceSearch, setProvinceSearch] = useState("");
+  const provinceRef = useRef<HTMLDivElement>(null);
+
+  // Đóng dropdown tỉnh thành khi click bên ngoài
+  useEffect(() => {
+    if (!showProvinceDropdown) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        provinceRef.current &&
+        !provinceRef.current.contains(e.target as Node)
+      ) {
+        setShowProvinceDropdown(false);
+        setProvinceSearch("");
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showProvinceDropdown]);
 
   return (
     <div className="max-w-6xl mx-auto w-full space-y-6">
@@ -243,7 +262,7 @@ export default function BlogForm({
             <select
               value={form.categoryId}
               onChange={(e) => updateForm("categoryId", Number(e.target.value))}
-              className="w-full px-3 py-2.5 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+              className="w-full px-3 py-2.5 rounded-lg border text-sm cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/30"
             >
               <option value={0}>Chọn danh mục</option>
               {categories.map((cat) => (
@@ -265,7 +284,7 @@ export default function BlogForm({
             </p>
 
             {/* Custom Searchable Dropdown for Province */}
-            <div className="relative">
+            <div className="relative" ref={provinceRef}>
               <div
                 onClick={() => setShowProvinceDropdown(!showProvinceDropdown)}
                 className="w-full px-3 py-2.5 rounded-lg border text-sm bg-background flex items-center justify-between cursor-pointer hover:border-primary/50 transition-colors focus:outline-none"
@@ -337,7 +356,7 @@ export default function BlogForm({
                   key={tag.id}
                   type="button"
                   onClick={() => handleTagToggle(tag.id)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all cursor-pointer ${
                     form.tagIds?.includes(tag.id)
                       ? "bg-primary text-white border-primary"
                       : "bg-background hover:bg-accent border-border"
@@ -371,7 +390,7 @@ export default function BlogForm({
                 type="button"
                 onClick={handleCreateTag}
                 disabled={creatingTag || !newTagInput.trim()}
-                className="px-3 py-1.5 bg-primary text-white rounded-lg text-xs font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 inline-flex items-center gap-1"
+                className="px-3 py-1.5 bg-primary text-white rounded-lg text-xs font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 inline-flex items-center gap-1 cursor-pointer"
               >
                 {creatingTag ? (
                   <Loader2 size={12} className="animate-spin" />
@@ -390,7 +409,10 @@ export default function BlogForm({
             </label>
 
             <div className="space-y-2">
-              {!form.thumbnailUrl ? (
+              {!form.thumbnailUrl ||
+              form.thumbnailUrl === "null" ||
+              form.thumbnailUrl === "undefined" ||
+              form.thumbnailUrl.trim() === "" ? (
                 <div className="flex items-center justify-center w-full">
                   <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-xl cursor-pointer hover:bg-accent/40 border-muted hover:border-primary/50 transition-all bg-background">
                     <div className="flex flex-col items-center justify-center pt-5 pb-6">
@@ -429,19 +451,35 @@ export default function BlogForm({
                   </label>
                 </div>
               ) : (
-                <div className="relative rounded-xl overflow-hidden border group">
+                <div className="relative h-32 rounded-xl overflow-hidden border bg-muted/10 flex flex-col items-center justify-center gap-2 group">
+                  {/* Fallback placeholder text/icon shown behind the image (or if image fails to load) */}
+                  <div className="flex flex-col items-center justify-center text-muted-foreground/60 p-4 text-center select-none">
+                    <UploadCloud className="w-8 h-8 mb-1" />
+                    <span className="text-xs font-semibold">
+                      Ảnh không tồn tại hoặc đã bị xóa
+                    </span>
+                  </div>
+
+                  {/* The image itself, positioned absolutely to cover the fallback if loaded successfully */}
                   <img
                     src={form.thumbnailUrl}
                     alt="Thumbnail preview"
-                    className="w-full h-32 object-cover"
+                    className="absolute inset-0 w-full h-full object-cover z-10"
                     onError={(e) => {
                       (e.target as HTMLImageElement).style.display = "none";
                     }}
                   />
+
+                  {/* The delete button, positioned on top of the image (z-20) */}
                   <button
                     type="button"
-                    onClick={() => updateForm("thumbnailUrl", "")}
-                    className="absolute top-2 right-2 p-1.5 bg-red-500 hover:bg-red-600 text-white rounded-full transition-colors shadow-md"
+                    onClick={() => {
+                      if (onDeleteImage && form.thumbnailUrl) {
+                        onDeleteImage(form.thumbnailUrl);
+                      }
+                      updateForm("thumbnailUrl", "");
+                    }}
+                    className="absolute top-2 right-2 p-1.5 bg-red-500 hover:bg-red-600 text-white rounded-full transition-colors shadow-md z-20 cursor-pointer"
                     title="Xóa ảnh"
                   >
                     <X size={14} />
@@ -458,7 +496,7 @@ export default function BlogForm({
                 type="checkbox"
                 checked={form.isFeatured}
                 onChange={(e) => updateForm("isFeatured", e.target.checked)}
-                className="w-4 h-4 rounded accent-primary"
+                className="w-4 h-4 rounded accent-primary cursor-pointer"
               />
               <div>
                 <span className="text-sm font-semibold flex items-center gap-1.5">

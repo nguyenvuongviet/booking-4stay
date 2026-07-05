@@ -372,7 +372,9 @@ export default function AdminBlogPage() {
                       {/* Post info */}
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
-                          {post.thumbnailUrl ? (
+                          {post.thumbnailUrl &&
+                          post.thumbnailUrl !== "null" &&
+                          post.thumbnailUrl !== "undefined" ? (
                             <Image
                               src={post.thumbnailUrl}
                               alt=""

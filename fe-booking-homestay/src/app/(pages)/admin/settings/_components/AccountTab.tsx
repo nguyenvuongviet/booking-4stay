@@ -10,6 +10,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/_components/ui/select";
+import {
+  validateFullName,
+  validatePhoneNumber,
+} from "@/_helper/validation.helper";
 import { COUNTRIES } from "@/constants/countries";
 import { useAuth } from "@/context/auth-context";
 import { update_profile } from "@/services/authApi";
@@ -33,6 +37,11 @@ export default function AccountTab() {
       : "",
   });
 
+  const [errors, setErrors] = useState({
+    fullName: "",
+    phoneNumber: "",
+  });
+
   useEffect(() => {
     if (user) {
       setProfile({
@@ -50,10 +59,35 @@ export default function AccountTab() {
 
   const handleProfileChange = (key: string, value: string) => {
     setProfile((prev) => ({ ...prev, [key]: value }));
+
+    setErrors((prev) => {
+      const nextErrors = { ...prev };
+      if (key === "fullName") {
+        nextErrors.fullName = validateFullName(value);
+      }
+      if (key === "phoneNumber") {
+        nextErrors.phoneNumber = validatePhoneNumber(value);
+      }
+      return nextErrors;
+    });
   };
 
   const saveProfile = async () => {
     if (!user) return;
+
+    const nameErr = validateFullName(profile.fullName);
+    const phoneErr = validatePhoneNumber(profile.phoneNumber);
+
+    setErrors({
+      fullName: nameErr,
+      phoneNumber: phoneErr,
+    });
+
+    if (nameErr || phoneErr) {
+      toast.error("Vui lòng sửa các lỗi nhập liệu trước khi lưu.");
+      return;
+    }
+
     const nameParts = profile.fullName.trim().split(/\s+/);
     const firstName = nameParts[0] || "";
     const lastName = nameParts.slice(1).join(" ") || "";
@@ -116,8 +150,17 @@ export default function AccountTab() {
               value={profile.fullName}
               onChange={(e) => handleProfileChange("fullName", e.target.value)}
               placeholder="Nhập họ và tên"
-              className="h-11 rounded-lg border-border/80 bg-card focus-visible:ring-primary/20"
+              className={`h-11 rounded-lg bg-card focus-visible:ring-primary/20 ${
+                errors.fullName
+                  ? "border-red-500 focus-visible:ring-red-200"
+                  : "border-border/80"
+              }`}
             />
+            {errors.fullName && (
+              <p className="text-xs text-red-500 mt-1 animate-in fade-in-50 font-medium">
+                {errors.fullName}
+              </p>
+            )}
           </div>
           <div>
             <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider block mb-2">
@@ -129,8 +172,17 @@ export default function AccountTab() {
                 handleProfileChange("phoneNumber", e.target.value)
               }
               placeholder="Nhập số điện thoại"
-              className="h-11 rounded-lg border-border/80 bg-card focus-visible:ring-primary/20"
+              className={`h-11 rounded-lg bg-card focus-visible:ring-primary/20 ${
+                errors.phoneNumber
+                  ? "border-red-500 focus-visible:ring-red-200"
+                  : "border-border/80"
+              }`}
             />
+            {errors.phoneNumber && (
+              <p className="text-xs text-red-500 mt-1 animate-in fade-in-50 font-medium">
+                {errors.phoneNumber}
+              </p>
+            )}
           </div>
         </div>
 

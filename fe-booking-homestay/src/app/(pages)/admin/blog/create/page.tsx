@@ -3,6 +3,7 @@
 import {
   createPost,
   createTag,
+  delete_blog_image,
   upload_blog_image,
   type CreatePostData,
 } from "@/services/admin/blogApi";
@@ -16,7 +17,7 @@ import { getLocation } from "@/services/locationApi";
 import { ChevronLeft, Globe, Loader2, Save } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import BlogForm, { type BlogFormData } from "../_components/BlogForm";
 
@@ -34,6 +35,9 @@ export default function CreateBlogPostPage() {
   const [uploadingFile, setUploadingFile] = useState(false);
   const [newTagInput, setNewTagInput] = useState("");
   const [creatingTag, setCreatingTag] = useState(false);
+
+  // Theo dõi tất cả ảnh đã upload trong phiên này để dọn dẹp khi hủy
+  const uploadedImagesRef = useRef<string[]>([]);
 
   // Auto fill tracking
   const [isMetaTitleEdited, setIsMetaTitleEdited] = useState(false);
@@ -82,6 +86,7 @@ export default function CreateBlogPostPage() {
       const res = await upload_blog_image(formData);
       if (res?.data?.imgUrl) {
         updateForm("thumbnailUrl", res.data.imgUrl);
+        uploadedImagesRef.current.push(res.data.imgUrl);
         toast.success("Tải ảnh lên thành công!");
       } else {
         toast.error("Không nhận được URL ảnh từ server");
@@ -163,6 +168,31 @@ export default function CreateBlogPostPage() {
     }
   };
 
+  // Xóa ảnh trên Cloudinary khi bấm nút X
+  const handleDeleteImage = async (imageUrl: string) => {
+    try {
+      await delete_blog_image(imageUrl);
+      // Xóa khỏi danh sách ảnh đã upload trong phiên
+      uploadedImagesRef.current = uploadedImagesRef.current.filter(
+        (url) => url !== imageUrl,
+      );
+    } catch {
+      // Bỏ qua lỗi xóa ảnh, vẫn xóa trên UI
+    }
+  };
+
+  // Dọn dẹp ảnh mồ côi khi bấm Hủy
+  const handleCancel = async () => {
+    // Xóa tất cả ảnh đã upload trong phiên mà chưa được lưu vào bài viết
+    const orphanImages = [...uploadedImagesRef.current];
+    if (orphanImages.length > 0) {
+      await Promise.allSettled(
+        orphanImages.map((url) => delete_blog_image(url)),
+      );
+    }
+    router.push("/admin/blog");
+  };
+
   return (
     <div className="space-y-6 w-full">
       {/* Header */}
@@ -189,6 +219,7 @@ export default function CreateBlogPostPage() {
         tags={tags}
         uploadingFile={uploadingFile}
         handleFileChange={handleFileChange}
+        onDeleteImage={handleDeleteImage}
         newTagInput={newTagInput}
         setNewTagInput={setNewTagInput}
         creatingTag={creatingTag}
@@ -203,12 +234,13 @@ export default function CreateBlogPostPage() {
       {/* Action Buttons */}
       <div className="max-w-6xl mx-auto w-full">
         <div className="flex items-center justify-end gap-3 pt-6 border-t mt-6">
-          <Link
-            href="/admin/blog"
+          <button
+            type="button"
+            onClick={handleCancel}
             className="px-5 py-2.5 border rounded-xl text-sm font-semibold hover:bg-accent transition-colors cursor-pointer bg-background"
           >
             Hủy
-          </Link>
+          </button>
           <button
             onClick={() => handleSubmit(false)}
             disabled={saving}

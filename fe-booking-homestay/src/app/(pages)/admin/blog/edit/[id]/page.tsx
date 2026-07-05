@@ -2,6 +2,7 @@
 
 import {
   createTag,
+  delete_blog_image,
   getAdminPostById,
   updatePost,
   upload_blog_image,
@@ -17,7 +18,7 @@ import { getLocation } from "@/services/locationApi";
 import { ChevronLeft, Loader2, Save } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import BlogForm, { type BlogFormData } from "../../_components/BlogForm";
 
@@ -40,6 +41,9 @@ export default function EditBlogPostPage() {
   const [uploadingFile, setUploadingFile] = useState(false);
   const [newTagInput, setNewTagInput] = useState("");
   const [creatingTag, setCreatingTag] = useState(false);
+
+  // Theo dõi ảnh mới upload trong phiên chỉnh sửa
+  const uploadedImagesRef = useRef<string[]>([]);
 
   // Auto fill tracking
   const [isMetaTitleEdited, setIsMetaTitleEdited] = useState(false);
@@ -121,6 +125,7 @@ export default function EditBlogPostPage() {
       const res = await upload_blog_image(formData);
       if (res?.data?.imgUrl) {
         updateForm("thumbnailUrl", res.data.imgUrl);
+        uploadedImagesRef.current.push(res.data.imgUrl);
         toast.success("Tải ảnh lên thành công!");
       } else {
         toast.error("Không nhận được URL ảnh từ server");
@@ -190,6 +195,30 @@ export default function EditBlogPostPage() {
     }
   };
 
+  // Xóa ảnh trên Cloudinary khi bấm nút X (cả ảnh cũ và ảnh mới)
+  const handleDeleteImage = async (imageUrl: string) => {
+    try {
+      await delete_blog_image(imageUrl);
+      // Xóa khỏi danh sách ảnh mới upload trong phiên (nếu có)
+      uploadedImagesRef.current = uploadedImagesRef.current.filter(
+        (url) => url !== imageUrl,
+      );
+    } catch {
+      // Bỏ qua lỗi, vẫn xóa trên UI
+    }
+  };
+
+  // Dọn dẹp ảnh mồ côi mới khi bấm Hủy (không xóa ảnh cũ đã lưu trong DB)
+  const handleCancel = async () => {
+    const orphanImages = [...uploadedImagesRef.current];
+    if (orphanImages.length > 0) {
+      await Promise.allSettled(
+        orphanImages.map((url) => delete_blog_image(url)),
+      );
+    }
+    router.push("/admin/blog");
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -222,6 +251,7 @@ export default function EditBlogPostPage() {
         tags={tags}
         uploadingFile={uploadingFile}
         handleFileChange={handleFileChange}
+        onDeleteImage={handleDeleteImage}
         newTagInput={newTagInput}
         setNewTagInput={setNewTagInput}
         creatingTag={creatingTag}
@@ -236,12 +266,13 @@ export default function EditBlogPostPage() {
       {/* Action Buttons */}
       <div className="max-w-6xl mx-auto w-full">
         <div className="flex items-center justify-end gap-3 pt-6 border-t mt-6">
-          <Link
-            href="/admin/blog"
+          <button
+            type="button"
+            onClick={handleCancel}
             className="px-5 py-2.5 border rounded-xl text-sm font-semibold hover:bg-accent transition-colors cursor-pointer bg-background"
           >
             Hủy
-          </Link>
+          </button>
           <button
             onClick={handleSubmit}
             disabled={saving}

@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform, TransformFnParams } from 'class-transformer';
-import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString, Matches } from 'class-validator';
 
 export class RegisterDto {
   @ApiProperty({ example: 'Nguyễn Văn', description: 'Họ của bạn' })
@@ -27,11 +27,22 @@ export class RegisterDto {
   @ApiProperty({ example: '123456', description: 'Mật khẩu của bạn' })
   @IsString({ message: 'Mật khẩu phải là chuỗi' })
   @IsNotEmpty({ message: 'Mật khẩu không được để trống' })
+  @Matches(
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
+    {
+      message:
+        'Mật khẩu phải có tối thiểu 8 ký tự, bao gồm ít nhất 1 chữ hoa, 1 chữ thường, 1 chữ số và 1 ký tự đặc biệt (@, $, !, %, *, ?, &)',
+    },
+  )
   password: string;
 
   @ApiProperty({ example: '0123456789', description: 'Số điện thoại của bạn' })
   @IsString({ message: 'Số điện thoại phải là chuỗi' })
   @IsNotEmpty({ message: 'Số điện thoại không được để trống' })
+  @Matches(/^0[0-9]{8,10}$/, {
+    message:
+      'Số điện thoại không hợp lệ (Ví dụ: 0912345678, gồm 9-11 chữ số bắt đầu bằng 0)',
+  })
   @Transform(({ value }: TransformFnParams) => value?.trim())
   phoneNumber: string;
 }

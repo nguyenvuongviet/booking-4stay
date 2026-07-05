@@ -95,9 +95,7 @@ export class ContextualBoostService {
    * Mỗi phòng sẽ được cộng thêm boost % vào matchScore.
    * Trả về danh sách đã sort lại theo score mới + gắn boost tags.
    */
-  async applyBoost(
-    rooms: any[],
-  ): Promise<any[]> {
+  async applyBoost(rooms: any[]): Promise<any[]> {
     if (rooms.length === 0) return rooms;
 
     const [hotProvinces, cancelledRooms] = await Promise.all([
@@ -106,7 +104,7 @@ export class ContextualBoostService {
     ]);
     const weekend = this.isWeekend();
 
-    return rooms.map((room) => {
+    const boostedRooms = rooms.map((room) => {
       const boosts: string[] = [];
       let boostMultiplier = 1.0;
 
@@ -118,19 +116,19 @@ export class ContextualBoostService {
 
       // 2. Phòng vừa bị hủy → slot trống mới
       if (cancelledRooms.has(room.id)) {
-        boostMultiplier += 0.20;
+        boostMultiplier += 0.2;
         boosts.push('🎯 Vừa có người hủy');
       }
 
       // 3. Phòng mới
       if (room.createdAt && this.isNewRoom(room.createdAt)) {
-        boostMultiplier += 0.10;
+        boostMultiplier += 0.1;
         boosts.push('✨ Phòng mới');
       }
 
       // 4. Cuối tuần + rating cao
       if (weekend && (Number(room.rating) || 0) >= 4.5) {
-        boostMultiplier += 0.10;
+        boostMultiplier += 0.1;
         boosts.push('🌟 Được yêu thích cuối tuần');
       }
 
@@ -146,5 +144,7 @@ export class ContextualBoostService {
         boostTags: boosts.length > 0 ? boosts : undefined,
       };
     });
+
+    return boostedRooms.sort((a, b) => b.matchScore - a.matchScore);
   }
 }

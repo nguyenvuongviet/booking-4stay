@@ -426,6 +426,36 @@ export class BlogService {
   }
 
   /**
+   * Xóa ảnh bài viết trên Cloudinary theo URL
+   */
+  async deleteImage(imageUrl: string) {
+    if (!imageUrl) throw new BadRequestException('Không có URL ảnh để xóa');
+
+    // Trích xuất publicId từ URL Cloudinary
+    // URL dạng: https://res.cloudinary.com/<cloud>/image/upload/v123/4stay/blogs/abc123.png
+    const match = imageUrl.match(
+      /\/upload\/(?:v\d+\/)?(4stay\/.+?)(?:\.\w+)?$/,
+    );
+    if (!match || !match[1]) {
+      throw new BadRequestException(
+        'URL ảnh không hợp lệ hoặc không thuộc Cloudinary',
+      );
+    }
+
+    const publicId = match[1];
+    try {
+      await this.cloudinaryService.deleteImage(publicId);
+      return { message: 'Xóa ảnh thành công', publicId };
+    } catch {
+      // Ảnh có thể đã bị xóa trước đó trên Cloudinary, bỏ qua lỗi
+      return {
+        message: 'Ảnh không tồn tại hoặc đã được xóa trước đó',
+        publicId,
+      };
+    }
+  }
+
+  /**
    * Trợ thủ tạo unique slug cho Post
    */
   private async resolveUniqueSlug(title: string, excludeId?: number) {

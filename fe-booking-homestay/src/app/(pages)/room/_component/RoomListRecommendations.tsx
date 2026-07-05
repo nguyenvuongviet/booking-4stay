@@ -176,8 +176,8 @@ export default function RoomListRecommendations({
           </div>
         )}
         {room.status !== "MAINTENANCE" && room.matchScore && (
-          <div className="absolute bottom-1.5 left-1.5 px-2 py-0.5 bg-purple-500/90 backdrop-blur-sm rounded-full">
-            <span className="text-[9px] font-bold text-white">
+          <div className="absolute bottom-1.5 left-1.5 px-2 py-0.5 bg-purple-500/90 backdrop-blur-sm rounded-full flex items-center justify-center">
+            <span className="text-[9px] font-bold text-white leading-none">
               ✨ {room.matchScore}% phù hợp
             </span>
           </div>

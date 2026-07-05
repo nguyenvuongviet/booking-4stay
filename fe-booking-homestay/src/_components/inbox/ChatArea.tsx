@@ -4,7 +4,7 @@ import { getImageUrl, getPartner } from "@/_helper/chat.helper";
 import { IConversation, IMessage } from "@/types/chat";
 import { ArrowLeft, Info, Send, Smile, Sparkles } from "lucide-react";
 import Image from "next/image";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import MessageBubble from "./MessageBubble";
 import QuickTemplates from "./QuickTemplates";
 import TypingIndicator from "./TypingIndicator";
@@ -51,6 +51,10 @@ export default function ChatArea({
     });
   }, [messages, activeConversation?.id, isTyping]);
 
+  const [imageSrc, setImageSrc] = useState(
+    getImageUrl(partner.avatar) || "/default-avatar.png",
+  );
+
   return (
     <div className="flex h-full min-w-0 flex-col bg-transparent">
       {/* Header */}
@@ -67,14 +71,15 @@ export default function ChatArea({
           )}
 
           {/* Partner avatar */}
-          <div className="relative h-10 w-10 rounded-2xl overflow-hidden bg-secondary border border-border shrink-0">
+          <div className="relative h-10 w-10 rounded-2xl overflow-hidden border border-border shrink-0">
             {partner.avatar ? (
               <Image
-                src={getImageUrl(partner.avatar) || ""}
+                src={imageSrc}
                 alt={partner.firstName}
                 fill
                 className="object-cover"
                 unoptimized
+                onError={() => setImageSrc("/default-avatar.png")}
               />
             ) : (
               <div className="flex h-full w-full items-center justify-center bg-linear-to-tr from-primary/20 to-blue-500/20 text-sm font-extrabold text-primary">

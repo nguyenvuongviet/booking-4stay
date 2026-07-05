@@ -249,11 +249,13 @@ export default function PromotionTable({
                 </div>
               </td>
               <td className="py-4 px-4 text-xs text-slate-500 font-mono">
-                <div className="space-y-1 min-w-52.5">
+                <div className="space-y-1 min-w-32.5">
                   <div>{getStatusBadge(promo.startDate, promo.endDate)}</div>
-                  <div className="text-[10px] text-slate-600 dark:text-slate-300">
-                    {formatExpiryDate(promo.startDate)} →{" "}
-                    {formatExpiryDate(promo.endDate)}
+                  <div className="text-[10px] text-slate-600 dark:text-slate-300 flex flex-col gap-0.5">
+                    <span>{formatExpiryDate(promo.startDate)}</span>
+                    <span className="text-slate-400">
+                      → {formatExpiryDate(promo.endDate)}
+                    </span>
                   </div>
                 </div>
               </td>

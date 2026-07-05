@@ -114,9 +114,9 @@ export function useSearchBar(options?: UseSearchBarOptions) {
     setLocationInput(loc.name || "");
     setShowSuggestions(false);
 
-    if (autoSearchOnSelect) {
-      handleSearch(loc.name);
-    }
+    // if (autoSearchOnSelect) {
+    //   handleSearch(loc.name);
+    // }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {

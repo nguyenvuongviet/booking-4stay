@@ -96,7 +96,7 @@ export function DetailedTabbedWidget({
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`px-4 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 ${
+              className={`px-4 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
                 activeTab === tab.id
                   ? "bg-slate-900 text-white shadow-md shadow-slate-950/20"
                   : "text-slate-500 hover:bg-slate-100 hover:text-slate-700"
@@ -150,6 +150,9 @@ export function DetailedTabbedWidget({
                         <img
                           src={getImageUrl(b.userAvatar) || ""}
                           alt={b.userName}
+                          onError={(e) => {
+                            e.currentTarget.src = "/default-avatar.png";
+                          }}
                           className="w-7 h-7 rounded-full object-cover border border-slate-100"
                         />
                       ) : (
@@ -180,9 +183,9 @@ export function DetailedTabbedWidget({
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="w-8 h-8 rounded-lg text-slate-400 hover:text-slate-900"
+                        className="w-7 h-7 text-slate-400 hover:text-slate-600 rounded-md hover:bg-slate-50 cursor-pointer"
                       >
-                        <Eye className="w-4 h-4" />
+                        <Eye className="w-3.5 h-3.5" />
                       </Button>
                     </Link>
                   </td>
@@ -215,6 +218,9 @@ export function DetailedTabbedWidget({
                 <img
                   src={getImageUrl(r.avatar) || ""}
                   alt={r.userName}
+                  onError={(e) => {
+                    e.currentTarget.src = "/default-avatar.png";
+                  }}
                   className="w-10 h-10 rounded-full object-cover shrink-0 border border-slate-100"
                 />
               ) : (
@@ -287,6 +293,9 @@ export function DetailedTabbedWidget({
                     <img
                       src={getImageUrl(room.imageUrl) || ""}
                       alt={room.roomName}
+                      onError={(e) => {
+                        e.currentTarget.src = "/default.jpg";
+                      }}
                       className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-500"
                     />
                   ) : (

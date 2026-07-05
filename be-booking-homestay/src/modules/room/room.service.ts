@@ -8,7 +8,7 @@ import { CreateRoomDto } from './dto/create-room.dto';
 import { RoomFilterDto } from './dto/filter-room.dto';
 import { UpdateRoomDto } from './dto/update-room.dto';
 
-const SORT_BY = new Set(['price', 'rating', 'createdAt']);
+const SORT_BY = new Set(['price', 'rating', 'createdAt', 'id']);
 const SORT_ORDER = new Set(['asc', 'desc']);
 
 @Injectable()
@@ -28,7 +28,7 @@ export class RoomService {
       minRating,
       checkIn,
       checkOut,
-      sortBy = 'createdAt',
+      sortBy = 'id',
       sortOrder = 'desc',
       page = 1,
       pageSize = 12,
@@ -36,7 +36,7 @@ export class RoomService {
     } = query;
 
     search = search?.trim();
-    sortBy = SORT_BY.has(sortBy ?? '') ? sortBy! : 'createdAt';
+    sortBy = SORT_BY.has(sortBy ?? '') ? sortBy! : 'id';
     sortOrder = SORT_ORDER.has(sortOrder ?? '') ? sortOrder! : 'desc';
     page = Math.max(1, Number(page) || 1);
     pageSize = Math.max(1, Number(pageSize) || 12);
