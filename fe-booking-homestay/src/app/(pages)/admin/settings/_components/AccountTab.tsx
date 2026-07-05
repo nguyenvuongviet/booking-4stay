@@ -133,24 +133,24 @@ export default function AccountTab() {
   };
 
   return (
-    <Card className="p-6 md:p-8 max-w-2xl border border-border/60 shadow-sm rounded-2xl animate-in fade-in-50 duration-200 bg-card">
-      <div className="border-b border-border/60 pb-4 mb-6">
-        <h2 className="text-xl font-bold">Thông tin tài khoản</h2>
-        <p className="text-sm text-muted-foreground mt-1">
+    <Card className="p-3.5 sm:p-6 md:p-8 max-w-2xl w-full border border-border/60 shadow-sm rounded-2xl animate-in fade-in-50 duration-200 bg-card">
+      <div className="border-b border-border/60 pb-2 sm:pb-4 mb-1 sm:mb-3">
+        <h2 className="text-base sm:text-xl font-bold">Thông tin tài khoản</h2>
+        <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 sm:mt-1">
           Cập nhật thông tin định danh và địa chỉ liên lạc.
         </p>
       </div>
-      <div className="space-y-5">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="space-y-2.5 sm:space-y-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-4">
           <div>
-            <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider block mb-2">
+            <label className="text-[10px] sm:text-xs font-semibold text-slate-500 uppercase tracking-wider block mb-1">
               Họ và tên
             </label>
             <Input
               value={profile.fullName}
               onChange={(e) => handleProfileChange("fullName", e.target.value)}
               placeholder="Nhập họ và tên"
-              className={`h-11 rounded-lg bg-card focus-visible:ring-primary/20 ${
+              className={`h-9.5 sm:h-11 text-xs sm:text-sm rounded-lg bg-card focus-visible:ring-primary/20 ${
                 errors.fullName
                   ? "border-red-500 focus-visible:ring-red-200"
                   : "border-border/80"
@@ -163,7 +163,7 @@ export default function AccountTab() {
             )}
           </div>
           <div>
-            <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider block mb-2">
+            <label className="text-[10px] sm:text-xs font-semibold text-slate-500 uppercase tracking-wider block mb-1">
               Số điện thoại
             </label>
             <Input
@@ -172,7 +172,7 @@ export default function AccountTab() {
                 handleProfileChange("phoneNumber", e.target.value)
               }
               placeholder="Nhập số điện thoại"
-              className={`h-11 rounded-lg bg-card focus-visible:ring-primary/20 ${
+              className={`h-9.5 sm:h-11 text-xs sm:text-sm rounded-lg bg-card focus-visible:ring-primary/20 ${
                 errors.phoneNumber
                   ? "border-red-500 focus-visible:ring-red-200"
                   : "border-border/80"
@@ -186,27 +186,27 @@ export default function AccountTab() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-4">
           <div>
-            <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider block mb-2">
+            <label className="text-[10px] sm:text-xs font-semibold text-slate-500 uppercase tracking-wider block mb-1">
               Email
             </label>
             <Input
               type="email"
               value={profile.email}
               disabled
-              className="h-11 rounded-lg bg-muted/30 cursor-not-allowed border-border/80"
+              className="h-9.5 sm:h-11 text-xs sm:text-sm rounded-lg bg-muted/30 cursor-not-allowed border-border/80"
             />
           </div>
           <div>
-            <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider block mb-2">
+            <label className="text-[10px] sm:text-xs font-semibold text-slate-500 uppercase tracking-wider block mb-1">
               Quốc gia
             </label>
             <Select
               value={profile.country || undefined}
               onValueChange={(val) => handleProfileChange("country", val)}
             >
-              <SelectTrigger className="h-11 rounded-lg border-border/80 bg-card focus:ring-primary/20 cursor-pointer">
+              <SelectTrigger className="h-9.5 sm:h-11 text-xs sm:text-sm rounded-lg border-border/80 bg-card focus:ring-primary/20 cursor-pointer">
                 <SelectValue placeholder="Chọn quốc gia" />
               </SelectTrigger>
               <SelectContent className="max-h-60 overflow-auto bg-card border border-border/60">
@@ -220,16 +220,16 @@ export default function AccountTab() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-4">
           <div>
-            <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider block mb-2">
+            <label className="text-[10px] sm:text-xs font-semibold text-slate-500 uppercase tracking-wider block mb-1">
               Giới tính
             </label>
             <Select
               value={profile.gender}
               onValueChange={(val) => handleProfileChange("gender", val)}
             >
-              <SelectTrigger className="h-11 rounded-lg border-border/80 bg-card focus:ring-primary/20 cursor-pointer">
+              <SelectTrigger className="h-9.5 sm:h-11 text-xs sm:text-sm rounded-lg border-border/80 bg-card focus:ring-primary/20 cursor-pointer">
                 <SelectValue placeholder="Chọn giới tính" />
               </SelectTrigger>
               <SelectContent className="bg-card border border-border/60">
@@ -240,7 +240,7 @@ export default function AccountTab() {
             </Select>
           </div>
           <div>
-            <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider block mb-2">
+            <label className="text-[10px] sm:text-xs font-semibold text-slate-500 uppercase tracking-wider block mb-1">
               Ngày sinh
             </label>
             <Input
@@ -249,17 +249,17 @@ export default function AccountTab() {
               onChange={(e) =>
                 handleProfileChange("dateOfBirth", e.target.value)
               }
-              className="h-11 rounded-lg border-border/80 bg-card focus-visible:ring-primary/20 relative cursor-pointer"
+              className="h-9.5 sm:h-11 text-xs sm:text-sm rounded-lg border-border/80 bg-card focus-visible:ring-primary/20 relative cursor-pointer"
             />
           </div>
         </div>
 
-        <div className="pt-2">
+        <div className="pt-1.5">
           <Button
             onClick={saveProfile}
-            className="bg-primary hover:bg-primary/95 text-white gap-2 rounded-xl h-11 px-5 font-semibold cursor-pointer shadow-sm hover:shadow transition-all duration-150"
+            className="w-full sm:w-auto bg-primary hover:bg-primary/95 text-white gap-2 rounded-lg sm:rounded-xl h-9.5 sm:h-11 px-4 sm:px-5 text-xs sm:text-sm font-semibold cursor-pointer shadow-sm hover:shadow transition-all duration-150 justify-center"
           >
-            <Save className="w-4 h-4" />
+            <Save className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             Lưu thay đổi
           </Button>
         </div>

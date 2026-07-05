@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/_components/ui/button";
+import { Skeleton } from "@/_components/ui/skeleton";
 import { formatExpiryDate } from "@/lib/utils/promotionUtils";
 import { Pencil, Trash } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -157,160 +158,391 @@ export default function PromotionTable({
     );
   };
 
-  if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center py-20 space-y-4">
-        <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-        <p className="text-sm text-slate-500">Đang tải danh sách...</p>
-      </div>
-    );
-  }
-
   return (
-    <div className="overflow-x-auto rounded-xl border bg-white dark:bg-slate-900 shadow-sm">
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="bg-slate-50 dark:bg-slate-800/50 border-b text-slate-500 dark:text-slate-400">
-            <th className="py-3.5 px-4 text-left font-semibold">Mã</th>
-            <th className="py-3.5 px-4 text-left font-semibold">Chiến dịch</th>
-            <th className="py-3.5 px-4 text-left font-semibold">Loại</th>
-            {renderSortHeader("Mức giảm", "discountValue")}
-            {renderSortHeader("Giảm tối đa", "maxDiscount")}
-            {renderSortHeader("Đơn tối thiểu", "minOrderValue")}
-            <th className="py-3.5 px-4 text-left font-semibold">Lượt dùng</th>
-            <th className="py-3.5 px-4 text-left font-semibold">Hiệu lực</th>
-            <th className="py-3.5 px-4 text-center font-semibold">Public</th>
-            <th className="py-3.5 px-4 text-center font-semibold">Kích hoạt</th>
-            <th className="py-3.5 px-4 text-center w-24">Thao tác</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-          {sortedItems.map((promo) => (
-            <tr
-              key={promo.id}
-              className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors"
+    <>
+      {/* ==================== Desktop Table (lg+) ==================== */}
+      <div className="hidden lg:block overflow-x-auto rounded-xl border bg-white dark:bg-slate-900 shadow-sm">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="bg-slate-50 dark:bg-slate-800/50 border-b text-slate-500 dark:text-slate-400">
+              <th className="py-3.5 px-4 text-left font-semibold">Mã</th>
+              <th className="py-3.5 px-4 text-left font-semibold">
+                Chiến dịch
+              </th>
+              <th className="py-3.5 px-4 text-left font-semibold">Loại</th>
+              {renderSortHeader("Mức giảm", "discountValue")}
+              {renderSortHeader("Giảm tối đa", "maxDiscount")}
+              {renderSortHeader("Đơn tối thiểu", "minOrderValue")}
+              <th className="py-3.5 px-4 text-left font-semibold">Lượt dùng</th>
+              <th className="py-3.5 px-4 text-left font-semibold">Hiệu lực</th>
+              <th className="py-3.5 px-4 text-center font-semibold">Public</th>
+              <th className="py-3.5 px-4 text-center font-semibold">
+                Kích hoạt
+              </th>
+              <th className="py-3.5 px-4 text-center w-24">Thao tác</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+            {loading &&
+              [...Array(4)].map((_, i) => (
+                <tr key={i} className="border-b">
+                  <td className="py-4 px-4">
+                    <Skeleton className="h-4 w-16 rounded font-mono" />
+                  </td>
+                  <td className="py-4 px-4">
+                    <Skeleton className="h-4 w-32 rounded" />
+                  </td>
+                  <td className="py-4 px-4">
+                    <Skeleton className="h-5 w-20 rounded-full" />
+                  </td>
+                  <td className="py-4 px-4">
+                    <Skeleton className="h-4 w-12 rounded" />
+                  </td>
+                  <td className="py-4 px-4">
+                    <Skeleton className="h-4 w-24 rounded" />
+                  </td>
+                  <td className="py-4 px-4">
+                    <Skeleton className="h-4 w-16 rounded" />
+                  </td>
+                  <td className="py-4 px-4">
+                    <div className="space-y-1">
+                      <Skeleton className="h-3 w-10 rounded" />
+                      <Skeleton className="h-1.5 w-20 rounded-full" />
+                    </div>
+                  </td>
+                  <td className="py-4 px-4">
+                    <div className="space-y-1">
+                      <Skeleton className="h-3.5 w-14 rounded" />
+                      <Skeleton className="h-3 w-28 rounded" />
+                    </div>
+                  </td>
+                  <td className="py-4 px-4 text-center">
+                    <Skeleton className="h-2 w-2 mx-auto rounded-full" />
+                  </td>
+                  <td className="py-4 px-4">
+                    <Skeleton className="h-5 w-9 mx-auto rounded-full" />
+                  </td>
+                  <td className="py-4 px-4 text-center">
+                    <div className="flex gap-1 justify-center">
+                      <Skeleton className="h-8 w-8 rounded-lg" />
+                      <Skeleton className="h-8 w-8 rounded-lg" />
+                    </div>
+                  </td>
+                </tr>
+              ))}
+
+            {!loading &&
+              sortedItems.map((promo) => (
+                <tr
+                  key={promo.id}
+                  className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors"
+                >
+                  <td className="py-4 px-4 font-mono font-bold text-primary select-all">
+                    {promo.code}
+                  </td>
+                  <td className="py-4 px-4">
+                    <div className="font-medium text-slate-900 dark:text-white max-w-45 truncate">
+                      {promo.name}
+                    </div>
+                  </td>
+                  <td className="py-4 px-4">
+                    <span
+                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPromoTypeBadge(
+                        promo.promotionType,
+                      )}`}
+                    >
+                      {promo.promotionType}
+                    </span>
+                  </td>
+                  <td className="py-4 px-4">{getDiscountDisplay(promo)}</td>
+                  <td className="py-4 px-4">{getMaxDiscountDisplay(promo)}</td>
+                  <td className="py-4 px-4 text-slate-600 dark:text-slate-300">
+                    {Number(promo.minOrderValue) > 0
+                      ? `${Number(promo.minOrderValue).toLocaleString("vi-VN")}đ`
+                      : "0đ"}
+                  </td>
+                  <td className="py-4 px-4">
+                    <div className="space-y-1 max-w-28">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-semibold text-slate-900 dark:text-white">
+                          {promo.usedCount}
+                        </span>
+                        <span className="text-slate-400">/</span>
+                        <span className="text-slate-500 font-medium">
+                          {promo.usageLimit || "∞"}
+                        </span>
+                      </div>
+                      {promo.usageLimit > 0 && (
+                        <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full rounded-full transition-all duration-300 ${
+                              promo.usedCount >= promo.usageLimit
+                                ? "bg-rose-500"
+                                : promo.usedCount / promo.usageLimit >= 0.8
+                                  ? "bg-amber-500"
+                                  : "bg-primary"
+                            }`}
+                            style={{
+                              width: `${Math.min((promo.usedCount / promo.usageLimit) * 100, 100)}%`,
+                            }}
+                          />
+                        </div>
+                      )}
+                      {promo.usageStats && (
+                        <span className="text-[9px] text-muted-foreground block leading-none">
+                          Ví: {promo.usageStats.totalCollected}
+                        </span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="py-4 px-4 text-xs text-slate-500 font-mono">
+                    <div className="space-y-1 min-w-32.5">
+                      <div>
+                        {getStatusBadge(promo.startDate, promo.endDate)}
+                      </div>
+                      <div className="text-[10px] text-slate-600 dark:text-slate-300 flex flex-col gap-0.5">
+                        <span>{formatExpiryDate(promo.startDate)}</span>
+                        <span className="text-slate-400">
+                          → {formatExpiryDate(promo.endDate)}
+                        </span>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="py-4 px-4 text-center">
+                    <span
+                      className={`inline-block w-2 h-2 rounded-full ${
+                        promo.isPublic ? "bg-green-500" : "bg-gray-300"
+                      }`}
+                      title={promo.isPublic ? "Công khai" : "Ẩn"}
+                    />
+                  </td>
+                  <td className="py-4 px-4">
+                    <div className="flex items-center justify-center">
+                      <FancySwitch
+                        size="xs"
+                        checked={promo.isActive}
+                        onChange={() => onToggle(promo.id)}
+                      />
+                    </div>
+                  </td>
+                  <td className="py-4 px-4 text-center">
+                    <div className="flex items-center justify-center gap-1">
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                        onClick={() => onEdit(promo)}
+                      >
+                        <Pencil className="w-4 h-4 text-slate-500 hover:text-slate-700" />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="hover:bg-red-50 dark:hover:bg-red-950/20 cursor-pointer"
+                        onClick={() => onDelete(promo.id)}
+                      >
+                        <Trash className="w-4 h-4 text-red-500 hover:text-red-700" />
+                      </Button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+
+            {!loading && items.length === 0 && (
+              <tr>
+                <td
+                  colSpan={11}
+                  className="py-12 text-center text-slate-500 dark:text-slate-400"
+                >
+                  Không tìm thấy mã giảm giá nào.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* ==================== Mobile Cards Layout (<lg) ==================== */}
+      <div className="lg:hidden space-y-3">
+        {loading &&
+          [...Array(3)].map((_, i) => (
+            <div
+              key={i}
+              className="border rounded-xl p-4 bg-white dark:bg-slate-900 shadow-xs space-y-3"
             >
-              <td className="py-4 px-4 font-mono font-bold text-primary select-all">
-                {promo.code}
-              </td>
-              <td className="py-4 px-4">
-                <div className="font-medium text-slate-900 dark:text-white max-w-45 truncate">
-                  {promo.name}
+              <div className="flex justify-between items-start">
+                <div className="space-y-1.5 flex-1">
+                  <Skeleton className="h-4.5 w-20 rounded font-mono" />
+                  <Skeleton className="h-4 w-3/4 rounded" />
                 </div>
-              </td>
-              <td className="py-4 px-4">
+                <Skeleton className="h-5 w-16 rounded-full" />
+              </div>
+              <div className="grid grid-cols-2 gap-3 bg-slate-50 dark:bg-slate-800/50 p-2.5 rounded-lg border text-xs">
+                <div className="space-y-1">
+                  <Skeleton className="h-3 w-16 rounded" />
+                  <Skeleton className="h-4 w-20 rounded" />
+                </div>
+                <div className="space-y-1">
+                  <Skeleton className="h-3 w-16 rounded" />
+                  <Skeleton className="h-4 w-24 rounded" />
+                </div>
+              </div>
+              <div className="space-y-1.5 pt-1">
+                <div className="flex justify-between text-xs">
+                  <Skeleton className="h-3.5 w-10 rounded" />
+                  <Skeleton className="h-3.5 w-12 rounded" />
+                </div>
+                <Skeleton className="h-1.5 w-full rounded-full" />
+              </div>
+              <div className="flex items-center justify-between border-t pt-3 mt-1">
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-1.5">
+                    <Skeleton className="h-3 w-12 rounded" />
+                    <Skeleton className="h-4 w-8 rounded-full" />
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Skeleton className="h-3 w-12 rounded" />
+                    <Skeleton className="h-4 w-8 rounded-full" />
+                  </div>
+                </div>
+                <div className="flex gap-1.5">
+                  <Skeleton className="h-8 w-8 rounded-lg" />
+                  <Skeleton className="h-8 w-8 rounded-lg" />
+                </div>
+              </div>
+            </div>
+          ))}
+
+        {!loading &&
+          sortedItems.map((promo) => (
+            <div
+              key={promo.id}
+              className="border rounded-xl p-4 bg-white dark:bg-slate-900 shadow-xs space-y-3"
+            >
+              <div className="flex justify-between items-start gap-3">
+                <div className="flex-1 min-w-0">
+                  <span className="font-mono font-bold text-primary select-all text-sm sm:text-base">
+                    {promo.code}
+                  </span>
+                  <h3 className="font-semibold text-slate-900 dark:text-white text-xs sm:text-sm mt-0.5 truncate">
+                    {promo.name}
+                  </h3>
+                </div>
                 <span
-                  className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPromoTypeBadge(
+                  className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-medium shrink-0 ${getPromoTypeBadge(
                     promo.promotionType,
                   )}`}
                 >
                   {promo.promotionType}
                 </span>
-              </td>
-              <td className="py-4 px-4">{getDiscountDisplay(promo)}</td>
-              <td className="py-4 px-4">{getMaxDiscountDisplay(promo)}</td>
-              <td className="py-4 px-4 text-slate-600 dark:text-slate-300">
-                {Number(promo.minOrderValue) > 0
-                  ? `${Number(promo.minOrderValue).toLocaleString("vi-VN")}đ`
-                  : "0đ"}
-              </td>
-              <td className="py-4 px-4">
-                <div className="space-y-1 max-w-28">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="font-semibold text-slate-900 dark:text-white">
-                      {promo.usedCount}
-                    </span>
-                    <span className="text-slate-400">/</span>
-                    <span className="text-slate-500 font-medium">
-                      {promo.usageLimit || "∞"}
-                    </span>
-                  </div>
-                  {promo.usageLimit > 0 && (
-                    <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                      <div
-                        className={`h-full rounded-full transition-all duration-300 ${
-                          promo.usedCount >= promo.usageLimit
-                            ? "bg-rose-500"
-                            : promo.usedCount / promo.usageLimit >= 0.8
-                              ? "bg-amber-500"
-                              : "bg-primary"
-                        }`}
-                        style={{
-                          width: `${Math.min((promo.usedCount / promo.usageLimit) * 100, 100)}%`,
-                        }}
-                      />
-                    </div>
-                  )}
-                  {promo.usageStats && (
-                    <span className="text-[9px] text-muted-foreground block leading-none">
-                      Ví: {promo.usageStats.totalCollected}
-                    </span>
-                  )}
-                </div>
-              </td>
-              <td className="py-4 px-4 text-xs text-slate-500 font-mono">
-                <div className="space-y-1 min-w-32.5">
-                  <div>{getStatusBadge(promo.startDate, promo.endDate)}</div>
-                  <div className="text-[10px] text-slate-600 dark:text-slate-300 flex flex-col gap-0.5">
-                    <span>{formatExpiryDate(promo.startDate)}</span>
-                    <span className="text-slate-400">
-                      → {formatExpiryDate(promo.endDate)}
-                    </span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 bg-slate-50 dark:bg-slate-800/50 p-2.5 rounded-lg border text-xs text-slate-650 dark:text-slate-300">
+                <div>
+                  <span className="text-muted-foreground block text-[10px]">
+                    Giảm giá:
+                  </span>
+                  <div className="flex flex-col gap-0.5 mt-0.5">
+                    {getDiscountDisplay(promo)}
+                    {getMaxDiscountDisplay(promo)}
                   </div>
                 </div>
-              </td>
-              <td className="py-4 px-4 text-center">
-                <span
-                  className={`inline-block w-2 h-2 rounded-full ${
-                    promo.isPublic ? "bg-green-500" : "bg-gray-300"
-                  }`}
-                  title={promo.isPublic ? "Công khai" : "Ẩn"}
-                />
-              </td>
-              <td className="py-4 px-4">
-                <div className="flex items-center justify-center">
-                  <FancySwitch
-                    size="xs"
-                    checked={promo.isActive}
-                    onChange={() => onToggle(promo.id)}
-                  />
+                <div>
+                  <span className="text-muted-foreground block text-[10px]">
+                    Đơn tối thiểu:
+                  </span>
+                  <span className="font-semibold text-slate-800 dark:text-slate-200 block mt-0.5">
+                    {Number(promo.minOrderValue) > 0
+                      ? `${Number(promo.minOrderValue).toLocaleString("vi-VN")}đ`
+                      : "0đ"}
+                  </span>
                 </div>
-              </td>
-              <td className="py-4 px-4 text-center">
-                <div className="flex items-center justify-center gap-1">
+              </div>
+
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground">Lượt dùng:</span>
+                  <span className="font-semibold text-slate-900 dark:text-white">
+                    {promo.usedCount} / {promo.usageLimit || "∞"}
+                  </span>
+                </div>
+                {promo.usageLimit > 0 && (
+                  <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all duration-300 ${
+                        promo.usedCount >= promo.usageLimit
+                          ? "bg-rose-500"
+                          : promo.usedCount / promo.usageLimit >= 0.8
+                            ? "bg-amber-500"
+                            : "bg-primary"
+                      }`}
+                      style={{
+                        width: `${Math.min((promo.usedCount / promo.usageLimit) * 100, 100)}%`,
+                      }}
+                    />
+                  </div>
+                )}
+              </div>
+
+              <div className="flex items-center justify-between text-xs border-t border-dashed pt-3 mt-1 text-slate-500">
+                <div className="flex flex-col gap-0.5">
+                  <span>Bắt đầu: {formatExpiryDate(promo.startDate)}</span>
+                  <span>Kết thúc: {formatExpiryDate(promo.endDate)}</span>
+                </div>
+                <div>{getStatusBadge(promo.startDate, promo.endDate)}</div>
+              </div>
+
+              <div className="flex items-center justify-between border-t pt-3 mt-1">
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs text-muted-foreground">
+                      Public:
+                    </span>
+                    <span
+                      className={`w-2 h-2 rounded-full ${
+                        promo.isPublic ? "bg-green-500" : "bg-gray-300"
+                      }`}
+                    />
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs text-muted-foreground">
+                      Kích hoạt:
+                    </span>
+                    <FancySwitch
+                      size="xs"
+                      checked={promo.isActive}
+                      onChange={() => onToggle(promo.id)}
+                    />
+                  </div>
+                </div>
+                <div className="flex items-center gap-1">
                   <Button
                     size="icon"
                     variant="ghost"
-                    className="hover:bg-slate-100 dark:hover:bg-slate-800"
+                    className="h-8 w-8 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
                     onClick={() => onEdit(promo)}
                   >
-                    <Pencil className="w-4 h-4 text-slate-500 hover:text-slate-700" />
+                    <Pencil className="w-3.5 h-3.5 text-slate-500" />
                   </Button>
                   <Button
                     size="icon"
                     variant="ghost"
-                    className="hover:bg-red-50 dark:hover:bg-red-950/20"
+                    className="h-8 w-8 hover:bg-red-50 dark:hover:bg-red-950/20 cursor-pointer"
                     onClick={() => onDelete(promo.id)}
                   >
-                    <Trash className="w-4 h-4 text-red-500 hover:text-red-700" />
+                    <Trash className="w-3.5 h-3.5 text-red-500" />
                   </Button>
                 </div>
-              </td>
-            </tr>
+              </div>
+            </div>
           ))}
 
-          {items.length === 0 && (
-            <tr>
-              <td
-                colSpan={11}
-                className="py-12 text-center text-slate-500 dark:text-slate-400"
-              >
-                Không tìm thấy mã giảm giá nào.
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
-    </div>
+        {!loading && items.length === 0 && (
+          <div className="border rounded-xl p-8 text-center text-muted-foreground bg-white dark:bg-slate-900">
+            Không tìm thấy mã giảm giá nào.
+          </div>
+        )}
+      </div>
+    </>
   );
 }

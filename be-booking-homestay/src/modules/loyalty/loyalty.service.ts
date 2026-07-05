@@ -6,7 +6,7 @@ import { UpdateLoyaltyLevelDto } from './dto/update-loyalty-level.dto';
 
 @Injectable()
 export class LoyaltyService {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
   private async ensureLevelExists(id: number) {
     const level = await this.prisma.levels.findUnique({ where: { id } });
@@ -106,7 +106,12 @@ export class LoyaltyService {
         where: { id: { gt: lastId } },
         take: BATCH_SIZE,
         orderBy: { id: 'asc' },
-        select: { id: true, points: true, levelId: true },
+        select: {
+          id: true,
+          points: true,
+          levelId: true,
+          lastUpgradeDate: true,
+        },
       });
 
       if (programs.length === 0) break;
@@ -115,9 +120,14 @@ export class LoyaltyService {
 
       for (const pg of programs) {
         const match = activeLevels.find((lvl) => pg.points >= lvl.minPoints);
-        if (match && match.id !== pg.levelId) {
-          if (!updatesMap[match.id]) updatesMap[match.id] = [];
-          updatesMap[match.id].push(pg.id);
+        if (match) {
+          const isLevelChanged = match.id !== pg.levelId;
+          const isDateMissing = pg.lastUpgradeDate === null;
+
+          if (isLevelChanged || isDateMissing) {
+            if (!updatesMap[match.id]) updatesMap[match.id] = [];
+            updatesMap[match.id].push(pg.id);
+          }
         }
         lastId = pg.id;
       }

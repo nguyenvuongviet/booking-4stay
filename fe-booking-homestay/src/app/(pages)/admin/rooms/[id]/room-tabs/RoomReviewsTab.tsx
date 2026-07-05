@@ -1,18 +1,11 @@
 "use client";
 
-import { Button } from "@/_components/ui/button";
 import { Card } from "@/_components/ui/card";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/_components/ui/tooltip";
 import { UserAvatar } from "@/_components/UserAvatar";
 import { Pagination } from "@/app/(pages)/admin/_components/Pagination";
 import { formatDate } from "@/lib/utils/date";
 import { Review } from "@/types/review";
-import { ExternalLink, Star } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { StarRating } from "../../../_components/StarRating";
@@ -28,15 +21,17 @@ function RatingBar({
 }) {
   const percent = total ? (count / total) * 100 : 0;
   return (
-    <div className="flex items-center gap-3 w-full">
-      <p className="w-6 font-medium">{star}★</p>
-      <div className="flex-1 h-3 bg-gray-200 rounded-full overflow-hidden">
+    <div className="flex items-center gap-2 sm:gap-3 w-full">
+      <p className="w-6 font-medium text-xs sm:text-sm">{star}★</p>
+      <div className="flex-1 h-2.5 sm:h-3 bg-gray-200 dark:bg-slate-800 rounded-full overflow-hidden">
         <div
-          className="h-full bg-yellow-400"
+          className="h-full bg-yellow-400 rounded-full transition-all duration-300"
           style={{ width: `${percent}%` }}
         />
       </div>
-      <p className="text-sm text-muted-foreground w-6 text-right">{count}</p>
+      <p className="text-xs sm:text-sm text-muted-foreground w-6 text-right">
+        {count}
+      </p>
     </div>
   );
 }
@@ -92,22 +87,34 @@ export default function RoomReviewsTab({ reviews }: { reviews: Review[] }) {
   }, [ratingFilter, sortType]);
 
   return (
-    <div className="space-y-8">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="p-4 rounded-xl shadow-sm">
-          <p className="font-semibold text-lg">Đánh giá tổng thể</p>
-          <p className="text-4xl font-bold mt-3">{stats.avg}</p>
+    <div className="space-y-4 sm:space-y-6 mt-4">
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-5">
+        <Card className="p-3.5 sm:p-5 rounded-2xl border border-slate-200/60 dark:border-slate-800/40 bg-card shadow-2xs flex flex-col justify-center">
+          <p className="font-semibold text-xs sm:text-sm text-slate-800 dark:text-slate-200">
+            Đánh giá tổng thể
+          </p>
+          <div className="flex items-baseline gap-2 mt-2 sm:mt-3">
+            <span className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white">
+              {stats.avg}
+            </span>
+            <span className="text-xs sm:text-sm text-slate-400 dark:text-slate-500 font-medium">
+              / 5.0
+            </span>
+          </div>
           <div className="mt-2">
             <StarRating value={Math.round(Number(stats.avg))} />
           </div>
-          <p className="text-sm text-muted-foreground mt-1">
-            Dựa trên {stats.total} đánh giá
+          <p className="text-[10px] sm:text-xs text-muted-foreground mt-1.5">
+            Dựa trên {stats.total} đánh giá từ khách hàng
           </p>
         </Card>
 
-        <Card className="p-6 rounded-xl shadow-sm">
-          <p className="font-semibold text-lg">Phân phối xếp hạng</p>
-          <div className="mt-4 space-y-3">
+        <Card className="p-3.5 sm:p-5 rounded-2xl border border-slate-200/60 dark:border-slate-800/40 bg-card shadow-2xs">
+          <p className="font-semibold text-xs sm:text-sm text-slate-800 dark:text-slate-200">
+            Phân phối xếp hạng
+          </p>
+          <div className="mt-2 sm:mt-3 space-y-1.5 sm:space-y-2">
             <RatingBar star={5} count={stats.counts[5]} total={stats.total} />
             <RatingBar star={4} count={stats.counts[4]} total={stats.total} />
             <RatingBar star={3} count={stats.counts[3]} total={stats.total} />
@@ -117,104 +124,113 @@ export default function RoomReviewsTab({ reviews }: { reviews: Review[] }) {
         </Card>
       </div>
 
-      <div className="flex flex-wrap justify-center gap-3">
-        <Button
-          onClick={() => {
-            setRatingFilter(null);
+      {/* Filter row: select combobox + sort */}
+      <div className="flex items-center gap-2 sm:gap-3">
+        <select
+          value={ratingFilter ?? "all"}
+          onChange={(e) => {
+            setRatingFilter(
+              e.target.value === "all" ? null : Number(e.target.value),
+            );
             setPage(1);
           }}
-          variant={ratingFilter === null ? "default" : "outline"}
-          className="px-5 rounded-full"
+          className="h-9 sm:h-9.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-transparent px-3 py-1.5 text-xs sm:text-sm outline-none focus:border-primary/50 text-slate-700 dark:text-slate-300 font-medium cursor-pointer"
         >
-          Tất cả
-        </Button>
+          <option value="all">Tất cả sao</option>
+          <option value="5">5 Sao ⭐</option>
+          <option value="4">4 Sao ⭐</option>
+          <option value="3">3 Sao ⭐</option>
+          <option value="2">2 Sao ⭐</option>
+          <option value="1">1 Sao ⭐</option>
+        </select>
 
-        {[5, 4, 3, 2, 1].map((star) => (
-          <Button
-            key={star}
-            onClick={() => {
-              setRatingFilter(star);
-              setPage(1);
-            }}
-            variant={ratingFilter === star ? "default" : "outline"}
-            className="px-4 rounded-full gap-1"
-          >
-            {star} <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />
-          </Button>
-        ))}
-
-        <Button
-          variant="outline"
-          onClick={() => {
-            setSortType(sortType === "newest" ? "oldest" : "newest");
+        <select
+          value={sortType}
+          onChange={(e) => {
+            setSortType(e.target.value as "newest" | "oldest");
             setPage(1);
           }}
-          className="px-5 rounded-full"
+          className="h-9 sm:h-9.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-transparent px-3 py-1.5 text-xs sm:text-sm outline-none focus:border-primary/50 text-slate-700 dark:text-slate-300 font-medium cursor-pointer ml-auto"
         >
-          ↕ {sortType === "newest" ? "Mới nhất" : "Cũ nhất"}
-        </Button>
+          <option value="newest">Mới nhất</option>
+          <option value="oldest">Cũ nhất</option>
+        </select>
       </div>
 
-      <div className="space-y-4">
+      {/* Reviews list */}
+      <div className="space-y-3 sm:space-y-4">
         {paged.map((review) => (
           <Card
             key={review.id}
-            className="p-5 flex flex-col md:flex-row gap-4 rounded-xl border shadow-sm hover:shadow-md transition-all"
+            className="p-3.5 sm:p-5 flex flex-col gap-3 sm:gap-3.5 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-2xs bg-card"
           >
-            <div className="flex items-start gap-4 w-full md:w-[25%] shrink-0">
+            {/* Header: User Avatar & Name, Stars top-right */}
+            <div className="flex items-start gap-2.5 sm:gap-3 pb-2.5 sm:pb-3 border-b border-dashed border-slate-100 dark:border-slate-800/60">
               <UserAvatar
-                size="lg"
+                size="md"
                 avatarUrl={review.user?.avatar}
                 fullName={review.user?.name}
+                className="w-9 h-9 sm:w-10 sm:h-10 border border-slate-100 dark:border-slate-800 shrink-0"
               />
-
-              <div>
-                <p className="font-semibold text-base">{review.user?.name}</p>
-                <p className="text-xs text-muted-foreground">
-                  {formatDate(review.createdAt)}
-                </p>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="font-bold text-xs sm:text-sm text-slate-850 dark:text-slate-200 truncate">
+                      {review.user?.name}
+                    </p>
+                    <span className="text-[10px] text-slate-450 dark:text-slate-500 mt-0.5 block">
+                      <span className="hidden sm:inline">Booking </span>#
+                      {review.bookingId}
+                    </span>
+                  </div>
+                  <div className="shrink-0">
+                    <StarRating value={Math.floor(review.rating)} />
+                  </div>
+                </div>
               </div>
             </div>
 
-            <div className="flex-1 min-w-0">
-              <p className="text-base leading-relaxed text-gray-900">
-                {review.comment}
+            {/* Comment Body */}
+            <div className="text-xs sm:text-sm leading-relaxed text-slate-650 dark:text-slate-300">
+              <p className="wrap-break-word">
+                {review.comment || "— Không có nội dung đánh giá —"}
               </p>
             </div>
 
-            <div className="flex flex-col items-end justify-between gap-2 md:w-20 shrink-0">
-              <StarRating value={Math.round(Number(review.rating))} />
+            {/* Footer details */}
+            <div className="flex justify-between items-center mt-0.5 sm:mt-1.5 pt-2 sm:pt-2.5 border-t border-slate-100 dark:border-slate-800/40">
+              <span className="text-[10px] sm:text-xs text-slate-400">
+                {formatDate(review.createdAt)}
+              </span>
 
               {review.bookingId && (
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Link
-                        href={`/admin/bookings/${review.bookingId}`}
-                        className="opacity-70 hover:opacity-100 transition"
-                      >
-                        <ExternalLink className="w-5 h-5 text-gray-600" />
-                      </Link>
-                    </TooltipTrigger>
-                    <TooltipContent className="text-xs py-1 px-2">
-                      Xem chi tiết booking
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+                <Link
+                  href={`/admin/bookings/${review.bookingId}`}
+                  className="text-primary hover:text-primary/80 text-[11px] sm:text-sm font-semibold flex items-center gap-1 cursor-pointer transition-colors"
+                >
+                  <span>Chi tiết booking</span>
+                  <ExternalLink className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                </Link>
               )}
             </div>
           </Card>
         ))}
 
         {filtered.length === 0 && (
-          <p className="text-center text-gray-500 py-6">
-            Không có đánh giá nào.
+          <p className="text-center text-slate-400 dark:text-slate-500 italic py-6 text-xs sm:text-sm">
+            Không có đánh giá nào phù hợp.
           </p>
         )}
       </div>
 
       {pageCount > 0 && (
-        <Pagination page={page} pageCount={pageCount} onPageChange={setPage} />
+        <div className="pt-2">
+          <Pagination
+            page={page}
+            pageCount={pageCount}
+            onPageChange={setPage}
+          />
+        </div>
       )}
     </div>
   );

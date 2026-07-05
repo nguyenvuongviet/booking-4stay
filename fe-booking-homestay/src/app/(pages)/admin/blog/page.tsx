@@ -1,6 +1,14 @@
 "use client";
 
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/_components/ui/select";
+import { Skeleton } from "@/_components/ui/skeleton";
+import {
   changePostStatus,
   deletePost,
   getAdminPosts,
@@ -187,14 +195,14 @@ export default function AdminBlogPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between pb-4 border-b gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between pb-3 sm:pb-4 border-b gap-3 sm:gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+          <h1 className="text-xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
             Quản lý Blog
           </h1>
-          <p className="text-gray-600 dark:text-slate-400 mt-1">
+          <p className="text-xs sm:text-sm text-gray-600 dark:text-slate-400 mt-0.5 sm:mt-1">
             {processedPosts.length} bài viết
           </p>
         </div>
@@ -202,25 +210,26 @@ export default function AdminBlogPage() {
           <button
             onClick={() => fetchPosts()}
             disabled={loading}
-            className="p-2.5 rounded-xl border bg-background hover:bg-accent transition-colors disabled:opacity-50 cursor-pointer"
+            className="p-2 sm:p-2.5 rounded-xl border bg-background hover:bg-accent transition-colors disabled:opacity-50 cursor-pointer"
             title="Làm mới"
           >
             <RotateCw size={18} className={loading ? "animate-spin" : ""} />
           </button>
           <Link
             href="/admin/blog/create"
-            className="inline-flex items-center gap-2 px-4 py-2.5 bg-primary text-white rounded-xl font-medium hover:bg-primary/90 transition-all shadow-sm cursor-pointer"
+            className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 bg-primary text-white rounded-xl text-sm font-medium hover:bg-primary/90 transition-all shadow-sm cursor-pointer"
           >
             <Plus size={18} />
-            Viết bài mới
+            <span className="hidden sm:inline">Viết bài mới</span>
+            <span className="sm:hidden">Tạo mới</span>
           </Link>
         </div>
       </div>
 
       {/* Status tabs */}
-      <div className="flex border-b border-muted">
+      <div className="flex border-b border-muted overflow-x-auto scrollbar-none">
         {[
-          { key: "", label: "Tất cả bài viết" },
+          { key: "", label: "Tất cả" },
           { key: "DRAFT", label: "Nháp" },
           { key: "PUBLISHED", label: "Đã xuất bản" },
           { key: "ARCHIVED", label: "Lưu trữ" },
@@ -230,7 +239,7 @@ export default function AdminBlogPage() {
             <button
               key={tab.key}
               onClick={() => setStatusFilter(tab.key)}
-              className={`px-6 py-3 text-sm font-semibold border-b-2 transition-all cursor-pointer ${
+              className={`px-4 sm:px-6 py-2.5 sm:py-3 text-xs sm:text-sm font-semibold border-b-2 transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                 isActive
                   ? "border-primary text-primary"
                   : "border-transparent text-muted-foreground hover:text-foreground"
@@ -243,7 +252,7 @@ export default function AdminBlogPage() {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-3">
+      <div className="sticky top-16 sm:top-20 z-20 bg-background/95 backdrop-blur-xs border border-border p-3 sm:p-4 rounded-2xl shadow-sm flex flex-col gap-3">
         <div className="relative flex-1">
           <Search
             size={16}
@@ -258,33 +267,36 @@ export default function AdminBlogPage() {
           />
         </div>
 
-        {/* Sort Select */}
-        <select
-          value={sortFilter}
-          onChange={(e) => {
-            const val = e.target.value;
-            setSortFilter(val);
-            if (val === "none") {
-              setSortBy(null);
-              setSortOrder(null);
-            } else {
-              const [field, order] = val.split("-");
-              setSortBy(field as any);
-              setSortOrder(order as "asc" | "desc");
-            }
-          }}
-          className="px-4 py-2.5 rounded-xl border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 cursor-pointer"
-        >
-          <option value="none">Không sắp xếp</option>
-          <option value="createdAt-desc">Mới nhất</option>
-          <option value="createdAt-asc">Cũ nhất</option>
-          <option value="viewCount-desc">Lượt xem: Nhiều nhất</option>
-          <option value="viewCount-asc">Lượt xem: Ít nhất</option>
-          <option value="commentCount-desc">Bình luận: Nhiều nhất</option>
-          <option value="commentCount-asc">Bình luận: Ít nhất</option>
-        </select>
+        <div className="flex flex-wrap gap-2 sm:gap-3">
+          {/* Sort Select */}
+          <Select
+            value={sortFilter}
+            onValueChange={(val) => {
+              setSortFilter(val);
+              if (val === "none") {
+                setSortBy(null);
+                setSortOrder(null);
+              } else {
+                const [field, order] = val.split("-");
+                setSortBy(field as any);
+                setSortOrder(order as "asc" | "desc");
+              }
+            }}
+          >
+            <SelectTrigger className="flex-1 min-w-35 sm:flex-none h-auto! px-4! py-2.5! rounded-xl! border! border-slate-200! dark:border-slate-800! bg-background text-sm font-medium hover:bg-accent transition-colors focus:ring-0 focus-visible:ring-0 focus-visible:border-slate-200 focus:border-slate-200 outline-none cursor-pointer shadow-none">
+              <SelectValue placeholder="Sắp xếp" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">Không sắp xếp</SelectItem>
+              <SelectItem value="createdAt-desc">Mới nhất</SelectItem>
+              <SelectItem value="createdAt-asc">Cũ nhất</SelectItem>
+              <SelectItem value="viewCount-desc">Lượt xem ↑</SelectItem>
+              <SelectItem value="viewCount-asc">Lượt xem ↓</SelectItem>
+              <SelectItem value="commentCount-desc">Bình luận ↑</SelectItem>
+              <SelectItem value="commentCount-asc">Bình luận ↓</SelectItem>
+            </SelectContent>
+          </Select>
 
-        <div className="flex gap-2">
           <Link
             href="/admin/blog/categories"
             className="px-4 py-2.5 rounded-xl border bg-background text-sm font-medium hover:bg-accent transition-colors"
@@ -300,8 +312,8 @@ export default function AdminBlogPage() {
         </div>
       </div>
 
-      {/* Table */}
-      <div className="border rounded-xl overflow-hidden bg-background">
+      {/* ==================== Desktop Table (lg+) ==================== */}
+      <div className="hidden lg:block border rounded-xl overflow-hidden bg-background">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
@@ -341,9 +353,34 @@ export default function AdminBlogPage() {
             <tbody>
               {loading &&
                 [...Array(5)].map((_, i) => (
-                  <tr key={i} className="border-b animate-pulse">
-                    <td className="px-4 py-4" colSpan={6}>
-                      <div className="h-10 bg-muted/20 rounded" />
+                  <tr key={i} className="border-b">
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-3">
+                        <Skeleton className="w-12 h-12 rounded-lg shrink-0" />
+                        <div className="space-y-2 flex-1 min-w-0">
+                          <Skeleton className="h-4 w-3/4 rounded" />
+                          <Skeleton className="h-3 w-1/2 rounded" />
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <Skeleton className="h-4 w-20 rounded" />
+                    </td>
+                    <td className="px-4 py-3">
+                      <Skeleton className="h-7 w-20 rounded-full" />
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <Skeleton className="h-4 w-8 mx-auto rounded" />
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <Skeleton className="h-7 w-8 mx-auto rounded-full" />
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center justify-end gap-1">
+                        <Skeleton className="w-8 h-8 rounded-lg" />
+                        <Skeleton className="w-8 h-8 rounded-lg" />
+                        <Skeleton className="w-8 h-8 rounded-lg" />
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -413,23 +450,27 @@ export default function AdminBlogPage() {
 
                       {/* Status */}
                       <td className="px-4 py-3">
-                        <select
+                        <Select
                           value={post.status}
-                          onChange={(e) =>
+                          onValueChange={(val) =>
                             handleStatusChange(
                               post.id,
-                              e.target.value as
-                                | "DRAFT"
-                                | "PUBLISHED"
-                                | "ARCHIVED",
+                              val as "DRAFT" | "PUBLISHED" | "ARCHIVED",
                             )
                           }
-                          className={`text-xs font-medium px-2.5 py-1 rounded-full border cursor-pointer ${status.color}`}
                         >
-                          <option value="DRAFT">Nháp</option>
-                          <option value="PUBLISHED">Xuất bản</option>
-                          <option value="ARCHIVED">Lưu trữ</option>
-                        </select>
+                          <SelectTrigger
+                            size="sm"
+                            className={`inline-flex items-center text-[11px] sm:text-xs font-semibold px-2 py-0 h-6! rounded-full border cursor-pointer shadow-none [&>svg]:size-3 [&>svg]:opacity-75 ${status.color}`}
+                          >
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="DRAFT">Nháp</SelectItem>
+                            <SelectItem value="PUBLISHED">Xuất bản</SelectItem>
+                            <SelectItem value="ARCHIVED">Lưu trữ</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </td>
 
                       {/* Views */}
@@ -491,6 +532,167 @@ export default function AdminBlogPage() {
               onPageChange={setPage}
             />
           </div>
+        )}
+      </div>
+
+      {/* ==================== Mobile Card Layout (<lg) ==================== */}
+      <div className="lg:hidden space-y-3">
+        {loading &&
+          [...Array(5)].map((_, i) => (
+            <div
+              key={i}
+              className="border rounded-xl p-3 sm:p-4 bg-background space-y-3"
+            >
+              <div className="flex items-start gap-3">
+                <Skeleton className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg shrink-0" />
+                <div className="flex-1 min-w-0 space-y-2">
+                  <Skeleton className="h-4 w-5/6 rounded" />
+                  <Skeleton className="h-3 w-1/3 rounded" />
+                </div>
+              </div>
+              <div className="flex items-center gap-2 border-t border-border/50 pt-3">
+                <Skeleton className="h-6 w-20 rounded-full" />
+                <Skeleton className="h-6 w-24 rounded-full" />
+                <Skeleton className="h-4 w-16 ml-auto rounded" />
+              </div>
+              <div className="flex items-center justify-between border-t border-border/50 pt-3">
+                <Skeleton className="h-8 w-24 rounded-full" />
+                <div className="flex gap-1">
+                  <Skeleton className="w-8 h-8 rounded-lg" />
+                  <Skeleton className="w-8 h-8 rounded-lg" />
+                  <Skeleton className="w-8 h-8 rounded-lg" />
+                </div>
+              </div>
+            </div>
+          ))}
+
+        {!loading && processedPosts.length === 0 && (
+          <div className="border rounded-xl p-8 sm:p-12 text-center text-muted-foreground bg-background">
+            Chưa có bài viết nào
+          </div>
+        )}
+
+        {!loading &&
+          pagedPosts.map((post) => {
+            const status = STATUS_CONFIG[post.status] || STATUS_CONFIG.DRAFT;
+            const StatusIcon = status.icon;
+
+            return (
+              <div
+                key={post.id}
+                className="border rounded-xl p-3 sm:p-4 bg-background hover:shadow-sm transition-shadow"
+              >
+                {/* Top: Thumbnail + Title + Date */}
+                <div className="flex items-start gap-3">
+                  {post.thumbnailUrl &&
+                  post.thumbnailUrl !== "null" &&
+                  post.thumbnailUrl !== "undefined" ? (
+                    <Image
+                      src={post.thumbnailUrl}
+                      alt=""
+                      width={56}
+                      height={56}
+                      className="rounded-lg object-cover w-12 h-12 sm:w-14 sm:h-14 shrink-0"
+                    />
+                  ) : (
+                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg bg-muted/30 flex items-center justify-center shrink-0">
+                      <FileText
+                        size={18}
+                        className="text-muted-foreground/40"
+                      />
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold line-clamp-2 leading-snug">
+                      {post.title}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {post.publishedAt
+                        ? new Date(post.publishedAt).toLocaleDateString("vi-VN")
+                        : "Chưa xuất bản"}{" "}
+                      · {post.readingTime || 5} phút đọc
+                    </p>
+                  </div>
+                </div>
+
+                {/* Middle: Category + Status + Stats */}
+                <div className="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-border/50">
+                  {post.category?.name && (
+                    <span className="text-xs font-medium px-2.5 py-1 rounded-full border bg-muted/30">
+                      {post.category.name}
+                    </span>
+                  )}
+                  <span
+                    className={`inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full border ${status.color}`}
+                  >
+                    <StatusIcon size={12} />
+                    {status.label}
+                  </span>
+                  <span className="text-xs text-muted-foreground ml-auto">
+                    👁 {post.viewCount?.toLocaleString() || 0} · 💬{" "}
+                    {post.commentCount || 0}
+                  </span>
+                </div>
+
+                {/* Bottom: Actions */}
+                <div className="flex items-center justify-between mt-3 pt-3 border-t border-border/50">
+                  <Select
+                    value={post.status}
+                    onValueChange={(val) =>
+                      handleStatusChange(
+                        post.id,
+                        val as "DRAFT" | "PUBLISHED" | "ARCHIVED",
+                      )
+                    }
+                  >
+                    <SelectTrigger
+                      size="sm"
+                      className={`inline-flex items-center text-[11px] sm:text-xs font-semibold px-2.5 py-0 h-6! rounded-full border cursor-pointer shadow-none [&>svg]:size-3 [&>svg]:opacity-75 ${status.color}`}
+                    >
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="DRAFT">Nháp</SelectItem>
+                      <SelectItem value="PUBLISHED">Xuất bản</SelectItem>
+                      <SelectItem value="ARCHIVED">Lưu trữ</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <div className="flex items-center gap-1">
+                    <Link
+                      href={`/blog/${post.slug}`}
+                      target="_blank"
+                      className="p-2 rounded-lg hover:bg-accent transition-colors"
+                      title="Xem bài viết"
+                    >
+                      <Eye size={16} className="text-muted-foreground" />
+                    </Link>
+                    <Link
+                      href={`/admin/blog/edit/${post.id}`}
+                      className="p-2 rounded-lg hover:bg-accent transition-colors"
+                      title="Chỉnh sửa"
+                    >
+                      <Edit size={16} className="text-primary" />
+                    </Link>
+                    <button
+                      onClick={() => handleDelete(post.id)}
+                      className="p-2 rounded-lg hover:bg-red-50 transition-colors"
+                      title="Xóa"
+                    >
+                      <Trash2 size={16} className="text-red-500" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+
+        {/* Pagination */}
+        {pageCount > 1 && (
+          <Pagination
+            page={page}
+            pageCount={pageCount}
+            onPageChange={setPage}
+          />
         )}
       </div>
     </div>

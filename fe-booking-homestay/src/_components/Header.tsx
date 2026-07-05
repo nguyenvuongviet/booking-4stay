@@ -169,9 +169,10 @@ export default function Header() {
                       </PopoverTrigger>
 
                       <PopoverContent
-                        className="w-72 sm:w-96 p-1.5 bg-white/90 dark:bg-black/90 backdrop-blur-2xl shadow-2xl rounded-xl border border-white/20 z-999"
+                        className="w-[calc(100vw-32px)] sm:w-96 p-1.5 bg-white/90 dark:bg-black/90 backdrop-blur-2xl shadow-2xl rounded-xl border border-white/20 z-999"
                         align="end"
                         sideOffset={8}
+                        collisionPadding={16}
                       >
                         <NotificationList />
                       </PopoverContent>

@@ -379,6 +379,14 @@ async function main() {
         levelId = matchedLevel.id;
       }
 
+      const existing = await prisma.loyalty_program.findUnique({
+        where: { userId: u.id },
+      });
+      const lastUpgradeDate =
+        existing && existing.levelId === levelId && existing.lastUpgradeDate
+          ? existing.lastUpgradeDate
+          : new Date();
+
       await prisma.loyalty_program.upsert({
         where: { userId: u.id },
         create: {
@@ -387,12 +395,14 @@ async function main() {
           totalNights,
           points,
           levelId,
+          lastUpgradeDate,
         },
         update: {
           totalBookings,
           totalNights,
           points,
           levelId,
+          lastUpgradeDate,
         },
       });
       console.log(

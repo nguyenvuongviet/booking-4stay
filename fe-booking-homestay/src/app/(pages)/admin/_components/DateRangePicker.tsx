@@ -11,6 +11,8 @@ import { format } from "date-fns";
 import { Calendar as CalendarIcon } from "lucide-react";
 import type { DateRange } from "react-day-picker";
 
+import { useEffect, useState } from "react";
+
 export function DateRangePicker({
   value,
   onChange,
@@ -18,6 +20,17 @@ export function DateRangePicker({
   value: DateRange | undefined;
   onChange: (v: DateRange | undefined) => void;
 }) {
+  const [monthsCount, setMonthsCount] = useState(1);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setMonthsCount(window.innerWidth >= 640 ? 2 : 1);
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   const formatted =
     value?.from && value?.to
       ? `${format(value.from, "dd/MM/yyyy")} → ${format(
@@ -31,7 +44,7 @@ export function DateRangePicker({
       <PopoverTrigger asChild>
         <Button
           variant="outline"
-          className="h-10 min-w-60 justify-start text-left font-normal"
+          className="h-10 w-full sm:min-w-60 justify-start text-left font-normal"
         >
           <CalendarIcon className="mr-2 h-4 w-4" />
           {formatted}
@@ -39,16 +52,16 @@ export function DateRangePicker({
       </PopoverTrigger>
 
       <PopoverContent
-        align="start"
+        align="center"
         side="bottom"
-        className="p-0! w-fit rounded-md border shadow-md z-9999"
+        className="p-0! w-auto max-w-[95vw] rounded-md border shadow-md z-9999 overflow-x-auto"
       >
         <Calendar
           mode="range"
           selected={value}
           onSelect={onChange}
           defaultMonth={value?.from}
-          numberOfMonths={2}
+          numberOfMonths={monthsCount}
           pagedNavigation
           className="rounded-md"
         />

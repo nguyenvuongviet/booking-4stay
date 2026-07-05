@@ -40,26 +40,30 @@ export function Pagination({ page, pageCount, onPageChange }: PaginationProps) {
   };
 
   return (
-    <div className="flex flex-col sm:flex-row justify-between items-center gap-4 pt-6 border-t border-gray-100 mt-4">
-      <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">
-        Trang <span className="text-gray-900">{page}</span> / {pageCount}
+    <div className="flex flex-row justify-between items-center gap-2 pt-4 border-t border-slate-100 dark:border-slate-800 mt-3">
+      <p className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase tracking-widest">
+        Trang <span className="text-gray-900 dark:text-white">{page}</span> /{" "}
+        {pageCount}
       </p>
 
-      <div className="flex items-center gap-1.5">
+      <div className="flex items-center gap-1 sm:gap-1.5">
         <Button
           variant="outline"
           size="icon"
-          className="h-8 w-8 rounded-lg border-gray-200 hover:border-primary hover:text-primary transition-all"
+          className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg border-gray-200 hover:border-primary hover:text-primary transition-all cursor-pointer"
           disabled={page === 1}
           onClick={prev}
         >
-          <ChevronLeft className="w-4 h-4" />
+          <ChevronLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
         </Button>
 
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-0.5 sm:gap-1">
           {getPageNumbers().map((p, i) =>
             p === "..." ? (
-              <span key={`dots-${i}`} className="px-2 text-gray-400 text-sm">
+              <span
+                key={`dots-${i}`}
+                className="px-1 text-gray-400 text-xs sm:text-sm"
+              >
                 ...
               </span>
             ) : (
@@ -67,7 +71,7 @@ export function Pagination({ page, pageCount, onPageChange }: PaginationProps) {
                 key={p}
                 variant={page === p ? "default" : "ghost"}
                 size="sm"
-                className={`h-8 w-8 rounded-lg text-xs font-bold transition-all ${
+                className={`h-7 w-7 sm:h-8 sm:w-8 rounded-lg text-[10px] sm:text-xs font-bold transition-all cursor-pointer ${
                   page === p
                     ? "bg-primary text-white shadow-md shadow-primary/20"
                     : "text-gray-500 hover:bg-gray-100"
@@ -83,11 +87,11 @@ export function Pagination({ page, pageCount, onPageChange }: PaginationProps) {
         <Button
           variant="outline"
           size="icon"
-          className="h-8 w-8 rounded-lg border-gray-200 hover:border-primary hover:text-primary transition-all"
+          className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg border-gray-200 hover:border-primary hover:text-primary transition-all cursor-pointer"
           disabled={page === pageCount}
           onClick={next}
         >
-          <ChevronRight className="w-4 h-4" />
+          <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
         </Button>
       </div>
     </div>

@@ -47,23 +47,23 @@ export function UrgentActionCenter({
   ];
 
   return (
-    <Card className="p-6 bg-white/70 backdrop-blur-md rounded-2xl border border-slate-100 shadow-xl shadow-slate-100/50 flex flex-col h-full">
-      <div className="flex items-center gap-2 mb-4">
-        <AlertCircle className="w-5 h-5 text-rose-500" />
-        <h2 className="text-lg font-bold text-slate-800">
+    <Card className="p-4 sm:p-6 bg-white/70 backdrop-blur-md rounded-2xl border border-slate-100 shadow-xl shadow-slate-100/50 flex flex-col h-full">
+      <div className="flex items-center gap-2 mb-2 sm:mb-4">
+        <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-rose-500" />
+        <h2 className="text-base sm:text-lg font-bold text-slate-800">
           Trung tâm xử lý khẩn cấp (PMS)
         </h2>
       </div>
-      <p className="text-xs text-muted-foreground mb-6">
+      <p className="text-[11px] sm:text-xs text-muted-foreground mb-3 sm:mb-6 leading-relaxed">
         Các tác vụ đặt phòng và thanh toán cần phê duyệt hoặc xử lý ngay từ phía
         quản trị viên.
       </p>
 
-      <div className="space-y-4 flex-1 flex flex-col justify-center">
+      <div className="space-y-3 sm:space-y-4">
         {tasks.map((task, idx) => (
           <div
             key={idx}
-            className={`p-4 rounded-xl border flex flex-col md:flex-row justify-between md:items-center gap-4 transition-all ${
+            className={`p-3 sm:p-4 rounded-xl border flex flex-col md:flex-row justify-between md:items-center gap-3 sm:gap-4 transition-all ${
               task.alert
                 ? "border-rose-100 bg-rose-50/20 hover:bg-rose-50/40"
                 : "border-slate-100 bg-slate-50/20 hover:bg-slate-50/40"
@@ -71,16 +71,16 @@ export function UrgentActionCenter({
           >
             <div className="space-y-1">
               <div className="flex items-center gap-2">
-                <span className="font-semibold text-slate-800 text-sm">
+                <span className="font-semibold text-slate-800 text-xs sm:text-sm">
                   {task.title}
                 </span>
                 <span
-                  className={`px-2 py-0.5 text-xs font-bold rounded-md ${task.badgeColor}`}
+                  className={`px-1.5 py-0.5 text-[10px] sm:text-xs font-bold rounded-md ${task.badgeColor}`}
                 >
                   {task.count}
                 </span>
               </div>
-              <p className="text-xs text-slate-500 leading-relaxed">
+              <p className="text-[11px] sm:text-xs text-slate-500 leading-relaxed">
                 {task.desc}
               </p>
             </div>
@@ -88,7 +88,7 @@ export function UrgentActionCenter({
               <Button
                 size="sm"
                 variant={task.alert ? "destructive" : "outline"}
-                className="text-xs flex items-center gap-1"
+                className="text-[11px] sm:text-xs h-8 sm:h-9 flex items-center gap-1 cursor-pointer"
               >
                 {task.action}
                 <ArrowRight className="w-3 h-3" />

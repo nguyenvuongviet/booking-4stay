@@ -36,10 +36,14 @@ export function RefreshButton({
       variant="outline"
       onClick={handleClick}
       disabled={loading}
-      className={`flex items-center gap-2 ${className}`}
+      className={`flex items-center justify-center gap-2 ${className}`}
     >
-      <RefreshCcw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
-      {loading ? "Đang làm mới..." : label}
+      <RefreshCcw className={`w-4 h-4 shrink-0 ${loading ? "animate-spin" : ""}`} />
+      {label && (
+        <span className="hidden sm:inline whitespace-nowrap">
+          {loading ? "Đang làm mới..." : label}
+        </span>
+      )}
     </Button>
   );
 }

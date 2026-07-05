@@ -2,12 +2,12 @@
 
 import { Card } from "@/_components/ui/card";
 import {
-  Wallet,
-  Home,
-  Calendar,
-  Star,
-  ArrowUpRight,
   ArrowDownRight,
+  ArrowUpRight,
+  Calendar,
+  Home,
+  Star,
+  Wallet,
 } from "lucide-react";
 
 interface KPIHighlightsProps {
@@ -66,54 +66,56 @@ export function KPIHighlights({
   ];
 
   return (
-    <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
+    <section className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-6">
       {kpiData.map((kpi, idx) => {
         const Icon = kpi.icon;
         return (
           <Card
             key={idx}
-            className="p-6 relative bg-white/70 backdrop-blur-md rounded-2xl shadow-xl shadow-slate-100/50 border border-slate-100 hover:scale-[1.02] transition-transform duration-300 overflow-hidden"
+            className="p-3.5 sm:p-6 relative bg-white/70 backdrop-blur-md rounded-xl sm:rounded-2xl shadow-sm sm:shadow-xl shadow-slate-100/50 border border-slate-100 hover:scale-[1.02] transition-transform duration-300 overflow-hidden"
           >
             {/* Background design pattern */}
-            <div className="absolute -top-12 -right-12 w-28 h-28 bg-slate-50 rounded-full opacity-40 z-0"></div>
+            <div className="absolute -top-12 -right-12 w-24 h-24 sm:w-28 sm:h-28 bg-slate-50 rounded-full opacity-40 z-0"></div>
 
             <div className="flex justify-between items-start relative z-10">
               <div>
-                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">
+                <p className="text-[10px] sm:text-xs font-semibold text-slate-400 uppercase tracking-wide">
                   {kpi.label}
                 </p>
-                <h3 className="text-2xl font-extrabold text-slate-800 mt-2 tracking-tight">
+                <h3 className="text-base sm:text-2xl font-extrabold text-slate-800 mt-1.5 sm:mt-2 tracking-tight">
                   {kpi.value}
                 </h3>
               </div>
-              <div className={`p-3 rounded-xl ${kpi.iconColor}`}>
-                <Icon className="w-5 h-5" />
+              <div
+                className={`p-2 sm:p-3 rounded-lg sm:rounded-xl shrink-0 ${kpi.iconColor}`}
+              >
+                <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
             </div>
 
-            <div className="mt-4 pt-3 border-t border-slate-50 flex items-center gap-2 relative z-10 text-xs">
+            <div className="mt-3 pt-2.5 border-t border-slate-50 flex flex-wrap items-center gap-1 relative z-10 text-[9px] sm:text-xs">
               {kpi.change !== undefined ? (
                 <>
                   <span
-                    className={`flex items-center gap-0.5 font-bold ${
+                    className={`flex items-center gap-0.5 font-bold shrink-0 ${
                       kpi.change >= 0 ? "text-emerald-600" : "text-rose-600"
                     }`}
                   >
                     {kpi.change >= 0 ? (
-                      <ArrowUpRight className="w-3.5 h-3.5" />
+                      <ArrowUpRight className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                     ) : (
-                      <ArrowDownRight className="w-3.5 h-3.5" />
+                      <ArrowDownRight className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                     )}
                     {kpi.change >= 0 ? "+" : ""}
                     {kpi.change.toFixed(1)}%
                   </span>
-                  <span className="text-slate-400 font-medium">
+                  <span className="text-slate-400 font-medium leading-tight">
                     {kpi.changeLabel}
                   </span>
                 </>
               ) : (
                 <span className="text-slate-400 font-medium flex items-center gap-1">
-                  <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+                  <Star className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-amber-500 fill-amber-500" />
                   {kpi.subText}
                 </span>
               )}

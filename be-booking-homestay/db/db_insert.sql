@@ -63,11 +63,11 @@ INSERT IGNORE INTO `user_roles` (`userId`, `roleId`) VALUES
 (3, 1);
 
 -- 8. Tích điểm thân thiết mẫu (Loyalty Program)
-INSERT INTO `loyalty_program` (`userId`, `levelId`, `points`) VALUES 
-(1, 4, 2400), 
-(2, 3, 650), 
-(3, 2, 320)
-ON DUPLICATE KEY UPDATE `levelId` = VALUES(`levelId`), `points` = VALUES(`points`);
+INSERT INTO `loyalty_program` (`userId`, `levelId`, `points`, `lastUpgradeDate`) VALUES 
+(1, 4, 2400, NOW()), 
+(2, 3, 650, NOW()), 
+(3, 2, 320, NOW())
+ON DUPLICATE KEY UPDATE `levelId` = VALUES(`levelId`), `points` = VALUES(`points`), `lastUpgradeDate` = NOW();
 
 -- 9. Phòng mẫu (Rooms)
 INSERT IGNORE INTO `rooms` (`id`, `hostId`, `provinceId`, `wardId`, `street`, `name`, `description`, `price`, `adultCapacity`, `childCapacity`, `latitude`, `longitude`, `createdAt`, `updatedAt`) VALUES

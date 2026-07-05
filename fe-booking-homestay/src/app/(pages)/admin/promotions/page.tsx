@@ -13,7 +13,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { BarChart3, EyeOff, Plus, RefreshCw, Search } from "lucide-react";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
-
+import { Pagination } from "../_components/Pagination";
 import PromotionForm from "./_components/PromotionForm";
 import PromotionStats from "./_components/PromotionStats";
 import PromotionTable from "./_components/PromotionTable";
@@ -85,7 +85,6 @@ export default function AdminPromotionsPage() {
     try {
       const res = await toggle_admin_promotion(id);
       toast.success(res.message || "Thay đổi trạng thái thành công!");
-      // Reload only table/stats
       loadData();
     } catch {
       toast.error("Không thể thay đổi trạng thái hoạt động");
@@ -115,41 +114,46 @@ export default function AdminPromotionsPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between pb-4 border-b gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between pb-3 sm:pb-4 border-b gap-3 sm:gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+          <h1 className="text-xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
             Quản lý mã giảm giá
           </h1>
-          <p className="text-gray-600 mt-1">
+          <p className="text-xs sm:text-sm text-gray-600 dark:text-slate-400 mt-0.5 sm:mt-1">
             Phát hành, theo dõi và cấu hình các chiến dịch mã giảm giá (Coupon).
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2 justify-end w-full md:w-auto shrink-0">
           <Button
             variant="outline"
             onClick={() => setShowStats(!showStats)}
-            className="flex items-center gap-1.5 cursor-pointer"
+            className="flex items-center gap-1 sm:gap-1.5 h-9 sm:h-10 text-xs sm:text-sm px-2.5 sm:px-4 cursor-pointer"
           >
             {showStats ? (
-              <EyeOff className="w-4 h-4" />
+              <EyeOff className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             ) : (
-              <BarChart3 className="w-4 h-4" />
+              <BarChart3 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             )}
-            <span>{showStats ? "Ẩn thống kê" : "Xem thống kê"}</span>
+            <span>{showStats ? "Ẩn" : "Thống kê"}</span>
           </Button>
           <Button
             variant="outline"
             size="icon"
             onClick={() => setRefreshKey((k) => k + 1)}
             title="Tải lại dữ liệu"
+            className="h-9 w-9 sm:h-10 sm:w-10 rounded-lg cursor-pointer shrink-0"
           >
-            <RefreshCw className="w-4 h-4" />
+            <RefreshCw className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
           </Button>
-          <Button onClick={handleCreate} className="text-white">
-            <Plus className="w-4 h-4 mr-2" /> Thêm Coupon
+          <Button
+            onClick={handleCreate}
+            className="h-9 sm:h-10 text-xs sm:text-sm px-3 sm:px-4 text-white cursor-pointer shrink-0"
+          >
+            <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1 sm:mr-2" /> Thêm
+            Coupon
           </Button>
         </div>
       </div>
@@ -173,20 +177,21 @@ export default function AdminPromotionsPage() {
         )}
       </AnimatePresence>
 
-      {/* Main Table & Filters */}
-      <Card className="p-6 rounded-2xl shadow-sm border bg-white dark:bg-slate-900">
-        <div className="flex flex-col md:flex-row md:items-center gap-4 mb-6">
-          {/* Search */}
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-slate-400" />
-            <Input
-              placeholder="Tìm kiếm mã coupon hoặc tên..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-10"
-            />
-          </div>
+      {/* Sticky Filters */}
+      <div className="sticky top-16 sm:top-20 z-20 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3 sm:p-4 rounded-xl sm:rounded-2xl shadow-md flex flex-col lg:flex-row lg:items-center gap-3">
+        {/* Search */}
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <Input
+            placeholder="Tìm kiếm mã coupon hoặc tên..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-10 h-9 sm:h-10 text-xs sm:text-sm rounded-lg sm:rounded-xl border border-slate-300 hover:border-slate-400"
+          />
+        </div>
 
+        {/* Filters Select */}
+        <div className="flex flex-row gap-2.5 sm:gap-3 w-full lg:w-auto">
           {/* Type Filter */}
           <select
             value={typeFilter}
@@ -194,7 +199,7 @@ export default function AdminPromotionsPage() {
               setTypeFilter(e.target.value);
               setPage(1);
             }}
-            className="h-10 px-3 border rounded-lg text-sm bg-background border-slate-200 dark:border-slate-800 focus:outline-none focus:ring-2 focus:ring-primary/40 min-w-40"
+            className="h-9 sm:h-10 px-2 sm:px-3 border rounded-lg sm:rounded-xl text-xs sm:text-sm bg-background border-slate-350 dark:border-slate-800 focus:outline-none focus:ring-1 focus:ring-primary/40 flex-1 lg:w-40 lg:flex-initial cursor-pointer"
           >
             <option value="">Tất cả loại mã</option>
             <option value="SEASONAL">Seasonal</option>
@@ -211,14 +216,17 @@ export default function AdminPromotionsPage() {
               setStatusFilter(e.target.value);
               setPage(1);
             }}
-            className="h-10 px-3 border rounded-lg text-sm bg-background border-slate-200 dark:border-slate-800 focus:outline-none focus:ring-2 focus:ring-primary/40 min-w-40"
+            className="h-9 sm:h-10 px-2 sm:px-3 border rounded-lg sm:rounded-xl text-xs sm:text-sm bg-background border-slate-350 dark:border-slate-800 focus:outline-none focus:ring-1 focus:ring-primary/40 flex-1 lg:w-40 lg:flex-initial cursor-pointer"
           >
             <option value="">Tất cả trạng thái</option>
             <option value="active">Đang hoạt động</option>
             <option value="expired">Đã hết hạn</option>
           </select>
         </div>
+      </div>
 
+      {/* Table Container Card */}
+      <Card className="p-3.5 sm:p-6 rounded-2xl border bg-white dark:bg-slate-900 shadow-sm space-y-4 sm:space-y-6">
         {/* Promotions List Table */}
         <PromotionTable
           items={promotions}
@@ -230,43 +238,21 @@ export default function AdminPromotionsPage() {
 
         {/* Pagination */}
         {!loading && totalPages > 1 && (
-          <div className="flex items-center justify-between mt-6 pt-4 border-t border-slate-100 dark:border-slate-800">
-            <span className="text-xs text-slate-500">
-              Hiển thị {promotions.length} trên tổng số {totalItems} coupon
-            </span>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page === 1}
-              >
-                Trước
-              </Button>
-              {Array.from({ length: totalPages }).map((_, i) => (
-                <Button
-                  key={i}
-                  variant={page === i + 1 ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setPage(i + 1)}
-                  className={page === i + 1 ? "text-white" : ""}
-                >
-                  {i + 1}
-                </Button>
-              ))}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                disabled={page === totalPages}
-              >
-                Sau
-              </Button>
-            </div>
-          </div>
+          <Pagination
+            page={page}
+            pageCount={totalPages}
+            onPageChange={setPage}
+          />
         )}
       </Card>
 
+      {/* Edit/Create Form Modal */}
+      <PromotionForm
+        open={formOpen}
+        onClose={() => setFormOpen(false)}
+        onSaved={() => setRefreshKey((k) => k + 1)}
+        editData={editPromo}
+      />
       {/* Edit/Create Form Modal */}
       <PromotionForm
         open={formOpen}

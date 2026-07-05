@@ -35,7 +35,7 @@ export default function LocationsPage() {
         onAdd={() => setOpenAdd(true)}
       />
 
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl shadow-sm">
+      <div className="sticky top-16 sm:top-20 z-20 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3 sm:p-4 rounded-2xl shadow-md">
         <LocationFilters
           {...state}
           provinces={state.provinces}
@@ -45,7 +45,7 @@ export default function LocationsPage() {
         />
       </div>
 
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 sm:p-6 rounded-2xl shadow-sm">
         <LocationList
           loading={state.loading}
           filteredList={state.filteredList}

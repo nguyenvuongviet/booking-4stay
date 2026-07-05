@@ -60,7 +60,7 @@ export default function OTPModals({
       setShow(false);
       toast.success("Đăng ký thành công!");
     } catch (err: any) {
-      setApiError(err?.response?.data?.message || "Mã OTP không hợp lệ!");
+      setApiError("Mã OTP không hợp lệ! Vui lòng thử lại.");
       setOtpValues(Array(6).fill(""));
       document.getElementById("otp-0")?.focus();
     }

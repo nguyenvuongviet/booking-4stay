@@ -180,8 +180,8 @@ CREATE TRIGGER `trg_users_after_insert_loyalty`
 AFTER INSERT ON `users`
 FOR EACH ROW
 BEGIN
-  INSERT IGNORE INTO `loyalty_program` (`userId`, `levelId`, `points`)
-  VALUES (NEW.`id`, 1, 0);
+  INSERT IGNORE INTO `loyalty_program` (`userId`, `levelId`, `points`, `lastUpgradeDate`)
+  VALUES (NEW.`id`, 1, 0, NOW());
 END $$
 
 DELIMITER ;

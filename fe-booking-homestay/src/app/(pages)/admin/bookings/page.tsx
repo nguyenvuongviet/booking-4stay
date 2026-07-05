@@ -61,7 +61,99 @@ export default function BookingListPage() {
   const [refundBooking, setRefundBooking] = useState<any>(null);
 
   if (initialLoading || !raw) {
-    return <div className="p-6">Đang tải dữ liệu…</div>;
+    return (
+      <div className="space-y-4 sm:space-y-6 pb-10 animate-pulse">
+        {/* Header Skeleton */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-slate-800">
+          <div className="space-y-2">
+            <div className="h-7 w-48 bg-slate-200 dark:bg-slate-850 rounded-xl" />
+            <div className="h-4 w-64 bg-slate-150 dark:bg-slate-850/60 rounded-lg" />
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="h-9.5 w-10 bg-slate-200 dark:bg-slate-850 rounded-xl" />
+            <div className="h-9.5 w-32 bg-slate-200 dark:bg-slate-850 rounded-xl" />
+          </div>
+        </div>
+
+        {/* Filter Card Skeleton */}
+        <div className="p-3 sm:p-4 rounded-2xl border border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-slate-900 space-y-3">
+          <div className="h-9.5 w-full bg-slate-100 dark:bg-slate-850 rounded-xl" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:items-center gap-2 sm:gap-3">
+            <div className="h-9.5 w-full lg:w-40 bg-slate-100 dark:bg-slate-850 rounded-xl" />
+            <div className="h-9.5 w-full lg:w-60 bg-slate-100 dark:bg-slate-850 rounded-xl" />
+          </div>
+        </div>
+
+        {/* Content Card Skeleton */}
+        <div className="p-3 sm:p-4 lg:p-6 rounded-2xl border border-slate-200/60 dark:border-slate-800/60 space-y-4">
+          {/* Desktop Table Header Skeleton */}
+          <div className="hidden lg:block space-y-3">
+            <div className="grid grid-cols-9 gap-4 pb-2 border-b border-slate-100 dark:border-slate-800">
+              {[...Array(9)].map((_, i) => (
+                <div
+                  key={i}
+                  className="h-4 bg-slate-200 dark:bg-slate-850 rounded-md"
+                />
+              ))}
+            </div>
+            {/* Table Rows Skeleton */}
+            {[...Array(5)].map((_, idx) => (
+              <div
+                key={idx}
+                className="grid grid-cols-9 gap-4 py-4 border-b border-slate-100/50 dark:border-slate-800/40"
+              >
+                <div className="space-y-1.5 col-span-1">
+                  <div className="h-4 w-24 bg-slate-100 dark:bg-slate-850 rounded-md" />
+                  <div className="h-3 w-16 bg-slate-100/70 dark:bg-slate-850/50 rounded-md" />
+                </div>
+                {[...Array(8)].map((_, i) => (
+                  <div
+                    key={i}
+                    className="h-4 bg-slate-100 dark:bg-slate-850 rounded-md self-center"
+                  />
+                ))}
+              </div>
+            ))}
+          </div>
+
+          {/* Mobile/Tablet Card Skeleton */}
+          <div className="lg:hidden space-y-3">
+            {[...Array(3)].map((_, idx) => (
+              <div
+                key={idx}
+                className="p-4 bg-card rounded-xl border border-slate-200/60 dark:border-slate-800/60 space-y-4"
+              >
+                <div className="flex justify-between items-center pb-2 border-b border-dashed border-slate-100 dark:border-slate-800/60">
+                  <div className="space-y-1">
+                    <div className="h-4 w-32 bg-slate-200 dark:bg-slate-850 rounded-md" />
+                    <div className="h-3 w-40 bg-slate-150 dark:bg-slate-850/50 rounded-md" />
+                  </div>
+                  <div className="h-5 w-20 bg-slate-200 dark:bg-slate-850 rounded-full" />
+                </div>
+                <div className="space-y-2">
+                  <div className="h-3 w-16 bg-slate-150 dark:bg-slate-850/40 rounded-md" />
+                  <div className="h-4 w-48 bg-slate-200 dark:bg-slate-850 rounded-md" />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <div className="h-3 w-12 bg-slate-150 dark:bg-slate-850/40 rounded-md" />
+                    <div className="h-4 w-36 bg-slate-200 dark:bg-slate-850 rounded-md" />
+                  </div>
+                  <div className="space-y-2">
+                    <div className="h-3 w-12 bg-slate-150 dark:bg-slate-850/40 rounded-md" />
+                    <div className="h-4 w-16 bg-slate-200 dark:bg-slate-850 rounded-md" />
+                  </div>
+                </div>
+                <div className="flex justify-between items-center pt-3 border-t border-slate-100 dark:border-slate-800/60 mt-1">
+                  <div className="h-4 w-28 bg-slate-200 dark:bg-slate-850 rounded-md" />
+                  <div className="h-7 w-20 bg-slate-200 dark:bg-slate-850 rounded-full" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
   }
 
   const exportExcel = async () => {
@@ -113,232 +205,334 @@ export default function BookingListPage() {
     );
   };
 
+  const SortIcon = ({ column }: { column: typeof sortBy }) => {
+    if (sortBy === column && sortOrder === "asc")
+      return <ArrowUp className="w-3.5 h-3.5 text-primary" />;
+    if (sortBy === column && sortOrder === "desc")
+      return <ArrowDown className="w-3.5 h-3.5 text-primary" />;
+    return <ArrowUpDown className="w-3.5 h-3.5 text-slate-400" />;
+  };
+
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between pb-4 border-b">
+    <div className="space-y-4 sm:space-y-6 pb-10">
+      {/* Header Section */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-slate-800">
         <div>
-          <h1 className="text-3xl font-bold">Quản lý đặt phòng</h1>
-          <p className="text-gray-600 mt-1">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-slate-850 dark:text-white tracking-tight">
+            Quản lý đặt phòng
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-500 mt-1 font-medium">
             Quản lý tất cả các đặt phòng của khách.
           </p>
         </div>
 
-        <div className="flex gap-3">
-          <RefreshButton onRefresh={refresh} />
-          <Button onClick={exportExcel} className="cursor-pointer">
-            <Download className="w-4 h-4 mr-2" /> Xuất excel
+        <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+          <RefreshButton
+            onRefresh={refresh}
+            className="rounded-xl border border-slate-200 dark:border-slate-800"
+          />
+          <Button
+            onClick={exportExcel}
+            className="h-9.5 text-xs sm:text-sm font-semibold rounded-xl cursor-pointer"
+          >
+            <Download className="w-4 h-4 mr-1.5" /> Xuất excel
           </Button>
         </div>
       </div>
 
-      <Card className="p-4 rounded-xl shadow-sm">
-        <div className="flex flex-wrap items-center gap-4 w-full">
-          <div className="relative min-w-65 flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 text-gray-400" />
+      {/* Filter Options */}
+      <Card className="p-3 sm:p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-2xs bg-white dark:bg-slate-900">
+        <div className="flex flex-col gap-3">
+          {/* Row 1: Search */}
+          <div className="relative w-full">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Tìm kiếm tên hoặc email..."
-              className="h-10 w-full pl-10 pr-3 border rounded-lg"
+              placeholder="Tìm kiếm tên khách hoặc email..."
+              className="h-9 sm:h-9.5 w-full pl-9.5 pr-3 border border-slate-200 dark:border-slate-800 rounded-xl text-xs sm:text-sm bg-transparent outline-none focus:border-primary/50 text-slate-700 dark:text-slate-300 font-medium"
             />
           </div>
 
-          <div className="flex items-center gap-2">
-            <Filter className="w-4 h-4 text-gray-400" />
-            <select
-              className="h-10 px-3 border rounded-lg cursor-pointer"
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-            >
-              {Object.entries(BOOKING_STATUS_MAP).map(([key, value]) => (
-                <option key={key} value={key}>
-                  {value.label}
-                </option>
-              ))}
-            </select>
+          {/* Row 2: Status + DateRange */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:items-center gap-2 sm:gap-3">
+            <div className="flex items-center gap-2">
+              <Filter className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+              <select
+                className="h-9 sm:h-9.5 w-full px-3 border border-slate-200 dark:border-slate-800 rounded-xl text-xs sm:text-sm bg-transparent outline-none focus:border-primary/50 text-slate-700 dark:text-slate-300 font-medium cursor-pointer"
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+              >
+                {Object.entries(BOOKING_STATUS_MAP).map(([key, value]) => (
+                  <option key={key} value={key}>
+                    {value.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="w-full lg:w-auto min-w-0 lg:min-w-65">
+              <DateRangePicker value={dateRange} onChange={setDateRange} />
+            </div>
           </div>
-          <DateRangePicker value={dateRange} onChange={setDateRange} />
         </div>
       </Card>
 
-      <Card className="p-6 rounded-xl shadow-sm">
-        <div className="overflow-x-auto min-h-125">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b text-sm">
-                <th className="py-3 px-4 text-left font-semibold">Khách</th>
-                <th className="py-3 px-4 text-left font-semibold">Phòng</th>
-                <th
-                  className={`py-3 px-4 text-center cursor-pointer font-semibold transition-colors select-none hover:bg-slate-50 dark:hover:bg-slate-800 ${
-                    sortBy === "checkIn"
-                      ? "text-primary dark:text-sky-400 font-bold"
-                      : ""
-                  }`}
-                  onClick={() => toggleSort("checkIn")}
-                >
-                  <div className="flex items-center justify-center gap-1">
-                    Ngày vào{" "}
-                    {sortBy === "checkIn" && sortOrder === "asc" ? (
-                      <ArrowUp className="w-4 h-4 text-primary dark:text-sky-400" />
-                    ) : sortBy === "checkIn" && sortOrder === "desc" ? (
-                      <ArrowDown className="w-4 h-4 text-primary dark:text-sky-400" />
-                    ) : (
-                      <ArrowUpDown className="w-4 h-4 text-slate-400" />
-                    )}
-                  </div>
-                </th>
-                <th
-                  className={`py-3 px-4 text-center cursor-pointer font-semibold transition-colors select-none hover:bg-slate-50 dark:hover:bg-slate-800 ${
-                    sortBy === "checkOut"
-                      ? "text-primary dark:text-sky-400 font-bold"
-                      : ""
-                  }`}
-                  onClick={() => toggleSort("checkOut")}
-                >
-                  <div className="flex items-center justify-center gap-1">
-                    Ngày ra{" "}
-                    {sortBy === "checkOut" && sortOrder === "asc" ? (
-                      <ArrowUp className="w-4 h-4 text-primary dark:text-sky-400" />
-                    ) : sortBy === "checkOut" && sortOrder === "desc" ? (
-                      <ArrowDown className="w-4 h-4 text-primary dark:text-sky-400" />
-                    ) : (
-                      <ArrowUpDown className="w-4 h-4 text-slate-400" />
-                    )}
-                  </div>
-                </th>
-                <th
-                  className={`py-3 px-4 text-center cursor-pointer font-semibold transition-colors select-none hover:bg-slate-50 dark:hover:bg-slate-800 ${
-                    sortBy === "nights"
-                      ? "text-primary dark:text-sky-400 font-bold"
-                      : ""
-                  }`}
-                  onClick={() => toggleSort("nights")}
-                >
-                  <div className="flex items-center justify-center gap-1">
-                    Số đêm{" "}
-                    {sortBy === "nights" && sortOrder === "asc" ? (
-                      <ArrowUp className="w-4 h-4 text-primary dark:text-sky-400" />
-                    ) : sortBy === "nights" && sortOrder === "desc" ? (
-                      <ArrowDown className="w-4 h-4 text-primary dark:text-sky-400" />
-                    ) : (
-                      <ArrowUpDown className="w-4 h-4 text-slate-400" />
-                    )}
-                  </div>
-                </th>
-                <th
-                  className={`py-3 px-4 text-center cursor-pointer font-semibold transition-colors select-none hover:bg-slate-50 dark:hover:bg-slate-800 ${
-                    sortBy === "guests"
-                      ? "text-primary dark:text-sky-400 font-bold"
-                      : ""
-                  }`}
-                  onClick={() => toggleSort("guests")}
-                >
-                  <div className="flex items-center justify-center gap-1">
-                    Số khách{" "}
-                    {sortBy === "guests" && sortOrder === "asc" ? (
-                      <ArrowUp className="w-4 h-4 text-primary dark:text-sky-400" />
-                    ) : sortBy === "guests" && sortOrder === "desc" ? (
-                      <ArrowDown className="w-4 h-4 text-primary dark:text-sky-400" />
-                    ) : (
-                      <ArrowUpDown className="w-4 h-4 text-slate-400" />
-                    )}
-                  </div>
-                </th>
-
-                <th
-                  className={`py-3 px-4 text-center cursor-pointer font-semibold transition-colors select-none hover:bg-slate-50 dark:hover:bg-slate-800 ${
-                    sortBy === "total"
-                      ? "text-primary dark:text-sky-400 font-bold"
-                      : ""
-                  }`}
-                  onClick={() => toggleSort("total")}
-                >
-                  <div className="flex items-center justify-center gap-1">
-                    Tổng tiền{" "}
-                    {sortBy === "total" && sortOrder === "asc" ? (
-                      <ArrowUp className="w-4 h-4 text-primary dark:text-sky-400" />
-                    ) : sortBy === "total" && sortOrder === "desc" ? (
-                      <ArrowDown className="w-4 h-4 text-primary dark:text-sky-400" />
-                    ) : (
-                      <ArrowUpDown className="w-4 h-4 text-slate-400" />
-                    )}
-                  </div>
-                </th>
-                <th className="py-3 px-4 text-center font-semibold">
-                  Trạng thái
-                </th>
-                <th className="py-3 px-4 text-center font-semibold">
-                  Hành động
-                </th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {paged.map((b) => (
-                <tr
-                  key={b.id}
-                  className="border-b hover:bg-sky-100/50 dark:hover:bg-slate-800/80 hover:shadow-sm cursor-pointer transition-all duration-150"
-                  onClick={() => router.push(`/admin/bookings/${b.id}`)}
-                >
-                  <td className="py-4 px-4">
-                    <div className="font-medium">{b.guestInfo.fullName}</div>
-                    <div className="text-[10px] text-gray-400 mt-0.5">
-                      {b.guestInfo.email}
-                    </div>
-                    <div className="text-[10px] text-primary font-bold">
-                      {b.guestInfo.phoneNumber}
-                    </div>
-                  </td>
-                  <td className="py-4 px-4 font-medium">{b.room?.name}</td>
-                  <td className="py-4 px-4 text-center">
-                    {formatDate(b.checkIn)}
-                  </td>
-                  <td className="py-4 px-4 text-center">
-                    {formatDate(b.checkOut)}
-                  </td>
-                  <td className="py-4 px-4 text-center">
-                    {getNights(b.checkIn, b.checkOut)}
-                  </td>
-                  <td className="py-4 px-4 text-center">
-                    <div className="flex items-center justify-center gap-3">
-                      <Users className="w-4 h-4" /> {b.adults}
-                      <Baby className="w-4 h-4" /> {b.children}
-                    </div>
-                  </td>
-                  <td className="py-4 px-4 text-center font-semibold">
-                    {b.totalAmount?.toLocaleString()} ₫
-                  </td>
-
-                  <td className="py-4 px-4 text-center">
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColorClasses(
-                        b.status,
-                      )}`}
+      {/* Bookings Content */}
+      <Card className="p-3 sm:p-4 lg:p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-2xs">
+        {paged.length === 0 ? (
+          <p className="text-center text-slate-400 dark:text-slate-500 italic py-8 text-xs sm:text-sm">
+            Không tìm thấy lượt đặt phòng nào phù hợp.
+          </p>
+        ) : (
+          <>
+            {/* Desktop Table View - only show on lg (1024px) or above */}
+            <div className="hidden lg:block overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b text-slate-400 font-bold uppercase tracking-wider text-[10px]">
+                    <th className="py-3 px-4 text-left font-semibold">Khách</th>
+                    <th className="py-3 px-4 text-left font-semibold">Phòng</th>
+                    <th
+                      className={`py-3 px-4 text-center cursor-pointer font-semibold transition-colors select-none hover:bg-slate-50 dark:hover:bg-slate-800 ${
+                        sortBy === "checkIn" ? "text-primary font-bold" : ""
+                      }`}
+                      onClick={() => toggleSort("checkIn")}
                     >
-                      {translateStatus(b.status)}
-                    </span>
-                  </td>
+                      <div className="flex items-center justify-center gap-1">
+                        Ngày vào <SortIcon column="checkIn" />
+                      </div>
+                    </th>
+                    <th
+                      className={`py-3 px-4 text-center cursor-pointer font-semibold transition-colors select-none hover:bg-slate-50 dark:hover:bg-slate-800 ${
+                        sortBy === "checkOut" ? "text-primary font-bold" : ""
+                      }`}
+                      onClick={() => toggleSort("checkOut")}
+                    >
+                      <div className="flex items-center justify-center gap-1">
+                        Ngày ra <SortIcon column="checkOut" />
+                      </div>
+                    </th>
+                    <th
+                      className={`py-3 px-4 text-center cursor-pointer font-semibold transition-colors select-none hover:bg-slate-50 dark:hover:bg-slate-800 ${
+                        sortBy === "nights" ? "text-primary font-bold" : ""
+                      }`}
+                      onClick={() => toggleSort("nights")}
+                    >
+                      <div className="flex items-center justify-center gap-1">
+                        Đêm <SortIcon column="nights" />
+                      </div>
+                    </th>
+                    <th
+                      className={`py-3 px-4 text-center cursor-pointer font-semibold transition-colors select-none hover:bg-slate-50 dark:hover:bg-slate-800 ${
+                        sortBy === "guests" ? "text-primary font-bold" : ""
+                      }`}
+                      onClick={() => toggleSort("guests")}
+                    >
+                      <div className="flex items-center justify-center gap-1">
+                        Khách <SortIcon column="guests" />
+                      </div>
+                    </th>
+                    <th
+                      className={`py-3 px-4 text-center cursor-pointer font-semibold transition-colors select-none hover:bg-slate-50 dark:hover:bg-slate-800 ${
+                        sortBy === "total" ? "text-primary font-bold" : ""
+                      }`}
+                      onClick={() => toggleSort("total")}
+                    >
+                      <div className="flex items-center justify-center gap-1">
+                        Tổng tiền <SortIcon column="total" />
+                      </div>
+                    </th>
+                    <th className="py-3 px-4 text-center font-semibold">
+                      Trạng thái
+                    </th>
+                    <th className="py-3 px-4 text-center font-semibold">
+                      Hành động
+                    </th>
+                  </tr>
+                </thead>
 
-                  <td
-                    className="py-4 px-4 text-center"
-                    onClick={(e) => e.stopPropagation()}
+                <tbody>
+                  {paged.map((b) => (
+                    <tr
+                      key={b.id}
+                      className="border-b border-slate-100 dark:border-slate-850 hover:bg-slate-50/50 dark:hover:bg-slate-800/40 cursor-pointer transition-all duration-150"
+                      onClick={() => router.push(`/admin/bookings/${b.id}`)}
+                    >
+                      <td className="py-3.5 px-4">
+                        <div className="font-semibold text-slate-800 dark:text-slate-200">
+                          {b.guestInfo.fullName}
+                        </div>
+                        <div className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5 max-w-40 truncate">
+                          {b.guestInfo.email}
+                        </div>
+                        <div className="text-[10px] text-primary font-bold mt-0.5">
+                          {b.guestInfo.phoneNumber}
+                        </div>
+                      </td>
+                      <td className="py-3.5 px-4 font-medium text-slate-800 dark:text-slate-200">
+                        {b.room?.name}
+                      </td>
+                      <td className="py-3.5 px-4 text-center text-xs text-slate-650 dark:text-slate-350">
+                        {formatDate(b.checkIn)}
+                      </td>
+                      <td className="py-3.5 px-4 text-center text-xs text-slate-650 dark:text-slate-350">
+                        {formatDate(b.checkOut)}
+                      </td>
+                      <td className="py-3.5 px-4 text-center text-xs text-slate-650 dark:text-slate-350">
+                        {getNights(b.checkIn, b.checkOut)}
+                      </td>
+                      <td className="py-3.5 px-4 text-center">
+                        <div className="flex items-center justify-center gap-1.5 text-xs text-slate-650 dark:text-slate-350">
+                          <Users className="w-3.5 h-3.5 text-slate-400" />{" "}
+                          {b.adults}
+                          <Baby className="w-3.5 h-3.5 text-slate-400 ml-0.5" />{" "}
+                          {b.children}
+                        </div>
+                      </td>
+                      <td className="py-3.5 px-4 text-center font-extrabold text-slate-800 dark:text-slate-200">
+                        {b.totalAmount?.toLocaleString()}₫
+                      </td>
+                      <td className="py-3.5 px-4 text-center">
+                        <span
+                          className={`px-2.5 py-0.5 rounded-full text-xs font-semibold border ${getStatusColorClasses(
+                            b.status,
+                          )}`}
+                        >
+                          {translateStatus(b.status)}
+                        </span>
+                      </td>
+                      <td
+                        className="py-3.5 px-4 text-center"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <BookingActionButtons
+                          status={b.status}
+                          id={b.id}
+                          booking={b}
+                          onEdit={() => setEditingBooking(b)}
+                          onCancel={(id) => setCancelBookingId(id)}
+                          onRefund={(bk) => setRefundBooking(bk)}
+                        />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile/Tablet Card List View - hidden on lg (1024px) or above */}
+            <div className="lg:hidden space-y-3">
+              {paged.map((b) => {
+                const nights = getNights(b.checkIn, b.checkOut);
+                return (
+                  <div
+                    key={b.id}
+                    onClick={() => router.push(`/admin/bookings/${b.id}`)}
+                    className="p-3.5 sm:p-4 bg-card rounded-xl sm:rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-2xs flex flex-col gap-2.5 sm:gap-3.5 cursor-pointer hover:shadow-xs active:bg-slate-50 dark:active:bg-slate-850 transition-all duration-200"
                   >
-                    <BookingActionButtons
-                      status={b.status}
-                      id={b.id}
-                      booking={b}
-                      onEdit={() => setEditingBooking(b)}
-                      onCancel={(id) => setCancelBookingId(id)}
-                      onRefund={(bk) => setRefundBooking(bk)}
-                    />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                    {/* Header */}
+                    <div className="flex items-start justify-between gap-2 pb-2 sm:pb-2.5 border-b border-dashed border-slate-100 dark:border-slate-800/60">
+                      <div className="min-w-0 flex-1">
+                        <p className="font-bold text-xs sm:text-sm text-slate-850 dark:text-slate-200 truncate">
+                          {b.guestInfo.fullName}
+                        </p>
+                        <p className="text-[10px] text-slate-400 truncate mt-0.5">
+                          {b.guestInfo.email} • {b.guestInfo.phoneNumber}
+                        </p>
+                      </div>
+                      <span
+                        className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border shrink-0 ${getStatusColorClasses(
+                          b.status,
+                        )}`}
+                      >
+                        {translateStatus(b.status)}
+                      </span>
+                    </div>
 
-        <Pagination page={page} pageCount={pageCount} onPageChange={setPage} />
+                    {/* Body Info */}
+                    <div className="space-y-2 text-xs leading-normal">
+                      <div className="flex justify-between items-start gap-4">
+                        <div className="min-w-0 flex-1">
+                          <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider block">
+                            Phòng
+                          </span>
+                          <span className="font-bold text-slate-800 dark:text-slate-200 truncate block">
+                            {b.room?.name || "N/A"}
+                          </span>
+                        </div>
+                        <div className="shrink-0 text-right">
+                          <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider block">
+                            Khách
+                          </span>
+                          <span className="font-bold text-slate-750 dark:text-slate-300 flex items-center justify-end gap-1 mt-0.5">
+                            <Users className="w-3.5 h-3.5 text-slate-400" />{" "}
+                            {b.adults}
+                            {b.children > 0 ? (
+                              <>
+                                <Baby className="w-3.5 h-3.5 text-slate-400 ml-0.5" />{" "}
+                                {b.children}
+                              </>
+                            ) : (
+                              <span className="text-[11px] text-slate-450 dark:text-slate-500 font-medium ml-0.5">
+                                0 bé
+                              </span>
+                            )}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div>
+                        <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider block">
+                          Lưu trú
+                        </span>
+                        <span className="font-bold text-slate-700 dark:text-slate-300">
+                          {formatDate(b.checkIn)} → {formatDate(b.checkOut)}{" "}
+                          <span className="text-slate-450 font-semibold">
+                            ({nights} đêm)
+                          </span>
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Action buttons + payment */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2.5 sm:pt-3 border-t border-slate-100 dark:border-slate-800/60 mt-1">
+                      <div className="flex items-center gap-1">
+                        <span className="text-[10px] text-slate-400 font-medium">
+                          Tổng thu:
+                        </span>
+                        <span className="font-extrabold text-xs sm:text-sm text-slate-850 dark:text-slate-200">
+                          {b.totalAmount?.toLocaleString()}₫
+                        </span>
+                      </div>
+
+                      <div
+                        className="flex items-center gap-1.5 self-end sm:self-auto"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <BookingActionButtons
+                          status={b.status}
+                          id={b.id}
+                          booking={b}
+                          onEdit={() => setEditingBooking(b)}
+                          onCancel={(id) => setCancelBookingId(id)}
+                          onRefund={(bk) => setRefundBooking(bk)}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </>
+        )}
+
+        <div className="pt-2">
+          <Pagination
+            page={page}
+            pageCount={pageCount}
+            onPageChange={setPage}
+          />
+        </div>
       </Card>
 
       {/* 1. Smart Cancel Dialog */}

@@ -68,30 +68,30 @@ export function BookingActionButtons({
         <Button
           size="sm"
           variant="outline"
-          className="rounded-full shadow-sm font-semibold flex items-center gap-1 border-gray-300 hover:border-sky-500 hover:bg-sky-100/70 hover:text-sky-700 dark:border-slate-700 dark:hover:border-sky-500 dark:hover:bg-sky-900/40 dark:hover:text-sky-300 transition-all duration-200 active:scale-95 cursor-pointer"
+          className="h-7 sm:h-8 px-2.5 sm:px-3.5 text-[10px] sm:text-xs rounded-full shadow-sm font-bold flex items-center gap-1 border-gray-300 hover:border-sky-500 hover:bg-sky-100/70 hover:text-sky-700 dark:border-slate-700 dark:hover:border-sky-500 dark:hover:bg-sky-900/40 dark:hover:text-sky-300 transition-all duration-200 active:scale-95 cursor-pointer"
           onClick={() => onEdit(id)}
         >
-          <Edit className="w-4 h-4" /> Sửa
+          <Edit className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> Sửa
         </Button>
       )}
 
       {canCancel && (
         <Button
           size="sm"
-          className="rounded-full shadow-sm font-semibold flex items-center gap-1 bg-red-600 hover:bg-red-700 text-white dark:bg-red-700 dark:hover:bg-red-800 transition-all duration-200 active:scale-95 cursor-pointer hover:shadow-md hover:shadow-red-500/35 border-none"
+          className="h-7 sm:h-8 px-2.5 sm:px-3.5 text-[10px] sm:text-xs rounded-full shadow-sm font-bold flex items-center gap-1 bg-red-600 hover:bg-red-700 text-white dark:bg-red-700 dark:hover:bg-red-800 transition-all duration-200 active:scale-95 cursor-pointer hover:shadow-md hover:shadow-red-500/35 border-none"
           onClick={() => onCancel(id)}
         >
-          <X className="w-4 h-4" /> Huỷ
+          <X className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> Huỷ
         </Button>
       )}
 
       {canRefund && (
         <Button
           size="sm"
-          className="rounded-full shadow-sm font-semibold flex items-center gap-1 bg-amber-600 hover:bg-amber-700 dark:bg-amber-700 dark:hover:bg-amber-800 text-white transition-all duration-200 active:scale-95 cursor-pointer hover:shadow-md hover:shadow-amber-500/35 border-none"
+          className="h-7 sm:h-8 px-2.5 sm:px-3.5 text-[10px] sm:text-xs rounded-full shadow-sm font-bold flex items-center gap-1 bg-amber-600 hover:bg-amber-700 dark:bg-amber-700 dark:hover:bg-amber-800 text-white transition-all duration-200 active:scale-95 cursor-pointer hover:shadow-md hover:shadow-amber-500/35 border-none"
           onClick={() => onRefund(booking)}
         >
-          <Banknote className="w-4 h-4" /> Hoàn tiền
+          <Banknote className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> Hoàn tiền
         </Button>
       )}
     </div>

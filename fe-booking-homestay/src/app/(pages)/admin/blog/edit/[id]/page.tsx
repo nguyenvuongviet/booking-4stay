@@ -228,7 +228,7 @@ export default function EditBlogPostPage() {
   }
 
   return (
-    <div className="space-y-6 w-full">
+    <div className="space-y-4 sm:space-y-6 w-full">
       {/* Header */}
       <div className="flex items-center gap-3">
         <Link
@@ -238,8 +238,10 @@ export default function EditBlogPostPage() {
           <ChevronLeft size={20} />
         </Link>
         <div>
-          <h1 className="text-2xl font-bold">Chỉnh sửa bài viết</h1>
-          <p className="text-sm text-muted-foreground">ID: #{postId}</p>
+          <h1 className="text-xl sm:text-2xl font-bold">Chỉnh sửa bài viết</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground">
+            ID: #{postId}
+          </p>
         </div>
       </div>
 
@@ -265,18 +267,18 @@ export default function EditBlogPostPage() {
 
       {/* Action Buttons */}
       <div className="max-w-6xl mx-auto w-full">
-        <div className="flex items-center justify-end gap-3 pt-6 border-t mt-6">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-2 sm:gap-3 pt-4 sm:pt-6 border-t mt-4 sm:mt-6">
           <button
             type="button"
             onClick={handleCancel}
-            className="px-5 py-2.5 border rounded-xl text-sm font-semibold hover:bg-accent transition-colors cursor-pointer bg-background"
+            className="w-full sm:w-auto px-5 py-2.5 border rounded-xl text-sm font-semibold hover:bg-accent transition-colors cursor-pointer bg-background"
           >
             Hủy
           </button>
           <button
             onClick={handleSubmit}
             disabled={saving}
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50 cursor-pointer"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50 cursor-pointer"
           >
             {saving ? (
               <Loader2 size={16} className="animate-spin" />

@@ -95,18 +95,20 @@ function CommentsListContent() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <Link
             href="/admin/blog"
-            className="-ml-2 p-2 rounded-lg hover:bg-accent transition-colors"
+            className="-ml-2 p-2 rounded-lg hover:bg-accent transition-colors shrink-0"
           >
             <ChevronLeft size={20} />
           </Link>
-          <div>
-            <h1 className="text-2xl font-bold">Quản lý Bình luận</h1>
-            <p className="text-sm text-muted-foreground">
+          <div className="min-w-0">
+            <h1 className="text-lg sm:text-2xl font-bold truncate">
+              Quản lý Bình luận
+            </h1>
+            <p className="text-xs sm:text-sm text-muted-foreground">
               {pagination.total} bình luận
             </p>
           </div>
@@ -114,7 +116,7 @@ function CommentsListContent() {
         <button
           onClick={() => fetchComments(pagination.page)}
           disabled={loading}
-          className="p-2.5 rounded-xl border bg-background hover:bg-accent transition-colors disabled:opacity-50"
+          className="p-2 sm:p-2.5 rounded-xl border bg-background hover:bg-accent transition-colors disabled:opacity-50 shrink-0"
           title="Làm mới"
         >
           <RotateCw size={18} className={loading ? "animate-spin" : ""} />
@@ -122,15 +124,15 @@ function CommentsListContent() {
       </div>
 
       {postId && (
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 bg-primary/5 rounded-xl border border-primary/20 text-sm text-primary">
-          <div>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3 sm:p-4 bg-primary/5 rounded-xl border border-primary/20 text-xs sm:text-sm text-primary">
+          <div className="min-w-0">
             <span className="font-medium text-foreground">
               Đang lọc bình luận cho bài viết
               {comments[0]?.post?.title ? (
                 <>
                   :{" "}
                   <strong className="text-primary font-bold">
-                    "{comments[0].post.title}"
+                    &quot;{comments[0].post.title}&quot;
                   </strong>
                 </>
               ) : (
@@ -140,7 +142,7 @@ function CommentsListContent() {
           </div>
           <Link
             href="/admin/blog/comments"
-            className="inline-flex items-center px-3 py-1.5 bg-background text-foreground border rounded-lg text-xs font-semibold hover:bg-accent transition-colors"
+            className="inline-flex items-center px-3 py-1.5 bg-background text-foreground border rounded-lg text-xs font-semibold hover:bg-accent transition-colors shrink-0"
           >
             Xem tất cả bình luận
           </Link>
@@ -159,7 +161,7 @@ function CommentsListContent() {
             <button
               key={tab.key}
               onClick={() => setActiveStatus(tab.key as any)}
-              className={`px-6 py-3 text-sm font-semibold border-b-2 transition-all cursor-pointer ${
+              className={`px-4 sm:px-6 py-2.5 sm:py-3 text-xs sm:text-sm font-semibold border-b-2 transition-all cursor-pointer ${
                 isActive
                   ? "border-primary text-primary"
                   : "border-transparent text-muted-foreground hover:text-foreground"
@@ -198,7 +200,7 @@ function CommentsListContent() {
             return (
               <div
                 key={comment.id}
-                className={`p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 transition-colors group ${
+                className={`p-3 sm:p-4 transition-colors group ${
                   isReported
                     ? "bg-rose-50/20 hover:bg-rose-50/30 border-l-4 border-l-red-500"
                     : "hover:bg-muted/5"
@@ -251,58 +253,61 @@ function CommentsListContent() {
                         </span>
                       )}
                     </div>
-                    <p className="text-sm text-muted-foreground mb-1.5 wrap-break-word">
+                    <p className="text-sm mb-2 wrap-break-word">
                       {comment.content}
                     </p>
-                    <Link
-                      href={`/blog/${comment.post?.slug}`}
-                      target="_blank"
-                      className="text-xs text-primary hover:underline font-medium"
-                    >
-                      📝 {comment.post?.title}
-                    </Link>
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <Link
+                        href={`/blog/${comment.post?.slug}`}
+                        target="_blank"
+                        className="text-xs text-primary hover:underline font-medium"
+                      >
+                        📝 {comment.post?.title}
+                      </Link>
+                      {/* Action buttons */}
+                      <div className="flex items-center gap-1.5">
+                        {isReported && comment.status !== "SPAM" && (
+                          <button
+                            onClick={() =>
+                              handleStatusChange(comment.id, "APPROVED", true)
+                            }
+                            className="px-2.5 py-1 text-xs font-semibold bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-colors cursor-pointer"
+                            title="Phê duyệt bình luận (Xóa lượt báo cáo)"
+                          >
+                            Không sao
+                          </button>
+                        )}
+                        {comment.status === "SPAM" ? (
+                          <button
+                            onClick={() =>
+                              handleStatusChange(comment.id, "APPROVED", false)
+                            }
+                            className="px-2.5 py-1 text-xs font-semibold bg-green-50 text-green-700 hover:bg-green-100 border border-green-200 rounded-lg transition-colors cursor-pointer"
+                            title="Khôi phục bình luận"
+                          >
+                            Khôi phục
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() =>
+                              handleStatusChange(comment.id, "SPAM")
+                            }
+                            className="px-2.5 py-1 text-xs font-semibold bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200 rounded-lg transition-colors cursor-pointer"
+                            title="Đánh dấu là Spam"
+                          >
+                            Spam
+                          </button>
+                        )}
+                        <button
+                          onClick={() => handleDelete(comment.id)}
+                          className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg border border-transparent hover:border-red-200 transition-colors cursor-pointer"
+                          title="Xóa bình luận"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                </div>
-
-                {/* Action buttons */}
-                <div className="flex items-center justify-end gap-1.5 transition-all duration-200">
-                  {isReported && comment.status !== "SPAM" && (
-                    <button
-                      onClick={() =>
-                        handleStatusChange(comment.id, "APPROVED", true)
-                      }
-                      className="px-2.5 py-1 text-xs font-semibold bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-colors cursor-pointer"
-                      title="Phê duyệt bình luận (Xóa lượt báo cáo)"
-                    >
-                      Không sao
-                    </button>
-                  )}
-                  {comment.status === "SPAM" ? (
-                    <button
-                      onClick={() =>
-                        handleStatusChange(comment.id, "APPROVED", false)
-                      }
-                      className="px-2.5 py-1 text-xs font-semibold bg-green-50 text-green-700 hover:bg-green-100 border border-green-200 rounded-lg transition-colors cursor-pointer"
-                      title="Khôi phục bình luận"
-                    >
-                      Khôi phục
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => handleStatusChange(comment.id, "SPAM")}
-                      className="px-2.5 py-1 text-xs font-semibold bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200 rounded-lg transition-colors cursor-pointer"
-                      title="Đánh dấu là Spam"
-                    >
-                      Spam
-                    </button>
-                  )}
-                  <button
-                    onClick={() => handleDelete(comment.id)}
-                    className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg border border-transparent hover:border-red-200 transition-colors cursor-pointer"
-                    title="Xóa bình luận"
-                  >
-                    <Trash2 size={14} />
-                  </button>
                 </div>
               </div>
             );

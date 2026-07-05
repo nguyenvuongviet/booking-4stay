@@ -1,5 +1,6 @@
 "use client";
 
+import { Skeleton } from "@/_components/ui/skeleton";
 import { BaseLocation } from "@/services/admin/locationsApi";
 import { motion } from "framer-motion";
 import { MapPin } from "lucide-react";
@@ -39,12 +40,27 @@ export function LocationList({
 }: Props) {
   if (loading) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((i) => (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
           <div
             key={i}
-            className="h-24 bg-slate-100 dark:bg-slate-800/50 rounded-2xl animate-pulse border border-slate-200 dark:border-slate-800"
-          />
+            className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-3.5 sm:p-4.5 space-y-3"
+          >
+            <div className="flex gap-3 sm:gap-4">
+              <Skeleton className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl shrink-0" />
+              <div className="space-y-2 flex-1">
+                <Skeleton className="h-4 w-5/6 rounded" />
+                <Skeleton className="h-3 w-1/3 rounded" />
+              </div>
+            </div>
+            <div className="flex items-center justify-between border-t border-slate-100 dark:border-slate-800/55 pt-2 mt-1">
+              <Skeleton className="h-4 w-16 rounded-full" />
+              <div className="flex gap-1.5">
+                <Skeleton className="w-8 h-8 rounded-lg" />
+                <Skeleton className="w-8 h-8 rounded-lg" />
+              </div>
+            </div>
+          </div>
         ))}
       </div>
     );

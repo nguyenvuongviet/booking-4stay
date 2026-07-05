@@ -247,7 +247,7 @@ function SortableImageItem({
             e.stopPropagation();
             onSetMain();
           }}
-          className="absolute bottom-2 left-2 z-20 bg-black/60 text-white px-2 py-1 rounded text-xs shadow opacity-0 group-hover:opacity-100 transition cursor-pointer"
+          className="absolute bottom-2 left-2 z-20 bg-black/70 hover:bg-black/80 text-white px-2 py-1 rounded text-xs shadow transition cursor-pointer opacity-100 lg:opacity-0 lg:group-hover:opacity-100"
         >
           Đặt làm chính
         </button>

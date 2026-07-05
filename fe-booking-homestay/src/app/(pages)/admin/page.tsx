@@ -11,8 +11,6 @@ import { AlertCircle, Download } from "lucide-react";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { RefreshButton } from "./_components/RefreshButton";
-
-// Import subcomponents
 import { DetailedTabbedWidget } from "./_components/dashboard/DetailedTabbedWidget";
 import { GeographicalPerformance } from "./_components/dashboard/GeographicalPerformance";
 import { KPIHighlights } from "./_components/dashboard/KPIHighlights";
@@ -83,11 +81,93 @@ export default function AdminDashboardPage() {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-125 space-y-4">
-        <div className="w-12 h-12 border-4 border-sky-500 border-t-transparent rounded-full animate-spin"></div>
-        <p className="text-gray-500 font-medium animate-pulse">
-          Đang thu thập và phân tích dữ liệu hệ thống...
-        </p>
+      <div className="space-y-6 pb-12 animate-pulse">
+        {/* HEADER SKELETON */}
+        <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-gray-100 pb-4">
+          <div className="space-y-2">
+            <div className="h-8 w-48 bg-slate-200 rounded-xl" />
+            <div className="h-4 w-72 bg-slate-150/80 rounded-md" />
+          </div>
+          <div className="flex items-center gap-2.5 w-full sm:w-auto justify-end">
+            <div className="h-9.5 w-10 bg-slate-200 rounded-xl shrink-0" />
+            <div className="h-9.5 w-44 bg-slate-200 rounded-xl shrink-0" />
+          </div>
+        </header>
+
+        {/* TODAY PULSE SKELETON */}
+        <div className="bg-linear-to-r from-sky-500/10 via-indigo-500/5 to-transparent p-4 sm:p-5 rounded-2xl border border-sky-100 space-y-4">
+          <div className="flex items-center gap-2">
+            <div className="w-5 h-5 bg-slate-200 rounded-full" />
+            <div className="h-5 w-48 bg-slate-200 rounded-md" />
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+            {[...Array(4)].map((_, i) => (
+              <div
+                key={i}
+                className="bg-white/50 border border-slate-100 p-3 sm:p-4 rounded-xl space-y-2.5 sm:space-y-3"
+              >
+                <div className="h-3 w-24 bg-slate-150 rounded-md" />
+                <div className="h-6 w-12 bg-slate-200 rounded-md" />
+                <div className="h-2.5 w-20 bg-slate-100 rounded-md" />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* KPI HIGHLIGHTS SKELETON */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-6">
+          {[...Array(4)].map((_, i) => (
+            <div
+              key={i}
+              className="bg-white border border-slate-100 p-5 sm:p-6 rounded-2xl space-y-3.5 sm:space-y-4 shadow-sm"
+            >
+              <div className="flex justify-between items-start">
+                <div className="space-y-2">
+                  <div className="h-3 w-24 bg-slate-150 rounded-md" />
+                  <div className="h-7 w-32 bg-slate-200 rounded-md" />
+                </div>
+                <div className="w-10 h-10 bg-slate-100 rounded-xl shrink-0" />
+              </div>
+              <div className="h-3.5 w-40 bg-slate-100 rounded-md pt-3 border-t border-slate-50" />
+            </div>
+          ))}
+        </div>
+
+        {/* URGENT ACTIONS & PIE CHART SKELETON */}
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+          <div className="xl:col-span-2 bg-white border border-slate-100 p-5 sm:p-6 rounded-2xl space-y-4">
+            <div className="h-6 w-44 bg-slate-200 rounded-md" />
+            <div className="space-y-3">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="h-14 sm:h-16 bg-slate-50 rounded-xl" />
+              ))}
+            </div>
+          </div>
+          <div className="bg-white border border-slate-100 p-5 sm:p-6 rounded-2xl flex flex-col justify-between items-center min-h-62.5 space-y-4">
+            <div className="h-6 w-36 bg-slate-200 rounded-md align-self-start self-start" />
+            <div className="h-32 w-32 sm:h-36 sm:w-36 rounded-full border-12 sm:border-14 border-slate-100" />
+            <div className="h-4 w-40 bg-slate-100 rounded-md" />
+          </div>
+        </div>
+
+        {/* CHARTS TREND & GEO SKELETON */}
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+          <div className="xl:col-span-2 bg-white border border-slate-100 p-5 sm:p-6 rounded-2xl space-y-4">
+            <div className="h-6 w-48 bg-slate-200 rounded-md" />
+            <div className="h-56 sm:h-60 bg-slate-50/50 rounded-xl" />
+          </div>
+          <div className="bg-white border border-slate-100 p-5 sm:p-6 rounded-2xl space-y-4">
+            <div className="h-6 w-36 bg-slate-200 rounded-md" />
+            <div className="space-y-3">
+              {[...Array(4)].map((_, i) => (
+                <div
+                  key={i}
+                  className="h-10 sm:h-11 bg-slate-50/50 rounded-xl"
+                />
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -219,29 +299,29 @@ export default function AdminDashboardPage() {
   };
 
   return (
-    <div className="space-y-6 pb-12">
+    <div className="space-y-4 sm:space-y-6 pb-12">
       {/* HEADER SECTION */}
       <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-gray-100 pb-4">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight bg-linear-to-r from-slate-900 to-sky-700 bg-clip-text text-transparent">
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight bg-linear-to-r from-slate-900 to-sky-700 bg-clip-text text-transparent">
             Trang tổng quan
           </h1>
-          <p className="text-muted-foreground mt-1 text-sm">
+          <p className="text-muted-foreground mt-0.5 text-xs sm:text-sm">
             Hệ thống quản lý Homestay PMS & Báo cáo hiệu năng vận hành 4Stay.
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto justify-end sm:justify-start">
           <RefreshButton
             onRefresh={loadData}
-            className="border-gray-200 shadow-sm"
+            className="border-gray-200 shadow-sm shrink-0"
           />
           <Button
             onClick={handleExportReport}
-            className="flex items-center gap-2 bg-sky-600 hover:bg-sky-700 text-white rounded-lg shadow-md hover:shadow-lg transition-all"
+            className="flex items-center justify-center gap-1.5 sm:gap-2 bg-sky-600 hover:bg-sky-700 text-white rounded-lg shadow-md hover:shadow-lg transition-all text-xs sm:text-sm px-3 py-2 shrink-0"
           >
-            <Download className="w-4 h-4" />
-            Xuất báo cáo chi tiết
+            <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            Xuất báo cáo
           </Button>
         </div>
       </header>
@@ -267,7 +347,7 @@ export default function AdminDashboardPage() {
       />
 
       {/* URGENT ACTIONS & PIE CHART */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6">
         <div className="xl:col-span-2">
           <UrgentActionCenter
             pendingConfirmationCount={pendingActions.pendingConfirmationCount}
@@ -284,7 +364,7 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* DUAL ANALYTICS CHARTS SECTION */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6">
         <div className="xl:col-span-2">
           <RevenueTrendChart
             revenue={revenue}

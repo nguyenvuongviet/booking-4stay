@@ -15,16 +15,16 @@ export function RoomCard({ room, onDelete }: any) {
   return (
     <div
       onClick={() => router.push(`/admin/rooms/${room.id}`)}
-      className="group rounded-2xl border shadow-sm overflow-hidden bg-card transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 hover:scale-[1.01] cursor-pointer flex flex-col"
+      className="group rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-2xs overflow-hidden bg-card transition-all duration-300 hover:shadow-md hover:-translate-y-0.5 cursor-pointer flex flex-col"
     >
-      <div className="relative w-full h-72 bg-muted/20">
+      <div className="relative w-full h-48 sm:h-56 md:h-64 lg:h-72 bg-muted/20">
         {room.images?.main ? (
           <Image
             src={room.images.main}
             alt={room.name}
             width={600}
             height={400}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-500"
           />
         ) : (
           <div className="h-full w-full flex flex-col items-center justify-center text-muted-foreground">
@@ -37,7 +37,7 @@ export function RoomCard({ room, onDelete }: any) {
 
         {room.status && (
           <div
-            className={`absolute top-4 left-4 backdrop-blur-xl px-2.5 py-1 rounded-full flex items-center gap-1.5 shadow-sm shadow-black/10 text-xs font-semibold ${
+            className={`absolute top-3 left-3 backdrop-blur-md px-2.5 py-1 rounded-full flex items-center gap-1.5 shadow-xs text-[10px] sm:text-xs font-semibold ${
               room.status === "MAINTENANCE"
                 ? "bg-red-500/80 text-white"
                 : room.status === "BOOKED"
@@ -60,35 +60,40 @@ export function RoomCard({ room, onDelete }: any) {
           </div>
         )}
 
-        <div className="absolute top-4 right-4 bg-background/70 backdrop-blur-xl px-2 py-1 rounded-full flex items-center gap-1 shadow-sm shadow-black/10">
-          <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-          <span className="text-sm font-medium">{room.rating ?? 0}</span>
+        <div className="absolute top-3 right-3 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md px-2 py-0.5 sm:py-1 rounded-full flex items-center gap-1 shadow-xs border border-slate-200/50 dark:border-slate-800/40">
+          <Star className="w-3.5 h-3.5 text-yellow-500 fill-yellow-500" />
+          <span className="text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-200">
+            {room.rating ?? 0}
+          </span>
         </div>
       </div>
 
-      <div className="p-5 flex flex-col flex-1">
-        <h3 className="text-xl font-bold text-foreground truncate mb-3">
+      <div className="p-4 sm:p-5 flex flex-col flex-1">
+        <h3 className="text-sm sm:text-base md:text-lg font-bold text-slate-800 dark:text-slate-100 truncate mb-1.5 group-hover:text-primary transition-colors">
           {room.name}
         </h3>
 
-        <p className="text-muted-foreground flex items-center gap-1 text-sm mb-3 line-clamp-2">
-          <MapPin size={16} className="text-primary" />
-          {room.location.fullAddress}
+        <p className="text-slate-500 dark:text-slate-400 flex items-center gap-1 text-xs sm:text-sm mb-4 line-clamp-1">
+          <MapPin size={14} className="text-primary shrink-0" />
+          <span className="truncate">
+            {room.location?.fullAddress || "Chưa cập nhật địa chỉ"}
+          </span>
         </p>
 
-        <div className="mt-auto flex justify-between">
+        <div className="mt-auto flex justify-between items-center pt-2.5 border-t border-slate-100 dark:border-slate-800/40">
           <div>
-            <span className="text-xl font-bold text-foreground">
-              {room.price.toLocaleString()}₫
+            <span className="text-base sm:text-lg font-extrabold text-slate-850 dark:text-slate-200">
+              {room.price?.toLocaleString()}₫
             </span>
-            <span className="ml-1 text-muted-foreground text-sm">/đêm</span>
+            <span className="ml-0.5 text-slate-400 dark:text-slate-500 text-[10px] sm:text-xs">
+              /đêm
+            </span>
           </div>
           <button
             onClick={handleDeleteClick}
-            className="bottom-3 right-3 p-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-200 transition-all flex items-center gap-1 cursor-pointer"
+            className="p-1.5 sm:px-3 sm:py-1.5 rounded-lg sm:rounded-xl bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 transition-colors flex items-center justify-center gap-1.5 cursor-pointer dark:bg-red-950/20 dark:text-red-400 dark:hover:bg-red-950/40 border border-red-100/50 dark:border-red-900/30"
           >
-            <Trash2 className="w-4 h-4" />
-            <span className="text-sm font-medium">Xóa</span>
+            <Trash2 className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>

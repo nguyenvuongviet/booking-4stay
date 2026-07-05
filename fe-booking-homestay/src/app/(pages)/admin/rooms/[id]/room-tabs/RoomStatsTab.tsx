@@ -401,16 +401,16 @@ export default function RoomStatsTab({ bookings }: Props) {
   return (
     <div className="space-y-6">
       {/* Dynamic Filters Bar */}
-      <Card className="p-4 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800 bg-card">
-        <div className="flex flex-wrap items-center justify-between gap-4">
+      <Card className="p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 bg-card shadow-2xs">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div className="flex items-center gap-2">
-            <Filter className="w-5 h-5 text-primary" />
-            <h4 className="font-semibold text-slate-800 dark:text-slate-200">
-              Lọc khoảng thời gian thống kê
+            <Filter className="w-4.5 h-4.5 text-primary" />
+            <h4 className="font-bold text-xs sm:text-sm text-slate-800 dark:text-slate-200 uppercase tracking-wider">
+              Khoảng thời gian thống kê
             </h4>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2.5 w-full lg:w-auto">
             {/* Year Selector */}
             <select
               value={selectedYear}
@@ -421,7 +421,7 @@ export default function RoomStatsTab({ bookings }: Props) {
                   setSelectedMonth("all");
                 }
               }}
-              className="h-10 px-3 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 text-sm font-medium cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary"
+              className="h-9.5 px-3 border border-slate-200 dark:border-slate-800 rounded-xl bg-transparent text-xs sm:text-sm font-semibold cursor-pointer outline-none focus:border-primary/50 text-slate-700 dark:text-slate-300 flex-1 sm:flex-initial"
             >
               <option value="all">Tất cả các năm</option>
               {availableYears.map((y) => (
@@ -436,7 +436,7 @@ export default function RoomStatsTab({ bookings }: Props) {
               value={selectedMonth}
               onChange={(e) => setSelectedMonth(e.target.value)}
               disabled={selectedYear === "all"}
-              className="h-10 px-3 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 text-sm font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-primary"
+              className="h-9.5 px-3 border border-slate-200 dark:border-slate-800 rounded-xl bg-transparent text-xs sm:text-sm font-semibold cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed outline-none focus:border-primary/50 text-slate-700 dark:text-slate-300 flex-1 sm:flex-initial"
             >
               <option value="all">Cả năm</option>
               {Array.from({ length: 12 }, (_, i) => (
@@ -449,10 +449,10 @@ export default function RoomStatsTab({ bookings }: Props) {
             {/* Export Report Button */}
             <button
               onClick={handleExport}
-              className="h-10 px-4 bg-emerald-600 dark:bg-emerald-700 hover:bg-emerald-700 dark:hover:bg-emerald-600 text-white text-sm font-semibold rounded-lg flex items-center gap-2 cursor-pointer transition-colors shadow-sm"
+              className="h-9.5 px-4 bg-emerald-600 dark:bg-emerald-700 hover:bg-emerald-700 dark:hover:bg-emerald-600 text-white text-xs sm:text-sm font-semibold rounded-xl flex items-center justify-center gap-2 cursor-pointer transition-colors shadow-sm flex-1 sm:flex-initial w-full sm:w-auto"
             >
               <Download className="w-4 h-4" />
-              Xuất báo cáo
+              <span>Xuất báo cáo</span>
             </button>
           </div>
         </div>
@@ -460,7 +460,7 @@ export default function RoomStatsTab({ bookings }: Props) {
 
       {/* Overview Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="p-5 flex items-center gap-4 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800 bg-card">
+        <Card className="p-5 flex items-center gap-4 rounded-2xl border border-slate-200/60 dark:border-slate-800/40 bg-card shadow-2xs">
           <div className="w-12 h-12 rounded-xl bg-green-50 dark:bg-green-950/30 text-green-600 dark:text-green-400 flex items-center justify-center shrink-0">
             <Coins className="w-6 h-6" />
           </div>
@@ -474,7 +474,7 @@ export default function RoomStatsTab({ bookings }: Props) {
           </div>
         </Card>
 
-        <Card className="p-5 flex items-center gap-4 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800 bg-card">
+        <Card className="p-5 flex items-center gap-4 rounded-2xl border border-slate-200/60 dark:border-slate-800/40 bg-card shadow-2xs">
           <div className="w-12 h-12 rounded-xl bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
             <CalendarCheck className="w-6 h-6" />
           </div>
@@ -488,7 +488,7 @@ export default function RoomStatsTab({ bookings }: Props) {
           </div>
         </Card>
 
-        <Card className="p-5 flex items-center gap-4 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800 bg-card">
+        <Card className="p-5 flex items-center gap-4 rounded-2xl border border-slate-200/60 dark:border-slate-800/40 bg-card shadow-2xs">
           <div className="w-12 h-12 rounded-xl bg-purple-50 dark:bg-purple-950/30 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
             <TrendingUp className="w-6 h-6" />
           </div>
@@ -502,7 +502,7 @@ export default function RoomStatsTab({ bookings }: Props) {
           </div>
         </Card>
 
-        <Card className="p-5 flex items-center gap-4 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800 bg-card">
+        <Card className="p-5 flex items-center gap-4 rounded-2xl border border-slate-200/60 dark:border-slate-800/40 bg-card shadow-2xs">
           <div className="w-12 h-12 rounded-xl bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 flex items-center justify-center shrink-0">
             <XCircle className="w-6 h-6" />
           </div>
@@ -518,9 +518,9 @@ export default function RoomStatsTab({ bookings }: Props) {
       </div>
 
       {/* Dynamic Graph Section */}
-      <Card className="p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800 bg-card space-y-4">
-        <div className="flex items-center justify-between">
-          <h4 className="font-bold text-slate-900 dark:text-white text-base">
+      <Card className="p-4 sm:p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 bg-card space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <h4 className="font-bold text-slate-900 dark:text-white text-sm sm:text-base">
             Biểu đồ xu hướng doanh thu & lượt đặt phòng
           </h4>
           <span className="text-xs text-muted-foreground">
@@ -603,10 +603,10 @@ export default function RoomStatsTab({ bookings }: Props) {
       </Card>
 
       {/* Detailed stats table */}
-      <Card className="p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800 bg-card space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-4">
+      <Card className="p-4 sm:p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 bg-card space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="space-y-1">
-            <h4 className="font-bold text-slate-900 dark:text-white text-base">
+            <h4 className="font-bold text-slate-900 dark:text-white text-sm sm:text-base">
               Bảng số liệu doanh thu & lượt đặt chi tiết
             </h4>
             <p className="text-xs text-muted-foreground">
@@ -622,7 +622,7 @@ export default function RoomStatsTab({ bookings }: Props) {
             <span className="text-xs text-muted-foreground">
               Hiển thị {tableData.length}/{chartData.length} dòng
             </span>
-            <label className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400 cursor-pointer select-none">
+            <label className="flex items-center gap-2 text-xs text-slate-650 dark:text-slate-400 cursor-pointer select-none">
               <input
                 type="checkbox"
                 checked={hideEmptyRows}
@@ -712,8 +712,8 @@ export default function RoomStatsTab({ bookings }: Props) {
       {/* Details breakdown */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
         {/* Status Breakdown Table */}
-        <Card className="lg:col-span-3 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800 bg-card space-y-4">
-          <h4 className="font-bold text-slate-900 dark:text-white text-base">
+        <Card className="lg:col-span-3 p-4 sm:p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 bg-card space-y-4">
+          <h4 className="font-bold text-slate-900 dark:text-white text-sm sm:text-base">
             Thống kê theo trạng thái đơn
           </h4>
           <div className="overflow-x-auto">
@@ -768,55 +768,55 @@ export default function RoomStatsTab({ bookings }: Props) {
         </Card>
 
         {/* Rental Performance details */}
-        <Card className="lg:col-span-2 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800 bg-card space-y-4">
-          <h4 className="font-bold text-slate-900 dark:text-white text-base">
+        <Card className="lg:col-span-2 p-4 sm:p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 bg-card space-y-4">
+          <h4 className="font-bold text-slate-900 dark:text-white text-sm sm:text-base">
             Hiệu suất thuê phòng
           </h4>
           <div className="space-y-4 pt-2">
             <div className="flex justify-between items-center pb-3 border-b border-slate-50 dark:border-slate-900/50">
-              <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
+              <div className="flex items-center gap-2 text-slate-650 dark:text-slate-400">
                 <Moon className="w-4 h-4 text-primary" />
-                <span className="text-sm font-medium">
+                <span className="text-xs sm:text-sm font-medium">
                   Tổng số đêm được thuê
                 </span>
               </div>
-              <span className="font-bold text-slate-900 dark:text-white text-sm">
+              <span className="font-bold text-slate-900 dark:text-white text-xs sm:text-sm">
                 {stats.totalNights} đêm
               </span>
             </div>
 
             <div className="flex justify-between items-center pb-3 border-b border-slate-50 dark:border-slate-900/50">
-              <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
+              <div className="flex items-center gap-2 text-slate-650 dark:text-slate-400">
                 <TrendingUp className="w-4 h-4 text-primary" />
-                <span className="text-sm font-medium">
+                <span className="text-xs sm:text-sm font-medium">
                   Số đêm thuê trung bình/đơn
                 </span>
               </div>
-              <span className="font-bold text-slate-900 dark:text-white text-sm">
+              <span className="font-bold text-slate-900 dark:text-white text-xs sm:text-sm">
                 {stats.avgNights} đêm/đơn
               </span>
             </div>
 
             <div className="flex justify-between items-center pb-3 border-b border-slate-50 dark:border-slate-900/50">
-              <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
+              <div className="flex items-center gap-2 text-slate-650 dark:text-slate-400">
                 <Users className="w-4 h-4 text-primary" />
-                <span className="text-sm font-medium">
+                <span className="text-xs sm:text-sm font-medium">
                   Số khách trung bình/đơn
                 </span>
               </div>
-              <span className="font-bold text-slate-900 dark:text-white text-sm">
+              <span className="font-bold text-slate-900 dark:text-white text-xs sm:text-sm">
                 {stats.avgGuests} khách
               </span>
             </div>
 
             <div className="flex justify-between items-center">
-              <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
+              <div className="flex items-center gap-2 text-slate-650 dark:text-slate-400">
                 <PercentCircle className="w-4 h-4 text-primary" />
-                <span className="text-sm font-medium">
+                <span className="text-xs sm:text-sm font-medium">
                   Doanh thu trung bình/đêm
                 </span>
               </div>
-              <span className="font-bold text-slate-900 dark:text-white text-sm">
+              <span className="font-bold text-slate-900 dark:text-white text-xs sm:text-sm">
                 {stats.avgRevenuePerNight.toLocaleString()}₫
               </span>
             </div>

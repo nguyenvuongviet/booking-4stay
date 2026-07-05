@@ -90,7 +90,7 @@ export default function BlogForm({
     <div className="max-w-6xl mx-auto w-full space-y-6">
       <div className="grid lg:grid-cols-3 gap-6">
         {/* Main form */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-2 space-y-6 min-w-0">
           {/* Title */}
           <div>
             <label className="block text-sm font-semibold mb-2">

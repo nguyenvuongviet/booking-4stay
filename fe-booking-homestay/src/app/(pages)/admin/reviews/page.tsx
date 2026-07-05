@@ -1,15 +1,19 @@
 "use client";
 
-import { Button } from "@/_components/ui/button";
-import { Card } from "@/_components/ui/card";
 import { Input } from "@/_components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/_components/ui/select";
 import { UserAvatar } from "@/_components/UserAvatar";
 import { formatDate } from "@/lib/utils/date";
 import { Search, Star, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Pagination } from "../_components/Pagination";
 import { RefreshButton } from "../_components/RefreshButton";
-import { StarRating } from "../_components/StarRating";
 import { useReviewList } from "./_hooks/useReviewList";
 
 export default function ReviewsPage() {
@@ -33,140 +37,205 @@ export default function ReviewsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between pb-4 border-b">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border">
         <div>
-          <h1 className="text-3xl font-bold">Quản lý đánh giá</h1>
-          <p className="text-muted-foreground mt-1">
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+            Quản lý đánh giá
+          </h1>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1">
             Theo dõi và kiểm soát các đánh giá của khách hàng
           </p>
         </div>
-        <RefreshButton onRefresh={refresh} />
+        <div className="flex items-center shrink-0">
+          <RefreshButton
+            onRefresh={refresh}
+            label=""
+            className="h-9 w-9 p-0 sm:w-auto sm:h-10 sm:px-4 sm:gap-2 cursor-pointer rounded-xl"
+          />
+        </div>
       </div>
 
-      <Card className="p-4 rounded-xl shadow-sm">
-        <div className="flex flex-wrap gap-4 items-center">
-          <div className="relative flex-1 min-w-65">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 text-gray-400" />
-            <Input
-              placeholder="Tìm theo tên khách hoặc nội dung đánh giá..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-10"
-            />
-          </div>
+      {/* Sticky Search & Filter Container */}
+      <div className="sticky top-16 sm:top-20 z-30 -mx-4 px-4 py-3 sm:-mx-6 sm:px-6 bg-slate-50/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200/50 dark:border-slate-800 shadow-xs transition-all duration-300">
+        <div className="p-3 sm:p-4 bg-card rounded-2xl border border-border/80 shadow-xs">
+          <div className="flex flex-col lg:flex-row gap-3 items-stretch lg:items-center">
+            {/* Search Input */}
+            <div className="relative flex-1">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Input
+                placeholder="Tìm theo tên khách hoặc nội dung đánh giá..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-10 h-10 sm:h-11 w-full text-xs sm:text-sm bg-background dark:bg-slate-900 rounded-xl border border-border"
+              />
+            </div>
 
-          <div className="flex gap-2 flex-wrap">
-            <Button
-              variant={ratingFilter === null ? "default" : "outline"}
-              onClick={() => setRatingFilter(null)}
-              className="rounded-full px-4"
-            >
-              Tất cả
-            </Button>
+            {/* Selects Container */}
+            <div className="flex items-center gap-2.5 sm:gap-3 w-full lg:w-auto shrink-0">
+              {/* Star Filter Select */}
+              <div className="flex-1 lg:w-44 lg:flex-none">
+                <Select
+                  value={ratingFilter === null ? "all" : String(ratingFilter)}
+                  onValueChange={(val) =>
+                    setRatingFilter(val === "all" ? null : Number(val))
+                  }
+                >
+                  <SelectTrigger className="h-10 sm:h-11 w-full px-3.5 bg-background dark:bg-slate-900 border border-border rounded-xl text-xs sm:text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer">
+                    <SelectValue placeholder="Lọc số sao" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Tất cả sao</SelectItem>
+                    <SelectItem value="5">⭐⭐⭐⭐⭐ 5 sao</SelectItem>
+                    <SelectItem value="4">⭐⭐⭐⭐ 4 sao</SelectItem>
+                    <SelectItem value="3">⭐⭐⭐ 3 sao</SelectItem>
+                    <SelectItem value="2">⭐⭐ 2 sao</SelectItem>
+                    <SelectItem value="1">⭐ 1 sao</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-            {[5, 4, 3, 2, 1].map((n) => (
-              <Button
-                key={n}
-                variant={ratingFilter === n ? "default" : "outline"}
-                onClick={() => setRatingFilter(n)}
-                className="rounded-full px-4 flex items-center gap-1"
-              >
-                {n} <Star className="w-3 h-3 fill-yellow-500 text-yellow-500" />
-              </Button>
-            ))}
-
-            <Button
-              variant="outline"
-              className="px-5 rounded-full"
-              onClick={() =>
-                setSortType(sortType === "newest" ? "oldest" : "newest")
-              }
-            >
-              ↕ {sortType === "newest" ? "Mới nhất" : "Cũ nhất"}
-            </Button>
+              {/* Sort Type Select */}
+              <div className="flex-1 lg:w-36 lg:flex-none">
+                <Select
+                  value={sortType}
+                  onValueChange={(val: any) => setSortType(val)}
+                >
+                  <SelectTrigger className="h-10 sm:h-11 w-full px-3.5 bg-background dark:bg-slate-900 border border-border rounded-xl text-xs sm:text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer">
+                    <SelectValue placeholder="Sắp xếp" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="newest">↕ Mới nhất</SelectItem>
+                    <SelectItem value="oldest">↕ Cũ nhất</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
           </div>
         </div>
-      </Card>
+      </div>
 
+      {/* Skeletons Loading */}
       {loading && (
-        <div className="py-10 text-center text-gray-500">
-          Đang tải đánh giá...
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {Array.from({ length: 6 }).map((_, idx) => (
+            <div
+              key={idx}
+              className="p-4 sm:p-5.5 rounded-2xl border border-slate-100 dark:border-slate-800/80 bg-card shadow-xs flex flex-col justify-between h-44 sm:h-48 animate-pulse"
+            >
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-slate-200 dark:bg-slate-800 rounded-full shrink-0" />
+                  <div className="space-y-2 flex-1 min-w-0">
+                    <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-1/2" />
+                    <div className="h-3 bg-slate-200 dark:bg-slate-800 rounded w-1/3" />
+                  </div>
+                  <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-20 shrink-0" />
+                </div>
+                <div className="space-y-2">
+                  <div className="h-3 bg-slate-200 dark:bg-slate-800 rounded w-full" />
+                  <div className="h-3 bg-slate-200 dark:bg-slate-800 rounded w-5/6" />
+                </div>
+              </div>
+              <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-1/3 mt-4 pt-3" />
+            </div>
+          ))}
         </div>
       )}
 
+      {/* Empty State */}
       {!loading && filtered.length === 0 && (
-        <div className="py-12 text-center text-gray-500">
-          Không có đánh giá nào.
+        <div className="py-20 text-center text-slate-550 text-xs sm:text-sm">
+          Không tìm thấy đánh giá nào phù hợp.
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {paged.map((review) => (
-          <Card
-            key={review.id}
-            onClick={() => {
-              if (review.bookingId) {
-                router.push(`/admin/bookings/${review.bookingId}`);
-              }
-            }}
-            className={`p-5 rounded-xl border border-slate-100 dark:border-slate-800/80 shadow-xs flex flex-col justify-between transition-all duration-300 ${
-              review.bookingId
-                ? "cursor-pointer hover:border-primary/40 hover:shadow-md hover:-translate-y-0.5"
-                : ""
-            }`}
-          >
-            <div className="space-y-4">
-              {/* Header: User Info & Stars */}
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex gap-3 items-center">
+      {/* Reviews Grid */}
+      {!loading && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {paged.map((review) => (
+            <div
+              key={review.id}
+              onClick={() => {
+                if (review.bookingId) {
+                  router.push(`/admin/bookings/${review.bookingId}`);
+                }
+              }}
+              className={`p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 bg-card shadow-2xs flex flex-col justify-between transition-all duration-300 ${
+                review.bookingId
+                  ? "cursor-pointer hover:border-primary/40 hover:shadow-xs hover:-translate-y-0.5"
+                  : ""
+              }`}
+            >
+              <div className="space-y-3.5">
+                {/* Header: User Avatar & Name & Stars */}
+                <div className="flex items-center gap-3">
                   <UserAvatar
                     size="md"
                     avatarUrl={review.user?.avatar}
                     fullName={review.user?.name}
+                    className="w-10 h-10 shrink-0 border border-slate-100 dark:border-slate-800"
                   />
-                  <div>
-                    <p className="font-semibold text-sm text-foreground line-clamp-1">
+                  <div className="min-w-0 flex-1">
+                    <p className="font-bold text-xs sm:text-sm text-slate-850 dark:text-slate-200 truncate">
                       {review.user?.name}
                     </p>
-                    <p className="text-[10px] text-muted-foreground">
-                      {formatDate(review.createdAt)}
-                    </p>
+                    <div className="flex items-center gap-2 mt-1 flex-wrap">
+                      <div className="flex items-center gap-1 bg-amber-50 dark:bg-amber-950/20 border border-amber-250/20 dark:border-amber-900/30 px-1.5 py-0.5 rounded-md shrink-0">
+                        <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
+                        <span className="text-[10px] font-bold text-amber-700 dark:text-amber-400">
+                          {review.rating}
+                        </span>
+                      </div>
+                      <span className="text-[10px] text-slate-450 dark:text-slate-500">
+                        {formatDate(review.createdAt)}
+                      </span>
+                    </div>
                   </div>
                 </div>
-                <div className="shrink-0">
-                  <StarRating value={Math.round(Number(review.rating))} />
-                </div>
+
+                {/* Comment Body */}
+                <p className="text-slate-650 dark:text-slate-300 text-xs sm:text-sm leading-relaxed line-clamp-4 wrap-break-word">
+                  {review.comment || "— Không có nội dung đánh giá —"}
+                </p>
               </div>
 
-              {/* Comment Body */}
-              <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed line-clamp-4 wrap-break-word">
-                {review.comment}
-              </p>
+              {/* Footer */}
+              <div className="flex items-center justify-between pt-2.5 mt-3.5 border-t border-slate-100 dark:border-slate-800/60">
+                {review.bookingId ? (
+                  <span className="text-[10px] sm:text-xs text-muted-foreground font-medium">
+                    <span className="hidden sm:inline">Mã đặt phòng: </span>
+                    <span>#{review.bookingId}</span>
+                  </span>
+                ) : (
+                  <span />
+                )}
+
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    removeReview(review.id);
+                  }}
+                  className="p-1.5 hover:bg-red-50 dark:hover:bg-red-950/20 text-muted-foreground hover:text-red-650 rounded-lg transition-colors cursor-pointer"
+                  title="Xóa đánh giá"
+                >
+                  <Trash2 className="w-4 h-4 text-red-500" />
+                </button>
+              </div>
             </div>
+          ))}
+        </div>
+      )}
 
-            {/* Footer */}
-            <div className="flex items-center justify-between pt-3 mt-4 border-t border-border/40">
-              <span className="text-[11px] text-muted-foreground font-medium">
-                {review.bookingId ? `Mã đặt phòng: #${review.bookingId}` : ""}
-              </span>
-
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  removeReview(review.id);
-                }}
-                className="p-1.5 hover:bg-red-50 dark:hover:bg-red-950/20 text-muted-foreground hover:text-red-600 rounded-lg transition-colors cursor-pointer"
-                title="Xóa đánh giá"
-              >
-                <Trash2 className="w-4 h-4 text-red-600" />
-              </button>
-            </div>
-          </Card>
-        ))}
-      </div>
-
+      {/* Pagination */}
       {!loading && filtered.length > 0 && (
-        <Pagination page={page} pageCount={pageCount} onPageChange={setPage} />
+        <div className="pt-2">
+          <Pagination
+            page={page}
+            pageCount={pageCount}
+            onPageChange={setPage}
+          />
+        </div>
       )}
     </div>
   );

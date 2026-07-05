@@ -7,6 +7,16 @@ import * as Popover from "@radix-ui/react-popover";
 import { X } from "lucide-react";
 import Link from "next/link";
 
+const formatConcisePrice = (value: number) => {
+  if (value >= 1000000) {
+    return `${(value / 1000000).toFixed(1).replace(/\.0$/, "")}M`;
+  }
+  if (value >= 1000) {
+    return `${(value / 1000).toFixed(0)}k`;
+  }
+  return value.toString();
+};
+
 const BookingPopoverContent = ({ booking }: { booking: Booking }) => {
   return (
     <Popover.Content
@@ -146,7 +156,7 @@ export default function CalendarCell({
       onMouseEnter={() => onMouseEnter?.(day.date)}
       onMouseUp={() => onMouseUp?.()}
       className={cn(
-        `min-h-[100px] sm:min-h-[120px] border-r border-b border-gray-200 cursor-pointer 
+        `min-h-14 sm:min-h-20 lg:min-h-30 border-r border-b border-gray-200 cursor-pointer 
                 transition flex flex-col relative bg-white select-none`,
         isOutMonth && "bg-gray-50/50",
         isSelected &&
@@ -162,7 +172,7 @@ export default function CalendarCell({
       {/* Date Number - Top Left */}
       <div
         className={cn(
-          "font-bold text-xs pl-2 pt-2 z-20 relative",
+          "font-bold text-[9px] sm:text-xs pl-1 sm:pl-2 pt-1 sm:pt-2 z-20 relative",
           isPast ? "text-gray-400" : "text-gray-800",
         )}
       >
@@ -170,7 +180,7 @@ export default function CalendarCell({
       </div>
 
       {/* Booking Bars Container (Absolute at top: 24px) */}
-      <div className="absolute top-8 left-0 right-0 h-6 z-30 pointer-events-none flex items-center">
+      <div className="absolute top-6 sm:top-8 left-0 right-0 h-4 sm:h-6 z-30 pointer-events-none flex items-center">
         {(() => {
           const isThisRedBar = isThisSoldOut && !inBetween && !checkIn;
           const hasRedBarToRender = isThisRedBar || isPrevRedBar;
@@ -191,7 +201,7 @@ export default function CalendarCell({
               )}
             >
               {isThisRedBar && !isPrevRedBar && (
-                <span className="text-white text-[10px] font-medium whitespace-nowrap pl-1 pointer-events-none drop-shadow-md">
+                <span className="text-white text-[8px] sm:text-[10px] font-medium whitespace-nowrap pl-1 pointer-events-none drop-shadow-md">
                   Đóng
                 </span>
               )}
@@ -267,7 +277,7 @@ export default function CalendarCell({
               })(),
             }}
           >
-            <span className="text-white text-[10px] font-black truncate drop-shadow-md block w-full">
+            <span className="text-white text-[8px] sm:text-[10px] font-black truncate drop-shadow-md block w-full">
               {inBetween.guestInfo.fullName}
             </span>
           </div>
@@ -321,7 +331,7 @@ export default function CalendarCell({
               })(),
             }}
           >
-            <span className="text-white text-[10px] font-black truncate drop-shadow-md block w-full pl-1">
+            <span className="text-white text-[8px] sm:text-[10px] font-black truncate drop-shadow-md block w-full pl-1">
               {checkIn.guestInfo.fullName}
             </span>
           </div>
@@ -329,14 +339,15 @@ export default function CalendarCell({
       </div>
 
       {/* Availability and Price - Bottom */}
-      <div className="mt-auto flex flex-col items-center justify-end pb-3 h-full z-20 relative pointer-events-none">
+      <div className="mt-auto flex flex-col items-center justify-end pb-1.5 sm:pb-3 h-full z-20 relative pointer-events-none">
         {!isOccupied && !isPast && !isThisSoldOut && (
           <>
-            <div className="text-[10px] mb-1 font-medium text-gray-500">
+            <div className="text-[8px] sm:text-[10px] mb-0.5 sm:mb-1 font-medium text-gray-400 hidden xs:block">
               Mở bán
             </div>
-            <div className={cn("text-[11px] font-semibold", color)}>
-              VND {price.toLocaleString()}
+            <div className={cn("text-[9px] sm:text-[11px] font-bold text-center", color)}>
+              <span className="min-[820px]:hidden">{formatConcisePrice(price)}</span>
+              <span className="hidden min-[820px]:inline">{price.toLocaleString()} vnđ</span>
             </div>
           </>
         )}

@@ -110,10 +110,10 @@ export function UserCreateModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="w-[calc(100%-2rem)] sm:max-w-md p-5 sm:p-6 rounded-2xl max-h-[90vh] overflow-y-auto beautiful-scrollbar">
         <DialogHeader>
           <DialogTitle>Thêm người dùng mới</DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-xs sm:text-sm">
             Vui lòng nhập thông tin người dùng.
           </DialogDescription>
         </DialogHeader>
@@ -249,16 +249,22 @@ export function UserCreateModal({
             </Select>
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-2 pt-4 border-t mt-5">
             <Button
-              type="button"
               variant="outline"
+              type="button"
               onClick={() => onOpenChange(false)}
+              disabled={submitting}
+              className="w-full sm:w-auto cursor-pointer"
             >
               Hủy
             </Button>
-            <Button type="submit" disabled={submitting}>
-              {submitting ? "Đang tạo..." : "Thêm"}
+            <Button
+              type="submit"
+              disabled={submitting}
+              className="w-full sm:w-auto text-white cursor-pointer"
+            >
+              {submitting ? "Đang tạo..." : "Tạo"}
             </Button>
           </DialogFooter>
         </form>

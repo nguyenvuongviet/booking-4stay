@@ -17,6 +17,7 @@ import {
 } from "@/services/admin/promotionsApi";
 import { BlogPost, getPosts } from "@/services/blogApi";
 import { getLocation } from "@/services/locationApi";
+import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
@@ -231,7 +232,7 @@ export default function PromotionForm({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto rounded-xl shadow-lg">
+      <DialogContent className="max-w-2xl w-[calc(100%-2rem)] sm:w-full max-h-[90vh] overflow-y-auto rounded-xl shadow-lg p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold">
             {isEdit ? "Chỉnh sửa mã giảm giá" : "Tạo mã giảm giá mới"}
@@ -481,15 +482,21 @@ export default function PromotionForm({
         </div>
 
         <DialogFooter className="mt-4 border-t pt-4">
-          <Button variant="outline" onClick={onClose} disabled={loading}>
+          <Button
+            variant="outline"
+            onClick={onClose}
+            disabled={loading}
+            className="px-4 cursor-pointer"
+          >
             Hủy
           </Button>
           <Button
             onClick={handleSave}
             disabled={loading}
-            className="text-white"
+            className="px-5 text-white cursor-pointer"
           >
-            {loading ? "Đang lưu..." : isEdit ? "Lưu thay đổi" : "Tạo mới"}
+            {loading && <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />}
+            {isEdit ? "Lưu thay đổi" : "Tạo mới"}
           </Button>
         </DialogFooter>
       </DialogContent>

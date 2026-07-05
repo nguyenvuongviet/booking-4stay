@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/_components/ui/button";
-import { Card } from "@/_components/ui/card";
+import { Skeleton } from "@/_components/ui/skeleton";
 import {
   getLoyaltyLevels,
   LoyaltyLevel,
@@ -22,15 +22,19 @@ export default function LoyaltyLevelsTab({
   const [levels, setLevels] = useState<LoyaltyLevel[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [editLevel, setEditLevel] = useState<LoyaltyLevel | null>(null);
+  const [loading, setLoading] = useState(true);
 
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
 
   const load = async () => {
+    setLoading(true);
     try {
       const data = await getLoyaltyLevels();
       setLevels(data);
     } catch {
       toast.error("Không thể tải danh sách cấp độ");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -57,25 +61,27 @@ export default function LoyaltyLevelsTab({
 
   return (
     <>
-      <Card className="p-6 rounded-2xl shadow-sm border bg-white/70 backdrop-blur">
-        <div className="flex items-center justify-between mb-4">
-          <p className="text-base text-muted-foreground mt-1">
+      <div className="space-y-4 sm:space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+          <p className="text-xs sm:text-base text-muted-foreground">
             Quản lý các cấp độ và điều kiện tích điểm của khách hàng.
           </p>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto shrink-0 justify-end">
             <RecomputeButton onDone={load} />
             <Button
               onClick={() => {
                 setEditLevel(null);
                 setModalOpen(true);
               }}
+              className="text-xs sm:text-sm px-3 sm:px-4 py-2 h-9 sm:h-10 rounded-lg cursor-pointer"
             >
-              <Plus className="w-4 h-4 mr-2" /> Thêm Level
+              <Plus className="w-4 h-4 mr-1 sm:mr-2" /> Thêm Level
             </Button>
           </div>
         </div>
 
-        <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm">
+        {/* ==================== Desktop Table (lg+) ==================== */}
+        <div className="hidden lg:block overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b bg-gray-50 text-left">
@@ -105,58 +111,86 @@ export default function LoyaltyLevelsTab({
             </thead>
 
             <tbody>
-              {sortedLevels.map((lv) => (
-                <tr
-                  key={lv.id}
-                  className="border-b hover:bg-muted/10 transition-colors"
-                >
-                  <td className="py-4 px-4 font-medium">{lv.name}</td>
-                  <td className="py-4 px-4">
-                    {Number(lv.minPoints).toLocaleString("vi-VN")}
-                  </td>
-                  <td className="py-4 px-4 font-semibold text-primary">
-                    {lv.discountPercent}%
-                  </td>
-                  <td className="py-4 px-4">
-                    {Number(lv.maxDiscountAmount).toLocaleString("vi-VN")} đ
-                  </td>
-                  <td className="py-4 px-4 text-muted-foreground text-xs max-w-50 truncate">
-                    {lv.description || "—"}
-                  </td>
+              {loading &&
+                [...Array(3)].map((_, i) => (
+                  <tr key={i} className="border-b">
+                    <td className="py-4 px-4">
+                      <Skeleton className="h-4 w-20 rounded" />
+                    </td>
+                    <td className="py-4 px-4">
+                      <Skeleton className="h-4 w-16 rounded" />
+                    </td>
+                    <td className="py-4 px-4">
+                      <Skeleton className="h-4 w-12 rounded" />
+                    </td>
+                    <td className="py-4 px-4">
+                      <Skeleton className="h-4 w-24 rounded" />
+                    </td>
+                    <td className="py-4 px-4">
+                      <Skeleton className="h-4 w-32 rounded" />
+                    </td>
+                    <td className="py-4 px-4 text-center">
+                      <Skeleton className="h-5 w-10 mx-auto rounded-full" />
+                    </td>
+                    <td className="py-4 px-4 text-center">
+                      <Skeleton className="h-8 w-8 mx-auto rounded-lg" />
+                    </td>
+                  </tr>
+                ))}
 
-                  <td className="py-4 px-4">
-                    <div className="flex items-center justify-center">
-                      <FancySwitch
-                        size="xs"
-                        checked={lv.isActive}
-                        onChange={async () => {
-                          await toggleLevelActive(lv.id);
-                          load();
+              {!loading &&
+                sortedLevels.map((lv) => (
+                  <tr
+                    key={lv.id}
+                    className="border-b hover:bg-muted/10 transition-colors"
+                  >
+                    <td className="py-4 px-4 font-medium">{lv.name}</td>
+                    <td className="py-4 px-4">
+                      {Number(lv.minPoints).toLocaleString("vi-VN")}
+                    </td>
+                    <td className="py-4 px-4 font-semibold text-primary">
+                      {lv.discountPercent}%
+                    </td>
+                    <td className="py-4 px-4">
+                      {Number(lv.maxDiscountAmount).toLocaleString("vi-VN")} đ
+                    </td>
+                    <td className="py-4 px-4 text-muted-foreground text-xs max-w-50 truncate">
+                      {lv.description || "—"}
+                    </td>
+
+                    <td className="py-4 px-4">
+                      <div className="flex items-center justify-center">
+                        <FancySwitch
+                          size="xs"
+                          checked={lv.isActive}
+                          onChange={async () => {
+                            await toggleLevelActive(lv.id);
+                            load();
+                          }}
+                        />
+                      </div>
+                    </td>
+
+                    <td className="py-4 px-4 text-center">
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="hover:bg-muted/20 cursor-pointer"
+                        onClick={() => {
+                          setEditLevel(lv);
+                          setModalOpen(true);
                         }}
-                      />
-                    </div>
-                  </td>
+                      >
+                        <Pencil className="w-4 h-4 text-muted-foreground" />
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
 
-                  <td className="py-4 px-4 text-center">
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="hover:bg-muted/20"
-                      onClick={() => {
-                        setEditLevel(lv);
-                        setModalOpen(true);
-                      }}
-                    >
-                      <Pencil className="w-4 h-4 text-muted-foreground" />
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-
-              {levels.length === 0 && (
+              {!loading && levels.length === 0 && (
                 <tr>
                   <td
-                    colSpan={5}
+                    colSpan={7}
                     className="py-10 text-center text-muted-foreground"
                   >
                     Không có cấp độ nào.
@@ -166,7 +200,114 @@ export default function LoyaltyLevelsTab({
             </tbody>
           </table>
         </div>
-      </Card>
+
+        {/* ==================== Mobile Cards Layout (<lg) ==================== */}
+        <div className="lg:hidden space-y-3">
+          {loading &&
+            [...Array(3)].map((_, i) => (
+              <div
+                key={i}
+                className="border rounded-xl p-4 bg-white shadow-xs space-y-3"
+              >
+                <div className="flex justify-between items-start">
+                  <div className="space-y-2 flex-1">
+                    <Skeleton className="h-5 w-24 rounded" />
+                    <Skeleton className="h-3 w-40 rounded" />
+                  </div>
+                  <Skeleton className="h-6 w-16 rounded-lg" />
+                </div>
+                <div className="grid grid-cols-2 gap-2 border-t border-dashed pt-3">
+                  <div className="space-y-1">
+                    <Skeleton className="h-3 w-16 rounded" />
+                    <Skeleton className="h-4 w-20 rounded" />
+                  </div>
+                  <div className="space-y-1">
+                    <Skeleton className="h-3 w-16 rounded" />
+                    <Skeleton className="h-4 w-24 rounded" />
+                  </div>
+                </div>
+                <div className="flex items-center justify-between border-t pt-3 mt-1">
+                  <Skeleton className="h-4 w-20 rounded" />
+                  <Skeleton className="h-8 w-16 rounded-lg" />
+                </div>
+              </div>
+            ))}
+
+          {!loading &&
+            sortedLevels.map((lv) => (
+              <div
+                key={lv.id}
+                className="border rounded-xl p-4 bg-white shadow-xs space-y-3"
+              >
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="font-bold text-slate-800 text-sm sm:text-base">
+                      {lv.name}
+                    </h3>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {lv.description || "Không có mô tả"}
+                    </p>
+                  </div>
+                  <span className="text-xs sm:text-sm font-semibold px-2.5 py-1 bg-primary/10 text-primary rounded-lg">
+                    Giảm {lv.discountPercent}%
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 text-xs border-t border-dashed pt-3">
+                  <div>
+                    <span className="text-muted-foreground block">
+                      Điểm tối thiểu:
+                    </span>
+                    <span className="font-semibold text-slate-700">
+                      {Number(lv.minPoints).toLocaleString("vi-VN")}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground block">
+                      Giảm giá tối đa:
+                    </span>
+                    <span className="font-semibold text-slate-700">
+                      {Number(lv.maxDiscountAmount).toLocaleString("vi-VN")} đ
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between border-t pt-3 mt-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-muted-foreground">
+                      Kích hoạt:
+                    </span>
+                    <FancySwitch
+                      size="xs"
+                      checked={lv.isActive}
+                      onChange={async () => {
+                        await toggleLevelActive(lv.id);
+                        load();
+                      }}
+                    />
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-8 text-xs gap-1.5 rounded-lg border-slate-200 cursor-pointer"
+                    onClick={() => {
+                      setEditLevel(lv);
+                      setModalOpen(true);
+                    }}
+                  >
+                    <Pencil className="w-3.5 h-3.5" /> Sửa
+                  </Button>
+                </div>
+              </div>
+            ))}
+
+          {!loading && levels.length === 0 && (
+            <div className="border rounded-xl p-8 text-center text-muted-foreground bg-white">
+              Không có cấp độ nào.
+            </div>
+          )}
+        </div>
+      </div>
 
       <LevelModal
         open={modalOpen}

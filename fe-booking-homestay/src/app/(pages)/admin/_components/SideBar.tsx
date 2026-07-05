@@ -28,7 +28,8 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
+import { useEffect } from "react";
 
 const menuGroups = [
   {
@@ -70,12 +71,22 @@ const menuGroups = [
 interface AdminSidebarProps {
   isCollapsed: boolean;
   onToggle: () => void;
+  isMobileOpen: boolean;
+  onMobileClose: () => void;
 }
 
-export function AdminSidebar({ isCollapsed, onToggle }: AdminSidebarProps) {
+export function AdminSidebar({
+  isCollapsed,
+  onToggle,
+  isMobileOpen,
+  onMobileClose,
+}: AdminSidebarProps) {
   const pathname = usePathname();
-  const router = useRouter();
   const { setUser } = useAuth();
+
+  useEffect(() => {
+    onMobileClose();
+  }, [pathname]);
 
   const handleLogout = () => {
     localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
@@ -91,61 +102,64 @@ export function AdminSidebar({ isCollapsed, onToggle }: AdminSidebarProps) {
   return (
     <aside
       className={cn(
-        "fixed left-0 top-0 h-screen bg-sidebar border-r border-sidebar-border flex flex-col transition-all duration-300",
-        isCollapsed ? "w-20" : "w-64",
+        "fixed left-0 top-0 h-screen bg-sidebar border-r border-sidebar-border flex flex-col transition-all duration-300 z-50",
+        // Desktop widths
+        isCollapsed ? "md:w-20" : "md:w-64",
+        // Mobile layout: overlay drawer, defaults to w-52 below sm, w-64 from sm, translates off screen, slides in on open
+        "w-52 sm:w-64 -translate-x-full md:translate-x-0",
+        isMobileOpen ? "translate-x-0 shadow-2xl" : "",
       )}
     >
       <button
         onClick={onToggle}
         className={cn(
-          "absolute -right-3 top-1/3 p-1 rounded-full border border-sidebar-border bg-sidebar text-sidebar-foreground shadow-md transition-colors hover:bg-sidebar-accent z-50 cursor-pointer",
+          "absolute -right-3 top-1/2 p-1 rounded-full border border-sidebar-border bg-sidebar text-sidebar-foreground shadow-md transition-colors hover:bg-sidebar-accent z-50 cursor-pointer hidden md:block",
           isCollapsed ? "rotate-180" : "",
         )}
       >
         <ChevronLeft className="w-4 h-4 transition-transform duration-300" />
       </button>
 
-      <div className="h-20 px-4 border-b border-sidebar-border flex items-center transition-all duration-300 justify-center mb-2">
+      <div className="h-16 sm:h-20 px-4 border-b border-sidebar-border flex items-center transition-all duration-300 justify-center mb-2 shrink-0">
         <Link href="/admin" className="flex items-center gap-3">
           <Image
             src="/4stay-logo.png"
             alt="4Stay"
-            width={50}
-            height={50}
-            className="rounded-md"
+            width={40}
+            height={40}
+            className="rounded-md sm:w-12.5 sm:h-12.5"
             priority
           />
-          {!isCollapsed && (
-            <span className="text-2xl font-bold tracking-tight whitespace-nowrap">
-              4Stay Admin
-            </span>
-          )}
+          <span
+            className={cn(
+              "text-lg sm:text-2xl font-bold tracking-tight whitespace-nowrap",
+              isCollapsed ? "md:hidden" : "block",
+            )}
+          >
+            4Stay Admin
+          </span>
         </Link>
       </div>
 
       <TooltipProvider>
-        <div className="px-4 py-2 border-b border-sidebar-border mb-2">
-          {isCollapsed ? (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Link
-                  href="/admin/offline-booking"
-                  className="flex items-center justify-center w-full bg-primary hover:bg-primary/90 text-primary-foreground p-3 rounded-lg transition-colors shadow-sm"
-                >
-                  <Plus className="w-5 h-5" />
-                </Link>
-              </TooltipTrigger>
-              <TooltipContent side="right">Đặt phòng nhanh</TooltipContent>
-            </Tooltip>
-          ) : (
-            <Link
-              href="/admin/offline-booking"
-              className="flex items-center justify-center gap-2 w-full bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-3 rounded-lg font-bold transition-all shadow-sm active:scale-[0.98]"
+        <div className="px-3 sm:px-4 py-2 border-b border-sidebar-border mb-2 shrink-0">
+          <Link
+            href="/admin/offline-booking"
+            className={cn(
+              "flex items-center justify-center gap-2 w-full bg-primary hover:bg-primary/90 text-primary-foreground p-2.5 sm:px-4 sm:py-3 rounded-lg font-bold transition-all shadow-sm active:scale-[0.98]",
+              isCollapsed ? "md:p-3" : "",
+            )}
+          >
+            <Plus className="w-5 h-5 shrink-0" />
+            <span
+              className={cn(
+                "text-xs sm:text-sm truncate",
+                isCollapsed ? "md:hidden" : "block",
+              )}
             >
-              <Plus className="w-5 h-5" />
               Đặt phòng nhanh
-            </Link>
-          )}
+            </span>
+          </Link>
         </div>
 
         <nav className="flex-1 overflow-y-auto p-1 space-y-4">
@@ -154,11 +168,14 @@ export function AdminSidebar({ isCollapsed, onToggle }: AdminSidebarProps) {
               {groupIdx > 0 && (
                 <div className="border-t border-sidebar-border/60 my-4 mx-2 opacity-50" />
               )}
-              {!isCollapsed && (
-                <div className="px-4 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-400/80 dark:text-slate-500/80 select-none">
-                  {group.groupLabel}
-                </div>
-              )}
+              <div
+                className={cn(
+                  "px-4 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-400/80 dark:text-slate-500/80 select-none",
+                  isCollapsed ? "md:hidden" : "block",
+                )}
+              >
+                {group.groupLabel}
+              </div>
               <div className="space-y-1">
                 {group.items.map((item) => {
                   const Icon = item.icon;
@@ -169,19 +186,22 @@ export function AdminSidebar({ isCollapsed, onToggle }: AdminSidebarProps) {
                       key={item.href}
                       href={item.href}
                       className={cn(
-                        "flex items-center gap-3 px-4 py-3 rounded-lg transition-colors",
+                        "flex items-center gap-3 px-4 py-2.5 sm:py-3 rounded-lg transition-colors",
                         isActive
                           ? "bg-sidebar-primary text-sidebar-primary-foreground"
                           : "text-sidebar-foreground hover:bg-sidebar-accent",
-                        isCollapsed ? "justify-center" : "justify-start",
+                        isCollapsed ? "md:justify-center" : "justify-start",
                       )}
                     >
-                      <Icon className="w-5 h-5" />
-                      {!isCollapsed && (
-                        <span className="text-sm font-medium whitespace-nowrap">
-                          {item.label}
-                        </span>
-                      )}
+                      <Icon className="w-5 h-5 shrink-0" />
+                      <span
+                        className={cn(
+                          "text-xs sm:text-sm font-medium truncate",
+                          isCollapsed ? "md:hidden" : "block",
+                        )}
+                      >
+                        {item.label}
+                      </span>
                     </Link>
                   );
 
@@ -189,7 +209,10 @@ export function AdminSidebar({ isCollapsed, onToggle }: AdminSidebarProps) {
                     return (
                       <Tooltip key={item.href}>
                         <TooltipTrigger asChild>{linkContent}</TooltipTrigger>
-                        <TooltipContent side="right">
+                        <TooltipContent
+                          side="right"
+                          className="hidden md:block"
+                        >
                           {item.label}
                         </TooltipContent>
                       </Tooltip>
@@ -203,36 +226,24 @@ export function AdminSidebar({ isCollapsed, onToggle }: AdminSidebarProps) {
           ))}
         </nav>
 
-        <div className="border-t border-sidebar-border">
-          {isCollapsed ? (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  onClick={handleLogout}
-                  className={cn(
-                    "w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent transition-colors cursor-pointer",
-                    "justify-center",
-                  )}
-                >
-                  <LogOut className="w-5 h-5" />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent side="right">Đăng xuất</TooltipContent>
-            </Tooltip>
-          ) : (
-            <button
-              onClick={handleLogout}
+        <div className="border-t border-sidebar-border p-2 shrink-0">
+          <button
+            onClick={handleLogout}
+            className={cn(
+              "w-full flex items-center gap-3 p-2.5 sm:px-4 sm:py-3 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent transition-colors cursor-pointer",
+              isCollapsed ? "md:justify-center" : "justify-start",
+            )}
+          >
+            <LogOut className="w-5 h-5 shrink-0" />
+            <span
               className={cn(
-                "w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent transition-colors cursor-pointer",
-                "justify-start",
+                "text-xs sm:text-sm font-medium truncate",
+                isCollapsed ? "md:hidden" : "block",
               )}
             >
-              <LogOut className="w-5 h-5" />
-              <span className="text-sm font-medium whitespace-nowrap">
-                Đăng xuất
-              </span>
-            </button>
-          )}
+              Đăng xuất
+            </span>
+          </button>
         </div>
       </TooltipProvider>
     </aside>

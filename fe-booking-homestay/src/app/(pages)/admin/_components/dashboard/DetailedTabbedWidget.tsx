@@ -59,7 +59,7 @@ export function DetailedTabbedWidget({
     const config = statusColors[status] || { label: status, color: "#6b7280" };
     return (
       <span
-        className="px-2.5 py-1 text-xs font-semibold rounded-full border"
+        className="px-2 py-0.5 sm:px-2.5 sm:py-1 text-[10px] sm:text-xs font-bold sm:font-semibold rounded-full border whitespace-nowrap inline-block"
         style={{
           backgroundColor: config.color + "12",
           color: config.color,
@@ -123,16 +123,16 @@ export function DetailedTabbedWidget({
       {/* Tab Content 1: Bookings */}
       {activeTab === "bookings" && (
         <div className="overflow-x-auto rounded-xl border border-slate-100">
-          <table className="w-full text-xs text-left">
+          <table className="w-full text-[11px] sm:text-xs text-left">
             <thead className="bg-slate-50 border-b border-slate-100 text-slate-400 font-semibold uppercase tracking-wider">
               <tr>
-                <th className="py-3 px-4">ID</th>
-                <th className="py-3 px-4">Khách hàng</th>
-                <th className="py-3 px-4">Tên Homestay</th>
-                <th className="py-3 px-4">Check-in / Check-out</th>
-                <th className="py-3 px-4 text-right">Tổng thanh toán</th>
-                <th className="py-3 px-4 text-center">Trạng thái</th>
-                <th className="py-3 px-4 text-center">Chi tiết</th>
+                <th className="py-2.5 sm:py-3 px-3 sm:px-4 whitespace-nowrap">ID</th>
+                <th className="py-2.5 sm:py-3 px-3 sm:px-4 whitespace-nowrap">Khách hàng</th>
+                <th className="py-2.5 sm:py-3 px-3 sm:px-4 whitespace-nowrap">Tên Homestay</th>
+                <th className="py-2.5 sm:py-3 px-3 sm:px-4 whitespace-nowrap">Check-in / Check-out</th>
+                <th className="py-2.5 sm:py-3 px-3 sm:px-4 text-right whitespace-nowrap">Tổng thanh toán</th>
+                <th className="py-2.5 sm:py-3 px-3 sm:px-4 text-center whitespace-nowrap">Trạng thái</th>
+                <th className="py-2.5 sm:py-3 px-3 sm:px-4 text-center whitespace-nowrap">Chi tiết</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
@@ -141,11 +141,11 @@ export function DetailedTabbedWidget({
                   key={b.id}
                   className="hover:bg-slate-50/30 transition-colors"
                 >
-                  <td className="py-3 px-4 font-semibold text-slate-800">
+                  <td className="py-2.5 sm:py-3 px-3 sm:px-4 font-semibold text-slate-800 whitespace-nowrap">
                     #{b.id}
                   </td>
-                  <td className="py-3 px-4">
-                    <div className="flex items-center gap-2">
+                  <td className="py-2.5 sm:py-3 px-3 sm:px-4 whitespace-nowrap">
+                    <div className="flex items-center gap-1.5 sm:gap-2">
                       {b.userAvatar && getImageUrl(b.userAvatar) ? (
                         <img
                           src={getImageUrl(b.userAvatar) || ""}
@@ -153,10 +153,10 @@ export function DetailedTabbedWidget({
                           onError={(e) => {
                             e.currentTarget.src = "/default-avatar.png";
                           }}
-                          className="w-7 h-7 rounded-full object-cover border border-slate-100"
+                          className="w-6 h-6 sm:w-7 sm:h-7 rounded-full object-cover border border-slate-100"
                         />
                       ) : (
-                        <div className="w-7 h-7 rounded-full bg-slate-100 text-slate-600 font-bold flex items-center justify-center text-[10px]">
+                        <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-slate-100 text-slate-600 font-bold flex items-center justify-center text-[9px] sm:text-[10px]">
                           {b.userName.slice(0, 1)}
                         </div>
                       )}
@@ -165,25 +165,25 @@ export function DetailedTabbedWidget({
                       </span>
                     </div>
                   </td>
-                  <td className="py-3 px-4 font-medium text-slate-600">
+                  <td className="py-2.5 sm:py-3 px-3 sm:px-4 font-medium text-slate-600 whitespace-nowrap">
                     {b.roomName}
                   </td>
-                  <td className="py-3 px-4 text-slate-500 font-medium">
+                  <td className="py-2.5 sm:py-3 px-3 sm:px-4 text-slate-500 font-medium whitespace-nowrap">
                     {new Date(b.checkIn).toLocaleDateString("vi-VN")} -{" "}
                     {new Date(b.checkOut).toLocaleDateString("vi-VN")}
                   </td>
-                  <td className="py-3 px-4 text-right font-extrabold text-slate-900">
+                  <td className="py-2.5 sm:py-3 px-3 sm:px-4 text-right font-extrabold text-slate-900 whitespace-nowrap">
                     {b.total.toLocaleString()} ₫
                   </td>
-                  <td className="py-3 px-4 text-center">
+                  <td className="py-2.5 sm:py-3 px-3 sm:px-4 text-center whitespace-nowrap">
                     {getStatusBadge(b.status)}
                   </td>
-                  <td className="py-3 px-4 text-center">
+                  <td className="py-2.5 sm:py-3 px-3 sm:px-4 text-center whitespace-nowrap">
                     <Link href={`/admin/bookings/${b.id}`}>
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="w-7 h-7 text-slate-400 hover:text-slate-600 rounded-md hover:bg-slate-50 cursor-pointer"
+                        className="w-6.5 h-6.5 sm:w-7 sm:h-7 text-slate-400 hover:text-slate-600 rounded-md hover:bg-slate-50 cursor-pointer"
                       >
                         <Eye className="w-3.5 h-3.5" />
                       </Button>

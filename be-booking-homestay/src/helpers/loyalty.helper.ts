@@ -46,6 +46,7 @@ export class LoyaltyProgram {
         totalNights: 0,
         points: 0,
         levelId,
+        lastUpgradeDate: new Date(),
       },
     });
   }
@@ -65,7 +66,10 @@ export class LoyaltyProgram {
     const newLevel = [...levels]
       .reverse()
       .find((lvl) => currentPoints >= lvl.minPoints);
-    if (newLevel && newLevel.id !== program.levelId) {
+    if (
+      newLevel &&
+      (newLevel.id !== program.levelId || !program.lastUpgradeDate)
+    ) {
       await this.prisma.loyalty_program.update({
         where: { userId },
         data: {

@@ -109,20 +109,20 @@ export default function SecurityTab() {
   };
 
   return (
-    <Card className="p-6 md:p-8 max-w-2xl border border-border/60 shadow-sm rounded-2xl animate-in fade-in-50 duration-200 bg-card">
-      <div className="border-b border-border/60 pb-4 mb-6">
-        <h2 className="text-xl font-bold">Bảo mật tài khoản</h2>
-        <p className="text-sm text-muted-foreground mt-1">
+    <Card className="p-3.5 sm:p-6 md:p-8 max-w-2xl w-full border border-border/60 shadow-sm rounded-2xl animate-in fade-in-50 duration-200 bg-card">
+      <div className="border-b border-border/60 pb-3 sm:pb-2 mb-1 sm:mb-2">
+        <h2 className="text-base sm:text-xl font-bold">Bảo mật tài khoản</h2>
+        <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 sm:mt-1">
           Quản lý mật khẩu truy cập và xác thực.
         </p>
       </div>
 
-      <div className="space-y-6">
+      <div className="space-y-3 sm:space-y-6">
         <div>
-          <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-4">
+          <h3 className="text-xs sm:text-sm font-semibold text-slate-750 dark:text-slate-200 mb-1.5 sm:mb-4">
             Đổi mật khẩu
           </h3>
-          <div className="space-y-5">
+          <div className="space-y-2.5 sm:space-y-5">
             <div>
               <div className="relative">
                 <Input
@@ -132,7 +132,7 @@ export default function SecurityTab() {
                   onChange={(e) =>
                     handlePasswordChange("oldPassword", e.target.value)
                   }
-                  className={`h-11 rounded-lg bg-card pr-10 focus-visible:ring-primary/20 ${
+                  className={`h-9.5 sm:h-11 text-xs sm:text-sm rounded-lg bg-card pr-9 sm:pr-10 focus-visible:ring-primary/20 ${
                     errors.oldPassword
                       ? "border-red-500 focus-visible:ring-red-200"
                       : "border-border/80"
@@ -145,9 +145,9 @@ export default function SecurityTab() {
                   aria-label={showOldPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
                 >
                   {showOldPassword ? (
-                    <EyeOff className="w-5 h-5" />
+                    <EyeOff className="w-4 h-4 sm:w-5 sm:h-5" />
                   ) : (
-                    <Eye className="w-5 h-5" />
+                    <Eye className="w-4 h-4 sm:w-5 sm:h-5" />
                   )}
                 </button>
               </div>
@@ -159,7 +159,7 @@ export default function SecurityTab() {
             </div>
 
             <div>
-              <p className="text-[11px] text-muted-foreground mb-2 leading-relaxed">
+              <p className="text-[10px] sm:text-[11px] text-muted-foreground mb-1 sm:mb-2 leading-relaxed">
                 Yêu cầu mật khẩu mạnh: Tối thiểu 8 ký tự, gồm ít nhất 1 chữ hoa,
                 1 chữ thường, 1 số và 1 ký tự đặc biệt (@, $, !, %, *, ?, &).
               </p>
@@ -171,7 +171,7 @@ export default function SecurityTab() {
                   onChange={(e) =>
                     handlePasswordChange("newPassword", e.target.value)
                   }
-                  className={`h-11 rounded-lg bg-card pr-10 focus-visible:ring-primary/20 ${
+                  className={`h-9.5 sm:h-11 text-xs sm:text-sm rounded-lg bg-card pr-9 sm:pr-10 focus-visible:ring-primary/20 ${
                     errors.newPassword
                       ? "border-red-500 focus-visible:ring-red-200"
                       : "border-border/80"
@@ -184,9 +184,9 @@ export default function SecurityTab() {
                   aria-label={showNewPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
                 >
                   {showNewPassword ? (
-                    <EyeOff className="w-5 h-5" />
+                    <EyeOff className="w-4 h-4 sm:w-5 sm:h-5" />
                   ) : (
-                    <Eye className="w-5 h-5" />
+                    <Eye className="w-4 h-4 sm:w-5 sm:h-5" />
                   )}
                 </button>
               </div>
@@ -206,7 +206,7 @@ export default function SecurityTab() {
                   onChange={(e) =>
                     handlePasswordChange("confirmPassword", e.target.value)
                   }
-                  className={`h-11 rounded-lg bg-card pr-10 focus-visible:ring-primary/20 ${
+                  className={`h-9.5 sm:h-11 text-xs sm:text-sm rounded-lg bg-card pr-9 sm:pr-10 focus-visible:ring-primary/20 ${
                     errors.confirmPassword
                       ? "border-red-500 focus-visible:ring-red-200"
                       : "border-border/80"
@@ -221,9 +221,9 @@ export default function SecurityTab() {
                   }
                 >
                   {showConfirmPassword ? (
-                    <EyeOff className="w-5 h-5" />
+                    <EyeOff className="w-4 h-4 sm:w-5 sm:h-5" />
                   ) : (
-                    <Eye className="w-5 h-5" />
+                    <Eye className="w-4 h-4 sm:w-5 sm:h-5" />
                   )}
                 </button>
               </div>
@@ -241,9 +241,9 @@ export default function SecurityTab() {
                 !!errors.newPassword ||
                 !!errors.confirmPassword
               }
-              className="bg-primary hover:bg-primary/95 text-white gap-2 rounded-xl h-11 px-5 font-semibold cursor-pointer shadow-sm hover:shadow transition-all duration-150"
+              className="w-full sm:w-auto bg-primary hover:bg-primary/95 text-white gap-2 rounded-lg sm:rounded-xl h-9.5 sm:h-11 px-4 sm:px-5 text-xs sm:text-sm font-semibold cursor-pointer shadow-sm hover:shadow transition-all duration-150 justify-center"
             >
-              <Save className="w-4 h-4" />
+              <Save className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               Cập nhật mật khẩu
             </Button>
           </div>

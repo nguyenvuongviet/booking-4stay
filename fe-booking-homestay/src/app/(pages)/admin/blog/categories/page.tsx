@@ -195,23 +195,25 @@ function CategoriesAndTagsContent() {
   }, []);
 
   return (
-    <div className="space-y-6 max-w-4xl">
+    <div className="space-y-4 sm:space-y-6 max-w-4xl">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <Link
             href="/admin/blog"
-            className="-ml-2 p-2 rounded-lg hover:bg-accent transition-colors"
+            className="-ml-2 p-2 rounded-lg hover:bg-accent transition-colors shrink-0"
           >
             <ChevronLeft size={20} />
           </Link>
-          <h1 className="text-2xl font-bold">Danh mục &amp; Tags</h1>
+          <h1 className="text-lg sm:text-2xl font-bold truncate">
+            Danh mục &amp; Tags
+          </h1>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           <button
             onClick={activeTab === "categories" ? fetchCategories : fetchTags}
             disabled={activeTab === "categories" ? catLoading : tagsLoading}
-            className="p-2.5 rounded-xl border bg-background hover:bg-accent transition-colors disabled:opacity-50 cursor-pointer animate-none"
+            className="p-2 sm:p-2.5 rounded-xl border bg-background hover:bg-accent transition-colors disabled:opacity-50 cursor-pointer animate-none"
             title="Làm mới"
           >
             <RotateCw
@@ -230,7 +232,7 @@ function CategoriesAndTagsContent() {
       <div className="flex border-b border-muted">
         <button
           onClick={() => setActiveTab("categories")}
-          className={`px-6 py-3 text-sm font-semibold border-b-2 transition-all cursor-pointer ${
+          className={`px-4 sm:px-6 py-2.5 sm:py-3 text-xs sm:text-sm font-semibold border-b-2 transition-all cursor-pointer ${
             activeTab === "categories"
               ? "border-primary text-primary"
               : "border-transparent text-muted-foreground hover:text-foreground"
@@ -240,7 +242,7 @@ function CategoriesAndTagsContent() {
         </button>
         <button
           onClick={() => setActiveTab("tags")}
-          className={`px-6 py-3 text-sm font-semibold border-b-2 transition-all cursor-pointer ${
+          className={`px-4 sm:px-6 py-2.5 sm:py-3 text-xs sm:text-sm font-semibold border-b-2 transition-all cursor-pointer ${
             activeTab === "tags"
               ? "border-primary text-primary"
               : "border-transparent text-muted-foreground hover:text-foreground"

@@ -77,10 +77,12 @@ export function UserEditModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-160">
+      <DialogContent className="w-[calc(100%-2rem)] sm:max-w-160 p-5 sm:p-6 rounded-2xl max-h-[90vh] overflow-y-auto beautiful-scrollbar">
         <DialogHeader>
           <DialogTitle>Chỉnh sửa thông tin</DialogTitle>
-          <DialogDescription>Cập nhật thông tin người dùng.</DialogDescription>
+          <DialogDescription className="text-xs sm:text-sm">
+            Cập nhật thông tin người dùng.
+          </DialogDescription>
         </DialogHeader>
 
         {(meta?.email ||
@@ -171,43 +173,45 @@ export function UserEditModal({
             />
           </div>
 
-          <div>
-            <Label>Vai trò</Label>
-            <Select
-              value={(form.roleName as Role) ?? "USER"}
-              onValueChange={(v) =>
-                setForm((s) => ({ ...s, roleName: v as Role }))
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Chọn vai trò" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="ADMIN">ADMIN</SelectItem>
-                {/* <SelectItem value="HOST">HOST</SelectItem> */}
-                <SelectItem value="USER">USER</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="grid grid-cols-2 gap-4 sm:col-span-2">
+            <div>
+              <Label>Vai trò</Label>
+              <Select
+                value={(form.roleName as Role) ?? "USER"}
+                onValueChange={(v) =>
+                  setForm((s) => ({ ...s, roleName: v as Role }))
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Chọn vai trò" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ADMIN">ADMIN</SelectItem>
+                  {/* <SelectItem value="HOST">HOST</SelectItem> */}
+                  <SelectItem value="USER">USER</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label>Giới tính</Label>
+              <Select
+                value={(form.gender as any) ?? "OTHER"}
+                onValueChange={(v) => setForm((s) => ({ ...s, gender: v }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Chọn giới tính" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="MALE">Nam</SelectItem>
+                  <SelectItem value="FEMALE">Nữ</SelectItem>
+                  <SelectItem value="OTHER">Khác</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
-          <div>
-            <Label>Giới tính</Label>
-            <Select
-              value={(form.gender as any) ?? "OTHER"}
-              onValueChange={(v) => setForm((s) => ({ ...s, gender: v }))}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Chọn giới tính" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="MALE">Nam</SelectItem>
-                <SelectItem value="FEMALE">Nữ</SelectItem>
-                <SelectItem value="OTHER">Khác</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="relative">
+          <div className="relative sm:col-span-2">
             <Label htmlFor="dob">Ngày sinh</Label>
             <Input
               id="dob"
@@ -221,11 +225,19 @@ export function UserEditModal({
           </div>
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+        <DialogFooter className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-2 pt-4 border-t mt-4">
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            className="w-full sm:w-auto cursor-pointer"
+          >
             Hủy
           </Button>
-          <Button onClick={handleSave} disabled={saving}>
+          <Button
+            onClick={handleSave}
+            disabled={saving}
+            className="w-full sm:w-auto cursor-pointer"
+          >
             {saving ? "Đang lưu..." : "Lưu thay đổi"}
           </Button>
         </DialogFooter>

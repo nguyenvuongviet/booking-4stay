@@ -203,40 +203,41 @@ export default function CalendarGrid({
     <div className="flex flex-col lg:flex-row w-full items-start lg:items-stretch gap-4">
       <div
         className={cn(
-          "transition-all duration-300 w-full",
-          mode === "pricing" ? "lg:w-[calc(100%-380px)]" : "lg:w-full",
+          "transition-all duration-300 w-full min-w-0",
+          mode === "pricing" ? "lg:w-[calc(100%-320px)]" : "lg:w-full",
         )}
       >
-        <div className="p-4 px-2 sm:px-6 bg-card rounded-xl select-none">
+        <div className="p-1 sm:p-4 sm:px-6 bg-card rounded-xl select-none">
           <CalendarHeader
             currentDate={currentDate}
             setCurrentDate={setCurrentDate}
           />
 
-          <p className="text-sm text-muted-foreground mb-4">
+          <p className="text-[10px] sm:text-xs lg:text-sm text-muted-foreground mb-2 sm:mb-4 hidden sm:block">
             Nhấn giữ Ctrl để chọn nhiều ngày, hoặc kéo chuột để chọn khoảng ngày
           </p>
 
-          <div className="overflow-x-auto pb-4">
-            <div className="min-w-175">
+          <div className="w-full min-w-0 pb-2 sm:pb-4">
+            <div className="w-full min-w-0">
               {/* Week */}
               <div className="grid grid-cols-7 mb-2 text-center elegant-sans text-primary">
                 {[
-                  "Thứ 2",
-                  "Thứ 3",
-                  "Thứ 4",
-                  "Thứ 5",
-                  "Thứ 6",
-                  "Thứ 7",
-                  "Chủ nhật",
+                  { full: "Thứ 2", short: "T2" },
+                  { full: "Thứ 3", short: "T3" },
+                  { full: "Thứ 4", short: "T4" },
+                  { full: "Thứ 5", short: "T5" },
+                  { full: "Thứ 6", short: "T6" },
+                  { full: "Thứ 7", short: "T7" },
+                  { full: "Chủ nhật", short: "CN" },
                 ].map((d) => (
-                  <div key={d} className="text-xs sm:text-sm font-semibold">
-                    {d}
+                  <div key={d.full} className="text-[10px] sm:text-xs md:text-sm font-bold">
+                    <span className="xs:hidden">{d.short}</span>
+                    <span className="hidden xs:inline">{d.full}</span>
                   </div>
                 ))}
               </div>
 
-              <div className="grid grid-cols-7 border border-primary">
+              <div className="grid grid-cols-7 border border-primary/30 dark:border-primary/50">
                 {days.map((day, i) => {
                   const prevDate = new Date(day.date);
                   prevDate.setDate(prevDate.getDate() - 1);
@@ -279,10 +280,10 @@ export default function CalendarGrid({
       {mode === "pricing" && (
         <div
           className={cn(
-            "shrink-0 bg-card lg:sticky lg:top-0 h-auto lg:h-full min-h-125 overflow-y-auto rounded-xl lg:rounded-none shadow-sm lg:shadow-none border border-gray-100 lg:border-none transition-all duration-300",
+            "shrink-0 bg-card lg:sticky lg:top-0 h-auto lg:h-full min-h-100 lg:min-h-125 overflow-y-auto rounded-xl lg:rounded-none shadow-sm lg:shadow-none border border-gray-100 lg:border-none transition-all duration-300",
             selectedDates.length > 0
-              ? "w-full lg:w-95 opacity-100"
-              : "w-0 lg:w-95 opacity-100",
+              ? "w-full lg:w-80 opacity-100 block"
+              : "w-0 lg:w-80 opacity-0 hidden lg:block",
           )}
         >
           <EditPanel

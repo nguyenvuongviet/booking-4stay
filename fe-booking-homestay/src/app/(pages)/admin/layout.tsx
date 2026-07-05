@@ -1,16 +1,12 @@
 "use client";
 
 import Loader from "@/_components/ui/loader";
+import { cn } from "@/lib/utils";
 import { getCurrentUser, isAdmin } from "@/lib/utils/auth-client";
 import { useRouter } from "next/navigation";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { AdminHeader } from "./_components/Header";
 import { AdminSidebar } from "./_components/SideBar";
-
-const SIDEBAR_WIDTH = {
-  expanded: 256,
-  collapsed: 80,
-} as const;
 
 export default function AdminLayout({
   children,
@@ -64,10 +60,7 @@ export default function AdminLayout({
     });
   };
 
-  const sidebarWidthPx = useMemo(
-    () => (isCollapsed ? SIDEBAR_WIDTH.collapsed : SIDEBAR_WIDTH.expanded),
-    [isCollapsed],
-  );
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   if (!ready)
     return (
@@ -77,14 +70,29 @@ export default function AdminLayout({
     );
 
   return (
-    <div className="min-h-screen bg-background flex">
-      <AdminSidebar isCollapsed={isCollapsed} onToggle={toggleSidebar} />
+    <div className="min-h-screen bg-background relative">
+      {/* Backdrop overlay for mobile sidebar */}
+      {isMobileOpen && (
+        <div
+          onClick={() => setIsMobileOpen(false)}
+          className="fixed inset-0 bg-black/50 backdrop-blur-xs z-40 md:hidden transition-all duration-300 animate-in fade-in-50"
+        />
+      )}
+
+      <AdminSidebar
+        isCollapsed={isCollapsed}
+        onToggle={toggleSidebar}
+        isMobileOpen={isMobileOpen}
+        onMobileClose={() => setIsMobileOpen(false)}
+      />
       <div
-        className="min-w-0 flex-1 overflow-x-hidden transition-all duration-300"
-        style={{ marginLeft: `${sidebarWidthPx}px` }}
+        className={cn(
+          "min-w-0 w-auto overflow-x-clip transition-all duration-300 ml-0",
+          isCollapsed ? "md:ml-20" : "md:ml-64",
+        )}
       >
-        <AdminHeader />
-        <main className="min-w-0 overflow-x-hidden px-6 pb-6 pt-2">
+        <AdminHeader onMenuToggle={() => setIsMobileOpen(true)} />
+        <main className="min-w-0 overflow-x-clip px-4 sm:px-6 pb-6 pt-2">
           {children}
         </main>
       </div>

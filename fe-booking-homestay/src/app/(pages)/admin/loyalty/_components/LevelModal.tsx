@@ -15,6 +15,7 @@ import {
   LoyaltyLevel,
   updateLoyaltyLevel,
 } from "@/services/admin/loyaltyApi";
+import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
@@ -36,8 +37,11 @@ export default function LevelModal({
   const [name, setName] = useState("");
   const [minPoints, setMinPoints] = useState<number | string>(0);
   const [discountPercent, setDiscountPercent] = useState<number | string>(0);
-  const [maxDiscountAmount, setMaxDiscountAmount] = useState<number | string>(0);
+  const [maxDiscountAmount, setMaxDiscountAmount] = useState<number | string>(
+    0,
+  );
   const [description, setDescription] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (editData) {
@@ -56,6 +60,7 @@ export default function LevelModal({
   }, [editData]);
 
   const handleSave = async () => {
+    setIsSaving(true);
     try {
       const payload = {
         name,
@@ -77,18 +82,22 @@ export default function LevelModal({
       onClose();
     } catch {
       toast.error("Không thể lưu cấp độ, vui lòng thử lại!");
+    } finally {
+      setIsSaving(false);
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-md rounded-xl shadow-lg">
-        <DialogHeader>
-          <DialogTitle className="text-xl font-semibold">
+      <DialogContent className="max-w-md w-[calc(100%-2rem)] sm:w-full rounded-2xl p-4 sm:p-6 shadow-lg border border-border/80 bg-background">
+        <DialogHeader className="space-y-1">
+          <DialogTitle className="text-lg sm:text-xl font-semibold">
             {isEdit ? "Chỉnh sửa cấp độ" : "Tạo cấp độ mới"}
           </DialogTitle>
-          <DialogDescription>
-            {isEdit ? "Chình sửa cấp độ cơ bản." : "Tạo cấp độ cơ bản."}
+          <DialogDescription className="text-xs sm:text-sm">
+            {isEdit
+              ? "Chỉnh sửa thông tin cấp độ và quyền lợi."
+              : "Thiết lập cấp độ tích lũy mới."}
           </DialogDescription>
         </DialogHeader>
 
@@ -98,6 +107,7 @@ export default function LevelModal({
             <Input
               placeholder="Ví dụ: GOLD, SILVER, VIP..."
               value={name}
+              disabled={isSaving}
               onChange={(e) => setName(e.target.value)}
             />
             <p className="text-xs text-muted-foreground">
@@ -111,6 +121,7 @@ export default function LevelModal({
               type="number"
               placeholder="VD: 1000"
               value={minPoints}
+              disabled={isSaving}
               onChange={(e) => setMinPoints(e.target.value)}
             />
             <p className="text-xs text-muted-foreground">
@@ -127,6 +138,7 @@ export default function LevelModal({
                 max="100"
                 placeholder="VD: 5"
                 value={discountPercent}
+                disabled={isSaving}
                 onChange={(e) => setDiscountPercent(e.target.value)}
               />
             </div>
@@ -137,6 +149,7 @@ export default function LevelModal({
                 min="0"
                 placeholder="VD: 500000"
                 value={maxDiscountAmount}
+                disabled={isSaving}
                 onChange={(e) => setMaxDiscountAmount(e.target.value)}
               />
             </div>
@@ -147,16 +160,27 @@ export default function LevelModal({
             <Input
               placeholder="Quyền lợi, ưu đãi dành cho cấp độ này..."
               value={description}
+              disabled={isSaving}
               onChange={(e) => setDescription(e.target.value)}
             />
           </div>
         </div>
 
         <DialogFooter className="mt-3">
-          <Button variant="outline" onClick={onClose} className="px-4">
+          <Button
+            variant="outline"
+            onClick={onClose}
+            className="px-4 cursor-pointer"
+            disabled={isSaving}
+          >
             Hủy
           </Button>
-          <Button onClick={handleSave} className="px-5 text-white">
+          <Button
+            onClick={handleSave}
+            className="px-5 text-white cursor-pointer"
+            disabled={isSaving}
+          >
+            {isSaving && <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />}
             {isEdit ? "Lưu thay đổi" : "Tạo"}
           </Button>
         </DialogFooter>
