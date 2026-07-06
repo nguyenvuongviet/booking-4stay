@@ -57,6 +57,9 @@ export interface Booking {
   checkOut: string;
   status: BookingStatus;
   totalAmount?: number;
+  rawTotalPrice?: number;
+  discountAmount?: number;
+  promotionDiscount?: number;
   cancelReason?: string | null;
   paymentMethod?: string;
   paidAmount?: number;

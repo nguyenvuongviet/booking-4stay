@@ -216,7 +216,7 @@ export const BookingDetail = ({
         {/* CỘT TRÁI (Nội dung chính) */}
         <div className="lg:col-span-8 space-y-6">
           {/* 1. Card: Mã đặt phòng */}
-          <div className="bg-white rounded-[1.25rem] p-6 border border-gray-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="bg-white rounded-3xl p-6 border border-gray-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <h2 className="text-2xl font-black text-gray-900 tracking-tight">
                 Mã đặt phòng: BK-{booking.id}
@@ -241,9 +241,9 @@ export const BookingDetail = ({
           {/* 2. Card: Thông tin Khách sạn / Phòng */}
           <Link
             href={`/room/${booking.room?.id}`}
-            className="bg-white rounded-[1.25rem] p-4 border border-gray-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] hover:shadow-[0_4px_15px_rgba(0,0,0,0.05)] transition-shadow flex flex-col sm:flex-row gap-6"
+            className="bg-white rounded-3xl p-4 border border-gray-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] hover:shadow-[0_4px_15px_rgba(0,0,0,0.05)] transition-shadow flex flex-col sm:flex-row gap-6"
           >
-            <div className="shrink-0 w-full sm:w-[220px] h-[160px] rounded-2xl overflow-hidden relative">
+            <div className="shrink-0 w-full sm:w-55 h-40 rounded-2xl overflow-hidden relative">
               <img
                 src={booking.room?.images?.main || "/placeholder.svg"}
                 alt="Room"
@@ -301,7 +301,7 @@ export const BookingDetail = ({
           {/* 3. Grid 2 cột: Lịch trình & Khách hàng */}
           <div className="grid md:grid-cols-2 gap-6">
             {/* 3.1 Chi tiết lưu trú */}
-            <div className="bg-white rounded-[1.25rem] p-6 border border-gray-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] space-y-6 flex flex-col">
+            <div className="bg-white rounded-3xl p-6 border border-gray-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] space-y-6 flex flex-col">
               <h4 className="font-bold text-gray-900 flex items-center gap-2">
                 <Calendar className="w-5 h-5 text-gray-400" /> Chi tiết lưu trú
               </h4>
@@ -366,7 +366,7 @@ export const BookingDetail = ({
             </div>
 
             {/* 3.2 Thông tin khách hàng & Quản lý */}
-            <div className="bg-white rounded-[1.25rem] p-6 border border-gray-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] flex flex-col justify-between">
+            <div className="bg-white rounded-3xl p-6 border border-gray-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] flex flex-col justify-between">
               <div className="space-y-5">
                 <div className="flex items-center justify-between">
                   <h4 className="font-bold text-gray-900 flex items-center gap-2">
@@ -443,14 +443,14 @@ export const BookingDetail = ({
           </div>
 
           {/* 4. Yêu cầu đặc biệt */}
-          <div className="bg-white rounded-[1.25rem] p-6 border border-gray-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] space-y-4">
+          <div className="bg-white rounded-3xl p-6 border border-gray-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] space-y-4">
             <div className="flex items-center justify-between">
               <h4 className="font-bold text-gray-900 flex items-center gap-2">
                 <MessageSquare className="w-5 h-5 text-gray-400" /> Yêu cầu đặc
                 biệt
               </h4>
             </div>
-            <div className="bg-gray-50/80 border border-gray-100 p-4 rounded-xl text-sm text-gray-600 leading-relaxed min-h-[80px]">
+            <div className="bg-gray-50/80 border border-gray-100 p-4 rounded-xl text-sm text-gray-600 leading-relaxed min-h-20">
               {booking.guestInfo?.specialRequest ||
                 "Không có yêu cầu đặc biệt nào được ghi chú."}
             </div>
@@ -463,7 +463,7 @@ export const BookingDetail = ({
 
           {/* 6. Lịch sử thay đổi (Collapsible) */}
           {booking.logs && booking.logs.length > 0 && (
-            <details className="bg-white rounded-[1.25rem] border border-gray-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] group overflow-hidden">
+            <details className="bg-white rounded-3xl border border-gray-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] group overflow-hidden">
               <summary className="flex items-center justify-between p-6 cursor-pointer list-none">
                 <div className="flex items-center gap-2">
                   <History className="w-5 h-5 text-gray-400" />
@@ -599,7 +599,7 @@ export const BookingDetail = ({
 
         {/* CỘT PHẢI (Thanh toán Tóm tắt - Sticky) */}
         <div className="lg:col-span-4">
-          <div className="bg-white rounded-[1.25rem] p-6 sm:p-8 border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] lg:sticky lg:top-24 space-y-6">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] lg:sticky lg:top-24 space-y-6">
             <h3 className="text-xl font-bold text-gray-900 border-b border-gray-100 pb-4">
               Tóm tắt thanh toán
             </h3>
@@ -610,9 +610,28 @@ export const BookingDetail = ({
                   Giá phòng ({totalNights} đêm)
                 </span>
                 <span className="font-medium text-gray-900">
-                  {formatPrice(total)} VND
+                  {formatPrice(Number(booking.rawTotalPrice || total))} VND
                 </span>
               </div>
+
+              {Number(booking.discountAmount || 0) > 0 && (
+                <div className="flex justify-between items-center text-amber-600 font-medium">
+                  <span>Giảm giá thành viên</span>
+                  <span>
+                    -{formatPrice(Number(booking.discountAmount))} VND
+                  </span>
+                </div>
+              )}
+
+              {Number(booking.promotionDiscount || 0) > 0 && (
+                <div className="flex justify-between items-center text-rose-600 font-medium">
+                  <span>Giảm giá mã khuyến mãi</span>
+                  <span>
+                    -{formatPrice(Number(booking.promotionDiscount))} VND
+                  </span>
+                </div>
+              )}
+
               <div className="flex justify-between items-center">
                 <span className="text-gray-500">Phí dịch vụ</span>
                 <span className="font-medium text-gray-900">Miễn phí</span>

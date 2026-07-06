@@ -36,12 +36,16 @@ export function SmartCancelDialog({
   const [preview, setPreview] = useState<CancelPreviewResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [reason, setReason] = useState("");
+  const [cancelInitiator, setCancelInitiator] = useState<"GUEST" | "HOST">(
+    "GUEST",
+  );
 
   useEffect(() => {
     if (open && bookingId) {
       setLoading(true);
       setError(null);
       setReason("");
+      setCancelInitiator("GUEST");
 
       getCancelPreview(bookingId)
         .then((data) => {
@@ -58,10 +62,18 @@ export function SmartCancelDialog({
   }, [open, bookingId]);
 
   const handleConfirm = async () => {
-    if (!bookingId) return;
+    if (!bookingId || !preview) return;
     setSubmitting(true);
     try {
-      await adminForceCancel(bookingId, reason || "Admin huỷ đơn");
+      const overrideRefund =
+        cancelInitiator === "HOST" ? preview.paidAmount : undefined;
+      const finalReason = reason.trim()
+        ? reason
+        : cancelInitiator === "HOST"
+          ? "Homestay chủ động hủy do sự cố khẩn cấp"
+          : "Khách hàng yêu cầu hủy";
+
+      await adminForceCancel(bookingId, finalReason, overrideRefund);
       toast.success("Huỷ đơn đặt phòng thành công");
       onSuccess();
       onClose();
@@ -147,64 +159,115 @@ export function SmartCancelDialog({
                 </div>
               </div>
 
-              {/* Policy Calculation */}
-              <div className="bg-amber-50 rounded-xl p-4 border border-amber-200 space-y-3">
-                <div className="flex items-center gap-2">
-                  <Calculator className="w-4 h-4 text-amber-600" />
-                  <h4 className="font-bold text-amber-900 text-sm">
-                    Kết quả tính toán chính sách
-                  </h4>
+              {/* Lựa chọn đối tượng chịu trách nhiệm hủy */}
+              <div className="space-y-2">
+                <label className="text-xs sm:text-sm font-bold text-gray-700">
+                  Đối tượng chủ động hủy đơn
+                </label>
+                <div className="grid grid-cols-2 gap-3 p-1 bg-gray-150/60 rounded-xl border border-gray-100">
+                  <button
+                    type="button"
+                    onClick={() => setCancelInitiator("GUEST")}
+                    className={`py-2 px-3 rounded-lg font-bold text-xs sm:text-sm text-center transition-all cursor-pointer ${
+                      cancelInitiator === "GUEST"
+                        ? "bg-white text-gray-800 shadow-sm border border-gray-200"
+                        : "text-gray-500 hover:text-gray-750"
+                    }`}
+                  >
+                    Khách yêu cầu hủy
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCancelInitiator("HOST")}
+                    className={`py-2 px-3 rounded-lg font-bold text-xs sm:text-sm text-center transition-all cursor-pointer ${
+                      cancelInitiator === "HOST"
+                        ? "bg-rose-500 text-white shadow-md shadow-rose-200"
+                        : "text-gray-500 hover:text-gray-750"
+                    }`}
+                  >
+                    Homestay (Sự cố khẩn cấp)
+                  </button>
                 </div>
-
-                <div className="flex items-center gap-2 text-sm">
-                  <Clock className="w-4 h-4 text-amber-500" />
-                  <span className="text-amber-800 font-medium">
-                    {getPolicyDescription(preview.daysUntilCheckIn)}
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-2 text-sm">
-                  <Shield className="w-4 h-4 text-amber-500" />
-                  <span className="text-amber-800 font-medium">
-                    Quy tắc áp dụng:{" "}
-                    <strong>
-                      {getRefundLabel(preview.appliedRefundPercent)}
-                    </strong>
-                  </span>
-                </div>
-
-                {/* Policy Rules Reference */}
-                {preview.cancellationPolicy &&
-                  preview.cancellationPolicy.length > 0 && (
-                    <div className="bg-white/60 rounded-lg p-3 mt-2 space-y-1">
-                      <p className="text-xs font-bold text-amber-700 uppercase tracking-wider mb-2">
-                        Bảng chính sách huỷ phòng
-                      </p>
-                      {[...preview.cancellationPolicy]
-                        .sort((a, b) => b.daysBefore - a.daysBefore)
-                        .map((rule, i) => (
-                          <div
-                            key={i}
-                            className={`flex justify-between text-xs py-1 px-2 rounded ${
-                              preview.daysUntilCheckIn >= rule.daysBefore &&
-                              (i === 0 ||
-                                preview.daysUntilCheckIn <
-                                  preview.cancellationPolicy.sort(
-                                    (a, b) => b.daysBefore - a.daysBefore,
-                                  )[i - 1]?.daysBefore)
-                                ? "bg-amber-200/50 font-bold"
-                                : ""
-                            }`}
-                          >
-                            <span>≥ {rule.daysBefore} ngày trước check-in</span>
-                            <span>
-                              Hoàn {Math.round(rule.refundPercent * 100)}%
-                            </span>
-                          </div>
-                        ))}
-                    </div>
-                  )}
               </div>
+
+              {/* Host Cancel Override Warning */}
+              {cancelInitiator === "HOST" && (
+                <div className="bg-rose-50 border border-rose-100 rounded-xl p-4 text-rose-700 text-xs sm:text-sm font-medium space-y-1 animate-in fade-in duration-200">
+                  <p className="font-bold flex items-center gap-1.5 text-rose-800">
+                    <Shield className="w-4 h-4 text-rose-500 shrink-0" />
+                    Chế độ Hủy do Sự cố Homestay
+                  </p>
+                  <p className="text-[11px] sm:text-xs text-rose-600 leading-relaxed">
+                    Hệ thống sẽ tự động ghi đè chính sách hủy phòng: Khách hàng
+                    được nhận lại <strong>100%</strong> số tiền đã đóng (
+                    <strong>{preview.paidAmount.toLocaleString()}₫</strong>) và{" "}
+                    <strong>0%</strong> phí phạt hủy.
+                  </p>
+                </div>
+              )}
+
+              {/* Policy Calculation */}
+              {cancelInitiator === "GUEST" && (
+                <div className="bg-amber-50 rounded-xl p-4 border border-amber-200 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Calculator className="w-4 h-4 text-amber-600" />
+                    <h4 className="font-bold text-amber-900 text-sm">
+                      Kết quả tính toán chính sách
+                    </h4>
+                  </div>
+
+                  <div className="flex items-center gap-2 text-sm">
+                    <Clock className="w-4 h-4 text-amber-500" />
+                    <span className="text-amber-800 font-medium">
+                      {getPolicyDescription(preview.daysUntilCheckIn)}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2 text-sm">
+                    <Shield className="w-4 h-4 text-amber-500" />
+                    <span className="text-amber-800 font-medium">
+                      Quy tắc áp dụng:{" "}
+                      <strong>
+                        {getRefundLabel(preview.appliedRefundPercent)}
+                      </strong>
+                    </span>
+                  </div>
+
+                  {/* Policy Rules Reference */}
+                  {preview.cancellationPolicy &&
+                    preview.cancellationPolicy.length > 0 && (
+                      <div className="bg-white/60 rounded-lg p-3 mt-2 space-y-1">
+                        <p className="text-xs font-bold text-amber-700 uppercase tracking-wider mb-2">
+                          Bảng chính sách huỷ phòng
+                        </p>
+                        {[...preview.cancellationPolicy]
+                          .sort((a, b) => b.daysBefore - a.daysBefore)
+                          .map((rule, i) => (
+                            <div
+                              key={i}
+                              className={`flex justify-between text-xs py-1 px-2 rounded ${
+                                preview.daysUntilCheckIn >= rule.daysBefore &&
+                                (i === 0 ||
+                                  preview.daysUntilCheckIn <
+                                    preview.cancellationPolicy.sort(
+                                      (a, b) => b.daysBefore - a.daysBefore,
+                                    )[i - 1]?.daysBefore)
+                                  ? "bg-amber-200/50 font-bold"
+                                  : ""
+                              }`}
+                            >
+                              <span>
+                                ≥ {rule.daysBefore} ngày trước check-in
+                              </span>
+                              <span>
+                                Hoàn {Math.round(rule.refundPercent * 100)}%
+                              </span>
+                            </div>
+                          ))}
+                      </div>
+                    )}
+                </div>
+              )}
 
               {/* Result */}
               <div className="bg-white rounded-xl border-2 border-gray-200 p-4 space-y-3">
@@ -213,7 +276,9 @@ export function SmartCancelDialog({
                     Phí phạt huỷ
                   </span>
                   <span className="text-lg font-black text-red-600">
-                    {preview.suggestedCancellationFee.toLocaleString()}₫
+                    {cancelInitiator === "HOST"
+                      ? "0₫"
+                      : `${preview.suggestedCancellationFee.toLocaleString()}₫`}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
@@ -221,7 +286,9 @@ export function SmartCancelDialog({
                     Số tiền hoàn trả gợi ý
                   </span>
                   <span className="text-lg font-black text-green-600">
-                    {preview.suggestedRefundAmount.toLocaleString()}₫
+                    {cancelInitiator === "HOST"
+                      ? `${preview.paidAmount.toLocaleString()}₫`
+                      : `${preview.suggestedRefundAmount.toLocaleString()}₫`}
                   </span>
                 </div>
               </div>

@@ -17,6 +17,9 @@ export interface Booking {
   adults: number;
   children: number;
   totalAmount: number | 0;
+  rawTotalPrice?: number;
+  discountAmount?: number;
+  promotionDiscount?: number;
   expiryMinutes?: number;
   paidAmount: number | 0;
   createdAt: string;

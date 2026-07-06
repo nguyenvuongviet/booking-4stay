@@ -363,12 +363,26 @@ export default function BookingDetailPage() {
                     {Number(booking.discountAmount) > 0 && (
                       <tr className="flex justify-between items-center">
                         <td className="text-orange-500 font-bold italic">
-                          Giảm giá / Ưu đãi
+                          Giảm giá thành viên
                         </td>
                         <td className="font-bold text-orange-500">
                           -{" "}
                           {(
                             Number(booking.discountAmount) || 0
+                          ).toLocaleString()}{" "}
+                          ₫
+                        </td>
+                      </tr>
+                    )}
+                    {Number(booking.promotionDiscount) > 0 && (
+                      <tr className="flex justify-between items-center">
+                        <td className="text-rose-500 font-bold italic">
+                          Giảm giá khuyến mãi
+                        </td>
+                        <td className="font-bold text-rose-500">
+                          -{" "}
+                          {(
+                            Number(booking.promotionDiscount) || 0
                           ).toLocaleString()}{" "}
                           ₫
                         </td>

@@ -245,14 +245,12 @@ export default function LoginPage() {
           </Button>
         </form>
 
-        <div className="mt-6 p-4 bg-muted rounded-lg">
-          <p className="text-xs font-semibold text-muted-foreground mb-2">
-            Demo Credentials:
+        <div className="mt-6 p-4 bg-gray-200/40 rounded-lg">
+          <p className="text-xs font-semibold text-foreground mb-2">
+            Thông tin tài khoản thử nghiệm:
           </p>
-          <p className="text-xs text-muted-foreground">
-            Email: admin@example.com
-          </p>
-          <p className="text-xs text-muted-foreground">Password: password123</p>
+          <p className="text-xs text-gray-500">Email: admin@gmail.com</p>
+          <p className="text-xs text-gray-500">Password: 123456</p>
         </div>
       </Card>
     </div>

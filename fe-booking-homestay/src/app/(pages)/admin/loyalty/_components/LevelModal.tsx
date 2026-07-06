@@ -64,7 +64,7 @@ export default function LevelModal({
     try {
       const payload = {
         name,
-        minPoints: Number(minPoints),
+        minPoints: Math.round(Number(minPoints)),
         discountPercent: Number(discountPercent),
         maxDiscountAmount: Number(maxDiscountAmount),
         description,
@@ -80,8 +80,11 @@ export default function LevelModal({
 
       onSaved();
       onClose();
-    } catch {
-      toast.error("Không thể lưu cấp độ, vui lòng thử lại!");
+    } catch (err: any) {
+      const msg =
+        err?.response?.data?.message ||
+        "Không thể lưu cấp độ, vui lòng thử lại!";
+      toast.error(Array.isArray(msg) ? msg[0] : msg);
     } finally {
       setIsSaving(false);
     }

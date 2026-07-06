@@ -11,6 +11,7 @@ import {
   ChevronRight,
   Search,
   Users,
+  X,
 } from "lucide-react";
 import Image from "next/image";
 import { useMemo, useState } from "react";
@@ -18,7 +19,7 @@ import { useMemo, useState } from "react";
 interface RoomSelectionGridProps {
   rooms: Room[];
   selectedRoomId: number | null;
-  onSelect: (roomId: number) => void;
+  onSelect: (roomId: number | null) => void;
 }
 
 const ITEMS_PER_PAGE = 6;
@@ -31,10 +32,25 @@ export function RoomSelectionGrid({
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
 
+  const selectedRoom = useMemo(() => {
+    if (selectedRoomId === null) return null;
+    return rooms.find((r) => r.id === selectedRoomId) || null;
+  }, [rooms, selectedRoomId]);
+
   const filteredRooms = useMemo(() => {
-    return rooms.filter((room) =>
-      room.name.toLowerCase().includes(searchTerm.toLowerCase()),
-    );
+    const term = searchTerm.toLowerCase().trim();
+    if (!term) return rooms;
+    return rooms.filter((room) => {
+      const nameMatch = room.name.toLowerCase().includes(term);
+      const provinceMatch = room.location?.province
+        ?.toLowerCase()
+        .includes(term);
+      const addressMatch = room.location?.fullAddress
+        ?.toLowerCase()
+        .includes(term);
+      const streetMatch = room.location?.street?.toLowerCase().includes(term);
+      return nameMatch || provinceMatch || addressMatch || streetMatch;
+    });
   }, [rooms, searchTerm]);
 
   const totalPages = Math.ceil(filteredRooms.length / ITEMS_PER_PAGE);
@@ -47,12 +63,63 @@ export function RoomSelectionGrid({
     setCurrentPage(page);
   };
 
+  if (selectedRoom) {
+    const mainImage = selectedRoom.images?.main || "/placeholder-room.png";
+    return (
+      <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+        <button
+          onClick={() => onSelect(null)}
+          className="w-full flex flex-col sm:flex-row items-start sm:items-center gap-4 bg-primary/5 border border-primary/20 hover:border-primary/30 rounded-2xl sm:rounded-3xl p-4 shadow-xs text-left transition-all relative group cursor-pointer"
+        >
+          <div className="relative w-full sm:w-48 h-32 rounded-xl sm:rounded-2xl overflow-hidden bg-gray-100 shrink-0">
+            <Image
+              src={mainImage}
+              alt={selectedRoom.name}
+              fill
+              className="object-cover"
+            />
+            <div className="absolute inset-0 bg-primary/20 flex items-center justify-center transition-colors">
+              <CheckCircle2 className="w-8 h-8 text-white group-hover:hidden drop-shadow-lg" />
+              <X className="w-8 h-8 text-rose-500 bg-white rounded-full p-1.5 hidden group-hover:block drop-shadow-lg scale-110 transition-all animate-in zoom-in-90" />
+            </div>
+          </div>
+          <div className="flex-1 space-y-2 w-full">
+            <div className="flex items-start justify-between gap-4 flex-wrap">
+              <h4 className="font-black text-base text-gray-900 leading-tight transition-colors">
+                {selectedRoom.name}
+              </h4>
+              <span className="text-sm font-black text-primary shrink-0">
+                {Number(selectedRoom.price).toLocaleString()}₫ / đêm
+              </span>
+            </div>
+            <div className="flex items-center gap-3 text-xs text-gray-500 font-bold uppercase tracking-wider">
+              <div className="flex items-center gap-1">
+                <Users className="w-3.5 h-3.5 text-gray-400" />
+                Sức chứa: {selectedRoom.adultCapacity} người lớn
+              </div>
+              {selectedRoom.childCapacity && selectedRoom.childCapacity > 0 && (
+                <div className="flex items-center gap-1">
+                  <Baby className="w-3.5 h-3.5 text-gray-400" />
+                  {selectedRoom.childCapacity} trẻ em
+                </div>
+              )}
+            </div>
+            <p className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest pt-1 flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+              Bấm vào đây để hủy chọn phòng này
+            </p>
+          </div>
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
-      <div className="relative max-w-sm mb-2">
+      <div className="relative w-full mb-4">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
         <Input
-          placeholder="Tìm tên phòng..."
+          placeholder="Tìm theo tên phòng, thành phố, địa chỉ..."
           className="pl-10 h-10 rounded-xl bg-gray-50 border-gray-200 focus:bg-white transition-all shadow-sm text-sm"
           value={searchTerm}
           onChange={(e) => {
@@ -147,7 +214,7 @@ export function RoomSelectionGrid({
             <Button
               variant="outline"
               size="icon"
-              className="h-8 w-8 rounded-lg border-gray-200"
+              className="h-8 w-8 rounded-lg border-gray-200 cursor-pointer"
               disabled={currentPage === 1}
               onClick={() => handlePageChange(currentPage - 1)}
             >
@@ -157,7 +224,7 @@ export function RoomSelectionGrid({
             <Button
               variant="outline"
               size="icon"
-              className="h-8 w-8 rounded-lg border-gray-200"
+              className="h-8 w-8 rounded-lg border-gray-200 cursor-pointer"
               disabled={currentPage === totalPages}
               onClick={() => handlePageChange(currentPage + 1)}
             >

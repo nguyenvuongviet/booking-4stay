@@ -106,6 +106,29 @@ export function AdminBookingUpdateDialog({
   }, [open, booking]);
   const currentTotal = Number(booking?.totalAmount || 0);
 
+  const minDate = useMemo(() => {
+    if (!booking?.checkIn) return new Date();
+    const originalCheckIn = parseAbsoluteDate(booking.checkIn);
+    const today = new Date();
+    originalCheckIn.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0);
+    return originalCheckIn.getTime() < today.getTime()
+      ? originalCheckIn
+      : today;
+  }, [booking]);
+
+  // Khóa ngày check-in nếu khách đã nhận phòng (check-in < hôm nay)
+  const lockedFrom = useMemo(() => {
+    if (!booking?.checkIn) return undefined;
+    const originalCheckIn = parseAbsoluteDate(booking.checkIn);
+    const today = new Date();
+    originalCheckIn.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0);
+    return originalCheckIn.getTime() < today.getTime()
+      ? originalCheckIn
+      : undefined;
+  }, [booking]);
+
   const statusMap = useMemo(() => {
     const map = new Map<number, "AVAILABLE" | "BOOKED" | "BLOCKED">();
     soldOutDates.forEach((d) => {
@@ -270,12 +293,19 @@ export function AdminBookingUpdateDialog({
               </div>
 
               <div className="flex justify-center w-full">
+                {lockedFrom && (
+                  <p className="text-[10px] sm:text-xs text-amber-700 font-bold bg-amber-50 border border-amber-100 rounded-lg px-3 py-1.5 mb-3 w-full text-center">
+                    🔒 Khách đã nhận phòng — Chỉ cho phép đổi ngày trả phòng
+                  </p>
+                )}
                 <DateRangePicker
                   value={range}
                   onChange={setRange}
                   statusMap={statusMap}
                   getPrice={getPrice}
                   defaultPrice={booking?.room?.price}
+                  minDate={minDate}
+                  lockedFrom={lockedFrom}
                 />
               </div>
             </div>

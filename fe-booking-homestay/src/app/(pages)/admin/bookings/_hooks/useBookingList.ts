@@ -2,10 +2,14 @@
 
 import { getBookings } from "@/services/admin/bookingsApi";
 import type { PaginatedBookings } from "@/types/booking";
+import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { DateRange } from "react-day-picker";
 
 export function useBookingList() {
+  const searchParams = useSearchParams();
+  const statusParam = searchParams.get("status");
+
   const [initialLoading, setInitialLoading] = useState(true);
 
   const [refreshing, setRefreshing] = useState(false);
@@ -13,8 +17,16 @@ export function useBookingList() {
   const [raw, setRaw] = useState<PaginatedBookings | null>(null);
 
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("ALL");
+  const [statusFilter, setStatusFilter] = useState(() => {
+    return statusParam ? statusParam.toUpperCase() : "ALL";
+  });
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
+
+  useEffect(() => {
+    if (statusParam) {
+      setStatusFilter(statusParam.toUpperCase());
+    }
+  }, [statusParam]);
 
   const [sortBy, setSortBy] = useState<
     "checkIn" | "checkOut" | "nights" | "guests" | "total" | null

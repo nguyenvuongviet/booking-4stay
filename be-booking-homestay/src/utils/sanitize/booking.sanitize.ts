@@ -22,6 +22,8 @@ function sanitize(booking: any) {
     cancellationFee: Number(booking.cancellationFee || 0),
     modifiedCount: Number(booking.modifiedCount || 0),
     totalAmount: Number(booking.totalPrice),
+    promotionDiscount: Number(booking.promotionDiscount || 0),
+    promotionId: booking.promotionId ?? null,
     createdAt: toUTCISOString(booking.createdAt),
     updatedAt: toUTCISOString(booking.updatedAt),
     expiryMinutes: booking.expiryMinutes || 15,

@@ -1,6 +1,5 @@
 "use client";
 
-import { Button } from "@/_components/ui/button";
 import { Calendar } from "@/_components/ui/calendar";
 import {
   Popover,
@@ -28,6 +27,8 @@ interface DateRangePickerProps {
   className?: string;
   compact?: boolean;
   variant?: "default" | "transparent";
+  minDate?: Date;
+  lockedFrom?: Date;
 }
 
 export default function DateRangePicker({
@@ -42,6 +43,8 @@ export default function DateRangePicker({
   className,
   compact = false,
   variant = "default",
+  minDate,
+  lockedFrom,
 }: DateRangePickerProps) {
   const isTransparent = variant === "transparent";
   const [open, setOpen] = React.useState(false);
@@ -80,6 +83,30 @@ export default function DateRangePicker({
   const handlePick = React.useCallback(
     (day?: Date, range?: DateRange) => {
       if (!day) return;
+
+      // Nếu check-in bị khóa (khách đã nhận phòng), chỉ cho chọn check-out
+      if (lockedFrom) {
+        const dayNorm = new Date(day);
+        dayNorm.setHours(0, 0, 0, 0);
+        const lockedNorm = new Date(lockedFrom);
+        lockedNorm.setHours(0, 0, 0, 0);
+
+        // Không cho chọn ngày <= ngày check-in đã khóa
+        if (dayNorm.getTime() <= lockedNorm.getTime()) return;
+
+        const newRange: DateRange = { from: lockedFrom, to: day };
+        if (!isRangeValid(lockedFrom, day)) {
+          toast.error(
+            "Khoảng ngày chứa ngày hết phòng. Vui lòng chọn ngày khác.",
+          );
+          return;
+        }
+        setSelectedRange(newRange);
+        onChange?.(newRange);
+        if (autoClose) setOpen(false);
+        return;
+      }
+
       const hasCompleteRange = selectedRange?.from && selectedRange?.to;
       if (!selectedRange || hasCompleteRange) {
         const newRange: DateRange = { from: day, to: undefined };
@@ -109,7 +136,7 @@ export default function DateRangePicker({
 
       if (autoClose && newRange.from && newRange.to) setOpen(false);
     },
-    [selectedRange, onChange, autoClose, statusMap],
+    [selectedRange, onChange, autoClose, statusMap, lockedFrom],
   );
 
   return (
@@ -197,7 +224,9 @@ export default function DateRangePicker({
                   onMonthChange?.(prevMonth);
                 }
               }}
-              disabled={[{ before: new Date() }]}
+              disabled={
+                minDate ? [{ before: minDate }] : [{ before: new Date() }]
+              }
               modifiers={{
                 soldOut: (date) => isSoldOut(date),
               }}

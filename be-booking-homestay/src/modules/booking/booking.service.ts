@@ -699,18 +699,45 @@ export class BookingService {
           inDate,
           outDate,
         );
-        const { totalPrice, discountAmount } =
-          await this.pricing.applyLoyaltyDiscount(booking.userId, rawTotal);
+        let promotionCode: string | undefined;
+        if (booking.promotionId) {
+          const promo = await tx.promotions.findUnique({
+            where: { id: booking.promotionId },
+          });
+          if (promo) {
+            promotionCode = promo.code;
+          }
+        }
+
+        const waterfallResult = await this.pricing.applyWaterfallDiscount(
+          booking.userId,
+          rawTotal,
+          promotionCode,
+          booking.rooms.provinceId,
+          { tx },
+        );
 
         // Admin "Miễn phụ phí": giữ nguyên giá cũ nếu giá mới đắt hơn
         const finalPrice =
-          waiveFee && role === Role.ADMIN && totalPrice > oldTotal
+          waiveFee &&
+          role === Role.ADMIN &&
+          waterfallResult.totalPrice > oldTotal
             ? oldTotal
-            : totalPrice;
-        const finalDiscount =
-          waiveFee && role === Role.ADMIN && totalPrice > oldTotal
+            : waterfallResult.totalPrice;
+
+        const finalLoyaltyDiscount =
+          waiveFee &&
+          role === Role.ADMIN &&
+          waterfallResult.totalPrice > oldTotal
             ? Number(booking.discountAmount)
-            : discountAmount;
+            : waterfallResult.loyaltyDiscount;
+
+        const finalCouponDiscount =
+          waiveFee &&
+          role === Role.ADMIN &&
+          waterfallResult.totalPrice > oldTotal
+            ? Number(booking.promotionDiscount || 0)
+            : waterfallResult.couponDiscount;
 
         const { newStatus, refundAmount, diff } = this.resolveRescheduleStatus(
           booking,
@@ -721,14 +748,15 @@ export class BookingService {
         updateData.checkIn = inDate;
         updateData.checkOut = outDate;
         updateData.rawTotalPrice = rawTotal;
-        updateData.discountAmount = finalDiscount;
+        updateData.discountAmount = finalLoyaltyDiscount;
+        updateData.promotionDiscount = finalCouponDiscount;
         updateData.totalPrice = finalPrice;
         updateData.status = newStatus;
         updateData.refundAmount = refundAmount;
 
         logAction = 'RESCHEDULE';
         if (waiveFee && role === Role.ADMIN) logNote += '[Miễn phụ phí] ';
-        logNote += `Đổi ngày: ${nights} đêm (${oldTotal.toLocaleString()} -> ${totalPrice.toLocaleString()} VND). `;
+        logNote += `Đổi ngày: ${nights} đêm (${oldTotal.toLocaleString()} -> ${waterfallResult.totalPrice.toLocaleString()} VND). `;
       }
 
       // 3. Xử lý đổi số lượng khách (Occupancy logic)
