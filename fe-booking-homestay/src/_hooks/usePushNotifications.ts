@@ -32,15 +32,28 @@ export function usePushNotifications(enabled: boolean) {
         const permission = await Notification.requestPermission();
         if (permission !== "granted" || cancelled) return;
 
+        // Đăng ký service worker (hoặc lấy registration đã có)
         const registration = await navigator.serviceWorker.register("/sw.js");
-        const existing = await registration.pushManager.getSubscription();
-        const subscription =
-          existing ??
-          (await registration.pushManager.subscribe({
+
+        // Force cập nhật SW để đảm bảo sw.js mới nhất được active
+        await registration.update();
+
+        // Chờ SW active xong
+        await navigator.serviceWorker.ready;
+
+        if (cancelled) return;
+
+        // Lấy subscription cũ hoặc tạo mới
+        let subscription = await registration.pushManager.getSubscription();
+        if (!subscription) {
+          subscription = await registration.pushManager.subscribe({
             userVisibleOnly: true,
             applicationServerKey: urlBase64ToUint8Array(publicKey),
-          }));
+          });
+        }
 
+        // LUÔN save subscription lên backend mỗi lần login/mount
+        // Để đảm bảo backend có endpoint của user hiện tại
         await savePushSubscription(subscription);
       } catch (error) {
         console.warn("Unable to register push notifications", error);
@@ -54,3 +67,4 @@ export function usePushNotifications(enabled: boolean) {
     };
   }, [enabled]);
 }
+

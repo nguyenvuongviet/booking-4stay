@@ -6,6 +6,7 @@ self.addEventListener("push", (event) => {
     icon: payload.icon || "/4stay-logo.png",
     badge: payload.badge || "/4stay-logo.png",
     tag: payload.tag || "4stay-notification",
+    renotify: true,
     data: {
       url: payload?.data?.url || "/",
       conversationId: payload?.data?.conversationId,
@@ -16,24 +17,18 @@ self.addEventListener("push", (event) => {
     .matchAll({ type: "window", includeUncontrolled: true })
     .then((windowClients) => {
       const isChatPush = Boolean(options.data.conversationId);
-      const hasAnyAppClient = windowClients.some((client) =>
-        client.url.startsWith(self.location.origin),
-      );
-      const hasVisibleClient = windowClients.some((client) => {
-        return (
-          client.url.startsWith(self.location.origin) &&
-          client.visibilityState === "visible"
+
+      if (!isChatPush) {
+        // Non-chat notification: chặn nếu user đang nhìn vào tab app
+        const hasVisibleClient = windowClients.some(
+          (client) =>
+            client.url.startsWith(self.location.origin) &&
+            client.visibilityState === "visible",
         );
-      });
-
-      if (isChatPush && hasAnyAppClient) {
-        return;
+        if (hasVisibleClient) return;
       }
 
-      if (!isChatPush && hasVisibleClient) {
-        return;
-      }
-
+      // Chat push hoặc không có tab nào visible → luôn hiển thị
       return self.registration.showNotification(title, options);
     });
 
@@ -49,12 +44,16 @@ self.addEventListener("notificationclick", (event) => {
       .matchAll({ type: "window", includeUncontrolled: true })
       .then((clients) => {
         const targetUrl = new URL(url, self.location.origin).href;
+
+        // Ưu tiên focus tab đang mở của app và điều hướng tới URL đích
         for (const client of clients) {
-          if ("focus" in client && client.url.startsWith(self.location.origin)) {
+          if (client.url.startsWith(self.location.origin) && "focus" in client) {
             client.navigate(targetUrl);
             return client.focus();
           }
         }
+
+        // Không có tab nào mở → mở tab mới
         return self.clients.openWindow(targetUrl);
       }),
   );

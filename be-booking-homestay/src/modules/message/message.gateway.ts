@@ -159,8 +159,7 @@ export class MessageGateway implements OnGatewayConnection, OnGatewayDisconnect 
     // 3. Phát tin nhắn tới tất cả thành viên đang trong room cuộc hội thoại này
     let enrichedMessage = savedMessage;
 
-    // 4. Phát thông báo tin nhắn mới tới user cá nhân của đối phương (phòng hờ họ đang ở trang khác)
-    // Lấy thông tin cuộc hội thoại để tìm người nhận
+    // 4. Phát thông báo tin nhắn mới tới user cá nhân của đối phương
     const conv = await this.prismaService.conversations.findUnique({
       where: { id: payload.conversationId },
       include: {
@@ -198,79 +197,84 @@ export class MessageGateway implements OnGatewayConnection, OnGatewayDisconnect 
         createdAt: savedMessage.createdAt,
       };
 
+      // Kiểm tra trạng thái online của người nhận qua activeUsers map
       const isReceiverOnline = this.isUserOnline(receiverId);
 
-      // Kiểm tra xem đối phương có đang ở trong phòng chat này không
-      const receiverSockets = this.activeUsers.get(receiverId);
-      let isReceiverInChatRoom = false;
-      if (receiverSockets) {
-        for (const socketId of receiverSockets) {
-          const socket = (this.server as any).sockets.get(socketId);
-          if (socket && socket.rooms.has(roomName)) {
-            isReceiverInChatRoom = true;
-            break;
-          }
-        }
-      }
+      // Kiểm tra chính xác xem socket của người nhận có đang join room chat này không
+      // Dùng server.in(roomName).fetchSockets() thay vì server.sockets.get() để tránh lỗi namespace
+      const socketsInRoom = await this.server.in(roomName).fetchSockets();
+      const isReceiverInChatRoom = socketsInRoom.some(
+        (s) => Number((s.data as any)?.user?.id) === Number(receiverId),
+      );
 
-      // 1. Phát event socket receive_message để hiện Toast in-app + nhấp nháy tab nếu đang online nhưng ở trang khác
+      console.log(
+        `[Chat] receiver=${receiverId} online=${isReceiverOnline} inChatRoom=${isReceiverInChatRoom}`,
+      );
+
+      // KÊNH 1: Socket event "receive_message" → hiện Toast + nhấp nháy tab in-app
+      // Điều kiện: online nhưng KHÔNG đang xem room chat này
       if (isReceiverOnline && !isReceiverInChatRoom) {
         this.server
           .to(`user_${receiverId}`)
           .except(roomName)
           .emit('receive_message', notificationPayload);
-        console.log(`[Chat] Gửi receive_message tới user ${receiverId} (online, ngoài room)`);
-      }
-
-      // 2. Gửi Web Push nếu đối phương không ở trong phòng chat này (offline hoặc online nhưng ở trang khác)
-      if (!isReceiverOnline) {
-        console.log(`[Chat] Gửi Web Push tới user ${receiverId}`);
-        await this.notificationService.sendChatNotification(receiverId, {
-          conversationId: payload.conversationId,
-          senderId,
-          title: `4Stay - ${senderName}`,
-          body: payload.content,
-          url: inboxUrl,
-        }).catch((err: Error) => {
-          console.error(`[Chat] Lỗi gửi Web Push: ${err.message}`);
-        });
-      }
-
-      // 3. Gửi Email thông báo nếu đối phương OFFLINE hoàn toàn (và hết cooldown)
-      if (!isReceiverOnline) {
-        console.log(`[Chat] User ${receiverId} offline → gửi Email thông báo`);
-        await this.sendOfflineEmailIfNeeded(
-          receiver.email,
-          receiverId,
-          payload.conversationId,
-          senderName,
-          payload.content,
-          inboxUrl,
+        console.log(
+          `[Chat] Kênh 1: Gửi receive_message tới user ${receiverId} (online, ngoài room)`,
         );
       }
+
+      // KÊNH 2: Web Push notification
+      if (!isReceiverOnline) {
+        console.log(`[Chat] Kênh 2: Gửi Web Push tới user ${receiverId}`);
+        this.notificationService
+          .sendChatNotification(receiverId, {
+            conversationId: payload.conversationId,
+            senderId,
+            title: `4Stay - ${senderName}`,
+            body: payload.content,
+            url: inboxUrl,
+          }).catch((err: Error) => {
+            console.error(`[Chat] Lỗi gửi Web Push: ${err.message}`);
+          });
+        }
+        // KÊNH 3: Email fallback (cooldown 15 phút)
+        // Điều kiện: người nhận OFFLINE hoàn toàn
+        if (!isReceiverOnline) {
+          console.log(`[Chat] Kênh 3: User ${receiverId} offline → gửi Email thông báo`);
+          this.sendOfflineEmailIfNeeded(
+            receiver.email,
+            receiverId,
+            payload.conversationId,
+            senderName,
+            payload.content,
+            inboxUrl,
+          ).catch((err: Error) => {
+            console.error(`[Chat] Lỗi gửi email: ${err.message}`);
+          });
+        }
+      }
+
+      this.server.to(roomName).emit('new_message', enrichedMessage);
     }
 
-    this.server.to(roomName).emit('new_message', enrichedMessage);
-  }
+    // Trạng thái đang gõ phím
+    @SubscribeMessage('typing')
+    handleTyping(
+      @ConnectedSocket() client: Socket,
+      @MessageBody() payload: { conversationId: number; isTyping: boolean },
+    ) {
+      const userId = client.data.user?.id;
+      if (!userId || !payload.conversationId) return;
 
-  // Trạng thái đang gõ phím
-  @SubscribeMessage('typing')
-  handleTyping(
-    @ConnectedSocket() client: Socket,
-    @MessageBody() payload: { conversationId: number; isTyping: boolean },
-  ) {
-    const userId = client.data.user?.id;
-    if (!userId || !payload.conversationId) return;
+      const roomName = `conversation_${payload.conversationId}`;
 
-    const roomName = `conversation_${payload.conversationId}`;
-
-    // Phát tin báo đang gõ cho các socket khác trong room (loại trừ chính sender)
-    client.to(roomName).emit('typing_status', {
-      conversationId: payload.conversationId,
-      senderId: userId,
-      isTyping: payload.isTyping,
-    });
-  }
+      // Phát tin báo đang gõ cho các socket khác trong room (loại trừ chính sender)
+      client.to(roomName).emit('typing_status', {
+        conversationId: payload.conversationId,
+        senderId: userId,
+        isTyping: payload.isTyping,
+      });
+    }
 
   private addActiveUser(userId: number, socketId: string) {
     const sockets = this.activeUsers.get(userId) || new Set<string>();

@@ -93,10 +93,14 @@ export class NotificationService {
       where: { userId },
     });
 
+  console.log('[Push] Subscription count:', subscriptions.length);
+
     await Promise.all(
       subscriptions.map(async (subscription) => {
         try {
-          await webpush.sendNotification(
+              console.log("[Push] Sending to:", subscription.endpoint);
+
+           const result = await webpush.sendNotification(
             {
               endpoint: subscription.endpoint,
               keys: {
@@ -117,6 +121,8 @@ export class NotificationService {
               },
             }),
           );
+              console.log("[Push] Success:", result.statusCode);
+
         } catch (error) {
           const statusCode = (error as any)?.statusCode;
           if (statusCode === 404 || statusCode === 410) {
