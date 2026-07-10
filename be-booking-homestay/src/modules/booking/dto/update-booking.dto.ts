@@ -110,4 +110,15 @@ export class UpdateBookingDto {
   @IsOptional()
   @IsString()
   bankAccountName?: string;
+
+  @IsOptional()
+  expectedCheckInReq?: boolean;
+
+  @IsOptional()
+  @IsString()
+  expectedCheckInTime?: string;
+
+  @IsOptional()
+  @IsString()
+  expectedCheckInReason?: string;
 }

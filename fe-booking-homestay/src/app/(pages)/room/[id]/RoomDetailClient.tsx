@@ -20,14 +20,12 @@ import { addMonths, format, parse } from "date-fns";
 import {
   Heart,
   Loader2,
-  Mail,
   MapPin,
   MessageSquare,
   Phone,
   Star,
   Users,
 } from "lucide-react";
-import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
@@ -478,81 +476,35 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
             </div>
 
             {room.host && (
-              <div className="mt-10 p-6 rounded-2xl border bg-white shadow-sm hover:shadow-md transition-all duration-200">
-                <h2 className="text-2xl elegant-heading mb-6 flex items-center gap-2">
-                  Thông tin chủ phòng
-                  <span className="inline-block bg-primary/10 text-primary text-xs px-2 py-1 rounded-full">
-                    Verified Host
-                  </span>
-                </h2>
-
-                <div className="flex items-center gap-6">
-                  <div className="relative">
-                    <Image
-                      src={room.host.avatar || "/placeholder.svg"}
-                      alt="host avatar"
-                      width={100}
-                      height={100}
-                      className="w-20 h-20 object-cover rounded-full"
-                    />
-                    <span className="absolute bottom-1 right-1 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></span>
-                  </div>
-
-                  <div className="flex-1">
-                    <p className="text-xl elegant-sans font-semibold text-foreground">
-                      {room.host.name}
-                    </p>
-
-                    <div className="mt-2 space-y-1 text-sm text-muted-foreground elegant-subheading">
-                      <p className="flex items-center gap-2">
-                        <Mail className="w-4 h-4 text-primary" />
-                        {room.host.email}
-                      </p>
-                      <p className="flex items-center gap-2">
-                        <Phone className="w-4 h-4 text-primary" />
-                        {room.host.phoneNumber}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-6 p-4 bg-gray-50 border rounded-xl text-sm elegant-subheading text-muted-foreground">
-                  Chủ phòng đã xác minh danh tính và thông tin liên hệ.
-                  <br />
-                  Luôn sẵn sàng hỗ trợ bạn trong quá trình lưu trú.
-                </div>
-
-                {/* Real-time Chat Trigger Buttons */}
-                <div className="mt-6 flex flex-col sm:flex-row gap-3">
-                  <button
-                    onClick={() => {
-                      if (!user) {
-                        openSignIn();
-                        return;
-                      }
-                      if (room.host) {
-                        router.push(
-                          `/inbox?hostId=${room.host.id}&roomId=${room.id}`,
-                        );
-                      }
-                    }}
-                    className="flex-1 flex items-center justify-center gap-2 rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold text-sm px-6 py-3.5 shadow-lg shadow-primary/10 active:scale-95 transition-all cursor-pointer"
-                  >
-                    <MessageSquare className="w-4.5 h-4.5" />
-                    Nhắn tin với Chủ phòng
-                  </button>
-                  <a
-                    href={
-                      room.host?.phoneNumber
-                        ? `tel:${room.host.phoneNumber}`
-                        : "#"
+              <div className="mt-8 flex flex-col sm:flex-row gap-3">
+                <button
+                  onClick={() => {
+                    if (!user) {
+                      openSignIn();
+                      return;
                     }
-                    className="flex items-center justify-center gap-2 rounded-2xl border bg-white text-slate-700 hover:bg-slate-50 font-bold text-sm px-6 py-3.5 transition-all cursor-pointer"
-                  >
-                    <Phone className="w-4.5 h-4.5 text-primary" />
-                    Gọi điện trực tiếp
-                  </a>
-                </div>
+                    if (room.host) {
+                      router.push(
+                        `/inbox?hostId=${room.host.id}&roomId=${room.id}`,
+                      );
+                    }
+                  }}
+                  className="flex-1 flex items-center justify-center gap-2 rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold text-sm px-6 py-3.5 shadow-lg shadow-primary/10 active:scale-95 transition-all cursor-pointer"
+                >
+                  <MessageSquare className="w-4.5 h-4.5" />
+                  Nhắn tin với Chủ phòng
+                </button>
+                <a
+                  href={
+                    room.host?.phoneNumber
+                      ? `tel:${room.host.phoneNumber}`
+                      : "#"
+                  }
+                  className="flex items-center justify-center gap-2 rounded-2xl border bg-white text-slate-700 hover:bg-slate-50 font-bold text-sm px-6 py-3.5 transition-all cursor-pointer"
+                >
+                  <Phone className="w-4.5 h-4.5 text-primary" />
+                  Gọi điện trực tiếp
+                </a>
               </div>
             )}
 

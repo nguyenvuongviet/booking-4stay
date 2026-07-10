@@ -3,9 +3,13 @@
 import { Button } from "@/_components/ui/button";
 import { Card } from "@/_components/ui/card";
 import { UserAvatar } from "@/_components/UserAvatar";
+import { useRealtimeChat } from "@/context/ChatContext";
 import { parseAbsoluteDate } from "@/lib/utils";
 import { formatDate } from "@/lib/utils/date";
-import { getBookingById } from "@/services/admin/bookingsApi";
+import {
+  approveExpectedCheckIn,
+  getBookingById,
+} from "@/services/admin/bookingsApi";
 import api from "@/services/api";
 import { format } from "date-fns";
 import { vi } from "date-fns/locale";
@@ -15,6 +19,7 @@ import {
   CreditCard,
   Image as ImageIcon,
   MapPin,
+  MessageSquare,
   Moon,
   Users,
 } from "lucide-react";
@@ -83,6 +88,55 @@ export default function BookingDetailPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [showAllLogs, setShowAllLogs] = useState(false);
   const [refundBookingData, setRefundBookingData] = useState<any>(null);
+  const [expectedCheckInNote, setExpectedCheckInNote] = useState("");
+  const [submittingResponse, setSubmittingResponse] = useState(false);
+  const { createOrGetConversation } = useRealtimeChat();
+  const [chatLoading, setChatLoading] = useState(false);
+
+  async function handleChatWithGuest() {
+    if (!booking?.user?.id) {
+      toast.error("Không tìm thấy thông tin khách hàng");
+      return;
+    }
+    setChatLoading(true);
+    try {
+      const hostId = booking.room?.host?.id || booking.roomId;
+      const convId = await createOrGetConversation(
+        hostId,
+        booking.room?.id,
+        booking.user.id,
+      );
+      if (convId) {
+        router.push("/admin/chat");
+      } else {
+        toast.error("Không thể tạo cuộc hội thoại lúc này");
+      }
+    } catch (err) {
+      toast.error("Lỗi khi kết nối trò chuyện");
+    } finally {
+      setChatLoading(false);
+    }
+  }
+
+  async function handleExpectedCheckInResponse(
+    status: "APPROVED" | "REJECTED",
+  ) {
+    try {
+      setSubmittingResponse(true);
+      await approveExpectedCheckIn(bookingId, status, expectedCheckInNote);
+      toast.success(
+        status === "APPROVED"
+          ? "Đã xác nhận giờ nhận phòng dự kiến!"
+          : "Đã từ chối!",
+      );
+      setExpectedCheckInNote("");
+      load();
+    } catch (error) {
+      toast.error("Không thể cập nhật yêu cầu. Vui lòng thử lại!");
+    } finally {
+      setSubmittingResponse(false);
+    }
+  }
 
   async function load() {
     try {
@@ -240,6 +294,7 @@ export default function BookingDetailPage() {
             onEdit={() => setIsEditing(true)}
             onCancel={(id) => setCancelBookingId(id)}
             onRefund={(bk) => setRefundBookingData(bk)}
+            onStatusUpdated={load}
           />
           <RefreshButton onRefresh={load} />
         </div>
@@ -650,16 +705,149 @@ export default function BookingDetailPage() {
               </div>
             </div>
 
-            {user?.id && (
-              <Link href={`/admin/users/${user.id}`}>
-                <div className="bg-gray-900 p-4 text-center hover:bg-black transition-colors cursor-pointer">
-                  <span className="text-[10px] font-black text-white uppercase tracking-widest">
-                    Quản lý hồ sơ người dùng →
-                  </span>
-                </div>
-              </Link>
-            )}
+            <div className="flex gap-2 p-4 bg-gray-50 border-t border-gray-100">
+              {user?.id && (
+                <Link href={`/admin/users/${user.id}`} className="flex-1">
+                  <Button
+                    variant="outline"
+                    className="w-full text-[10px] font-black uppercase tracking-widest text-gray-700 py-3 h-auto rounded-xl hover:bg-gray-100 border-gray-200"
+                  >
+                    Hồ sơ khách →
+                  </Button>
+                </Link>
+              )}
+              <Button
+                onClick={handleChatWithGuest}
+                disabled={chatLoading}
+                className="flex-1 bg-sky-500 hover:bg-sky-600 text-white font-bold text-[10px] uppercase tracking-widest py-3 h-auto rounded-xl flex items-center justify-center gap-2 shadow-sm"
+              >
+                <MessageSquare className="w-4 h-4" />
+                {chatLoading ? "Đang kết nối..." : "Trò chuyện"}
+              </Button>
+            </div>
           </Card>
+
+          {/* EXPECTED CHECK-IN (IF ANY) */}
+          {booking.expectedCheckInReq &&
+            (() => {
+              const isEarlyCheckIn =
+                booking.expectedCheckInTime &&
+                booking.expectedCheckInTime.split("-")[0].trim() < "14:00";
+              return (
+                <Card className="p-6 rounded-3xl shadow-xl border-none ring-1 ring-gray-100 bg-white space-y-4">
+                  <div className="flex items-center justify-between border-b pb-3">
+                    <h3 className="text-sm sm:text-base font-bold text-gray-800 flex items-center gap-2">
+                      <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+                      Giờ nhận phòng dự kiến
+                    </h3>
+                    {booking.expectedCheckInStatus === "PENDING" && (
+                      <span className="text-[10px] font-bold px-2.5 py-1 bg-amber-50 text-amber-600 rounded-full border border-amber-200">
+                        Chờ xác nhận
+                      </span>
+                    )}
+                    {booking.expectedCheckInStatus === "APPROVED" && (
+                      <span className="text-[10px] font-bold px-2.5 py-1 bg-emerald-50 text-emerald-600 rounded-full border border-emerald-200">
+                        {isEarlyCheckIn ? "Đã xác nhận" : "Đã ghi nhận"}
+                      </span>
+                    )}
+                    {booking.expectedCheckInStatus === "REJECTED" && (
+                      <span className="text-[10px] font-bold px-2.5 py-1 bg-red-50 text-red-600 rounded-full border border-red-200">
+                        Từ chối
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-2 gap-4 bg-gray-50 p-3 rounded-2xl border border-gray-100">
+                      <div>
+                        <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">
+                          Khung giờ dự kiến
+                        </p>
+                        <p className="text-xs sm:text-sm font-bold text-gray-800">
+                          {booking.expectedCheckInTime || "N/A"}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">
+                          Ngày nhận phòng
+                        </p>
+                        <p className="text-xs sm:text-sm font-bold text-gray-800">
+                          {formatDate(booking.checkIn)}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="p-3 bg-gray-50 rounded-2xl border border-gray-100">
+                      <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">
+                        Ghi chú của khách hàng
+                      </p>
+                      <p className="text-xs text-gray-700 italic">
+                        "
+                        {booking.expectedCheckInReason ||
+                          "Không có ghi chú thêm"}
+                        "
+                      </p>
+                    </div>
+
+                    {booking.expectedCheckInStatus === "PENDING" ? (
+                      <div className="pt-2 space-y-3">
+                        <textarea
+                          placeholder="Phản hồi hoặc ghi chú phụ thu nếu có..."
+                          className="w-full p-3 border border-border/80 rounded-xl text-xs resize-none h-16 focus:outline-none focus:ring-1 focus:ring-primary bg-input placeholder:text-[11px]"
+                          value={expectedCheckInNote}
+                          onChange={(e) =>
+                            setExpectedCheckInNote(e.target.value)
+                          }
+                        />
+                        <div className="grid grid-cols-2 gap-3">
+                          <Button
+                            variant="outline"
+                            className="rounded-xl border-red-200 hover:bg-red-50 hover:text-red-600 text-xs py-2 h-auto"
+                            onClick={() =>
+                              handleExpectedCheckInResponse("REJECTED")
+                            }
+                            disabled={submittingResponse}
+                          >
+                            Từ chối
+                          </Button>
+                          <Button
+                            className="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs py-2 h-auto"
+                            onClick={() =>
+                              handleExpectedCheckInResponse("APPROVED")
+                            }
+                            disabled={submittingResponse}
+                          >
+                            Xác nhận giờ đến
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      isEarlyCheckIn && (
+                        <div
+                          className={`p-3 text-xs rounded-2xl border ${
+                            booking.expectedCheckInStatus === "APPROVED"
+                              ? "bg-emerald-50/50 text-emerald-950 border-emerald-100/50"
+                              : "bg-red-50/50 text-red-950 border-red-100/50"
+                          }`}
+                        >
+                          <p className="font-bold mb-1">
+                            {booking.expectedCheckInStatus === "APPROVED"
+                              ? "✓ Phản hồi từ Admin (Đã chấp thuận):"
+                              : "✗ Phản hồi từ Admin (Từ chối):"}
+                          </p>
+                          <p className="italic">
+                            "
+                            {booking.expectedCheckInReason ||
+                              "Không có phản hồi chi tiết"}
+                            "
+                          </p>
+                        </div>
+                      )
+                    )}
+                  </div>
+                </Card>
+              );
+            })()}
 
           {/* REVIEW (IF ANY) */}
           {booking.review && (

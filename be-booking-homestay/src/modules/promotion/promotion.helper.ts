@@ -76,6 +76,11 @@ export class PromotionHelper {
       return this.invalid('Mã giảm giá đã hết lượt sử dụng', orderTotal);
     }
 
+    // Để tránh race condition cho perUserLimit, ta khóa dòng của user trong DB nếu đang chạy trong transaction
+    if (options?.tx) {
+      await prisma.$queryRaw`SELECT id FROM users WHERE id = ${userId} FOR UPDATE`;
+    }
+
     // 5. Kiểm tra số lần user đã dùng mã này
     const userUsageCount = await prisma.promotion_usages.count({
       where: { promotionId: promotion.id, userId },
@@ -291,16 +296,18 @@ export class PromotionHelper {
   ) {
     const prisma = options?.tx || this.prisma;
 
-    // Giảm usedCount (atomic + CAS, tối thiểu về 0)
-    await prisma.promotions.updateMany({
-      where: { id: promotionId, usedCount: { gt: 0 } },
-      data: { usedCount: { decrement: 1 } },
-    });
-
-    // Xoá ghi nhận usage
-    await prisma.promotion_usages.deleteMany({
+    // Xoá ghi nhận usage trước để làm nguồn chân lý (idempotent)
+    const deleted = await prisma.promotion_usages.deleteMany({
       where: { bookingId, promotionId, userId },
     });
+
+    // Chỉ khi thực sự xoá được 1 usage record thì mới hoàn lượt dùng
+    if (deleted.count === 1) {
+      await prisma.promotions.updateMany({
+        where: { id: promotionId, usedCount: { gt: 0 } },
+        data: { usedCount: { decrement: 1 } },
+      });
+    }
 
     // Cập nhật user_voucher về AVAILABLE nếu tồn tại
     const voucher = await prisma.user_vouchers.findFirst({

@@ -65,4 +65,8 @@ export interface Booking {
     note: string;
     createdAt: string;
   }[];
+  expectedCheckInReq?: boolean;
+  expectedCheckInTime?: string | null;
+  expectedCheckInStatus?: "PENDING" | "APPROVED" | "REJECTED" | null;
+  expectedCheckInReason?: string | null;
 }

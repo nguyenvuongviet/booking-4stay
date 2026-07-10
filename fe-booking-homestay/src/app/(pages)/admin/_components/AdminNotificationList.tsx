@@ -29,7 +29,8 @@ export default function AdminNotificationList() {
     type === "ADMIN_BOOKING_CANCELLED" ||
     type === "ADMIN_BOOKING_WAITING_REFUND" ||
     type === "ADMIN_PAYMENT_SUCCESS" ||
-    type === "ADMIN_CHECKIN_REMINDER";
+    type === "ADMIN_CHECKIN_REMINDER" ||
+    type === "ADMIN_EXPECTED_CHECKIN_REQUEST";
   // type === "NEW_MESSAGE";
   const adminNotifications = notifications.filter((n) =>
     isAdminNotificationType(n.type),
@@ -110,6 +111,9 @@ export default function AdminNotificationList() {
     ),
     ADMIN_BOOKING_WAITING_REFUND: (
       <CreditCard className="w-4 h-4 sm:w-5 sm:h-5 text-red-500 shrink-0" />
+    ),
+    ADMIN_EXPECTED_CHECKIN_REQUEST: (
+      <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500 shrink-0" />
     ),
   };
   const defaultIcon = (

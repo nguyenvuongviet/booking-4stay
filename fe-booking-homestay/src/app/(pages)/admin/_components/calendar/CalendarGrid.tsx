@@ -132,7 +132,12 @@ export default function CalendarGrid({
     if (!bookings) return map;
 
     bookings.forEach((b) => {
-      if (b.status === "CANCELLED") return;
+      const inactiveStatuses = [
+        "CANCELLED",
+        "CANCELLED_BY_ADMIN",
+        "REFUNDED",
+      ];
+      if (inactiveStatuses.includes(b.status)) return;
       const start = new Date(b.checkIn);
       const end = new Date(b.checkOut);
       const current = new Date(start);

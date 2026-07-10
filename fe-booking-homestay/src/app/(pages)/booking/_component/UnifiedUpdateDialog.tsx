@@ -78,6 +78,33 @@ export function UnifiedUpdateDialog({
   const [bankAccountName, setBankAccountName] = useState("");
   const [bankLoading, setBankLoading] = useState(false);
 
+  const [expectedCheckInReq, setExpectedCheckInReq] = useState(false);
+  const [fromTime, setFromTime] = useState("08:00");
+  const [toTime, setToTime] = useState("10:00");
+  const [expectedCheckInReason, setExpectedCheckInReason] = useState("");
+
+  const handleFromTimeChange = (val: string) => {
+    setFromTime(val);
+    if (val && toTime && val > toTime) {
+      const [h, m] = val.split(":").map(Number);
+      const nextH = (h + 1) % 24;
+      const nextHStr = nextH < 10 ? `0${nextH}` : `${nextH}`;
+      const mStr = m < 10 ? `0${m}` : `${m}`;
+      setToTime(`${nextHStr}:${mStr}`);
+    }
+  };
+
+  const handleToTimeChange = (val: string) => {
+    setToTime(val);
+    if (val && fromTime && val < fromTime) {
+      const [h, m] = val.split(":").map(Number);
+      const prevH = (h - 1 + 24) % 24;
+      const prevHStr = prevH < 10 ? `0${prevH}` : `${prevH}`;
+      const mStr = m < 10 ? `0${m}` : `${m}`;
+      setFromTime(`${prevHStr}:${mStr}`);
+    }
+  };
+
   useEffect(() => {
     if (open && booking) {
       // Xác định bước khởi đầu
@@ -127,6 +154,17 @@ export function UnifiedUpdateDialog({
         booking.guestInfo?.phoneNumber || booking.user?.phoneNumber || "",
       );
       setSpecialRequest(booking.guestInfo?.specialRequest || "");
+
+      setExpectedCheckInReq(booking.expectedCheckInReq || false);
+      if (booking.expectedCheckInTime) {
+        const parts = booking.expectedCheckInTime.split("-");
+        setFromTime(parts[0]?.trim() || "08:00");
+        setToTime(parts[1]?.trim() || "10:00");
+      } else {
+        setFromTime("08:00");
+        setToTime("10:00");
+      }
+      setExpectedCheckInReason(booking.expectedCheckInReason || "");
 
       if (booking.room?.id) {
         get_unavailable_dates(booking.room.id, booking.id).then((dates) => {
@@ -202,7 +240,10 @@ export function UnifiedUpdateDialog({
 
       // Tính toán các khoản phí cố định (như phí dọn dẹp, phí dịch vụ...)
       // bằng cách lấy Tổng tiền thanh toán trừ đi (Tiền phòng gốc - Giảm giá)
-      const fixedFees = Math.max(0, originalTotal - (originalRaw - originalDiscount));
+      const fixedFees = Math.max(
+        0,
+        originalTotal - (originalRaw - originalDiscount),
+      );
 
       const discountPercent = originalDiscount / originalRaw;
       const newDiscount = Math.round(rawTotal * discountPercent);
@@ -249,6 +290,26 @@ export function UnifiedUpdateDialog({
         data.guestPhoneNumber = phone;
       if (specialRequest !== (booking.guestInfo?.specialRequest || ""))
         data.specialRequest = specialRequest;
+
+      const finalTimeStr = `${fromTime} - ${toTime}`;
+      if (expectedCheckInReq !== booking.expectedCheckInReq) {
+        data.expectedCheckInReq = expectedCheckInReq;
+      }
+      if (expectedCheckInReq) {
+        if (finalTimeStr !== booking.expectedCheckInTime) {
+          data.expectedCheckInTime = finalTimeStr;
+        }
+        if (expectedCheckInReason !== booking.expectedCheckInReason) {
+          data.expectedCheckInReason = expectedCheckInReason;
+        }
+      } else {
+        if (booking.expectedCheckInTime) {
+          data.expectedCheckInTime = null;
+        }
+        if (booking.expectedCheckInReason) {
+          data.expectedCheckInReason = null;
+        }
+      }
 
       // Gọi API update
       const resp = await update_booking(booking.id, data);
@@ -317,6 +378,14 @@ export function UnifiedUpdateDialog({
       return true;
     if (specialRequest !== (booking.guestInfo?.specialRequest || ""))
       return true;
+
+    const finalTimeStr = `${fromTime} - ${toTime}`;
+    if (expectedCheckInReq !== booking.expectedCheckInReq) return true;
+    if (expectedCheckInReq) {
+      if (finalTimeStr !== booking.expectedCheckInTime) return true;
+      if (expectedCheckInReason !== booking.expectedCheckInReason) return true;
+    }
+
     return false;
   };
 
@@ -327,7 +396,7 @@ export function UnifiedUpdateDialog({
 
   return (
     <Dialog open={open} onOpenChange={(val) => !val && handleClose()}>
-      <DialogContent className="sm:max-w-[700px] p-0 overflow-hidden bg-white rounded-3xl max-h-[90vh] flex flex-col">
+      <DialogContent className="sm:max-w-175 p-0 overflow-hidden bg-white rounded-3xl max-h-[90vh] flex flex-col">
         {/* ─── Step 1: Edit Form ─── */}
         {step === "edit" && (
           <>
@@ -535,10 +604,67 @@ export function UnifiedUpdateDialog({
                         value={specialRequest}
                         onChange={(e) => setSpecialRequest(e.target.value)}
                         placeholder="Ví dụ: Phòng tầng cao, nệm phụ, check-in sớm..."
-                        className="pl-10 min-h-[100px] rounded-xl border-gray-200 focus:ring-primary pt-2.5 bg-gray-50"
+                        className="pl-10 min-h-25 rounded-xl border-gray-200 focus:ring-primary pt-2.5 bg-gray-50"
                       />
                     </div>
                   </div>
+                </div>
+
+                <div className="bg-white p-5 rounded-2xl border border-gray-100 space-y-4">
+                  <label className="flex items-center gap-3 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      className="w-5 h-5 rounded-lg border-gray-300 accent-primary cursor-pointer"
+                      checked={expectedCheckInReq}
+                      onChange={(e) => setExpectedCheckInReq(e.target.checked)}
+                    />
+                    <span className="text-sm font-bold text-gray-800">
+                      Thông báo giờ nhận phòng dự kiến
+                    </span>
+                  </label>
+
+                  {expectedCheckInReq && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                      <div className="space-y-1.5">
+                        <Label className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase ml-1">
+                          Khung giờ dự kiến
+                        </Label>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="time"
+                            className="flex-1 p-2.5 border border-gray-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-1 focus:ring-primary bg-gray-50 text-gray-800 font-bold"
+                            value={fromTime}
+                            onChange={(e) =>
+                              handleFromTimeChange(e.target.value)
+                            }
+                          />
+                          <span className="text-gray-400 text-xs font-semibold">
+                            đến
+                          </span>
+                          <input
+                            type="time"
+                            className="flex-1 p-2.5 border border-gray-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-1 focus:ring-primary bg-gray-50 text-gray-800 font-bold"
+                            value={toTime}
+                            onChange={(e) => handleToTimeChange(e.target.value)}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <Label className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase ml-1">
+                          Ghi chú / Lý do
+                        </Label>
+                        <Input
+                          value={expectedCheckInReason}
+                          onChange={(e) =>
+                            setExpectedCheckInReason(e.target.value)
+                          }
+                          placeholder="Ví dụ: Muốn gửi đồ trước..."
+                          className="h-9 sm:h-11 rounded-xl border-gray-200 focus:ring-primary bg-gray-50 text-xs sm:text-sm"
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Financial Impact Preview */}
@@ -568,13 +694,15 @@ export function UnifiedUpdateDialog({
                           <div className="flex items-center gap-3">
                             <div className="w-1.5 h-1.5 rounded-full bg-white/20" />
                             <p className="text-xs text-white/40 line-through">
-                              {format(new Date(booking.checkIn), "dd/MM")} - {format(new Date(booking.checkOut), "dd/MM")}
+                              {format(new Date(booking.checkIn), "dd/MM")} -{" "}
+                              {format(new Date(booking.checkOut), "dd/MM")}
                             </p>
                           </div>
                           <div className="flex items-center gap-3">
                             <div className="w-1.5 h-1.5 rounded-full bg-primary" />
                             <p className="text-sm font-bold text-white">
-                              {format(range?.from!, "dd/MM")} - {format(range?.to!, "dd/MM")}
+                              {format(range?.from!, "dd/MM")} -{" "}
+                              {format(range?.to!, "dd/MM")}
                             </p>
                           </div>
                         </div>
@@ -589,13 +717,16 @@ export function UnifiedUpdateDialog({
                           <div className="flex items-center gap-3">
                             <div className="w-1.5 h-1.5 rounded-full bg-white/20" />
                             <p className="text-xs text-white/40 line-through">
-                              {booking.adults} Người lớn {booking.children > 0 && `, ${booking.children} Trẻ em`}
+                              {booking.adults} Người lớn{" "}
+                              {booking.children > 0 &&
+                                `, ${booking.children} Trẻ em`}
                             </p>
                           </div>
                           <div className="flex items-center gap-3">
                             <div className="w-1.5 h-1.5 rounded-full bg-primary" />
                             <p className="text-sm font-bold text-white">
-                              {adults} Người lớn {children > 0 && `, ${children} Trẻ em`}
+                              {adults} Người lớn{" "}
+                              {children > 0 && `, ${children} Trẻ em`}
                             </p>
                           </div>
                         </div>
@@ -605,7 +736,9 @@ export function UnifiedUpdateDialog({
                     {/* Price Impact */}
                     <div className="bg-white/5 rounded-2xl p-4 border border-white/10 space-y-4">
                       <div className="flex justify-between items-center text-sm">
-                        <span className="text-white/60">Tổng giá trị đơn mới:</span>
+                        <span className="text-white/60">
+                          Tổng giá trị đơn mới:
+                        </span>
                         <span className="font-black text-xl text-primary">
                           {previewPrice.total.toLocaleString()}₫
                         </span>
@@ -617,16 +750,22 @@ export function UnifiedUpdateDialog({
                             Chênh lệch tổng đơn
                           </span>
                           <p className="text-sm font-bold text-white/60">
-                            {previewPrice.priceDiff > 0 ? "+" : ""}{previewPrice.priceDiff.toLocaleString()}₫
+                            {previewPrice.priceDiff > 0 ? "+" : ""}
+                            {previewPrice.priceDiff.toLocaleString()}₫
                           </p>
                         </div>
 
                         <div className="text-right space-y-1">
                           <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest">
-                            {previewPrice.actualDiff > 0 ? "Bạn cần trả thêm" : "Số tiền hoàn trả"}
+                            {previewPrice.actualDiff > 0
+                              ? "Bạn cần trả thêm"
+                              : "Số tiền hoàn trả"}
                           </span>
-                          <p className={`text-sm font-black ${previewPrice.actualDiff > 0 ? "text-rose-400" : "text-emerald-400"}`}>
-                            {Math.abs(previewPrice.actualDiff).toLocaleString()}₫
+                          <p
+                            className={`text-sm font-black ${previewPrice.actualDiff > 0 ? "text-rose-400" : "text-emerald-400"}`}
+                          >
+                            {Math.abs(previewPrice.actualDiff).toLocaleString()}
+                            ₫
                           </p>
                         </div>
                       </div>
@@ -811,7 +950,7 @@ export function UnifiedUpdateDialog({
               <h3 className="text-xl font-black text-gray-900">
                 Đã gửi thông tin thành công!
               </h3>
-              <p className="text-gray-500 text-sm max-w-[400px] leading-relaxed">
+              <p className="text-gray-500 text-sm max-w-100 leading-relaxed">
                 Thông tin ngân hàng của bạn đã được lưu. Quản trị viên sẽ xử lý
                 hoàn tiền{" "}
                 <span className="font-bold text-green-600">

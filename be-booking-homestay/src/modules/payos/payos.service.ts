@@ -1,5 +1,12 @@
-import { Injectable, Logger } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { PayOS } from '@payos/node';
+import { bookings_status } from '@prisma/client';
 import {
   CLIENT_URL,
   PAYOS_API_KEY,
@@ -8,6 +15,7 @@ import {
 } from 'src/common/constant/app.constant';
 import { BookingLifecycleService } from '../booking/booking-lifecycle.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { Role } from '../user/dto/enum.dto';
 
 @Injectable()
 export class PayosService {
@@ -25,7 +33,69 @@ export class PayosService {
     });
   }
 
-  async createPaymentLink(bookingId: number, amount: number) {
+  async createPaymentLink(
+    userId: number,
+    role: string,
+    bookingId: number,
+    paymentPurpose?: 'DEPOSIT' | 'FULL',
+  ) {
+    const booking = await this.prisma.bookings.findUnique({
+      where: { id: bookingId },
+    });
+    if (!booking) {
+      throw new NotFoundException('Không tìm thấy booking');
+    }
+
+    // 1. Kiểm tra booking thuộc người gọi (Trừ Admin)
+    if (role !== Role.ADMIN && booking.userId !== userId) {
+      throw new ForbiddenException('Bạn không có quyền thanh toán booking này');
+    }
+
+    // 2. Kiểm tra trạng thái booking có được phép thanh toán không
+    const invalidStatuses: bookings_status[] = [
+      bookings_status.CANCELLED,
+      bookings_status.CANCELLED_BY_ADMIN,
+      bookings_status.CHECKED_OUT,
+      bookings_status.REFUNDED,
+    ];
+    if (invalidStatuses.includes(booking.status as bookings_status)) {
+      throw new BadRequestException(
+        'Booking này không ở trạng thái được phép thanh toán',
+      );
+    }
+
+    // 3. Tính số tiền phải thu từ database
+    const total = Number(booking.totalPrice);
+    const paid = Number(booking.paidAmount);
+    const outstandingAmount = total - paid;
+
+    if (outstandingAmount <= 0) {
+      throw new BadRequestException('Booking này đã được thanh toán đầy đủ');
+    }
+
+    let amount = 0;
+    if (paymentPurpose === 'DEPOSIT') {
+      // Đặt cọc 30% tổng tiền
+      const requiredDeposit = Math.round(total * 0.3);
+      if (paid >= requiredDeposit) {
+        // Đã cọc đủ hoặc hơn rồi, số tiền cần thanh toán tiếp là outstandingAmount
+        amount = outstandingAmount;
+      } else {
+        // Cần thanh toán số tiền còn thiếu để đạt mức cọc 30%
+        amount = requiredDeposit - paid;
+      }
+    } else {
+      // Mặc định hoặc thanh toán FULL: trả hết số tiền còn thiếu
+      amount = outstandingAmount;
+    }
+
+    // Tránh số tiền quá nhỏ (dưới 1000đ PayOS không nhận)
+    if (amount < 1000) {
+      throw new BadRequestException(
+        'Số tiền thanh toán tối thiểu là 1,000 VND',
+      );
+    }
+
     // Tạo orderCode an toàn: bookingId + timestamp (6 chữ số)
     const timestamp = Date.now() % 1000000;
     const orderCode = Number(
@@ -49,7 +119,7 @@ export class PayosService {
     const body = {
       orderCode,
       amount,
-      description: `Don ${bookingId}`,
+      description: `Don BK-${bookingId}`,
       items: [
         {
           name: `Đơn đặt phòng #${bookingId}`,
@@ -78,7 +148,6 @@ export class PayosService {
       throw error;
     }
   }
-
   async handleWebhook(webhookBody: any) {
     try {
       const webhookData = await this.payos.webhooks.verify(webhookBody);
@@ -107,30 +176,35 @@ export class PayosService {
           return true;
         }
 
-        // Xử lý trong transaction
+        // Giao dịch nguyên tử (Atomic transaction) cho cả payment_transactions và bookings
         await this.prisma.$transaction(async (tx) => {
-          // Double-check idempotency trong TX (chống race giữa 2 webhook cùng lúc)
-          const freshTx = await tx.payment_transactions.findUnique({
-            where: { orderCode: orderCodeBigInt },
-          });
-          if (freshTx?.status === 'COMPLETED') return;
-
-          // Cập nhật trạng thái giao dịch
-          await tx.payment_transactions.update({
-            where: { id: paymentTx.id },
+          // Chống race condition: Chỉ update status = 'COMPLETED' nếu nó đang là 'PENDING'
+          const updateResult = await tx.payment_transactions.updateMany({
+            where: {
+              id: paymentTx.id,
+              status: 'PENDING',
+            },
             data: {
               status: 'COMPLETED',
               payosResponse: webhookData as any,
               processedAt: new Date(),
             },
           });
-        });
 
-        // Cập nhật booking (bên ngoài TX riêng vì lifecycleService có TX riêng)
-        await this.lifecycleService.updateStatus(
-          paymentTx.bookingId,
-          webhookData.amount,
-        );
+          if (updateResult.count === 0) {
+            this.logger.log(
+              `Webhook transaction already processed or not pending: ${paymentTx.id}`,
+            );
+            return;
+          }
+
+          // Cập nhật booking trong CÙNG transaction 'tx' này!
+          await this.lifecycleService.updateStatus(
+            paymentTx.bookingId,
+            webhookData.amount,
+            tx,
+          );
+        });
       }
       return true;
     } catch (error) {
@@ -164,19 +238,29 @@ export class PayosService {
           return true; // Đã xử lý rồi
         }
 
-        // Cập nhật giao dịch + booking
-        await this.prisma.payment_transactions.update({
-          where: { id: paymentTx.id },
-          data: {
-            status: 'COMPLETED',
-            processedAt: new Date(),
-          },
-        });
+        // Cập nhật giao dịch + booking trong CÙNG một transaction
+        await this.prisma.$transaction(async (tx) => {
+          const updateResult = await tx.payment_transactions.updateMany({
+            where: {
+              id: paymentTx.id,
+              status: 'PENDING',
+            },
+            data: {
+              status: 'COMPLETED',
+              processedAt: new Date(),
+            },
+          });
 
-        await this.lifecycleService.updateStatus(
-          paymentTx.bookingId,
-          paymentInfo.amountPaid,
-        );
+          if (updateResult.count === 0) {
+            return;
+          }
+
+          await this.lifecycleService.updateStatus(
+            paymentTx.bookingId,
+            paymentInfo.amountPaid,
+            tx,
+          );
+        });
 
         return true;
       }

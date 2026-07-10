@@ -79,7 +79,7 @@ export default function BookingDetailClient({
             {/* Back Button */}
             <button
               onClick={() => router.back()}
-              className="group flex items-center justify-center h-10 w-10 rounded-full hover:bg-primary/10 hover:scale-105 backdrop-blur-xl shadow-sm hover:shadow-lg hover:shadow-primary/10 hover:border-primary/30 transition-all duration-300 hover:-translate-x-1"
+              className="cursor-pointer group flex items-center justify-center h-10 w-10 rounded-full hover:bg-primary/10 hover:scale-105 backdrop-blur-xl shadow-sm hover:shadow-lg hover:shadow-primary/10 hover:border-primary/30 transition-all duration-300 hover:-translate-x-1"
             >
               <ChevronLeft className="h-6 w-6 text-muted-foreground group-hover:text-primary duration-300 transition-colors" />
             </button>

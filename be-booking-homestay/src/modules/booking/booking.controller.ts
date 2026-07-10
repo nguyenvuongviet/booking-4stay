@@ -15,14 +15,17 @@ import { Public } from 'src/common/decorator/public.decorator';
 import { Roles } from 'src/common/decorator/roles.decorator';
 import { Role } from '../user/dto/enum.dto';
 import { BookingCancelRefundService } from './booking-cancel-refund.service';
+import { BookingLifecycleService } from './booking-lifecycle.service';
 import { BookingQueryService } from './booking-query.service';
 import { BookingService } from './booking.service';
+import { ApproveExpectedCheckInDto } from './dto/approve-expected-checkin.dto';
 import { CancelBookingDto } from './dto/cancel-booking.dto';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { CreateManualBookingDto } from './dto/create-manual-booking.dto';
 import { ListBookingQuery } from './dto/list-booking.query';
 import { PreCheckDto } from './dto/preCheck-booking.dto';
 import { RoomAvailabilityDto } from './dto/room-availability.dto';
+import { UpdateBookingStatusDto } from './dto/update-booking-status.dto';
 import { UpdateBookingDto } from './dto/update-booking.dto';
 
 @ApiTags('bookings')
@@ -32,6 +35,7 @@ export class BookingController {
     private readonly bookingService: BookingService,
     private readonly queryService: BookingQueryService,
     private readonly cancelRefundService: BookingCancelRefundService,
+    private readonly lifecycleService: BookingLifecycleService,
   ) {}
 
   @Get('unavailable-days')
@@ -195,5 +199,31 @@ export class BookingController {
       dto.refundAmount,
       dto.refundEvidence,
     );
+  }
+
+  @Patch('/:id/admin-status')
+  @Roles(Role.ADMIN)
+  @ApiBearerAuth('AccessToken')
+  async adminUpdateStatus(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateBookingStatusDto,
+  ) {
+    return this.lifecycleService.changeBookingStatus(id, dto.status, {
+      reason: dto.reason,
+      surcharge: dto.surcharge,
+      allowOverride: true,
+      notifyUser: true,
+      notifyAdmin: false,
+    });
+  }
+
+  @Patch('/:id/expected-checkin/approve')
+  @Roles(Role.ADMIN)
+  @ApiBearerAuth('AccessToken')
+  async approveExpectedCheckIn(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: ApproveExpectedCheckInDto,
+  ) {
+    return this.bookingService.approveExpectedCheckIn(id, dto);
   }
 }

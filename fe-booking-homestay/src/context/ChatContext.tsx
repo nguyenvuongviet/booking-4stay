@@ -178,9 +178,9 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
   );
 
   const createOrGetConversation = useCallback(
-    async (hostId: number, roomId?: number): Promise<number> => {
+    async (hostId: number, roomId?: number, guestId?: number): Promise<number> => {
       try {
-        const conversation = await createConversation(hostId, roomId);
+        const conversation = await createConversation(hostId, roomId, guestId);
         if (!conversation?.id) return 0;
 
         await refreshConversations();
@@ -188,7 +188,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
         return conversation.id;
       } catch (error) {
         console.error("Lỗi tạo cuộc trò chuyện:", error);
-        toast.error("Không thể kết nối với Host lúc này.");
+        toast.error("Không thể kết nối lúc này.");
         return 0;
       }
     },

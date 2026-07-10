@@ -261,6 +261,15 @@ export class BookingService {
           paidAmount: 0,
           cancellationPolicy: policyConfig?.value || [],
           policyUpdatedAt: policyConfig?.updatedAt || new Date(),
+          expectedCheckInReq: dto.expectedCheckInReq ?? false,
+          expectedCheckInTime: dto.expectedCheckInTime ?? null,
+          expectedCheckInStatus: dto.expectedCheckInReq
+            ? dto.expectedCheckInTime &&
+              dto.expectedCheckInTime.split('-')[0].trim() < '14:00'
+              ? 'PENDING'
+              : 'APPROVED'
+            : null,
+          expectedCheckInReason: dto.expectedCheckInReason ?? null,
         },
         include: { rooms: { include: { room_images: true } } },
       });
@@ -304,10 +313,24 @@ export class BookingService {
     // create notification for user
     try {
       await this.notificationService.notifyBookingCreated(userId, booking.id);
-      // Notify admin about new booking
-      this.notificationService
+      // Notify admin about new booking (Gửi trước)
+      await this.notificationService
         .notifyAdminNewBooking(booking.id, guestFullName)
         .catch((err) => console.error('Admin notification error:', err));
+
+      // Bắn thông báo nhận phòng dự kiến nếu khách có yêu cầu (Gửi sau 100ms để đảm bảo thứ tự hiển thị)
+      if (booking.expectedCheckInReq) {
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        await this.notificationService
+          .notifyAdminExpectedCheckIn(
+            booking.id,
+            guestFullName,
+            booking.expectedCheckInTime ?? undefined,
+          )
+          .catch((err) =>
+            console.error('Admin expected check-in notification error:', err),
+          );
+      }
     } catch (err) {
       console.error('Notification error:', err);
     }
@@ -614,6 +637,9 @@ export class BookingService {
       bankName,
       bankAccountNumber,
       bankAccountName,
+      expectedCheckInReq,
+      expectedCheckInTime,
+      expectedCheckInReason,
     } = dto;
 
     return await this.prisma.$transaction(async (tx) => {
@@ -652,11 +678,20 @@ export class BookingService {
         (bankAccountName !== undefined &&
           bankAccountName !== booking.bankAccountName);
 
+      const isExpectedCheckInChanged =
+        (expectedCheckInReq !== undefined &&
+          expectedCheckInReq !== booking.expectedCheckInReq) ||
+        (expectedCheckInTime !== undefined &&
+          expectedCheckInTime !== booking.expectedCheckInTime) ||
+        (expectedCheckInReason !== undefined &&
+          expectedCheckInReason !== booking.expectedCheckInReason);
+
       if (
         !isDateChanged &&
         !isOccupancyChanged &&
         !isInfoChanged &&
-        !isBankInfoChanged
+        !isBankInfoChanged &&
+        !isExpectedCheckInChanged
       ) {
         return {
           message: 'Không có thay đổi nào được thực hiện',
@@ -809,6 +844,45 @@ export class BookingService {
           logAction = 'UPDATE_BANK_INFO';
         }
         logNote += 'Cập nhật thông tin nhận tiền hoàn. ';
+      }
+
+      // 4.7 Xử lý thông tin giờ nhận phòng dự kiến
+      if (isExpectedCheckInChanged) {
+        if (expectedCheckInReq !== undefined) {
+          updateData.expectedCheckInReq = expectedCheckInReq;
+          const finalTime =
+            expectedCheckInTime !== undefined
+              ? expectedCheckInTime
+              : booking.expectedCheckInTime;
+          if (expectedCheckInReq) {
+            updateData.expectedCheckInStatus =
+              finalTime && finalTime.split('-')[0].trim() < '14:00'
+                ? 'PENDING'
+                : 'APPROVED';
+          } else {
+            updateData.expectedCheckInStatus = null;
+          }
+        }
+        if (expectedCheckInTime !== undefined) {
+          updateData.expectedCheckInTime = expectedCheckInTime;
+          const finalReq =
+            expectedCheckInReq !== undefined
+              ? expectedCheckInReq
+              : booking.expectedCheckInReq;
+          if (finalReq) {
+            updateData.expectedCheckInStatus =
+              expectedCheckInTime &&
+              expectedCheckInTime.split('-')[0].trim() < '14:00'
+                ? 'PENDING'
+                : 'APPROVED';
+          }
+        }
+        if (expectedCheckInReason !== undefined) {
+          updateData.expectedCheckInReason = expectedCheckInReason;
+        }
+
+        if (logAction === 'UPDATE') logAction = 'UPDATE_EXPECTED_CHECKIN';
+        logNote += 'Cập nhật giờ nhận phòng dự kiến. ';
       }
 
       if (
@@ -1009,5 +1083,62 @@ export class BookingService {
       return `Đã cập nhật ngày. Số tiền thừa ${refundAmount.toLocaleString()} VNĐ đã được ghi nhận hoàn trả.`;
     }
     return 'Đã cập nhật ngày thành công.';
+  }
+
+  async approveExpectedCheckIn(
+    id: number,
+    dto: { status: 'APPROVED' | 'REJECTED'; adminNote?: string },
+  ) {
+    const booking = await this.prisma.bookings.findFirst({
+      where: { id, isDeleted: false },
+    });
+
+    if (!booking) {
+      throw new NotFoundException('Không tìm thấy đơn đặt phòng');
+    }
+
+    if (!booking.expectedCheckInReq) {
+      throw new BadRequestException(
+        'Đơn đặt phòng này không có yêu cầu nhận phòng dự kiến',
+      );
+    }
+
+    const updated = await this.prisma.bookings.update({
+      where: { id },
+      data: {
+        expectedCheckInStatus: dto.status,
+        expectedCheckInReason: dto.adminNote || booking.expectedCheckInReason,
+      },
+    });
+
+    // Bắn thông báo kết quả phê duyệt cho User
+    this.notificationService
+      .notifyUserExpectedCheckInResult(
+        booking.userId,
+        id,
+        dto.status,
+        dto.adminNote,
+      )
+      .catch((err) =>
+        console.error(
+          'Error sending expected check-in result notification:',
+          err,
+        ),
+      );
+
+    // Ghi nhận lịch sử hoạt động đổi trạng thái checkin dự kiến vào booking_logs
+    await (this.prisma as any).booking_logs.create({
+      data: {
+        bookingId: id,
+        action: `EXPECTED_CHECKIN_${dto.status}`,
+        oldTotal: booking.totalPrice,
+        newTotal: booking.totalPrice,
+        note:
+          dto.adminNote ||
+          `Admin ${dto.status === 'APPROVED' ? 'duyệt' : 'từ chối'} giờ nhận phòng dự kiến.`,
+      },
+    });
+
+    return updated;
   }
 }

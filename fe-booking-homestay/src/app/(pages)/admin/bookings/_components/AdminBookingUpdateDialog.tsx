@@ -56,6 +56,32 @@ export function AdminBookingUpdateDialog({
     { date: string; price: number }[]
   >([]);
   const [waiveFee, setWaiveFee] = useState(false);
+  const [expectedCheckInReq, setExpectedCheckInReq] = useState(false);
+  const [fromTime, setFromTime] = useState("08:00");
+  const [toTime, setToTime] = useState("10:00");
+  const [expectedCheckInReason, setExpectedCheckInReason] = useState("");
+
+  const handleFromTimeChange = (val: string) => {
+    setFromTime(val);
+    if (val && toTime && val > toTime) {
+      const [h, m] = val.split(":").map(Number);
+      const nextH = (h + 1) % 24;
+      const nextHStr = nextH < 10 ? `0${nextH}` : `${nextH}`;
+      const mStr = m < 10 ? `0${m}` : `${m}`;
+      setToTime(`${nextHStr}:${mStr}`);
+    }
+  };
+
+  const handleToTimeChange = (val: string) => {
+    setToTime(val);
+    if (val && fromTime && val < fromTime) {
+      const [h, m] = val.split(":").map(Number);
+      const prevH = (h - 1 + 24) % 24;
+      const prevHStr = prevH < 10 ? `0${prevH}` : `${prevH}`;
+      const mStr = m < 10 ? `0${m}` : `${m}`;
+      setFromTime(`${prevHStr}:${mStr}`);
+    }
+  };
 
   useEffect(() => {
     if (open && booking) {
@@ -102,6 +128,16 @@ export function AdminBookingUpdateDialog({
         });
       }
       setWaiveFee(false);
+      setExpectedCheckInReq(booking?.expectedCheckInReq || false);
+      if (booking?.expectedCheckInTime) {
+        const parts = booking.expectedCheckInTime.split("-");
+        setFromTime(parts[0]?.trim() || "08:00");
+        setToTime(parts[1]?.trim() || "10:00");
+      } else {
+        setFromTime("08:00");
+        setToTime("10:00");
+      }
+      setExpectedCheckInReason(booking?.expectedCheckInReason || "");
     }
   }, [open, booking]);
   const currentTotal = Number(booking?.totalAmount || 0);
@@ -218,6 +254,26 @@ export function AdminBookingUpdateDialog({
       if (specialRequest !== (booking?.guestInfo?.specialRequest || ""))
         data.specialRequest = specialRequest;
 
+      const finalTimeStr = `${fromTime} - ${toTime}`;
+      if (expectedCheckInReq !== booking?.expectedCheckInReq) {
+        data.expectedCheckInReq = expectedCheckInReq;
+      }
+      if (expectedCheckInReq) {
+        if (finalTimeStr !== booking?.expectedCheckInTime) {
+          data.expectedCheckInTime = finalTimeStr;
+        }
+        if (expectedCheckInReason !== booking?.expectedCheckInReason) {
+          data.expectedCheckInReason = expectedCheckInReason;
+        }
+      } else {
+        if (booking?.expectedCheckInTime) {
+          data.expectedCheckInTime = null;
+        }
+        if (booking?.expectedCheckInReason) {
+          data.expectedCheckInReason = null;
+        }
+      }
+
       if (waiveFee) data.waiveFee = true;
 
       await onConfirm(data);
@@ -245,6 +301,14 @@ export function AdminBookingUpdateDialog({
     if (specialRequest !== (booking?.guestInfo?.specialRequest || ""))
       return true;
     if (waiveFee) return true;
+
+    const finalTimeStr = `${fromTime} - ${toTime}`;
+    if (expectedCheckInReq !== booking?.expectedCheckInReq) return true;
+    if (expectedCheckInReq) {
+      if (finalTimeStr !== booking?.expectedCheckInTime) return true;
+      if (expectedCheckInReason !== booking?.expectedCheckInReason) return true;
+    }
+
     return false;
   };
 
@@ -455,6 +519,59 @@ export function AdminBookingUpdateDialog({
                   />
                 </div>
               </div>
+            </div>
+
+            <div className="bg-white p-3.5 sm:p-5 rounded-2xl border border-gray-100 space-y-4">
+              <label className="flex items-center gap-3 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  className="w-5 h-5 rounded-lg border-gray-300 accent-primary cursor-pointer"
+                  checked={expectedCheckInReq}
+                  onChange={(e) => setExpectedCheckInReq(e.target.checked)}
+                />
+                <span className="text-sm font-bold text-gray-800">
+                  Thông báo giờ nhận phòng dự kiến
+                </span>
+              </label>
+
+              {expectedCheckInReq && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase ml-1">
+                      Khung giờ dự kiến
+                    </Label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="time"
+                        className="flex-1 p-2.5 border border-gray-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-1 focus:ring-primary bg-gray-50 text-gray-800 font-bold"
+                        value={fromTime}
+                        onChange={(e) => handleFromTimeChange(e.target.value)}
+                      />
+                      <span className="text-gray-400 text-xs font-bold">
+                        đến
+                      </span>
+                      <input
+                        type="time"
+                        className="flex-1 p-2.5 border border-gray-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-1 focus:ring-primary bg-gray-50 text-gray-800 font-bold"
+                        value={toTime}
+                        onChange={(e) => handleToTimeChange(e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase ml-1">
+                      Ghi chú / Lý do
+                    </Label>
+                    <Input
+                      value={expectedCheckInReason}
+                      onChange={(e) => setExpectedCheckInReason(e.target.value)}
+                      placeholder="Ví dụ: Muốn gửi đồ trước..."
+                      className="h-9 sm:h-11 rounded-xl border-gray-200 focus:ring-primary bg-gray-50 text-xs sm:text-sm"
+                    />
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="flex items-start gap-2.5 mt-3.5 bg-amber-50 p-3 sm:p-4 rounded-xl border border-amber-100">

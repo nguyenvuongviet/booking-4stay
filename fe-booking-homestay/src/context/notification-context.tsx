@@ -4,9 +4,9 @@ import {
   getSocketUrl,
   getStoredAccessToken,
 } from "@/_helper/chat-realtime.helper";
-import { getPushPublicKey, savePushSubscription } from "@/services/chatApi";
 import { useAuth } from "@/context/auth-context";
 import api from "@/services/api";
+import { getPushPublicKey, savePushSubscription } from "@/services/chatApi";
 import {
   createContext,
   ReactNode,
@@ -37,7 +37,9 @@ export type Noti = {
     | "ADMIN_PAYMENT_SUCCESS"
     | "ADMIN_BOOKING_CANCELLED"
     | "ADMIN_CHECKIN_REMINDER"
-    | "ADMIN_BOOKING_WAITING_REFUND";
+    | "ADMIN_BOOKING_WAITING_REFUND"
+    | "ADMIN_EXPECTED_CHECKIN_REQUEST"
+    | "EXPECTED_CHECKIN_RESULT";
   title: string;
   body: string;
   data?: {

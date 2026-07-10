@@ -63,6 +63,11 @@ model bookings {
   refundEvidence     String?                @db.VarChar(255)
   refundedAt         DateTime?              @db.Timestamp(0)
 
+  expectedCheckInReq    Boolean? @default(false)
+  expectedCheckInTime   String?  @db.VarChar(30)
+  expectedCheckInStatus String?  @db.VarChar(20)
+  expectedCheckInReason String?  @db.VarChar(500)
+
   isDeleted Boolean        @default(false)
   deletedAt DateTime?      @db.Timestamp(0)
   createdAt DateTime       @default(now()) @db.Timestamp(0)

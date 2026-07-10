@@ -8,7 +8,13 @@ import {
   Query,
   Req,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiBody, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiParam,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
 import { MessageService } from './message.service';
 import { NotificationService } from './notification.service';
 
@@ -19,7 +25,7 @@ export class MessageController {
   constructor(
     private readonly messageService: MessageService,
     private readonly notificationService: NotificationService,
-  ) { }
+  ) {}
 
   // Lấy danh sách hộp thư inbox (Conversations) của người dùng hiện tại
   @Get('conversations')
@@ -44,9 +50,16 @@ export class MessageController {
     @Req() req: any,
     @Body('hostId', ParseIntPipe) hostId: number,
     @Body('roomId') roomId?: number,
+    @Body('guestId') guestIdQuery?: number,
   ) {
-    const guestId = +req.user.id;
-    return this.messageService.createConversation(guestId, hostId, roomId);
+    const userId = +req.user.id;
+    const roles = req.user.user_roles?.map((ur: any) => ur.roles?.name) || [];
+    const isAdmin = roles.includes('ADMIN');
+
+    const guestId = guestIdQuery && isAdmin ? guestIdQuery : userId;
+    const finalHostId = guestIdQuery && isAdmin ? userId : hostId;
+
+    return this.messageService.createConversation(guestId, finalHostId, roomId);
   }
 
   // Lấy danh sách tin nhắn của một cuộc hội thoại (Phân trang)
@@ -64,7 +77,12 @@ export class MessageController {
     const pageNum = page ? +page : 1;
     const limitNum = limit ? +limit : 20;
 
-    return this.messageService.getMessages(conversationId, userId, limitNum, pageNum);
+    return this.messageService.getMessages(
+      conversationId,
+      userId,
+      limitNum,
+      pageNum,
+    );
   }
 
   // Đánh dấu đã đọc tất cả tin nhắn trong cuộc hội thoại từ đối phương

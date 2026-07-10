@@ -31,6 +31,10 @@ function sanitize(booking: any) {
     isReview: booking.isReview,
     paymentMethod: booking.paymentMethod,
     cancellationPolicy: booking.cancellationPolicy,
+    expectedCheckInReq: booking.expectedCheckInReq ?? false,
+    expectedCheckInTime: booking.expectedCheckInTime ?? null,
+    expectedCheckInStatus: booking.expectedCheckInStatus ?? null,
+    expectedCheckInReason: booking.expectedCheckInReason ?? null,
     bankInfo: {
       bankName: booking.bankName,
       bankAccountNumber: booking.bankAccountNumber,

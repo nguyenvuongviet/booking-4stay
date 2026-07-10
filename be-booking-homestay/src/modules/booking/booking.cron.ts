@@ -26,10 +26,11 @@ export class BookingCron {
   ) {}
 
   /**
-   * Tự động quét và chuyển các đơn từ CHECKED_IN sang CHECKED_OUT nếu hôm nay là ngày trả phòng.
+   * Cảnh báo các đơn đã quá giờ trả phòng nhưng chưa xác nhận Check-Out.
+   * Chạy vào cuối ngày (23:59) để thông báo cho Admin kiểm tra.
    */
-  @Cron('0 0 12 * * *', { timeZone: 'Asia/Ho_Chi_Minh' })
-  async handleAutoCheckOut() {
+  @Cron('0 59 23 * * *', { timeZone: 'Asia/Ho_Chi_Minh' })
+  async handleUnconfirmedCheckOuts() {
     const today = startOfDay(new Date());
     const checkouts = await this.prisma.bookings.findMany({
       where: {
@@ -37,58 +38,81 @@ export class BookingCron {
         status: bookings_status.CHECKED_IN,
         checkOut: { lte: endOfDay(today) },
       },
-      select: { id: true },
+      select: { id: true, guestFullName: true },
     });
 
     for (const b of checkouts) {
-      await this.lifecycleService.changeBookingStatus(
-        b.id,
-        bookings_status.CHECKED_OUT,
-        {
-          allowOverride: true,
-          notifyAdmin: false,
-          notifyUser: false,
-        },
+      await this.bookingNotifications.notifyAdminUnconfirmedCheckOut(b.id, b.guestFullName).catch((err) =>
+        this.logger.error(
+          `[Cron] Failed to send unconfirmed checkout warning for booking ${b.id}`,
+          err,
+        ),
       );
     }
 
     if (checkouts.length) {
-      this.logger.log(`[Cron] Auto Check-out: ${checkouts.length} đơn.`);
+      this.logger.log(
+        `[Cron] Cảnh báo Check-out chưa xác nhận cuối ngày: ${checkouts.length} đơn.`,
+      );
     }
   }
 
   /**
-   * Tự động quét và chuyển các đơn từ CONFIRMED/PARTIALLY_PAID sang CHECKED_IN nếu hôm nay là ngày nhận phòng.
+   * Cảnh báo các đơn đã đến ngày check-in nhưng chưa xác nhận Check-In, hoặc nghi ngờ No-Show.
+   * Chạy vào cuối ngày (23:59).
    */
-  @Cron('0 0 14 * * *', { timeZone: 'Asia/Ho_Chi_Minh' })
-  async handleAutoCheckIn() {
+  @Cron('0 59 23 * * *', { timeZone: 'Asia/Ho_Chi_Minh' })
+  async handleUnconfirmedCheckIns() {
     const today = startOfDay(new Date());
+    const endOfToday = endOfDay(today);
 
+    // 1. Quét đơn chưa Check-In nhưng vẫn còn trong thời gian lưu trú (chưa tới ngày checkout)
     const checkins = await this.prisma.bookings.findMany({
       where: {
         isDeleted: false,
         status: {
           in: [bookings_status.CONFIRMED, bookings_status.PARTIALLY_PAID],
         },
-        checkIn: { lte: endOfDay(today) },
+        checkIn: { lte: endOfToday },
+        checkOut: { gt: endOfToday },
       },
-      select: { id: true },
+      select: { id: true, guestFullName: true },
     });
 
     for (const b of checkins) {
-      await this.lifecycleService.changeBookingStatus(
-        b.id,
-        bookings_status.CHECKED_IN,
-        {
-          allowOverride: true,
-          notifyAdmin: false,
-          notifyUser: true,
-        },
+      await this.bookingNotifications.notifyAdminUnconfirmedCheckIn(b.id, b.guestFullName).catch((err) =>
+        this.logger.error(
+          `[Cron] Failed to send unconfirmed checkin warning for booking ${b.id}`,
+          err,
+        ),
       );
     }
 
-    if (checkins.length) {
-      this.logger.log(`[Cron] Auto Check-in: ${checkins.length} đơn.`);
+    // 2. Quét đơn nghi ngờ No-Show (hết hạn ngày checkout dự kiến nhưng chưa từng check-in)
+    const noshows = await this.prisma.bookings.findMany({
+      where: {
+        isDeleted: false,
+        status: {
+          in: [bookings_status.CONFIRMED, bookings_status.PARTIALLY_PAID],
+        },
+        checkOut: { lte: endOfToday },
+      },
+      select: { id: true, guestFullName: true },
+    });
+
+    for (const b of noshows) {
+      await this.bookingNotifications.notifyAdminSuspectedNoShow(b.id, b.guestFullName).catch((err) =>
+        this.logger.error(
+          `[Cron] Failed to send suspected no-show warning for booking ${b.id}`,
+          err,
+        ),
+      );
+    }
+
+    if (checkins.length || noshows.length) {
+      this.logger.log(
+        `[Cron] Cảnh báo Check-in chưa xác nhận: ${checkins.length} đơn, Nghi ngờ No-Show: ${noshows.length} đơn.`,
+      );
     }
   }
 

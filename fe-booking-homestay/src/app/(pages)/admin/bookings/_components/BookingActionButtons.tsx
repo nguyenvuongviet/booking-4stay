@@ -2,7 +2,9 @@
 
 import { Button } from "@/_components/ui/button";
 import { BookingStatus } from "@/types/booking";
-import { Banknote, Edit, X } from "lucide-react";
+import { Banknote, CheckCircle, Edit, LogOut, X } from "lucide-react";
+import { useState } from "react";
+import { StatusChangeDialog } from "./StatusChangeDialog";
 
 export function BookingActionButtons({
   status,
@@ -11,6 +13,7 @@ export function BookingActionButtons({
   onEdit,
   onCancel,
   onRefund,
+  onStatusUpdated,
   className,
 }: {
   status: string;
@@ -19,8 +22,14 @@ export function BookingActionButtons({
   onEdit?: (id: number) => void;
   onCancel: (id: number) => void;
   onRefund: (booking: any) => void;
+  onStatusUpdated?: () => void;
   className?: string;
 }) {
+  const [statusChangeData, setStatusChangeData] = useState<{
+    open: boolean;
+    status: BookingStatus | null;
+  }>({ open: false, status: null });
+
   const refundAmount = Number(booking?.refundAmount || 0);
 
   const canEdit = [
@@ -38,6 +47,17 @@ export function BookingActionButtons({
   ].includes(status as BookingStatus);
 
   const canRefund = refundAmount > 0 && status !== BookingStatus.REFUNDED;
+
+  const canCheckIn = [
+    BookingStatus.CONFIRMED,
+    BookingStatus.PARTIALLY_PAID,
+  ].includes(status as BookingStatus);
+
+  const canCheckOut = status === BookingStatus.CHECKED_IN;
+
+  const handleStatusChange = (newStatus: BookingStatus) => {
+    setStatusChangeData({ open: true, status: newStatus });
+  };
 
   if (
     [
@@ -64,6 +84,26 @@ export function BookingActionButtons({
     <div
       className={`flex items-center justify-center gap-2 flex-wrap ${className}`}
     >
+      {canCheckIn && (
+        <Button
+          size="sm"
+          className="h-7 sm:h-8 px-2.5 sm:px-3.5 text-[10px] sm:text-xs rounded-full shadow-sm font-bold flex items-center gap-1 bg-emerald-600 hover:bg-emerald-700 text-white dark:bg-emerald-750 dark:hover:bg-emerald-800 transition-all duration-200 active:scale-95 cursor-pointer hover:shadow-md hover:shadow-emerald-500/35 border-none"
+          onClick={() => handleStatusChange(BookingStatus.CHECKED_IN)}
+        >
+          <CheckCircle className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> Nhận phòng
+        </Button>
+      )}
+
+      {canCheckOut && (
+        <Button
+          size="sm"
+          className="h-7 sm:h-8 px-2.5 sm:px-3.5 text-[10px] sm:text-xs rounded-full shadow-sm font-bold flex items-center gap-1 bg-indigo-600 hover:bg-indigo-750 text-white dark:bg-indigo-700 dark:hover:bg-indigo-800 transition-all duration-200 active:scale-95 cursor-pointer hover:shadow-md hover:shadow-indigo-500/35 border-none"
+          onClick={() => handleStatusChange(BookingStatus.CHECKED_OUT)}
+        >
+          <LogOut className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> Trả phòng
+        </Button>
+      )}
+
       {canEdit && onEdit && (
         <Button
           size="sm"
@@ -94,6 +134,14 @@ export function BookingActionButtons({
           <Banknote className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> Hoàn tiền
         </Button>
       )}
+
+      <StatusChangeDialog
+        open={statusChangeData.open}
+        bookingId={id}
+        newStatus={statusChangeData.status}
+        onClose={() => setStatusChangeData({ open: false, status: null })}
+        onSuccess={onStatusUpdated}
+      />
     </div>
   );
 }

@@ -160,6 +160,22 @@ export class RoomService {
       dto.provinceId,
       1, // Default countryId to 1 (Việt Nam)
     );
+
+    // Kiểm tra trùng tên và địa chỉ để tránh tạo trùng lắp phòng vật lý
+    const duplicate = await this.prisma.rooms.findFirst({
+      where: {
+        name: dto.name,
+        fullAddress,
+        isDeleted: false,
+      },
+    });
+
+    if (duplicate) {
+      throw new BadRequestException(
+        'Phòng có tên và địa chỉ này đã tồn tại trên hệ thống. Để tạo phòng mới tại cùng địa chỉ, vui lòng đặt tên phân biệt (Ví dụ thêm số phòng hoặc mã căn hộ ở cuối tên phòng).',
+      );
+    }
+
     const room = await this.prisma.rooms.create({
       data: { ...dto, hostId, fullAddress },
     });
@@ -173,11 +189,15 @@ export class RoomService {
   async update(id: number, dto: UpdateRoomDto) {
     const existing = await this.findOne(id);
 
-    const street = dto.street !== undefined ? dto.street : existing.street;
-    const wardId = dto.wardId !== undefined ? dto.wardId : existing.wardId;
+    const street =
+      dto.street !== undefined ? dto.street : existing.location?.street;
+    const wardId =
+      dto.wardId !== undefined ? dto.wardId : existing.location?.wardId;
     const provinceId =
-      dto.provinceId !== undefined ? dto.provinceId : existing.provinceId;
-    const countryId = existing.countryId;
+      dto.provinceId !== undefined
+        ? dto.provinceId
+        : existing.location?.provinceId;
+    const countryId = existing.location?.countryId;
 
     const fullAddress = await this.getFullAddress(
       street,
@@ -185,6 +205,24 @@ export class RoomService {
       provinceId,
       countryId,
     );
+
+    const newName = dto.name !== undefined ? dto.name : existing.name;
+
+    // Kiểm tra trùng tên và địa chỉ (loại trừ chính phòng đang sửa)
+    const duplicate = await this.prisma.rooms.findFirst({
+      where: {
+        id: { not: id },
+        name: newName,
+        fullAddress,
+        isDeleted: false,
+      },
+    });
+
+    if (duplicate) {
+      throw new BadRequestException(
+        'Phòng có tên và địa chỉ này đã tồn tại trên hệ thống. Vui lòng đặt tên phân biệt (Ví dụ thêm số phòng hoặc mã căn hộ ở cuối tên phòng để phân biệt).',
+      );
+    }
 
     const room = await this.prisma.rooms.update({
       where: { id },

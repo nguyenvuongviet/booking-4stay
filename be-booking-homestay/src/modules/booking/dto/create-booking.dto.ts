@@ -2,6 +2,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { bookings_paymentMethod } from '@prisma/client';
 import { Type } from 'class-transformer';
 import {
+  IsBoolean,
   IsDateString,
   IsEmail,
   IsEnum,
@@ -103,4 +104,28 @@ export class CreateBookingDto {
   @IsOptional()
   @IsString()
   promotionCode?: string;
+
+  @ApiPropertyOptional({
+    example: true,
+    description: 'Yêu cầu giờ nhận phòng dự kiến',
+  })
+  @IsOptional()
+  @IsBoolean()
+  expectedCheckInReq?: boolean;
+
+  @ApiPropertyOptional({
+    example: '08:00 - 10:00',
+    description: 'Thời gian nhận phòng dự kiến mong muốn',
+  })
+  @IsOptional()
+  @IsString()
+  expectedCheckInTime?: string;
+
+  @ApiPropertyOptional({
+    example: 'Do bay sớm nên muốn gửi đồ',
+    description: 'Lý do/Ghi chú nhận phòng dự kiến',
+  })
+  @IsOptional()
+  @IsString()
+  expectedCheckInReason?: string;
 }

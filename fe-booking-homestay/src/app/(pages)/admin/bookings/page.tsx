@@ -412,6 +412,7 @@ export default function BookingListPage() {
                           onEdit={() => setEditingBooking(b)}
                           onCancel={(id) => setCancelBookingId(id)}
                           onRefund={(bk) => setRefundBooking(bk)}
+                          onStatusUpdated={refresh}
                         />
                       </td>
                     </tr>
@@ -516,6 +517,7 @@ export default function BookingListPage() {
                           onEdit={() => setEditingBooking(b)}
                           onCancel={(id) => setCancelBookingId(id)}
                           onRefund={(bk) => setRefundBooking(bk)}
+                          onStatusUpdated={refresh}
                         />
                       </div>
                     </div>

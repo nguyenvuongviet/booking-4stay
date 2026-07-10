@@ -2,11 +2,16 @@ import {
   BadRequestException,
   Body,
   Controller,
+  ForbiddenException,
   Get,
   Logger,
   Param,
   Post,
+  Req,
 } from '@nestjs/common';
+import { ApiBearerAuth } from '@nestjs/swagger';
+import { Public } from 'src/common/decorator/public.decorator';
+import { Role } from '../user/dto/enum.dto';
 import { PayosService } from './payos.service';
 
 @Controller('payos')
@@ -16,14 +21,26 @@ export class PayosController {
   constructor(private readonly payosService: PayosService) {}
 
   @Post('create-link')
-  async createLink(@Body() body: { bookingId: number; amount: number }) {
-    if (!body.bookingId || !body.amount) {
-      throw new BadRequestException('Thiếu tham số');
-    }
+  @ApiBearerAuth('AccessToken')
+  async createLink(
+    @Req() req: any,
+    @Body() body: { bookingId: number; paymentPurpose?: 'DEPOSIT' | 'FULL' },
+  ) {
+    if (!body.bookingId)
+      throw new BadRequestException('Thiếu tham số bookingId');
+
+    const user = req['user'];
+    if (!user)
+      throw new ForbiddenException('Bạn cần đăng nhập để thực hiện thanh toán');
+
+    const roles = user.user_roles?.map((ur: any) => ur.roles?.name) || [];
+    const role = roles.includes(Role.ADMIN) ? Role.ADMIN : Role.USER;
 
     const paymentData = await this.payosService.createPaymentLink(
+      +user.id,
+      role,
       body.bookingId,
-      body.amount,
+      body.paymentPurpose,
     );
 
     return {
@@ -40,13 +57,13 @@ export class PayosController {
   }
 
   @Post('webhook')
+  @Public()
   async handleWebhook(@Body() body: any) {
     this.logger.log(`Received PayOS webhook: ${JSON.stringify(body)}`);
     const success = await this.payosService.handleWebhook(body);
 
-    if (!success) {
+    if (!success)
       return { success: false, message: 'Invalid signature or error' };
-    }
 
     return { success: true };
   }

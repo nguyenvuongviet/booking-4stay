@@ -145,3 +145,43 @@ export async function confirmRefundDifference(id: number) {
     throw err;
   }
 }
+
+// ──────────────────────────────────────────
+// Manual Check-in / Check-out Status Update
+// ──────────────────────────────────────────
+
+export async function updateBookingStatus(
+  id: number,
+  status: "CHECKED_IN" | "CHECKED_OUT" | string,
+  reason?: string,
+  surcharge?: number,
+) {
+  try {
+    const res = await api.patch(`/bookings/${id}/admin-status`, {
+      status,
+      reason: reason || undefined,
+      surcharge: surcharge !== undefined ? Number(surcharge) : undefined,
+    });
+    return res.data?.data;
+  } catch (err) {
+    console.error("Update Booking Status error:", err);
+    throw err;
+  }
+}
+
+export async function approveExpectedCheckIn(
+  id: number,
+  status: "APPROVED" | "REJECTED",
+  adminNote?: string,
+) {
+  try {
+    const res = await api.patch(`/bookings/${id}/expected-checkin/approve`, {
+      status,
+      adminNote,
+    });
+    return res.data?.data;
+  } catch (err) {
+    console.error("Approve Expected Check-in error:", err);
+    throw err;
+  }
+}

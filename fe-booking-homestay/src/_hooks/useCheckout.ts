@@ -1,15 +1,14 @@
 import { usePayment } from "@/_hooks/usePayment";
 import { useAuth } from "@/context/auth-context";
 import { useLang } from "@/context/lang-context";
+import { BookingPre } from "@/models/BookingPre";
 import { Room } from "@/models/Room";
 import { room_detail, room_preview } from "@/services/roomApi";
 import { PaymentMethod } from "@/types/paymentmethod";
-import toast from "react-hot-toast";
-
-import { BookingPre } from "@/models/BookingPre";
 import { differenceInDays, format, parseISO } from "date-fns";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 
 export function useCheckout() {
   const { user } = useAuth();
@@ -95,6 +94,10 @@ export function useCheckout() {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("CASH");
   const [specialRequests, setSpecialRequests] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [expectedCheckInReq, setExpectedCheckInReq] = useState(false);
+  const [expectedCheckInTime, setExpectedCheckInTime] =
+    useState("08:00 - 10:00");
+  const [expectedCheckInReason, setExpectedCheckInReason] = useState("");
   const [policyUpdatedAt, setPolicyUpdatedAt] = useState<string | null>(null);
 
   const bookingData = {
@@ -157,6 +160,13 @@ export function useCheckout() {
         paymentMethod,
         policyUpdatedAt: policyUpdatedAt ?? undefined,
         promotionCode: appliedCouponCode ?? undefined,
+        expectedCheckInReq,
+        expectedCheckInTime: expectedCheckInReq
+          ? expectedCheckInTime
+          : undefined,
+        expectedCheckInReason: expectedCheckInReq
+          ? expectedCheckInReason
+          : undefined,
       })
       .finally(() => setIsLoading(false));
   };
@@ -180,6 +190,13 @@ export function useCheckout() {
         paymentMethod,
         policyUpdatedAt: policyUpdatedAt ?? undefined,
         promotionCode: appliedCouponCode ?? undefined,
+        expectedCheckInReq,
+        expectedCheckInTime: expectedCheckInReq
+          ? expectedCheckInTime
+          : undefined,
+        expectedCheckInReason: expectedCheckInReq
+          ? expectedCheckInReason
+          : undefined,
       })
       .finally(() => setIsLoading(false));
   };
@@ -251,6 +268,13 @@ export function useCheckout() {
 
     specialRequests,
     setSpecialRequests,
+
+    expectedCheckInReq,
+    setExpectedCheckInReq,
+    expectedCheckInTime,
+    setExpectedCheckInTime,
+    expectedCheckInReason,
+    setExpectedCheckInReason,
 
     isLoading,
     confirmNow,

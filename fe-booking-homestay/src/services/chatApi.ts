@@ -51,8 +51,13 @@ export async function getMessages(
 export async function createConversation(
   hostId: number,
   roomId?: number,
+  guestId?: number,
 ): Promise<{ id: number } | null> {
-  const res = await api.post("/message/conversations", { hostId, roomId });
+  const res = await api.post("/message/conversations", {
+    hostId,
+    roomId,
+    guestId,
+  });
   return unwrapObject<{ id: number }>(res.data);
 }
 
@@ -70,10 +75,12 @@ export async function getPushPublicKey(): Promise<{
   enabled: boolean;
 }> {
   const res = await api.get("/message/push/public-key");
-  return unwrapObject<{ publicKey: string; enabled: boolean }>(res.data) ?? {
-    publicKey: "",
-    enabled: false,
-  };
+  return (
+    unwrapObject<{ publicKey: string; enabled: boolean }>(res.data) ?? {
+      publicKey: "",
+      enabled: false,
+    }
+  );
 }
 
 export async function savePushSubscription(

@@ -12,6 +12,7 @@ import {
 import { Input } from "@/_components/ui/input";
 import { Textarea } from "@/_components/ui/textarea";
 import type { Room } from "@/types/room";
+import { Loader2 } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import { LocationSelector } from "../../_components/location-selector";
@@ -201,13 +202,16 @@ export function RoomFormModal({
             onClick={submit}
             className="h-9 bg-primary text-white hover:bg-primary/90 rounded-xl text-xs sm:text-sm px-4 cursor-pointer"
           >
-            {loading
-              ? isEditMode
-                ? "Đang lưu..."
-                : "Đang tạo..."
-              : isEditMode
-                ? "Lưu thay đổi"
-                : "Tạo phòng"}
+            {loading ? (
+              <span className="flex items-center gap-1.5">
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                {isEditMode ? "Đang lưu..." : "Đang tạo..."}
+              </span>
+            ) : isEditMode ? (
+              "Lưu thay đổi"
+            ) : (
+              "Tạo phòng"
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

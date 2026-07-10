@@ -13,6 +13,9 @@ export const create_booking = async (data: {
   paymentMethod: string;
   policyUpdatedAt?: string;
   promotionCode?: string;
+  expectedCheckInReq?: boolean;
+  expectedCheckInTime?: string;
+  expectedCheckInReason?: string;
 }) => {
   try {
     const resp = await api.post("/bookings", data);
@@ -73,10 +76,13 @@ export const cancel_booking = async (
 
 export const create_payos_link = async (
   bookingId: number | string,
-  amount: number | string,
+  paymentPurpose?: "DEPOSIT" | "FULL",
 ) => {
   try {
-    const resp = await api.post("/payos/create-link", { bookingId, amount });
+    const resp = await api.post("/payos/create-link", {
+      bookingId,
+      paymentPurpose,
+    });
     return resp.data.data || {};
   } catch (error) {
     console.error("PayOS error: ", error);

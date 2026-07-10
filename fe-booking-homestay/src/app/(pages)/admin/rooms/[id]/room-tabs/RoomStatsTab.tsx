@@ -30,6 +30,13 @@ interface Props {
   bookings: Booking[];
 }
 
+const CANCELLED_STATUSES = [
+  "CANCELLED",
+  "CANCELLED_BY_ADMIN",
+  "WAITING_REFUND",
+  "REFUNDED",
+];
+
 export default function RoomStatsTab({ bookings }: Props) {
   // Extract unique years from bookings to build year list
   const availableYears = useMemo(() => {
@@ -89,9 +96,11 @@ export default function RoomStatsTab({ bookings }: Props) {
       };
     }
 
-    const cancelled = filteredBookings.filter((b) => b.status === "CANCELLED");
+    const cancelled = filteredBookings.filter((b) =>
+      CANCELLED_STATUSES.includes(b.status),
+    );
     const activeBookings = filteredBookings.filter(
-      (b) => b.status !== "CANCELLED",
+      (b) => !CANCELLED_STATUSES.includes(b.status),
     );
 
     const totalRevenue = activeBookings.reduce(
@@ -135,7 +144,7 @@ export default function RoomStatsTab({ bookings }: Props) {
         statusCounts[b.status] = { count: 0, revenue: 0 };
       }
       statusCounts[b.status].count += 1;
-      if (b.status !== "CANCELLED") {
+      if (!CANCELLED_STATUSES.includes(b.status)) {
         statusCounts[b.status].revenue += b.totalAmount ?? 0;
       }
     });
@@ -164,7 +173,7 @@ export default function RoomStatsTab({ bookings }: Props) {
       });
 
       bookings.forEach((b) => {
-        if (b.status === "CANCELLED" || !b.checkIn) return;
+        if (CANCELLED_STATUSES.includes(b.status) || !b.checkIn) return;
         const y = String(new Date(b.checkIn).getFullYear());
         if (yearlyMap[y]) {
           yearlyMap[y].revenue += b.totalAmount ?? 0;
@@ -190,7 +199,7 @@ export default function RoomStatsTab({ bookings }: Props) {
       }));
 
       bookings.forEach((b) => {
-        if (b.status === "CANCELLED" || !b.checkIn) return;
+        if (CANCELLED_STATUSES.includes(b.status) || !b.checkIn) return;
         const date = new Date(b.checkIn);
         const y = date.getFullYear();
         if (String(y) === selectedYear) {
@@ -215,7 +224,7 @@ export default function RoomStatsTab({ bookings }: Props) {
     }));
 
     bookings.forEach((b) => {
-      if (b.status === "CANCELLED" || !b.checkIn) return;
+      if (CANCELLED_STATUSES.includes(b.status) || !b.checkIn) return;
       const date = new Date(b.checkIn);
       if (date.getFullYear() === year && date.getMonth() + 1 === month) {
         const d = date.getDate(); // 1-31

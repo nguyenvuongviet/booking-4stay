@@ -2,6 +2,7 @@
 
 import { usePayment } from "@/_hooks/usePayment";
 import { BookingCancelSection } from "@/app/(pages)/booking/_component/BookingCancelSection";
+import { useRealtimeChat } from "@/context/ChatContext";
 import { useLang } from "@/context/lang-context";
 import { parseAbsoluteDate } from "@/lib/utils";
 import { Booking } from "@/models/Booking";
@@ -22,6 +23,7 @@ import {
   User,
 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import toast from "react-hot-toast";
 import CountdownTimer from "../../../../_components/CountdownTimer";
@@ -38,6 +40,9 @@ export const BookingDetail = ({
   booking: Booking;
 }) => {
   const { t } = useLang();
+  const router = useRouter();
+  const { createOrGetConversation } = useRealtimeChat();
+  const [chatLoading, setChatLoading] = useState(false);
   const [booking, setBooking] = useState(initialBooking);
   const [cancelInfo, setCancelInfo] = useState<{
     reason: string;
@@ -47,6 +52,29 @@ export const BookingDetail = ({
   const [updateModalStep, setUpdateModalStep] = useState<"edit" | "bank-info">(
     "edit",
   );
+
+  const handleChatWithHost = async () => {
+    if (!booking.room?.host?.id) {
+      toast.error("Không tìm thấy thông tin Host");
+      return;
+    }
+    setChatLoading(true);
+    try {
+      const convId = await createOrGetConversation(
+        booking.room.host.id,
+        booking.room.id,
+      );
+      if (convId) {
+        router.push("/inbox");
+      } else {
+        toast.error("Không thể tạo cuộc hội thoại lúc này");
+      }
+    } catch (err) {
+      toast.error("Lỗi khi kết nối trò chuyện");
+    } finally {
+      setChatLoading(false);
+    }
+  };
 
   if (!booking || !booking.checkIn || !booking.checkOut) {
     return null;
@@ -442,6 +470,84 @@ export const BookingDetail = ({
             </div>
           </div>
 
+          {/* Yêu cầu Nhận phòng dự kiến (nếu có) */}
+          {booking.expectedCheckInReq &&
+            (() => {
+              const isEarlyCheckIn =
+                booking.expectedCheckInTime &&
+                booking.expectedCheckInTime.split("-")[0].trim() < "14:00";
+              return (
+                <div className="bg-white rounded-3xl p-6 border border-gray-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-bold text-gray-900 flex items-center gap-2">
+                      <Calendar className="w-5 h-5 text-gray-400" /> Giờ nhận
+                      phòng dự kiến
+                    </h4>
+                    {booking.expectedCheckInStatus === "PENDING" && (
+                      <span className="text-[10px] font-bold px-3 py-1 bg-amber-50 text-amber-600 rounded-full border border-amber-200">
+                        Đang chờ xác nhận
+                      </span>
+                    )}
+                    {booking.expectedCheckInStatus === "APPROVED" && (
+                      <span className="text-[10px] font-bold px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full border border-emerald-200">
+                        {isEarlyCheckIn ? "Đã xác nhận" : "Đã ghi nhận"}
+                      </span>
+                    )}
+                    {booking.expectedCheckInStatus === "REJECTED" && (
+                      <span className="text-[10px] font-bold px-3 py-1 bg-red-50 text-red-600 rounded-full border border-red-200">
+                        Từ chối
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-gray-50/80 p-4 rounded-xl text-sm border border-gray-100">
+                    <div>
+                      <span className="text-[10px] text-gray-400 font-bold uppercase block mb-0.5">
+                        Giờ nhận phòng dự kiến
+                      </span>
+                      <span className="font-bold text-gray-800">
+                        {booking.expectedCheckInTime || "N/A"}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-gray-400 font-bold uppercase block mb-0.5">
+                        Lời nhắn của bạn
+                      </span>
+                      <span className="text-gray-600 italic">
+                        "
+                        {booking.expectedCheckInReason ||
+                          "Không có ghi chú thêm"}
+                        "
+                      </span>
+                    </div>
+                  </div>
+
+                  {booking.expectedCheckInStatus !== "PENDING" &&
+                    isEarlyCheckIn && (
+                      <div
+                        className={`p-4 rounded-xl text-xs border ${
+                          booking.expectedCheckInStatus === "APPROVED"
+                            ? "bg-emerald-50/50 text-emerald-950 border-emerald-100/50"
+                            : "bg-red-50/50 text-red-950 border-red-100/50"
+                        }`}
+                      >
+                        <span className="font-bold block mb-1">
+                          {booking.expectedCheckInStatus === "APPROVED"
+                            ? "✓ Phản hồi từ Admin (Chấp thuận):"
+                            : "✗ Phản hồi từ Admin (Từ chối):"}
+                        </span>
+                        <p className="italic">
+                          "
+                          {booking.expectedCheckInReason ||
+                            "Không có lời nhắn chi tiết"}
+                          "
+                        </p>
+                      </div>
+                    )}
+                </div>
+              );
+            })()}
+
           {/* 4. Yêu cầu đặc biệt */}
           <div className="bg-white rounded-3xl p-6 border border-gray-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] space-y-4">
             <div className="flex items-center justify-between">
@@ -494,7 +600,7 @@ export const BookingDetail = ({
                     key={log.id}
                     className="flex flex-col sm:flex-row gap-4 p-4 bg-gray-50/50 rounded-2xl border border-gray-100/50"
                   >
-                    <div className="sm:w-1/4">
+                    <div className="sm:w-[30%] shrink-0">
                       <div className="flex items-center gap-2 mb-1">
                         <span
                           className={`w-2 h-2 rounded-full ${
@@ -507,7 +613,7 @@ export const BookingDetail = ({
                                   : "bg-gray-400"
                           }`}
                         />
-                        <p className="text-xs font-black text-gray-700 uppercase tracking-tight">
+                        <p className="text-xs font-black text-gray-700 uppercase tracking-tight wrap-break-word">
                           {log.action === "RESCHEDULE"
                             ? "Đổi ngày lưu trú"
                             : log.action === "REFUND_DIFFERENCE_CONFIRMED"
@@ -522,14 +628,19 @@ export const BookingDetail = ({
                                       ? "Xác nhận hoàn tiền"
                                       : log.action === "CREATE"
                                         ? "Tạo đơn đặt"
-                                        : log.action}
+                                        : log.action ===
+                                            "UPDATE_EXPECTED_CHECKIN"
+                                          ? "Đổi giờ nhận phòng"
+                                          : log.action === "UPDATE_BANK_INFO"
+                                            ? "Cập nhật TK hoàn tiền"
+                                            : log.action}
                         </p>
                       </div>
                       <time className="text-[10px] text-gray-400 font-medium">
                         {format(new Date(log.createdAt), "HH:mm, dd/MM/yyyy")}
                       </time>
                     </div>
-                    <div className="sm:w-3/4 text-sm">
+                    <div className="flex-1 text-sm">
                       <p className="text-gray-600 leading-relaxed mb-3 font-medium">
                         {Object.keys(BookingStatus).reduce(
                           (note, key) =>
@@ -921,6 +1032,18 @@ export const BookingDetail = ({
                 )}
               </div>
             )}
+
+            {/* Trò chuyện với Host */}
+            <div className="pt-4 border-t border-gray-100">
+              <Button
+                onClick={handleChatWithHost}
+                disabled={chatLoading}
+                className="w-full h-12 rounded-2xl bg-sky-500 hover:bg-sky-600 text-white font-bold transition-all flex items-center justify-center gap-2 shadow-md shadow-sky-100"
+              >
+                <MessageSquare className="w-4 h-4" />
+                {chatLoading ? "Đang kết nối..." : "Trò chuyện với Host"}
+              </Button>
+            </div>
           </div>
         </div>
       </div>

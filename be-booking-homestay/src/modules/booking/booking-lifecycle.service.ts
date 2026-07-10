@@ -23,6 +23,7 @@ export interface ChangeStatusOptions {
   notifyUser?: boolean;
   notifyAdmin?: boolean;
   paidAmount?: number;
+  surcharge?: number;
 }
 
 @Injectable()
@@ -55,18 +56,42 @@ export class BookingLifecycleService {
       this.validateTransition(booking.status as bookings_status, newStatus);
     }
 
+    const surcharge = Number(options?.surcharge || 0);
+    const oldTotalPrice = Number(booking.totalPrice);
+    const newTotalPrice = oldTotalPrice + surcharge;
+
+    let finalPaidAmount = Number(booking.paidAmount);
+    if (newStatus === bookings_status.CHECKED_OUT) {
+      finalPaidAmount = newTotalPrice;
+    } else {
+      finalPaidAmount = finalPaidAmount + surcharge;
+    }
+
     const updated = await this.prisma.bookings.update({
       where: { id: bookingId },
       data: {
         status: newStatus,
         cancelReason: options?.reason ?? null,
-        paidAmount:
-          newStatus === bookings_status.CHECKED_OUT
-            ? booking.totalPrice
-            : (options?.paidAmount ?? booking.paidAmount),
+        totalPrice: newTotalPrice,
+        paidAmount: finalPaidAmount,
         updatedAt: new Date(),
       },
       include: { rooms: true },
+    });
+
+    // Ghi log hoạt động đổi trạng thái vào booking_logs
+    await (this.prisma as any).booking_logs.create({
+      data: {
+        bookingId,
+        action: `STATUS_${newStatus}`,
+        oldTotal: booking.totalPrice,
+        newTotal: updated.totalPrice,
+        note:
+          options?.reason ||
+          (surcharge > 0
+            ? `Cập nhật trạng thái sang ${newStatus} (Phụ thu phát sinh: ${surcharge.toLocaleString()}đ)`
+            : `Cập nhật trạng thái sang ${newStatus}`),
+      },
     });
 
     const isCancelledStatus =
@@ -152,12 +177,12 @@ export class BookingLifecycleService {
    * Cập nhật trạng thái sau khi khách thanh toán thành công.
    * Tự động tính toán tổng tiền để chuyển sang PARTIALLY_PAID hoặc CONFIRMED.
    */
-  async updateStatus(orderId: number, paidAmount: number) {
-    return await this.prisma.$transaction(async (tx) => {
-      const booking = await tx.bookings.findUnique({
+  async updateStatus(orderId: number, paidAmount: number, tx?: any) {
+    const runUpdate = async (prismaTx: any) => {
+      const booking = await prismaTx.bookings.findUnique({
         where: { id: orderId },
       });
-      if (!booking) throw new NotFoundException();
+      if (!booking) throw new NotFoundException('Không tìm thấy booking');
 
       // Guard: không xử lý nếu booking đã ở trạng thái cuối
       const terminalStatuses: bookings_status[] = [
@@ -187,11 +212,11 @@ export class BookingLifecycleService {
         newStatus = bookings_status.CONFIRMED;
       }
 
-      const latestPolicy = await tx.app_configs.findUnique({
+      const latestPolicy = await prismaTx.app_configs.findUnique({
         where: { key: AppConfigKey.CANCELLATION_POLICY },
       });
 
-      const updated = await tx.bookings.update({
+      const updated = await prismaTx.bookings.update({
         where: { id: orderId },
         data: {
           status: newStatus,
@@ -203,6 +228,7 @@ export class BookingLifecycleService {
         include: { rooms: true },
       });
 
+      // Gửi mail & notifications (không block luồng chính của database transaction)
       this.sendStatusMail(updated, newStatus);
 
       try {
@@ -232,7 +258,15 @@ export class BookingLifecycleService {
       }
 
       return updated;
-    });
+    };
+
+    if (tx) {
+      return await runUpdate(tx);
+    } else {
+      return await this.prisma.$transaction(async (prismaTx) => {
+        return await runUpdate(prismaTx);
+      });
+    }
   }
 
   /**

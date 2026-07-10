@@ -19,6 +19,9 @@ type BookingPayload = {
   paymentMethod: PaymentMethod;
   policyUpdatedAt?: string;
   promotionCode?: string;
+  expectedCheckInReq?: boolean;
+  expectedCheckInTime?: string;
+  expectedCheckInReason?: string;
 };
 
 export function usePayment(
@@ -61,16 +64,11 @@ export function usePayment(
         }
         console.log("id: ", id);
       }
-      const finalTotal = bookingData?.totalAmount || room.price * totalNights;
-      let amountToPay = 0;
-      if (payload.paymentMethod === "BANK_TRANSFER") {
-        amountToPay = finalTotal;
-      } else if (payload.paymentMethod === "CASH") {
-        amountToPay = Math.round(finalTotal * 0.3);
-      }
+      const paymentPurpose =
+        payload.paymentMethod === "CASH" ? "DEPOSIT" : "FULL";
 
       toast.success("Đang tạo mã thanh toán PayOS...");
-      const { url } = await create_payos_link(id, amountToPay);
+      const { url } = await create_payos_link(id, paymentPurpose);
       if (url) {
         window.location.href = url;
       } else {

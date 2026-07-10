@@ -82,7 +82,11 @@ export interface ChatContextType {
   selectConversation: (conversationId: number) => Promise<void>;
   sendMessage: (content: string) => void;
   sendTypingStatus: (isTyping: boolean) => void;
-  createOrGetConversation: (hostId: number, roomId?: number) => Promise<number>;
+  createOrGetConversation: (
+    hostId: number,
+    roomId?: number,
+    guestId?: number,
+  ) => Promise<number>;
   refreshConversations: () => Promise<void>;
   markConversationAsRead: (conversationId: number) => void;
 }
