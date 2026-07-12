@@ -38,6 +38,9 @@ export default function AdminDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
+  const [progress, setProgress] = useState(0);
+  const [autoRefreshEnabled, setAutoRefreshEnabled] = useState(true);
+
   const currentYear = new Date().getFullYear();
   const [year, setYear] = useState(currentYear);
 
@@ -72,6 +75,29 @@ export default function AdminDashboardPage() {
   useEffect(() => {
     loadData();
   }, []);
+
+  useEffect(() => {
+    if (!autoRefreshEnabled) {
+      setProgress(0);
+      return;
+    }
+
+    const duration = 15000;
+    const intervalTime = 100;
+    const step = (intervalTime / duration) * 100;
+
+    const timer = setInterval(() => {
+      setProgress((prev) => {
+        if (prev >= 100) {
+          loadData();
+          return 0;
+        }
+        return prev + step;
+      });
+    }, intervalTime);
+
+    return () => clearInterval(timer);
+  }, [autoRefreshEnabled]);
 
   useEffect(() => {
     if (!loading) {
@@ -311,9 +337,38 @@ export default function AdminDashboardPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto justify-end sm:justify-start">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto justify-end sm:justify-start">
+          <div
+            onClick={() => setAutoRefreshEnabled(!autoRefreshEnabled)}
+            className={`flex items-center gap-2 text-[11px] font-bold px-2.5 py-1.5 rounded-xl border select-none cursor-pointer transition-all ${
+              autoRefreshEnabled
+                ? "bg-slate-50 dark:bg-slate-850 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:bg-slate-100"
+                : "bg-slate-100 dark:bg-slate-800 text-slate-400 border-slate-300 dark:border-slate-700 hover:bg-slate-200"
+            }`}
+            title={autoRefreshEnabled ? "Click để tạm dừng tự động làm mới" : "Click để bật tự động làm mới"}
+          >
+            <span className="relative flex h-1.5 w-1.5">
+              {autoRefreshEnabled && (
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              )}
+              <span
+                className={`relative inline-flex rounded-full h-1.5 w-1.5 ${
+                  autoRefreshEnabled ? "bg-emerald-500" : "bg-slate-400"
+                }`}
+              ></span>
+            </span>
+            <span>
+              {autoRefreshEnabled
+                ? `Làm mới sau ${Math.max(1, Math.ceil(15 - (progress * 15) / 100))}s`
+                : "Tự động làm mới: Tắt"}
+            </span>
+          </div>
+
           <RefreshButton
-            onRefresh={loadData}
+            onRefresh={async () => {
+              await loadData();
+              setProgress(0);
+            }}
             className="border-gray-200 shadow-sm shrink-0"
           />
           <Button
@@ -325,6 +380,16 @@ export default function AdminDashboardPage() {
           </Button>
         </div>
       </header>
+
+      {/* Sleek Auto Refresh Progress Bar */}
+      {autoRefreshEnabled && (
+        <div className="w-full h-0.5 bg-slate-100 dark:bg-slate-800/50 rounded-full overflow-hidden -mt-2 sm:-mt-3">
+          <div
+            className="h-full bg-primary/70 transition-all duration-100 ease-linear rounded-full"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+      )}
 
       {/* TODAY OPERATION PULSE */}
       <TodayPulse

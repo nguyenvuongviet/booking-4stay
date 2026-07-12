@@ -1,7 +1,7 @@
 "use client";
 
 import { BaseLocation } from "@/services/admin/locationsApi";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AddLocationModal } from "./_components/AddLocationModal";
 import { EditLocationModal } from "./_components/EditLocationModal";
 import { LocationFilters } from "./_components/LocationFilters";
@@ -15,6 +15,32 @@ export default function LocationsPage() {
   const [openAdd, setOpenAdd] = useState(false);
   const [openEdit, setOpenEdit] = useState(false);
   const [editingItem, setEditingItem] = useState<BaseLocation | null>(null);
+
+  const [progress, setProgress] = useState(0);
+  const [autoRefreshEnabled, setAutoRefreshEnabled] = useState(true);
+
+  useEffect(() => {
+    if (!autoRefreshEnabled) {
+      setProgress(0);
+      return;
+    }
+
+    const duration = 15000;
+    const intervalTime = 100;
+    const step = (intervalTime / duration) * 100;
+
+    const timer = setInterval(() => {
+      setProgress((prev) => {
+        if (prev >= 100) {
+          state.fetchData();
+          return 0;
+        }
+        return prev + step;
+      });
+    }, intervalTime);
+
+    return () => clearInterval(timer);
+  }, [autoRefreshEnabled, state.fetchData]);
 
   const parents =
     state.dataType === "Province"
@@ -31,8 +57,14 @@ export default function LocationsPage() {
   return (
     <div className="space-y-4 max-w-400 mx-auto">
       <LocationHeader
-        onRefresh={state.fetchData}
+        onRefresh={async () => {
+          await state.fetchData();
+          setProgress(0);
+        }}
         onAdd={() => setOpenAdd(true)}
+        progress={progress}
+        autoRefreshEnabled={autoRefreshEnabled}
+        setAutoRefreshEnabled={setAutoRefreshEnabled}
       />
 
       <div className="sticky top-16 sm:top-20 z-20 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3 sm:p-4 rounded-2xl shadow-md">

@@ -110,7 +110,7 @@ export class BookingLifecycleService {
       );
     }
 
-    if (newStatus === bookings_status.CHECKED_OUT) {
+    if (newStatus === bookings_status.CHECKED_OUT && booking.status !== bookings_status.CHECKED_OUT) {
       await this.loyaltyProgram.addLoyaltyProgressAfterCheckout(
         updated.userId,
         updated.checkIn,

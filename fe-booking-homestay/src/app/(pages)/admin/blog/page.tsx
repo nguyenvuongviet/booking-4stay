@@ -67,6 +67,9 @@ export default function AdminBlogPage() {
   const [page, setPage] = useState(1);
   const pageSize = 10;
 
+  const [progress, setProgress] = useState(0);
+  const [autoRefreshEnabled, setAutoRefreshEnabled] = useState(true);
+
   const handleSort = (field: "createdAt" | "viewCount" | "commentCount") => {
     if (sortBy === field) {
       if (sortOrder === "desc") {
@@ -125,6 +128,29 @@ export default function AdminBlogPage() {
   useEffect(() => {
     fetchPosts();
   }, [fetchPosts]);
+
+  useEffect(() => {
+    if (!autoRefreshEnabled) {
+      setProgress(0);
+      return;
+    }
+
+    const duration = 15000;
+    const intervalTime = 100;
+    const step = (intervalTime / duration) * 100;
+
+    const timer = setInterval(() => {
+      setProgress((prev) => {
+        if (prev >= 100) {
+          fetchPosts();
+          return 0;
+        }
+        return prev + step;
+      });
+    }, intervalTime);
+
+    return () => clearInterval(timer);
+  }, [autoRefreshEnabled, fetchPosts]);
 
   useEffect(() => {
     setPage(1);
@@ -206,18 +232,47 @@ export default function AdminBlogPage() {
             {processedPosts.length} bài viết
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          <div
+            onClick={() => setAutoRefreshEnabled(!autoRefreshEnabled)}
+            className={`flex items-center gap-2 text-[11px] font-bold px-2.5 py-1.5 rounded-xl border select-none cursor-pointer transition-all ${
+              autoRefreshEnabled
+                ? "bg-slate-50 dark:bg-slate-850 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:bg-slate-100"
+                : "bg-slate-100 dark:bg-slate-800 text-slate-400 border-slate-300 dark:border-slate-700 hover:bg-slate-200"
+            }`}
+            title={autoRefreshEnabled ? "Click để tạm dừng tự động làm mới" : "Click để bật tự động làm mới"}
+          >
+            <span className="relative flex h-1.5 w-1.5">
+              {autoRefreshEnabled && (
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              )}
+              <span
+                className={`relative inline-flex rounded-full h-1.5 w-1.5 ${
+                  autoRefreshEnabled ? "bg-emerald-500" : "bg-slate-400"
+                }`}
+              ></span>
+            </span>
+            <span>
+              {autoRefreshEnabled
+                ? `Làm mới sau ${Math.max(1, Math.ceil(15 - (progress * 15) / 100))}s`
+                : "Tự động làm mới: Tắt"}
+            </span>
+          </div>
+
           <button
-            onClick={() => fetchPosts()}
+            onClick={async () => {
+              await fetchPosts();
+              setProgress(0);
+            }}
             disabled={loading}
-            className="p-2 sm:p-2.5 rounded-xl border bg-background hover:bg-accent transition-colors disabled:opacity-50 cursor-pointer"
+            className="p-2 sm:p-2.5 rounded-xl border bg-background hover:bg-accent transition-colors disabled:opacity-50 cursor-pointer h-9 sm:h-10 flex items-center justify-center"
             title="Làm mới"
           >
-            <RotateCw size={18} className={loading ? "animate-spin" : ""} />
+            <RotateCw size={16} className={loading ? "animate-spin" : ""} />
           </button>
           <Link
             href="/admin/blog/create"
-            className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 bg-primary text-white rounded-xl text-sm font-medium hover:bg-primary/90 transition-all shadow-sm cursor-pointer"
+            className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 bg-primary text-white rounded-xl text-sm font-medium hover:bg-primary/90 transition-all shadow-sm cursor-pointer h-9 sm:h-10"
           >
             <Plus size={18} />
             <span className="hidden sm:inline">Viết bài mới</span>
@@ -225,6 +280,16 @@ export default function AdminBlogPage() {
           </Link>
         </div>
       </div>
+
+      {/* Sleek Auto Refresh Progress Bar */}
+      {autoRefreshEnabled && (
+        <div className="w-full h-0.5 bg-slate-100 dark:bg-slate-800/50 rounded-full overflow-hidden -mt-2 sm:-mt-3">
+          <div
+            className="h-full bg-primary/70 transition-all duration-100 ease-linear rounded-full"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+      )}
 
       {/* Status tabs */}
       <div className="flex border-b border-muted overflow-x-auto scrollbar-none">

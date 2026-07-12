@@ -79,11 +79,6 @@ export function useBookingList() {
   }, [loadInitial]);
 
   useEffect(() => {
-    const timer = setInterval(() => refresh(), 60000);
-    return () => clearInterval(timer);
-  }, [refresh]);
-
-  useEffect(() => {
     setPage(1);
   }, [searchTerm, statusFilter, dateRange]);
 
