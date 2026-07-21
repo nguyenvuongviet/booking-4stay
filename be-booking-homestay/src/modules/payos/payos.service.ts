@@ -42,14 +42,17 @@ export class PayosService {
     const booking = await this.prisma.bookings.findUnique({
       where: { id: bookingId },
     });
-    if (!booking) {
-      throw new NotFoundException('Không tìm thấy booking');
-    }
+    if (!booking) throw new NotFoundException('Không tìm thấy booking');
+
+    // 0. Kiểm tra xem chức năng thanh toán có đang mở không
+    if (process.env.ENABLE_PAYMENT === 'false')
+      throw new BadRequestException(
+        'Chức năng thanh toán trực tuyến hiện chưa kích hoạt trên hệ thống.',
+      );
 
     // 1. Kiểm tra booking thuộc người gọi (Trừ Admin)
-    if (role !== Role.ADMIN && booking.userId !== userId) {
+    if (role !== Role.ADMIN && booking.userId !== userId)
       throw new ForbiddenException('Bạn không có quyền thanh toán booking này');
-    }
 
     // 2. Kiểm tra trạng thái booking có được phép thanh toán không
     const invalidStatuses: bookings_status[] = [
@@ -58,20 +61,18 @@ export class PayosService {
       bookings_status.CHECKED_OUT,
       bookings_status.REFUNDED,
     ];
-    if (invalidStatuses.includes(booking.status as bookings_status)) {
+    if (invalidStatuses.includes(booking.status as bookings_status))
       throw new BadRequestException(
         'Booking này không ở trạng thái được phép thanh toán',
       );
-    }
 
     // 3. Tính số tiền phải thu từ database
     const total = Number(booking.totalPrice);
     const paid = Number(booking.paidAmount);
     const outstandingAmount = total - paid;
 
-    if (outstandingAmount <= 0) {
+    if (outstandingAmount <= 0)
       throw new BadRequestException('Booking này đã được thanh toán đầy đủ');
-    }
 
     let amount = 0;
     if (paymentPurpose === 'DEPOSIT') {
@@ -80,21 +81,18 @@ export class PayosService {
       if (paid >= requiredDeposit) {
         // Đã cọc đủ hoặc hơn rồi, số tiền cần thanh toán tiếp là outstandingAmount
         amount = outstandingAmount;
-      } else {
+      } else
         // Cần thanh toán số tiền còn thiếu để đạt mức cọc 30%
         amount = requiredDeposit - paid;
-      }
-    } else {
+    } else
       // Mặc định hoặc thanh toán FULL: trả hết số tiền còn thiếu
       amount = outstandingAmount;
-    }
 
     // Tránh số tiền quá nhỏ (dưới 1000đ PayOS không nhận)
-    if (amount < 1000) {
+    if (amount < 1000)
       throw new BadRequestException(
         'Số tiền thanh toán tối thiểu là 1,000 VND',
       );
-    }
 
     // Tạo orderCode an toàn: bookingId + timestamp (6 chữ số)
     const timestamp = Date.now() % 1000000;
@@ -234,9 +232,7 @@ export class PayosService {
         }
 
         // Idempotency check
-        if (paymentTx.status === 'COMPLETED') {
-          return true; // Đã xử lý rồi
-        }
+        if (paymentTx.status === 'COMPLETED') return true; // Đã xử lý rồi
 
         // Cập nhật giao dịch + booking trong CÙNG một transaction
         await this.prisma.$transaction(async (tx) => {
@@ -251,9 +247,7 @@ export class PayosService {
             },
           });
 
-          if (updateResult.count === 0) {
-            return;
-          }
+          if (updateResult.count === 0) return;
 
           await this.lifecycleService.updateStatus(
             paymentTx.bookingId,
