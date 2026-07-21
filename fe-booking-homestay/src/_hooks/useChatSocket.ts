@@ -15,7 +15,13 @@ import {
   IMessage,
   TypingUser,
 } from "@/types/chat";
-import { Dispatch, RefObject, SetStateAction, useEffect, useState } from "react";
+import {
+  Dispatch,
+  RefObject,
+  SetStateAction,
+  useEffect,
+  useState,
+} from "react";
 import { io, Socket } from "socket.io-client";
 
 type UseChatSocketParams = {
@@ -81,7 +87,6 @@ export function useChatSocket({
     });
 
     socketClient.on("connect", () => {
-      console.log("[Socket] Connected");
       if (activeConversationRef.current) {
         socketClient.emit("join_conversation", {
           conversationId: activeConversationRef.current.id,
@@ -159,7 +164,10 @@ export function useChatSocket({
         isTyping: boolean;
       }) => {
         const activeConversation = activeConversationRef.current;
-        if (!activeConversation || payload.conversationId !== activeConversation.id) {
+        if (
+          !activeConversation ||
+          payload.conversationId !== activeConversation.id
+        ) {
           return;
         }
 

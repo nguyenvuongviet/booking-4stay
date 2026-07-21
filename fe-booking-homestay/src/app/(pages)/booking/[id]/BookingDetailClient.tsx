@@ -23,8 +23,6 @@ export default function BookingDetailClient({
     const fetchBooking = async () => {
       try {
         const res = await get_booking_detail(bookingId);
-        console.log("Booking detail API response:", res);
-
         const bookingData = res.data;
         if (!bookingData || !bookingData.id)
           throw new Error(t("booking_not_found"));

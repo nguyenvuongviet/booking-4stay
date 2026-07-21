@@ -7,13 +7,9 @@
  */
 export function validateEmail(email: string): string {
   const trimmed = email.trim();
-  if (!trimmed) {
-    return "Vui lòng nhập địa chỉ email.";
-  }
+  if (!trimmed) return "Vui lòng nhập địa chỉ email.";
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(trimmed)) {
-    return "Địa chỉ email không đúng định dạng (Ví dụ: name@example.com).";
-  }
+  if (!emailRegex.test(trimmed)) return "Địa chỉ email không đúng định dạng (Ví dụ: name@example.com).";
   return "";
 }
 
@@ -46,12 +42,8 @@ export function validatePasswordStrength(pwd: string): string {
  */
 export function validateLoginPassword(pwd: string): string {
   const trimmed = pwd.trim();
-  if (!trimmed) {
-    return "Vui lòng nhập mật khẩu.";
-  }
-  if (trimmed.length < 6) {
-    return "Mật khẩu phải chứa ít nhất 6 ký tự.";
-  }
+  if (!trimmed) return "Vui lòng nhập mật khẩu.";
+  if (trimmed.length < 6) return "Mật khẩu phải chứa ít nhất 6 ký tự.";
   return "";
 }
 
@@ -60,13 +52,9 @@ export function validateLoginPassword(pwd: string): string {
  */
 export function validatePhoneNumber(phone: string): string {
   const trimmed = phone.trim();
-  if (!trimmed) {
-    return "Số điện thoại không được để trống.";
-  }
+  if (!trimmed) return "Số điện thoại không được để trống.";
   const phoneRegex = /^0[0-9]{8,10}$/;
-  if (!phoneRegex.test(trimmed)) {
-    return "Số điện thoại không hợp lệ (Ví dụ: 0912345678, gồm 9-11 chữ số bắt đầu bằng 0).";
-  }
+  if (!phoneRegex.test(trimmed)) return "Số điện thoại không hợp lệ (Ví dụ: 0912345678, gồm 9-11 chữ số bắt đầu bằng 0).";
   return "";
 }
 
@@ -75,11 +63,7 @@ export function validatePhoneNumber(phone: string): string {
  */
 export function validateFullName(name: string): string {
   const trimmed = name.trim();
-  if (!trimmed) {
-    return "Họ và tên không được để trống.";
-  }
-  if (trimmed.length < 2) {
-    return "Họ và tên phải có ít nhất 2 ký tự.";
-  }
+  if (!trimmed) return "Họ và tên không được để trống.";
+  if (trimmed.length < 2) return "Họ và tên phải có ít nhất 2 ký tự.";
   return "";
 }

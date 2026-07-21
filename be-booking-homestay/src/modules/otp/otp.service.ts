@@ -43,7 +43,9 @@ export class OtpService {
           this.logger.error(`Lỗi gửi email OTP cho ${email}`, error.stack),
         );
 
-      console.log(`OTP cho ${email}: ${otp}`);
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`[DEV ONLY] OTP cho ${email}: ${otp}`);
+      }
     } catch (error) {
       this.logger.error(`Lỗi tạo OTP cho ${email}`, error.stack);
       throw new BadRequestException('Không thể tạo OTP. Vui lòng thử lại.');
@@ -65,9 +67,8 @@ export class OtpService {
         },
       });
 
-      if (!otpRecord) {
+      if (!otpRecord)
         throw new BadRequestException('OTP không hợp lệ hoặc hết hạn!');
-      }
 
       await this.prismaService.otp_codes.update({
         where: { id: otpRecord.id },

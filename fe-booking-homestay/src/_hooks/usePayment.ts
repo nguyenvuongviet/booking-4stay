@@ -62,18 +62,14 @@ export function usePayment(
           toast.error("Không thể tạo đặt phòng. Vui lòng thử lại.");
           return;
         }
-        console.log("id: ", id);
       }
       const paymentPurpose =
         payload.paymentMethod === "CASH" ? "DEPOSIT" : "FULL";
 
       toast.success("Đang tạo mã thanh toán PayOS...");
       const { url } = await create_payos_link(id, paymentPurpose);
-      if (url) {
-        window.location.href = url;
-      } else {
-        toast.error("Không thể lấy link PayOS");
-      }
+      if (url) return (window.location.href = url);
+      toast.error("Không thể lấy link PayOS");
       return;
     } catch (error: any) {
       console.error("Payment error:", error);

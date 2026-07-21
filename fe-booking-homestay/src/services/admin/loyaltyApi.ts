@@ -91,8 +91,6 @@ export async function recomputeAllUserLevels() {
 export async function getAllUserLoyalty(): Promise<LoyaltyUserProgram[]> {
   try {
     const res = await api.get("/loyalty/users/all");
-    console.log(res.data);
-
     return res.data?.data ?? [];
   } catch (error) {
     console.error("API Error: getAllUserLoyalty", error);

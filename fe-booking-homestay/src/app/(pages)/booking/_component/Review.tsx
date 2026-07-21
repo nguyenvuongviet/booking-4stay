@@ -20,7 +20,6 @@ export default function ReviewsPopover({ hotel }: { hotel: any }) {
   });
 
   const handleSubmitReview = () => {
-    console.log("Review submitted:", reviewForm);
     setIsReviewPopoverOpen(false);
   };
 
@@ -30,7 +29,7 @@ export default function ReviewsPopover({ hotel }: { hotel: any }) {
         <Button variant="outline">View Reviews</Button>
       </PopoverTrigger>
 
-      <PopoverContent className="max-w-5xl w-[800px] max-h-[80vh] overflow-y-auto p-0">
+      <PopoverContent className="max-w-5xl w-200 max-h-[80vh] overflow-y-auto p-0">
         <div className="sticky top-0 bg-white border-b px-6 py-4 z-10 flex justify-between items-center">
           <h2 className="text-lg font-semibold">
             Guest reviews for {hotel.name}
@@ -70,7 +69,7 @@ export default function ReviewsPopover({ hotel }: { hotel: any }) {
               </Button>
             </PopoverTrigger>
 
-            <PopoverContent className="w-[400px] p-5">
+            <PopoverContent className="w-100 p-5">
               <h3 className="font-semibold text-lg mb-3">Write a Review</h3>
 
               <div className="space-y-4">
@@ -120,7 +119,7 @@ export default function ReviewsPopover({ hotel }: { hotel: any }) {
                       })
                     }
                     placeholder="Share your experience..."
-                    className="min-h-[100px]"
+                    className="min-h-25"
                   />
                 </div>
 
