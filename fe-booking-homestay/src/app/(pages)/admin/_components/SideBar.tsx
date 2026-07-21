@@ -9,6 +9,7 @@ import {
 import { toast } from "@/_components/ui/use-toast";
 import { STORAGE_KEYS } from "@/constants";
 import { useAuth } from "@/context/auth-context";
+import { useRealtimeChat } from "@/context/ChatContext";
 import { cn } from "@/lib/utils";
 import {
   Calendar,
@@ -98,6 +99,7 @@ export function AdminSidebar({
     });
     window.location.href = "/auth/login";
   };
+  const { unreadCount } = useRealtimeChat();
 
   return (
     <aside
@@ -193,7 +195,14 @@ export function AdminSidebar({
                         isCollapsed ? "md:justify-center" : "justify-start",
                       )}
                     >
-                      <Icon className="w-5 h-5 shrink-0" />
+                      <div className="relative flex items-center justify-center w-5 h-5">
+                        <Icon className="w-5 h-5 shrink-0" />
+                        {item.href === "/admin/chat" && unreadCount > 0 && (
+                          <span className="absolute -top-1 -right-2 z-20 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-bold leading-none text-white">
+                            {unreadCount > 9 ? "9+" : unreadCount}
+                          </span>
+                        )}
+                      </div>
                       <span
                         className={cn(
                           "text-xs sm:text-sm font-medium truncate",

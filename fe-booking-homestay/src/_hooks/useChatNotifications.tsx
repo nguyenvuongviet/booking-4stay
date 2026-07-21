@@ -1,13 +1,12 @@
 "use client";
 
-import {
-  getMessagePreview,
-  isChatPage,
-} from "@/_helper/chat-realtime.helper";
+import { getMessagePreview, isChatPage } from "@/_helper/chat-realtime.helper";
 import { usePushNotifications } from "@/_hooks/usePushNotifications";
 import { ChatNotificationPayload, IConversation } from "@/types/chat";
 import { RefObject, useCallback, useEffect, useRef } from "react";
 import toast from "react-hot-toast";
+import { useRouter } from "next/navigation";
+import { STORAGE_KEYS } from "@/constants";
 
 type WindowWithWebkitAudio = Window & {
   webkitAudioContext?: typeof AudioContext;
@@ -30,6 +29,7 @@ export function useChatNotifications({
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const originalTitleRef = useRef("");
   const blinkIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const router = useRouter();
 
   usePushNotifications(enabled);
 
@@ -70,7 +70,11 @@ export function useChatNotifications({
         if (!AudioContextClass) return;
         const context = new AudioContextClass();
 
-        const playBeep = (time: number, frequency: number, duration: number) => {
+        const playBeep = (
+          time: number,
+          frequency: number,
+          duration: number,
+        ) => {
           const oscillator = context.createOscillator();
           const gainNode = context.createGain();
           oscillator.type = "sine";
@@ -111,7 +115,11 @@ export function useChatNotifications({
         !activeConversation ||
         activeConversation.id !== payload.conversationId;
 
-      if (!shouldNotify || String(payload.senderId) === String(userId)) return;
+      if (String(payload.senderId) === String(userId)) return;
+      playNotificationSound();
+
+      // nếu đang xem đúng cuộc trò chuyện thì không toast
+      if (!shouldNotify) return;
 
       const now = Date.now();
       const lastToastAt =
@@ -119,17 +127,37 @@ export function useChatNotifications({
       if (now - lastToastAt < 4000) return;
 
       toastCooldownRef.current.set(payload.conversationId, now);
-      playNotificationSound();
       startTabBlinking(payload.senderName);
 
-      toast.success(
-        `Tin nhắn mới từ ${payload.senderName ?? "4Stay"}: "${getMessagePreview(
-          payload.content,
-        )}"`,
+      toast(
+        (t) => (
+          <div
+            className="cursor-pointer"
+            onClick={() => {
+              const user = JSON.parse(
+                localStorage.getItem(STORAGE_KEYS.CURRENT_USER) || "{}",
+              );
+
+              if (user.roles ===1) {
+                router.push("/admin/chat");
+              } else {
+                router.push("/inbox");
+              }
+
+              toast.dismiss(t.id);
+            }}
+          >
+            <p className="elegent-text-sm font-semibold text-gray-800 dark:text-gray-100">
+              💬 Tin nhắn mới từ {payload.senderName}
+            </p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              {getMessagePreview(payload.content)}
+            </p>
+            <p className="text-xs text-blue-500">Nhấn để mở cuộc trò chuyện</p>
+          </div>
+        ),
         {
-          id: "inbox-notification",
-          icon: "💬",
-          duration: 3500,
+          duration: 5000,
         },
       );
     },
@@ -142,9 +170,9 @@ export function useChatNotifications({
     ],
   );
 
-  useEffect(() => {
-    audioRef.current = new Audio("/notification.mp3");
-  }, []);
+  // useEffect(() => {
+  //   audioRef.current = new Audio("/notification.mp3");
+  // }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") return;

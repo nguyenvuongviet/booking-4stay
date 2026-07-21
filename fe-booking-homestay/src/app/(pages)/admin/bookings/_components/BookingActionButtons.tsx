@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/_components/ui/button";
+import { parseAbsoluteDate } from "@/lib/utils";
 import { BookingStatus } from "@/types/booking";
 import { Banknote, CheckCircle, Edit, LogOut, X } from "lucide-react";
 import { useState } from "react";
@@ -47,13 +48,30 @@ export function BookingActionButtons({
   ].includes(status as BookingStatus);
 
   const canRefund = refundAmount > 0 && status !== BookingStatus.REFUNDED;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
-  const canCheckIn = [
-    BookingStatus.CONFIRMED,
-    BookingStatus.PARTIALLY_PAID,
-  ].includes(status as BookingStatus);
+  const checkInDate = booking ? parseAbsoluteDate(booking.checkIn) : null;
+  const checkOutDate = booking ? parseAbsoluteDate(booking.checkOut) : null;
 
-  const canCheckOut = status === BookingStatus.CHECKED_IN;
+  if (checkInDate) checkInDate.setHours(0, 0, 0, 0);
+
+  if (checkOutDate) checkOutDate.setHours(0, 0, 0, 0);
+
+  const isCheckInDateOrLater = checkInDate
+    ? today.getTime() >= checkInDate.getTime()
+    : true;
+  const isCheckOutDateOrLater = checkOutDate
+    ? today.getTime() >= checkOutDate.getTime()
+    : true;
+
+  const canCheckIn =
+    [BookingStatus.CONFIRMED, BookingStatus.PARTIALLY_PAID].includes(
+      status as BookingStatus,
+    ) && isCheckInDateOrLater;
+
+  const canCheckOut =
+    status === BookingStatus.CHECKED_IN && isCheckOutDateOrLater;
 
   const handleStatusChange = (newStatus: BookingStatus) => {
     setStatusChangeData({ open: true, status: newStatus });
