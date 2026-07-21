@@ -71,7 +71,6 @@ export default function SignUpModal({
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Sign In button clicked");
 
     const firstNameErr = !firstName.trim() ? "Vui lòng nhập Họ của bạn!" : "";
     const lastNameErr = !lastName.trim() ? "Vui lòng nhập Tên của bạn!" : "";

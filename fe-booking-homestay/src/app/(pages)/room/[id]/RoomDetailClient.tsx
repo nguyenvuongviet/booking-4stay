@@ -166,7 +166,6 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
 
     try {
       setCheckingPreview(true);
-      console.log("roomId:", roomId, typeof roomId);
       const data = await room_preview(
         Number(roomId),
         format(checkInDate, "yyyy-MM-dd"),
@@ -180,7 +179,6 @@ export function RoomDetailClient({ roomId }: RoomDetailClientProps) {
 
       const status = data.available ? "Available" : "SoldOut";
       setAvailable(data.available);
-      console.log("Room preview:", data);
       if (!data.available)
         toast.error(
           "This room is not available for the selected dates. Please choose different dates.",

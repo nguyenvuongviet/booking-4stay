@@ -5,11 +5,11 @@ import { Input } from "@/_components/ui/input";
 import { Label } from "@/_components/ui/label";
 import { STORAGE_KEYS } from "@/constants";
 import { useAuth } from "@/context/auth-context";
+import { useLang } from "@/context/lang-context";
 import { login } from "@/services/authApi";
 import { Eye, EyeOff, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import GoogleLoginButton from "./GoogleLoginButton";
-import { useLang } from "@/context/lang-context";
 
 interface SignInModalProps {
   show: boolean;
@@ -71,7 +71,6 @@ export default function SignInModal({
       });
       setUser(data.user);
 
-      console.log("API response:", data);
       // lưu email vào context để OTPModal có thể dùng
       setEmailInput(emailInput.trim());
       localStorage.setItem(

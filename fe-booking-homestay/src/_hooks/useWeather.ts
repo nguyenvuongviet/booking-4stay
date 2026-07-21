@@ -20,7 +20,6 @@ export const useWeather = (lat?: number | string, lon?: number | string) => {
         const result = await res.json();
         const daily = groupWeatherByDay(result?.list || []);
         setData(daily);
-        console.log("weather: ", lat, lon);
       } catch (err) {
         console.error(err);
         setData([]);

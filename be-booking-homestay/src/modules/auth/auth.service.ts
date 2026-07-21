@@ -5,6 +5,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
+import { isEmail } from 'class-validator';
 import { OAuth2Client } from 'google-auth-library';
 import * as jwt from 'jsonwebtoken';
 import {
@@ -13,7 +14,6 @@ import {
   GOOGLE_CLIENT_SECRET,
   REFRESH_TOKEN_SECRET,
 } from 'src/common/constant/app.constant';
-import { isEmail } from 'class-validator';
 import { LoyaltyProgram } from 'src/helpers/loyalty.helper';
 import { sanitizeUserData } from 'src/utils/sanitize/user.sanitize';
 import { VerifyOtpDto } from '../otp/dto/verifyOtp.dto';
@@ -42,9 +42,7 @@ export class AuthService {
   async register(dto: RegisterDto): Promise<{ message: string; user: any }> {
     const { email, password, phoneNumber, firstName, lastName } = dto;
 
-    if (isEmail(email) === false) {
-      throw new BadRequestException('Email không hợp lệ!');
-    }
+    if (!isEmail(email)) throw new BadRequestException('Email không hợp lệ!');
 
     try {
       const [userExist, defaultRole, salt] = await Promise.all([
@@ -55,9 +53,8 @@ export class AuthService {
 
       const hashPassword = await bcrypt.hash(password, salt);
 
-      if (!defaultRole) {
+      if (!defaultRole)
         throw new BadRequestException('Vai trò mặc định không tìm thấy');
-      }
 
       if (userExist && !userExist.isVerified) {
         await this.prismaService.$transaction([
@@ -148,9 +145,7 @@ export class AuthService {
   async login(dto: LoginDto): Promise<any> {
     const { email, password } = dto;
 
-    if (isEmail(email) === false) {
-      throw new BadRequestException('Email không hợp lệ!');
-    }
+    if (!isEmail(email)) throw new BadRequestException('Email không hợp lệ!');
 
     try {
       const userExist = await this.prismaService.users.findUnique({
@@ -204,9 +199,9 @@ export class AuthService {
         },
       ) as { userId: number };
 
-      if (decodeRefreshToken.userId !== decodeAccessToken.userId) {
+      if (decodeRefreshToken.userId !== decodeAccessToken.userId)
         throw new UnauthorizedException('Token không hợp lệ');
-      }
+
       const tokens = this.tokenService.createTokens(decodeRefreshToken.userId);
 
       return tokens;
@@ -220,18 +215,15 @@ export class AuthService {
 
   async forgotPassword(dto: ForgotPasswordDto): Promise<{ message: string }> {
     const { email } = dto;
-    if (isEmail(email) === false) {
-      throw new BadRequestException('Email không hợp lệ!');
-    }
+    if (!isEmail(email)) throw new BadRequestException('Email không hợp lệ!');
 
     try {
       const userExist = await this.prismaService.users.findUnique({
         where: { email },
       });
 
-      if (!userExist) {
+      if (!userExist)
         throw new BadRequestException('Tài khoản không tìm thấy!');
-      }
 
       this.otpService
         .createOtp(userExist.email, userExist.id, 'FORGOT_PASSWORD')
