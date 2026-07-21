@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import axios from 'axios';
 import { format } from 'date-fns';
 import { SENDER_EMAIL } from 'src/common/constant/app.constant';
@@ -6,6 +6,8 @@ import transporter from 'src/config/nodemailer.config';
 
 @Injectable()
 export class MailService {
+  private readonly logger = new Logger(MailService.name);
+
   private wrapTemplate(subject: string, body: string) {
     return `
       <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: auto; background: #f8f8f8;">
@@ -56,6 +58,9 @@ export class MailService {
       const fromValue = `${displayName} <${rawFromEmail}>`;
 
       try {
+        this.logger.log(
+          `Sending email via Resend to ${options.to} (Subject: "${options.subject}")`,
+        );
         const response = await axios.post(
           'https://api.resend.com/emails',
           {
@@ -74,11 +79,15 @@ export class MailService {
         return response.data;
       } catch (error: any) {
         const errMsg = error.response?.data?.message || error.message;
+        this.logger.error(`Resend API Error: ${errMsg}`);
         throw new Error(`Resend API Error: ${errMsg}`);
       }
     }
 
     // Fallback to Nodemailer
+    this.logger.log(
+      `Sending email via Nodemailer to ${options.to} (Subject: "${options.subject}")`,
+    );
     await transporter.sendMail(options);
   }
 
